@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { createServer } from "@/lib/api";
+import { createServer, createClient } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,17 +13,44 @@ export function AddServerForm({ onServerAdded }: { onServerAdded: () => void }) 
         description: "",
         os_info: "",
         ssh_username: "ubuntu",
-        client_id: 1 // Hardcoded for MVP
     });
+    const [loading, setLoading] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setLoading(true);
         try {
-            await createServer(formData);
+            // Create a default client first (or use existing one)
+            let clientId = 1;
+            try {
+                const client = await createClient({
+                    name: "Default Client",
+                    description: "Auto-created client"
+                });
+                clientId = client.id;
+            } catch (error) {
+                // Client might already exist, use default ID 1
+                console.log("Using default client ID");
+            }
+
+            // Create server with the client ID
+            await createServer({ ...formData, client_id: clientId });
+
+            // Reset form completely
+            setFormData({
+                hostname: "",
+                ip_address: "",
+                description: "",
+                os_info: "",
+                ssh_username: "ubuntu",
+            });
+
             onServerAdded();
-            setFormData({ ...formData, hostname: "", ip_address: "" }); // Reset key fields
         } catch (error) {
             console.error("Failed to create server", error);
+            alert("Failed to create server. Please try again.");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -63,7 +90,9 @@ export function AddServerForm({ onServerAdded }: { onServerAdded: () => void }) 
                         value={formData.description}
                         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     />
-                    <Button type="submit" className="w-full">Add Server</Button>
+                    <Button type="submit" className="w-full" disabled={loading}>
+                        {loading ? "Adding..." : "Add Server"}
+                    </Button>
                 </form>
             </CardContent>
         </Card>

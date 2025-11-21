@@ -1,8 +1,18 @@
-const API_BASE_URL = "http://localhost:8000/api/v1";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
 
 export async function fetchServers() {
     const res = await fetch(`${API_BASE_URL}/servers/`);
     if (!res.ok) throw new Error("Failed to fetch servers");
+    return res.json();
+}
+
+export async function createClient(data: any) {
+    const res = await fetch(`${API_BASE_URL}/clients/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error("Failed to create client");
     return res.json();
 }
 
@@ -15,6 +25,7 @@ export async function createServer(data: any) {
     if (!res.ok) throw new Error("Failed to create server");
     return res.json();
 }
+
 
 export async function diagnoseProblem(serverId: number, problem: string) {
     const res = await fetch(`${API_BASE_URL}/agent/diagnose`, {

@@ -1,6 +1,6 @@
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.backends import default_backend
 import base64
 import os
@@ -17,7 +17,7 @@ def get_encryption_key() -> bytes:
     # This should come from environment variable in production
     password = os.getenv('ENCRYPTION_KEY', 'default-encryption-key-change-in-production').encode()
     
-    kdf = PBKDF2(
+    kdf = PBKDF2HMAC(
         algorithm=hashes.SHA256(),
         length=32,
         salt=ENCRYPTION_SALT,

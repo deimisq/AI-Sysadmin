@@ -28,10 +28,18 @@ class ServerBase(BaseModel):
 class ServerCreate(ServerBase):
     client_id: int
 
-class Server(ServerBase):
+# Response model - excludes sensitive data
+class Server(BaseModel):
     id: int
+    hostname: str
+    ip_address: str
+    description: Optional[str] = None
+    os_info: Optional[str] = None
+    ssh_port: int
+    ssh_username: str
     client_id: int
     created_at: datetime
+    # Note: ssh_password and ssh_key_path are intentionally excluded for security
     class Config:
         from_attributes = True
 

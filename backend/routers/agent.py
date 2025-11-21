@@ -5,8 +5,11 @@ from typing import Optional, Dict, Any
 import database, models
 from services.ai_service import ai_service
 from services.ansible_service import ansible_service
+from services.diagnostic_service import diagnostic_service
 from utils.encryption import decrypt_data
+import logging
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 class AgentQuery(BaseModel):
@@ -15,6 +18,7 @@ class AgentQuery(BaseModel):
 
 class AgentResponse(BaseModel):
     analysis: Dict[str, Any]
+    diagnostics: Optional[Dict[str, Any]] = None
 
 class ExecuteRequest(BaseModel):
     server_id: int
@@ -34,12 +38,38 @@ def diagnose_problem(query: AgentQuery, db: Session = Depends(get_db)):
     if not server:
         raise HTTPException(status_code=404, detail="Server not found")
     
-    server_info = f"Hostname: {server.hostname}, OS: {server.os_info}, IP: {server.ip_address}"
-    
     try:
-        response_data = ai_service.analyze_problem(db, query.problem_description, server_info)
-        return AgentResponse(analysis=response_data)
+        # Step 1: Gather real diagnostic information from the server
+        logger.info(f"Gathering diagnostics for server {server.hostname}")
+        
+        # Decrypt credentials
+        ssh_password = decrypt_data(server.ssh_password) if server.ssh_password else None
+        ssh_key = decrypt_data(server.ssh_key_path) if server.ssh_key_path else None
+        
+        # Collect system information
+        diagnostics = diagnostic_service.gather_system_info(server, ssh_password, ssh_key)
+        
+        # Step 2: Build context with real data
+        diagnostic_summary = f"""
+Server: {server.hostname} ({server.ip_address})
+OS: {server.os_info}
+
+DIAGNOSTIC RESULTS:
+"""
+        for check_name, result in diagnostics.get("checks", {}).items():
+            if result["success"]:
+                diagnostic_summary += f"\n{check_name.upper()}:\n{result['output']}\n"
+        
+        # Step 3: Analyze with AI using real data
+        server_info = f"Hostname: {server.hostname}, OS: {server.os_info}, IP: {server.ip_address}"
+        full_context = f"{server_info}\n\n{diagnostic_summary}\n\nUser Problem: {query.problem_description}"
+        
+        response_data = ai_service.analyze_problem(db, full_context, server_info)
+        
+        return AgentResponse(analysis=response_data, diagnostics=diagnostics)
+        
     except Exception as e:
+        logger.error(f"Error during diagnosis: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/agent/execute")

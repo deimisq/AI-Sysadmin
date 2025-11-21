@@ -59,19 +59,30 @@ class AIService:
 
         # 2. Construct Prompt
         prompt = ChatPromptTemplate.from_messages([
-            ("system", "You are an expert Sysadmin AI Agent. Your goal is to diagnose server issues and propose concrete solutions (commands). "
-                       "You have access to a history of past solved problems. Use them to guide your answer if relevant. "
-                       "Always propose a specific command to run if possible. "
-                       "Format your response clearly with a 'Analysis', 'Proposed Solution', and 'Command to Execute' section."),
+            ("system", "You are an expert Sysadmin AI Agent. Your goal is to diagnose server issues based on REAL diagnostic data collected from the server. \n"
+                       "You will receive actual system metrics (CPU, memory, disk, processes, logs, etc.). \n"
+                       "Analyze this data carefully before proposing solutions. \n"
+                       "Your response should include:\n"
+                       "1. **Analysis**: What you found in the diagnostic data\n"
+                       "2. **Root Cause**: What is causing the issue based on evidence\n"
+                       "3. **Proposed Solution**: Recommended action\n"
+                       "4. **Command to Execute**: Specific command (if applicable)\n"
+                       "Be thorough and base your recommendations on the actual data provided."),
             ("user", "Server Info: {server_info}\n\nProblem Description: {problem}\n\nRelevant Past Cases:\n{context}")
         ])
 
         # 3. Invoke LLM
         if self.mock_mode:
+            # Mock response that simulates analysis of diagnostic data
             response = (
-                "**Analysis**: (MOCK) The server seems to be experiencing high load.\n"
-                "**Proposed Solution**: Restart the web service.\n"
-                "**Command to Execute**: systemctl restart nginx"
+                "**Analysis**: Based on the diagnostic data collected:\n"
+                "- CPU Usage: Analyzed current CPU consumption\n"
+                "- Memory Usage: Checked available memory\n"
+                "- Top Processes: Identified resource-intensive processes\n"
+                "- System Logs: Reviewed recent errors\n\n"
+                "**Root Cause**: (MOCK MODE - Real analysis would be based on actual diagnostic data)\n\n"
+                "**Proposed Solution**: After analyzing the system metrics, recommend appropriate action.\n\n"
+                "**Command to Execute**: Specific command based on findings"
             )
         else:
             chain = prompt | self.llm | StrOutputParser()

@@ -13,3 +13,4 @@ asyncssh
 python-dotenv
 alembic
 psycopg2-binary
+ansible-runner

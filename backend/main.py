@@ -3,6 +3,16 @@ from routers import inventory, agent
 
 app = FastAPI(title="Sysadmin AI Agent API")
 
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], # For MVP, allow all. In prod, restrict to frontend/n8n IPs
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 app.include_router(inventory.router, prefix="/api/v1", tags=["inventory"])
 app.include_router(agent.router, prefix="/api/v1", tags=["agent"])
 

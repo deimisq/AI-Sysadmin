@@ -68,6 +68,11 @@ class AIService:
             "context": context_str
         })
         
-        return response
+        # Try to parse as JSON or ensure it's structured
+        # For MVP, we'll trust the LLM follows instructions or wrap it
+        return {
+            "analysis": response,
+            "proposed_command": "Extract command from response if possible or use specific field" 
+        }
 
 ai_service = AIService()

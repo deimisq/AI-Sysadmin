@@ -1,8 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
+from typing import Optional, Dict, Any
 import database, models
 from services.ai_service import ai_service
+from services.ansible_service import ansible_service
 
 router = APIRouter()
 
@@ -11,7 +13,12 @@ class AgentQuery(BaseModel):
     problem_description: str
 
 class AgentResponse(BaseModel):
-    analysis: str
+    analysis: Dict[str, Any]
+
+class ExecuteRequest(BaseModel):
+    server_id: int
+    command: str
+    approved_by: str
 
 def get_db():
     db = database.SessionLocal()
@@ -29,7 +36,45 @@ def diagnose_problem(query: AgentQuery, db: Session = Depends(get_db)):
     server_info = f"Hostname: {server.hostname}, OS: {server.os_info}, IP: {server.ip_address}"
     
     try:
-        response_text = ai_service.analyze_problem(db, query.problem_description, server_info)
-        return AgentResponse(analysis=response_text)
+        response_data = ai_service.analyze_problem(db, query.problem_description, server_info)
+        return AgentResponse(analysis=response_data)
     except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/agent/execute")
+def execute_solution(request: ExecuteRequest, db: Session = Depends(get_db)):
+    server = db.query(models.Server).filter(models.Server.id == request.server_id).first()
+    if not server:
+        raise HTTPException(status_code=404, detail="Server not found")
+
+    # Log the attempt
+    log = models.OperationLog(
+        server_id=server.id,
+        action=request.command,
+        status="pending",
+        approved_by=request.approved_by
+    )
+    db.add(log)
+    db.commit()
+    
+    try:
+        # Execute using Ansible (ad-hoc command for now)
+        # In real world, we'd map commands to playbooks or use shell module carefully
+        stdout, status, rc = ansible_service.run_command(
+            host_pattern=server.ip_address,
+            module="shell",
+            module_args=request.command,
+            inventory={"all": {"hosts": {server.ip_address: {"ansible_user": server.ssh_username}}}}
+        )
+        
+        log.output = stdout
+        log.status = "success" if rc == 0 else "failed"
+        db.commit()
+        
+        return {"status": log.status, "output": stdout}
+        
+    except Exception as e:
+        log.status = "error"
+        log.output = str(e)
+        db.commit()
         raise HTTPException(status_code=500, detail=str(e))

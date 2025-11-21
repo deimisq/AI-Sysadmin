@@ -1,4 +1,22 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+// Dynamically determine API URL based on environment
+const getApiBaseUrl = () => {
+    // If NEXT_PUBLIC_API_URL is set, use it
+    if (process.env.NEXT_PUBLIC_API_URL) {
+        return process.env.NEXT_PUBLIC_API_URL;
+    }
+
+    // Otherwise, use the same host as the frontend but port 8000
+    if (typeof window !== 'undefined') {
+        const protocol = window.location.protocol;
+        const hostname = window.location.hostname;
+        return `${protocol}//${hostname}:8000/api/v1`;
+    }
+
+    // Fallback for SSR
+    return "http://localhost:8000/api/v1";
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 export async function fetchServers() {
     const res = await fetch(`${API_BASE_URL}/servers/`);
@@ -23,6 +41,14 @@ export async function createServer(data: any) {
         body: JSON.stringify(data),
     });
     if (!res.ok) throw new Error("Failed to create server");
+    return res.json();
+}
+
+export async function deleteServer(serverId: number) {
+    const res = await fetch(`${API_BASE_URL}/servers/${serverId}`, {
+        method: "DELETE",
+    });
+    if (!res.ok) throw new Error("Failed to delete server");
     return res.json();
 }
 

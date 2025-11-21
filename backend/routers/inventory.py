@@ -40,6 +40,15 @@ def read_servers(skip: int = 0, limit: int = 100, db: Session = Depends(get_db))
     servers = db.query(models.Server).offset(skip).limit(limit).all()
     return servers
 
+@router.delete("/servers/{server_id}")
+def delete_server(server_id: int, db: Session = Depends(get_db)):
+    server = db.query(models.Server).filter(models.Server.id == server_id).first()
+    if not server:
+        raise HTTPException(status_code=404, detail="Server not found")
+    db.delete(server)
+    db.commit()
+    return {"message": "Server deleted successfully"}
+
 @router.post("/execute/", response_model=schemas.CommandResponse)
 async def execute_command(request: schemas.CommandRequest, db: Session = Depends(get_db)):
     server = db.query(models.Server).filter(models.Server.id == request.server_id).first()

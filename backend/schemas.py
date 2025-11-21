@@ -22,6 +22,7 @@ class ServerBase(BaseModel):
     os_info: Optional[str] = None
     ssh_port: int = 22
     ssh_username: str
+    ssh_password: Optional[str] = None
     ssh_key_path: Optional[str] = None
 
 class ServerCreate(ServerBase):

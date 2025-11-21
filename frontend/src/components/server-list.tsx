@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { fetchServers } from "@/lib/api";
+import { fetchServers, deleteServer } from "@/lib/api";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Terminal, Server as ServerIcon } from "lucide-react";
+import { Terminal, Server as ServerIcon, Trash2 } from "lucide-react";
 
 interface Server {
     id: number;
@@ -37,6 +37,20 @@ export function ServerList({ onDiagnose }: ServerListProps) {
         }
     };
 
+    const handleDelete = async (serverId: number) => {
+        if (!confirm("¿Estás seguro de que deseas eliminar este servidor?")) {
+            return;
+        }
+
+        try {
+            await deleteServer(serverId);
+            await loadServers(); // Refresh the list
+        } catch (error) {
+            console.error(error);
+            alert("Error al eliminar el servidor");
+        }
+    };
+
     if (loading) return <div>Loading servers...</div>;
 
     return (
@@ -55,13 +69,20 @@ export function ServerList({ onDiagnose }: ServerListProps) {
                             {server.os_info} - {server.description}
                         </p>
                     </CardContent>
-                    <CardFooter>
+                    <CardFooter className="flex gap-2">
                         <Button
                             variant="outline"
-                            className="w-full"
+                            className="flex-1"
                             onClick={() => onDiagnose(server)}
                         >
                             <Terminal className="mr-2 h-4 w-4" /> Diagnose
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            size="icon"
+                            onClick={() => handleDelete(server.id)}
+                        >
+                            <Trash2 className="h-4 w-4" />
                         </Button>
                     </CardFooter>
                 </Card>

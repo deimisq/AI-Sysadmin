@@ -27,6 +27,7 @@ class Server(Base):
     # Connection details (stored securely ideally, simplified for MVP)
     ssh_port = Column(Integer, default=22)
     ssh_username = Column(String)
+    ssh_password = Column(String, nullable=True)  # In a real app, this should be encrypted
     # In a real app, this should be encrypted or stored in Vault
     ssh_key_path = Column(String, nullable=True) 
     

@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: sysadmin_agent
+      POSTGRES_PASSWORD: secure_password_dev
+      POSTGRES_DB: sysadmin_agent_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build: ./backend
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://sysadmin_agent:secure_password_dev@db:5432/sysadmin_agent_db
+    depends_on:
+      - db
+
+  # Frontend will be run locally for dev usually, but adding here for completeness if needed
+  # frontend:
+  #   build: ./frontend
+  #   ports:
+  #     - "3000:3000"
+  #   volumes:
+  #     - ./frontend:/app
+  #     - /app/node_modules
+
+volumes:
+  postgres_data:

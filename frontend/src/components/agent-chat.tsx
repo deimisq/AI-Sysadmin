@@ -25,7 +25,11 @@ export function AgentChat({ server, onClose }: AgentChatProps) {
         setExecutionResult(null);
         try {
             const res = await diagnoseProblem(server.id, problem);
-            setAnalysis(res.analysis);
+            // res.analysis is an object with 'analysis' and 'proposed_command' fields
+            const analysisText = typeof res.analysis === 'string'
+                ? res.analysis
+                : res.analysis.analysis || JSON.stringify(res.analysis);
+            setAnalysis(analysisText);
         } catch (error) {
             console.error(error);
             setAnalysis("Error diagnosing problem. Please try again.");
@@ -37,6 +41,7 @@ export function AgentChat({ server, onClose }: AgentChatProps) {
     // Extract command from analysis (simple heuristic for MVP)
     // In a real app, the API should return structured data including the command
     const extractCommand = (text: string) => {
+        if (!text || typeof text !== 'string') return null;
         const match = text.match(/Command to Execute:?\s*`?([^`\n]+)`?/i);
         return match ? match[1].trim() : null;
     };

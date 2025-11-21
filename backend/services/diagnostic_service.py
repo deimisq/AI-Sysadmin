@@ -34,16 +34,11 @@ class DiagnosticService:
             "checks": {}
         }
         
-        # Run diagnostic commands
+        # Optimized diagnostic commands - combined where possible
         checks = [
-            ("cpu_usage", "top -bn1 | grep 'Cpu(s)' | awk '{print $2}'"),
-            ("memory_usage", "free -m | awk 'NR==2{printf \"%.2f\", $3*100/$2 }'"),
-            ("disk_usage", "df -h / | awk 'NR==2{print $5}'"),
-            ("top_processes", "ps aux --sort=-%cpu | head -10"),
-            ("load_average", "uptime | awk -F'load average:' '{print $2}'"),
-            ("running_services", "systemctl list-units --type=service --state=running | head -20"),
-            ("network_connections", "ss -tuln | wc -l"),
-            ("recent_errors", "journalctl -p err -n 20 --no-pager"),
+            ("system_overview", "echo 'CPU:' && top -bn1 | grep 'Cpu(s)' && echo 'Memory:' && free -h | grep Mem && echo 'Disk:' && df -h / | grep -v Filesystem && echo 'Load:' && uptime"),
+            ("top_processes", "ps aux --sort=-%cpu | head -6"),
+            ("recent_errors", "journalctl -p err -n 5 --no-pager 2>/dev/null || echo 'No recent errors'"),
         ]
         
         for check_name, command in checks:
@@ -56,16 +51,18 @@ class DiagnosticService:
                 )
                 diagnostics["checks"][check_name] = {
                     "success": rc == 0,
-                    "output": stdout.strip() if rc == 0 else f"Error: {stdout}",
+                    "output": stdout.strip()[:500] if rc == 0 else f"Error: {stdout[:200]}",  # Limit output size
                     "exit_code": rc
                 }
             except Exception as e:
                 logger.error(f"Failed to run check {check_name}: {e}")
                 diagnostics["checks"][check_name] = {
                     "success": False,
-                    "output": f"Failed to execute: {str(e)}",
+                    "output": f"Timeout or connection error",
                     "exit_code": -1
                 }
+                # Don't fail completely if one check fails
+                continue
         
         return diagnostics
     

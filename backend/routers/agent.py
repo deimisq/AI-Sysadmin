@@ -46,8 +46,26 @@ def diagnose_problem(query: AgentQuery, db: Session = Depends(get_db)):
         ssh_password = decrypt_data(server.ssh_password) if server.ssh_password else None
         ssh_key = decrypt_data(server.ssh_key_path) if server.ssh_key_path else None
         
-        # Collect system information
-        diagnostics = diagnostic_service.gather_system_info(server, ssh_password, ssh_key)
+        # Check if we have credentials
+        if not ssh_password and not ssh_key:
+            return AgentResponse(
+                analysis={
+                    "analysis": "Cannot connect to server: No SSH credentials configured. Please add SSH password or key to the server configuration.",
+                    "proposed_command": None
+                },
+                diagnostics={"error": "No credentials configured"}
+            )
+        
+        # Collect system information with timeout protection
+        try:
+            diagnostics = diagnostic_service.gather_system_info(server, ssh_password, ssh_key)
+        except Exception as diag_error:
+            logger.error(f"Diagnostic gathering failed: {diag_error}")
+            # If diagnostics fail, still try to provide analysis with limited info
+            diagnostics = {
+                "error": f"Failed to gather diagnostics: {str(diag_error)}",
+                "checks": {}
+            }
         
         # Step 2: Build context with real data
         diagnostic_summary = f"""
@@ -56,9 +74,12 @@ OS: {server.os_info}
 
 DIAGNOSTIC RESULTS:
 """
-        for check_name, result in diagnostics.get("checks", {}).items():
-            if result["success"]:
-                diagnostic_summary += f"\n{check_name.upper()}:\n{result['output']}\n"
+        if diagnostics.get("checks"):
+            for check_name, result in diagnostics.get("checks", {}).items():
+                if result.get("success"):
+                    diagnostic_summary += f"\n{check_name.upper()}:\n{result['output']}\n"
+        else:
+            diagnostic_summary += "\nUnable to gather diagnostic data. Analysis will be limited.\n"
         
         # Step 3: Analyze with AI using real data
         server_info = f"Hostname: {server.hostname}, OS: {server.os_info}, IP: {server.ip_address}"
@@ -70,7 +91,7 @@ DIAGNOSTIC RESULTS:
         
     except Exception as e:
         logger.error(f"Error during diagnosis: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"Diagnosis failed: {str(e)}")
 
 @router.post("/agent/execute")
 def execute_solution(request: ExecuteRequest, db: Session = Depends(get_db)):

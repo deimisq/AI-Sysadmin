@@ -73,16 +73,27 @@ class DiagnosticService:
                 "hosts": {
                     server.ip_address: {
                         "ansible_user": server.ssh_username,
+                        "ansible_host_key_checking": False,  # Disable for easier testing
                     }
                 }
             }
         }
         
+        # Validate and add authentication
         if ssh_password:
+            logger.info(f"Using password authentication for {server.ip_address}")
             inventory["all"]["hosts"][server.ip_address]["ansible_password"] = ssh_password
+            
         if ssh_key:
+            # Check if user accidentally entered public key instead of path
+            if ssh_key.startswith("ssh-rsa") or ssh_key.startswith("ssh-ed25519") or "AAAAB3NzaC" in ssh_key:
+                logger.error(f"SSH key appears to be a public key, not a file path: {ssh_key[:50]}...")
+                raise ValueError("SSH key should be a file path (e.g., /home/user/.ssh/id_rsa), not the key content itself")
+            
+            logger.info(f"Using SSH key authentication: {ssh_key}")
             inventory["all"]["hosts"][server.ip_address]["ansible_ssh_private_key_file"] = ssh_key
             
+        logger.debug(f"Inventory built for {server.ip_address}: user={server.ssh_username}, has_password={bool(ssh_password)}, has_key={bool(ssh_key)}")
         return inventory
 
 # Singleton instance

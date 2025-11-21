@@ -32,6 +32,16 @@ def read_clients(skip: int = 0, limit: int = 100, db: Session = Depends(get_db))
 def create_server(server: schemas.ServerCreate, db: Session = Depends(get_db)):
     server_data = server.dict()
     
+    # Validate SSH key path before encrypting
+    if server_data.get('ssh_key_path'):
+        ssh_key = server_data['ssh_key_path']
+        # Check if user entered public key instead of path
+        if ssh_key.startswith("ssh-rsa") or ssh_key.startswith("ssh-ed25519") or "AAAAB3NzaC" in ssh_key:
+            raise HTTPException(
+                status_code=400, 
+                detail="SSH Key Path debe ser una ruta al archivo de clave privada (ej: /home/user/.ssh/id_rsa), no el contenido de la clave pública"
+            )
+    
     # Encrypt sensitive data before storing
     if server_data.get('ssh_password'):
         server_data['ssh_password'] = encrypt_data(server_data['ssh_password'])

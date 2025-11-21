@@ -132,12 +132,15 @@ export function AddServerForm({ onServerAdded }: { onServerAdded: () => void }) 
                         />
                         <div className="col-span-2">
                             <Input
-                                placeholder="SSH Key Path (opcional si hay contraseña)"
+                                placeholder="SSH Private Key Path (opcional si hay contraseña)"
                                 value={formData.ssh_key_path}
                                 onChange={(e) => setFormData({ ...formData, ssh_key_path: e.target.value })}
                             />
                             <p className="text-xs text-muted-foreground mt-1">
-                                Ejemplo: /home/user/.ssh/id_rsa
+                                ⚠️ Ruta al archivo de clave PRIVADA en el servidor backend (ej: /home/user/.ssh/id_rsa)
+                            </p>
+                            <p className="text-xs text-yellow-600 mt-1">
+                                Nota: NO ingresar la clave pública (ssh-rsa...). Debe ser la ruta al archivo de clave privada.
                             </p>
                         </div>
                     </div>

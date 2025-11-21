@@ -5,6 +5,7 @@ from typing import Optional, Dict, Any
 import database, models
 from services.ai_service import ai_service
 from services.ansible_service import ansible_service
+from utils.encryption import decrypt_data
 
 router = APIRouter()
 
@@ -58,13 +59,33 @@ def execute_solution(request: ExecuteRequest, db: Session = Depends(get_db)):
     db.commit()
     
     try:
+        # Decrypt SSH credentials if they exist
+        ssh_password = decrypt_data(server.ssh_password) if server.ssh_password else None
+        ssh_key = decrypt_data(server.ssh_key_path) if server.ssh_key_path else None
+        
+        # Build inventory for Ansible
+        inventory = {
+            "all": {
+                "hosts": {
+                    server.ip_address: {
+                        "ansible_user": server.ssh_username,
+                    }
+                }
+            }
+        }
+        
+        # Add authentication method
+        if ssh_password:
+            inventory["all"]["hosts"][server.ip_address]["ansible_password"] = ssh_password
+        if ssh_key:
+            inventory["all"]["hosts"][server.ip_address]["ansible_ssh_private_key_file"] = ssh_key
+        
         # Execute using Ansible (ad-hoc command for now)
-        # In real world, we'd map commands to playbooks or use shell module carefully
         stdout, status, rc = ansible_service.run_command(
             host_pattern=server.ip_address,
             module="shell",
             module_args=request.command,
-            inventory={"all": {"hosts": {server.ip_address: {"ansible_user": server.ssh_username}}}}
+            inventory=inventory
         )
         
         log.output = stdout

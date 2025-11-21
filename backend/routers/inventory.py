@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List
 import database, models, schemas
 from services.ssh_service import ssh_service
+from utils.encryption import encrypt_data
 
 router = APIRouter()
 
@@ -29,7 +30,15 @@ def read_clients(skip: int = 0, limit: int = 100, db: Session = Depends(get_db))
 
 @router.post("/servers/", response_model=schemas.Server)
 def create_server(server: schemas.ServerCreate, db: Session = Depends(get_db)):
-    db_server = models.Server(**server.dict())
+    server_data = server.dict()
+    
+    # Encrypt sensitive data before storing
+    if server_data.get('ssh_password'):
+        server_data['ssh_password'] = encrypt_data(server_data['ssh_password'])
+    if server_data.get('ssh_key_path'):
+        server_data['ssh_key_path'] = encrypt_data(server_data['ssh_key_path'])
+    
+    db_server = models.Server(**server_data)
     db.add(db_server)
     db.commit()
     db.refresh(db_server)

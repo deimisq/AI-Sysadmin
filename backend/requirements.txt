@@ -15,3 +15,4 @@ alembic
 psycopg2-binary
 ansible-runner
 ansible
+cryptography

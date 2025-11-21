@@ -12,14 +12,21 @@ logger = logging.getLogger(__name__)
 class AIService:
     def __init__(self):
         # In a real scenario, we'd handle missing keys gracefully or fallback to local models
-        self.llm = ChatOpenAI(
-            api_key=settings.OPENAI_API_KEY, 
-            model="gpt-4o", 
-            temperature=0
-        )
-        self.embeddings = OpenAIEmbeddings(api_key=settings.OPENAI_API_KEY)
+        if not settings.OPENAI_API_KEY:
+            logger.warning("OPENAI_API_KEY not set. Using Mock Mode.")
+            self.mock_mode = True
+        else:
+            self.mock_mode = False
+            self.llm = ChatOpenAI(
+                api_key=settings.OPENAI_API_KEY, 
+                model="gpt-4o", 
+                temperature=0
+            )
+            self.embeddings = OpenAIEmbeddings(api_key=settings.OPENAI_API_KEY)
 
     def get_embedding(self, text: str) -> list[float]:
+        if self.mock_mode:
+            return [0.0] * 1536
         return self.embeddings.embed_query(text)
 
     def search_knowledge_base(self, db: Session, query: str, limit: int = 3):
@@ -60,13 +67,20 @@ class AIService:
         ])
 
         # 3. Invoke LLM
-        chain = prompt | self.llm | StrOutputParser()
-        
-        response = chain.invoke({
-            "server_info": server_info,
-            "problem": problem_description,
-            "context": context_str
-        })
+        if self.mock_mode:
+            response = (
+                "**Analysis**: (MOCK) The server seems to be experiencing high load.\n"
+                "**Proposed Solution**: Restart the web service.\n"
+                "**Command to Execute**: systemctl restart nginx"
+            )
+        else:
+            chain = prompt | self.llm | StrOutputParser()
+            
+            response = chain.invoke({
+                "server_info": server_info,
+                "problem": problem_description,
+                "context": context_str
+            })
         
         # Try to parse as JSON or ensure it's structured
         # For MVP, we'll trust the LLM follows instructions or wrap it

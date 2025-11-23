@@ -164,11 +164,44 @@ The `analyze_problem` method is the brain. It:
 The frontend maintains the chat history. The backend is stateless regarding the conversation *flow*, but it receives the context in each request.
 *Note: Currently, the backend analyzes "snapshots" of data. Future improvements could include passing full chat history to the LLM.*
 
-### Security Model
+### Detailed Data Flow (Real-World)
 
--   **SSH Keys**: Stored as file paths. The app reads the key file to connect.
--   **Passwords**: Stored encrypted in DB using `cryptography.fernet`. Decrypted only in memory during connection.
--   **Command Execution**: **NEVER** automatic. The AI proposes, the User must click "Execute".
+1.  **User Interaction**: User sends a command or question in the Chat (Frontend).
+2.  **API Request**: Frontend sends `POST /api/v1/agent/diagnose` to Backend.
+3.  **Credential Retrieval**:
+    -   Backend queries PostgreSQL for the server's details.
+    -   **Decryption**: Encrypted SSH passwords or key paths are decrypted in memory using `cryptography.fernet`.
+4.  **SSH Connection**:
+    -   Backend connects to the target server using `asyncssh` or `openssh-client`.
+    -   *Note*: In Docker, host SSH keys (`~/.ssh`) are mounted into the container to allow identity-based auth.
+5.  **Diagnostic Execution**:
+    -   Backend runs diagnostic commands (`top`, `df`, `logs`) on the target server.
+    -   Output is captured.
+6.  **AI Processing**:
+    -   Diagnostic output + User Query + RAG Context are sent to **Amazon Bedrock** (Claude 3.5 Sonnet).
+7.  **Response Generation**:
+    -   Bedrock returns an analysis and potential commands.
+    -   Backend formats this and sends it to Frontend.
+8.  **User Feedback**:
+    -   User sees the analysis.
+    -   If a command is proposed, User clicks "Execute".
+    -   Backend executes the command and returns the result.
+    -   **Loop**: The result is automatically fed back to the AI for further analysis.
+
+### Security Model & Encryption
+
+-   **Data at Rest**:
+    -   **SSH Passwords**: Stored in the `servers` table, encrypted using **Fernet (AES-128-CBC with HMAC)**.
+    -   **SSH Key Paths**: Also encrypted in the database to prevent path enumeration attacks.
+-   **Encryption Key Management**:
+    -   Uses a salt (`ENCRYPTION_SALT`) and a key derived from `ENCRYPTION_KEY` env var.
+    -   **Critical**: In production, `ENCRYPTION_KEY` must be set in `.env` to a secure random value.
+-   **SSH Identity**:
+    -   The backend container mounts the host's `~/.ssh` directory (read-only) to access private keys.
+    -   This avoids storing actual private key content in the database, leveraging the host's secure key management.
+-   **Command Execution**:
+    -   **Human-in-the-loop**: The AI *cannot* execute commands autonomously. It can only *propose* them.
+    -   User approval is strictly required for every execution action.
 
 ## 🐛 Troubleshooting Common Issues
 

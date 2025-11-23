@@ -28,6 +28,51 @@ def read_clients(skip: int = 0, limit: int = 100, db: Session = Depends(get_db))
     clients = db.query(models.Client).offset(skip).limit(limit).all()
     return clients
 
+# Server Groups endpoints
+@router.post("/groups/", response_model=schemas.ServerGroup)
+def create_group(group: schemas.ServerGroupCreate, db: Session = Depends(get_db)):
+    db_group = models.ServerGroup(**group.dict())
+    db.add(db_group)
+    db.commit()
+    db.refresh(db_group)
+    return db_group
+
+@router.get("/groups/", response_model=List[schemas.ServerGroup])
+def read_groups(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    groups = db.query(models.ServerGroup).offset(skip).limit(limit).all()
+    return groups
+
+@router.put("/groups/{group_id}", response_model=schemas.ServerGroup)
+def update_group(group_id: int, group_update: schemas.ServerGroupUpdate, db: Session = Depends(get_db)):
+    db_group = db.query(models.ServerGroup).filter(models.ServerGroup.id == group_id).first()
+    if not db_group:
+        raise HTTPException(status_code=404, detail="Group not found")
+    
+    update_data = group_update.dict(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(db_group, key, value)
+        
+    db.commit()
+    db.refresh(db_group)
+    return db_group
+
+@router.delete("/groups/{group_id}")
+def delete_group(group_id: int, db: Session = Depends(get_db)):
+    db_group = db.query(models.ServerGroup).filter(models.ServerGroup.id == group_id).first()
+    if not db_group:
+        raise HTTPException(status_code=404, detail="Group not found")
+    
+    # Check if group has servers
+    if db_group.servers:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Cannot delete group with {len(db_group.servers)} servers. Remove servers from group first."
+        )
+    
+    db.delete(db_group)
+    db.commit()
+    return {"message": "Group deleted successfully"}
+
 @router.post("/servers/", response_model=schemas.Server)
 def create_server(server: schemas.ServerCreate, db: Session = Depends(get_db)):
     server_data = server.dict()

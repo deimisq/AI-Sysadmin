@@ -4,9 +4,10 @@ import { useState } from "react";
 import { ServerList } from "@/components/server-list";
 import { AddServerForm } from "@/components/add-server-form";
 import { ConversationalChat } from "@/components/conversational-chat";
+import { GroupManager } from "@/components/group-manager";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Server as ServerIcon } from "lucide-react";
+import { PlusCircle, Server as ServerIcon, FolderOpen } from "lucide-react";
 import { useI18n } from "@/lib/i18n-context";
 
 export default function Home() {
@@ -14,6 +15,7 @@ export default function Home() {
     const [selectedServer, setSelectedServer] = useState<any>(null);
     const [editingServer, setEditingServer] = useState<any>(null);
     const [showAddForm, setShowAddForm] = useState(false);
+    const [showGroupManager, setShowGroupManager] = useState(false);
     const [refreshKey, setRefreshKey] = useState(0);
 
     const handleServerAdded = () => {
@@ -42,6 +44,11 @@ export default function Home() {
         }
     };
 
+    const handleGroupManagerClose = () => {
+        setShowGroupManager(false);
+        setRefreshKey(prev => prev + 1); // Refresh server list
+    };
+
     return (
         <main className="min-h-screen bg-background p-8">
             <div className="max-w-6xl mx-auto space-y-8">
@@ -59,6 +66,10 @@ export default function Home() {
                     </div>
                     <div className="flex gap-2">
                         <LanguageSwitcher />
+                        <Button variant="outline" onClick={() => setShowGroupManager(true)}>
+                            <FolderOpen className="mr-2 h-4 w-4" />
+                            Manage Groups
+                        </Button>
                         <Button onClick={toggleAddForm}>
                             <PlusCircle className="mr-2 h-4 w-4" />
                             {showAddForm ? t.common.cancel : t.header.addServer}
@@ -68,6 +79,12 @@ export default function Home() {
 
                 {/* Main Content */}
                 <div className="grid gap-8">
+                    {showGroupManager && (
+                        <div className="animate-in fade-in slide-in-from-top-4 duration-300">
+                            <GroupManager onClose={handleGroupManagerClose} />
+                        </div>
+                    )}
+
                     {showAddForm && (
                         <div className="animate-in fade-in slide-in-from-top-4 duration-300">
                             <AddServerForm

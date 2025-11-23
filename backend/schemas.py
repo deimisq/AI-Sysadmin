@@ -15,6 +15,25 @@ class Client(ClientBase):
     class Config:
         from_attributes = True
 
+class ServerGroupBase(BaseModel):
+    name: str
+    description: Optional[str] = None
+    color: Optional[str] = None
+
+class ServerGroupCreate(ServerGroupBase):
+    pass
+
+class ServerGroupUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    color: Optional[str] = None
+
+class ServerGroup(ServerGroupBase):
+    id: int
+    created_at: datetime
+    class Config:
+        from_attributes = True
+
 class ServerBase(BaseModel):
     hostname: str
     ip_address: str
@@ -27,6 +46,7 @@ class ServerBase(BaseModel):
 
 class ServerCreate(ServerBase):
     client_id: int
+    group_id: Optional[int] = None
 
 class ServerUpdate(BaseModel):
     hostname: Optional[str] = None
@@ -37,6 +57,7 @@ class ServerUpdate(BaseModel):
     ssh_username: Optional[str] = None
     ssh_password: Optional[str] = None
     ssh_key_path: Optional[str] = None
+    group_id: Optional[int] = None
 
 # Response model - excludes sensitive data
 class Server(BaseModel):
@@ -48,6 +69,7 @@ class Server(BaseModel):
     ssh_port: int
     ssh_username: str
     client_id: int
+    group_id: Optional[int] = None
     created_at: datetime
     # Note: ssh_password and ssh_key_path are intentionally excluded for security
     class Config:

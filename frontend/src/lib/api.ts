@@ -35,6 +35,42 @@ export async function createClient(data: any) {
     return res.json();
 }
 
+// Server Groups
+export async function fetchGroups() {
+    const res = await fetch(`${API_BASE_URL}/groups/`);
+    if (!res.ok) throw new Error("Failed to fetch groups");
+    return res.json();
+}
+
+export async function createGroup(data: any) {
+    const res = await fetch(`${API_BASE_URL}/groups/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error("Failed to create group");
+    return res.json();
+}
+
+export async function updateGroup(groupId: number, data: any) {
+    const res = await fetch(`${API_BASE_URL}/groups/${groupId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error("Failed to update group");
+    return res.json();
+}
+
+export async function deleteGroup(groupId: number) {
+    const res = await fetch(`${API_BASE_URL}/groups/${groupId}`, {
+        method: "DELETE",
+    });
+    if (!res.ok) throw new Error("Failed to delete group");
+    return res.json();
+}
+
+
 export async function createServer(data: any) {
     const res = await fetch(`${API_BASE_URL}/servers/`, {
         method: "POST",

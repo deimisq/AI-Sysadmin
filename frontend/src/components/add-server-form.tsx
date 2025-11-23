@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createServer, createClient, updateServer } from "@/lib/api";
+import { createServer, createClient, updateServer, fetchGroups } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -41,8 +41,14 @@ export function AddServerForm({ onServerAdded, initialData, onCancel }: ServerFo
         ssh_username: "",
         ssh_password: "",
         ssh_key_path: "",
+        group_id: "",
     });
+    const [groups, setGroups] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        loadGroups();
+    }, []);
 
     useEffect(() => {
         if (initialData) {
@@ -54,9 +60,19 @@ export function AddServerForm({ onServerAdded, initialData, onCancel }: ServerFo
                 ssh_username: initialData.ssh_username || "",
                 ssh_password: "", // Don't populate sensitive data
                 ssh_key_path: "", // Don't populate sensitive data
+                group_id: initialData.group_id || "",
             });
         }
     }, [initialData]);
+
+    const loadGroups = async () => {
+        try {
+            const data = await fetchGroups();
+            setGroups(data);
+        } catch (error) {
+            console.error("Failed to load groups", error);
+        }
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -102,6 +118,7 @@ export function AddServerForm({ onServerAdded, initialData, onCancel }: ServerFo
                 ssh_username: "",
                 ssh_password: "",
                 ssh_key_path: "",
+                group_id: "",
             });
 
             onServerAdded();
@@ -143,6 +160,20 @@ export function AddServerForm({ onServerAdded, initialData, onCancel }: ServerFo
                                 <option value="">Select Operating System *</option>
                                 {OS_OPTIONS.map((os) => (
                                     <option key={os} value={os}>{os}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="col-span-2">
+                            <select
+                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                value={formData.group_id}
+                                onChange={(e) => setFormData({ ...formData, group_id: e.target.value })}
+                            >
+                                <option value="">No Group (Optional)</option>
+                                {groups.map((group) => (
+                                    <option key={group.id} value={group.id}>
+                                        {group.name}
+                                    </option>
                                 ))}
                             </select>
                         </div>

@@ -14,6 +14,17 @@ class Client(Base):
     
     servers = relationship("Server", back_populates="client")
 
+class ServerGroup(Base):
+    __tablename__ = "server_groups"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, unique=True, index=True)
+    description = Column(String, nullable=True)
+    color = Column(String, nullable=True)  # For UI display (hex color)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    
+    servers = relationship("Server", back_populates="group")
+
 class Server(Base):
     __tablename__ = "servers"
 
@@ -21,20 +32,21 @@ class Server(Base):
     hostname = Column(String, index=True)
     ip_address = Column(String)
     client_id = Column(Integer, ForeignKey("clients.id"))
+    group_id = Column(Integer, ForeignKey("server_groups.id"), nullable=True)
     description = Column(String, nullable=True)
     os_info = Column(String, nullable=True)
     
     # Connection details (stored securely ideally, simplified for MVP)
     ssh_port = Column(Integer, default=22)
     ssh_username = Column(String)
-    ssh_password = Column(String, nullable=True)  # In a real app, this should be encrypted
-    # In a real app, this should be encrypted or stored in Vault
-    ssh_key_path = Column(String, nullable=True) 
+    ssh_password = Column(String, nullable=True)  # Encrypted
+    ssh_key_path = Column(String, nullable=True)  # Encrypted
     
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
     client = relationship("Client", back_populates="servers")
+    group = relationship("ServerGroup", back_populates="servers")
     credentials = relationship("Credential", back_populates="server")
     logs = relationship("OperationLog", back_populates="server")
 

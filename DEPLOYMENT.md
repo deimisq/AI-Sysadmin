@@ -1,52 +1,52 @@
-# 🚀 Deployment Guide
+# 🚀 Guía de Despliegue
 
-This guide describes how to deploy the **AI Sysadmin Agent** in a production environment.
+Esta guía describe cómo desplegar el **AI Sysadmin Agent** en un entorno de producción.
 
-## 🏗️ Deployment Architecture
+## 🏗️ Arquitectura de Despliegue
 
-For production, we recommend:
--   **Docker Compose** for orchestrating services (Frontend, Backend, DB).
--   **Nginx** as a reverse proxy (SSL termination).
--   **Systemd** or Docker Restart Policies for high availability.
+Para producción recomendamos:
+-   **Docker Compose** para orquestar los servicios (Frontend, Backend, BD).
+-   **Nginx** como proxy inverso (terminación SSL).
+-   **Systemd** o políticas de reinicio de Docker para alta disponibilidad.
 
-## 📋 Prerequisites
+## 📋 Prerrequisitos
 
--   A Linux server (Ubuntu 22.04 recommended).
--   Public IP address.
--   Domain name (optional but recommended for SSL).
--   Docker and Docker Compose installed.
+-   Un servidor Linux (se recomienda Ubuntu 22.04).
+-   Dirección IP pública.
+-   Nombre de dominio (opcional pero recomendado para SSL).
+-   Docker y Docker Compose instalados.
 
-## 🐳 Docker Deployment (Recommended)
+## 🐳 Despliegue con Docker (Recomendado)
 
-### 1. Prepare the Server
+### 1. Preparar el Servidor
 
-Clone the repository to your production server:
+Clona el repositorio en tu servidor de producción:
 ```bash
 git clone https://github.com/sentrait/ai_agent.git
 cd ai_agent
 ```
 
-### 2. Configure Environment Variables
+### 2. Configurar Variables de Entorno
 
-Create the production `.env` file:
+Crea el archivo `.env` de producción:
 ```bash
 cp backend/.env.example backend/.env
 ```
-Edit `backend/.env` with your **production** credentials:
--   Set a strong `SECRET_KEY`.
--   Configure your AI Provider (AWS Bedrock/OpenAI).
--   Set `DATABASE_URL` to point to the docker container service (e.g., `postgresql://user:pass@db:5432/dbname`).
+Edita `backend/.env` con tus credenciales de **producción**:
+-   Establece una `SECRET_KEY` fuerte.
+-   Configura tu proveedor de IA (AWS Bedrock/OpenAI).
+-   Ajusta `DATABASE_URL` para que apunte al servicio del contenedor de la base de datos (p. ej., `postgresql://user:pass@db:5432/dbname`).
 
-Create the frontend environment file:
+Crea el archivo de entorno del frontend:
 ```bash
 cp frontend/.env.local.example frontend/.env.local
 ```
-Edit `frontend/.env.local`:
--   `NEXT_PUBLIC_API_URL`: Set this to your public domain/IP API endpoint (e.g., `https://api.yourdomain.com/api/v1` or `http://YOUR_IP:8000/api/v1`).
+Edita `frontend/.env.local`:
+-   `NEXT_PUBLIC_API_URL`: Establece esto a tu dominio/IP público del endpoint API (p. ej., `https://api.tudominio.com/api/v1` o `http://TU_IP:8000/api/v1`).
 
-### 3. Build and Run with Docker Compose
+### 3. Construir y Ejecutar con Docker Compose
 
-We need to create a production `docker-compose.prod.yml` (or update the existing one). Here is a recommended configuration:
+Necesitamos crear un `docker-compose.prod.yml` de producción (o actualizar el existente). Aquí hay una configuración recomendada:
 
 ```yaml
 version: '3.8'
@@ -87,36 +87,36 @@ volumes:
   postgres_data:
 ```
 
-Run the deployment:
+Ejecuta el despliegue:
 ```bash
 docker compose -f docker-compose.prod.yml up -d --build
 ```
 
-### 4. Database Migrations
+### 4. Migraciones de Base de Datos
 
-Once the containers are running, apply the database migrations:
+Una vez que los contenedores estén en ejecución, aplica las migraciones de la base de datos:
 
 ```bash
 docker compose -f docker-compose.prod.yml exec backend alembic upgrade head
 ```
 
-## 🔒 Security Considerations for Production
+## 🔒 Consideraciones de Seguridad para Producción
 
-1.  **SSL/TLS**: Do NOT expose ports 3000/8000 directly to the internet without SSL. Use Nginx with Let's Encrypt.
-2.  **Firewall**:
-    -   Allow 80/443 (HTTP/HTTPS).
-    -   Allow 22 (SSH) only from trusted IPs.
-    -   Block 5432 (Database) from external access.
-3.  **Secrets**: Never commit `.env` files to Git. Use a secrets manager if possible.
-4.  **SSH Keys**: Ensure the backend container has access to the SSH keys needed to manage your infrastructure. You may need to mount a volume with keys:
+1.  **SSL/TLS**: NO expongas directamente los puertos 3000/8000 a Internet sin SSL. Usa Nginx con Let's Encrypt.
+2.  **Cortafuegos**:
+    -   Permite 80/443 (HTTP/HTTPS).
+    -   Permite 22 (SSH) sólo desde IPs de confianza.
+    -   Bloquea 5432 (base de datos) para acceso externo.
+3.  **Secretos**: Nunca comites archivos `.env` al repositorio. Usa un gestor de secretos si es posible.
+4.  **Claves SSH**: Asegúrate de que el contenedor del backend tenga acceso a las claves SSH necesarias para gestionar tu infraestructura. Puede que necesites montar un volumen con las claves:
     ```yaml
     volumes:
-      - /path/to/host/keys:/root/.ssh:ro
+      - /ruta/en/el/host/keys:/root/.ssh:ro
     ```
 
-## 🔄 Updating the Application
+## 🔄 Actualizar la Aplicación
 
-To update to the latest version:
+Para actualizar a la última versión:
 
 ```bash
 git pull origin main
@@ -125,9 +125,9 @@ docker compose -f docker-compose.prod.yml up -d --build
 docker compose -f docker-compose.prod.yml exec backend alembic upgrade head
 ```
 
-## 📊 Monitoring
+## 📊 Monitorización
 
--   **Logs**: View logs with `docker compose logs -f`.
--   **Health Checks**:
+-   **Registros**: Visualiza logs con `docker compose logs -f`.
+-   **Comprobaciones de salud**:
     -   Backend: `GET /health`
     -   Frontend: `GET /`

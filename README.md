@@ -77,14 +77,12 @@ Un sistema inteligente que diagnostica problemas de servidores Linux, propone so
 └─────────────────────────────────────────────────────────────┘
 ```
 
-## 🚀 Inicio Rápido
+### 🚀 Inicio Rápido
 
 ### Prerrequisitos
 
-- **Python 3.10+**
-- **Node.js 18+** y npm
-- **PostgreSQL 14+** con extensión pgvector
-- **Git**
+-   **Docker Engine** y **Docker Compose**
+-   **Git**
 
 ### 1. Clonar el Repositorio
 
@@ -93,60 +91,38 @@ git clone https://github.com/sentrait/ai_agent.git
 cd ai_agent
 ```
 
-### 2. Configurar Base de Datos
+### 2. Configurar Variables de Entorno
 
 ```bash
-# Iniciar PostgreSQL con Docker
-docker compose up -d db
+# Backend
+cp backend/.env.example backend/.env
+# Editar backend/.env con tus credenciales (AWS/OpenAI, DB, etc.)
 
-# O instalar PostgreSQL manualmente y crear la base de datos
-createdb sysadmin_agent_db
-psql sysadmin_agent_db -c "CREATE EXTENSION vector;"
+# Frontend
+cp frontend/.env.local.example frontend/.env.local
+# Editar frontend/.env.local (normalmente no requiere cambios para local)
 ```
 
-### 3. Configurar Backend
+### 3. Iniciar con Docker Compose
 
 ```bash
-cd backend
-
-# Crear entorno virtual
-python3 -m venv venv
-source venv/bin/activate  # En Windows: venv\Scripts\activate
-
-# Instalar dependencias
-pip install -r requirements.txt
-
-# Configurar variables de entorno
-cp .env.example .env
-# Editar .env con tus credenciales (ver sección de Configuración)
-
-# Ejecutar migraciones
-alembic upgrade head
-
-# Iniciar servidor
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
+# Levantar todo el stack (Frontend, Backend, DB)
+sudo docker compose up --build -d
 ```
 
-### 4. Configurar Frontend
+### 4. Ejecutar Migraciones de Base de Datos
 
 ```bash
-cd frontend
-
-# Instalar dependencias
-npm install
-
-# Configurar variables de entorno
-cp .env.local.example .env.local
-
-# Iniciar servidor de desarrollo
-npm run dev
+# Ejecutar migraciones dentro del contenedor backend
+sudo docker compose exec backend alembic upgrade head
 ```
 
 ### 5. Acceder a la Aplicación
 
-- **Frontend**: http://localhost:3000
-- **Backend API**: http://localhost:8000
-- **Documentación API**: http://localhost:8000/docs
+-   **Frontend**: http://localhost:3000
+-   **Backend API**: http://localhost:8000
+-   **Documentación API**: http://localhost:8000/docs
+
 
 ## ⚙️ Configuración
 

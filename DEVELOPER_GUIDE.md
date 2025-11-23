@@ -101,30 +101,44 @@ ai_agent/
 ## 🚀 Development Workflow
 
 ### 1. Setting up the Environment
+The project is fully Dockerized for development. This ensures your local environment matches production.
 
-Follow the **Quick Start** in `README.md`. Ensure you have the `.env` files configured correctly in both `backend/` and `frontend/`.
+1.  **Clone & Configure**:
+    ```bash
+    git clone ...
+    cp backend/.env.example backend/.env
+    cp frontend/.env.local.example frontend/.env.local
+    ```
+2.  **Start Services**:
+    ```bash
+    docker compose up --build
+    ```
+    This starts:
+    -   Frontend (Hot-reload enabled)
+    -   Backend (Hot-reload enabled)
+    -   Database
+
+3.  **Run Migrations**:
+    ```bash
+    docker compose exec backend alembic upgrade head
+    ```
 
 ### 2. Making Changes to the Backend
+Since the backend volume is mounted (`./backend:/app`), any change you make to the python files will trigger a **hot-reload** inside the container. You don't need to restart Docker.
 
--   **New Endpoint**:
-    1.  Define schemas in `schemas.py`.
-    2.  Create route handler in `routers/`.
-    3.  Register router in `main.py`.
--   **Database Change**:
-    1.  Modify `models.py`.
-    2.  Run `alembic revision --autogenerate -m "description"`.
-    3.  Run `alembic upgrade head`.
--   **AI Logic**:
-    -   Modify `services/ai_service.py`.
-    -   **Prompts**: The system prompts are defined here. Be careful when changing them as they affect the AI's personality and logic.
+-   **New Dependency**: If you add a package to `requirements.txt`, you MUST rebuild the container:
+    ```bash
+    docker compose up -d --build backend
+    ```
 
 ### 3. Making Changes to the Frontend
+Similarly, the frontend volume is mounted. Changes to `src/` will trigger a **Hot Module Replacement (HMR)** in the browser instantly.
 
--   **New Component**: Create in `src/components/`. Use `shadcn/ui` components where possible.
--   **API Call**: Add function to `src/lib/api.ts`.
--   **Translation**:
-    1.  Add keys to `messages/en.json` AND `messages/es.json`.
-    2.  Use `const { t } = useI18n()` to access them.
+-   **New Dependency**: If you run `npm install package`, you should also rebuild or run npm install inside the container:
+    ```bash
+    docker compose exec frontend npm install package
+    ```
+
 
 ### 4. Testing
 

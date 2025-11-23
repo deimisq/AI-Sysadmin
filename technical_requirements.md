@@ -15,18 +15,18 @@ This document outlines the software, hardware, and network requirements for runn
 -   **Windows**: WSL2 (Ubuntu distro)
 
 ## 🛠️ Software Dependencies
+The project is containerized, so the only **strict requirements** on the host machine are:
 
-### Core Runtime
--   **Python**: Version 3.10 or higher
--   **Node.js**: Version 18 LTS or higher
--   **npm**: Version 9 or higher
 -   **Docker Engine**: Version 24.0+
 -   **Docker Compose**: Version 2.0+
+-   **Git**
 
-### Database
--   **PostgreSQL**: Version 14 or higher
--   **pgvector Extension**: Required for vector similarity search.
-    -   *Note: The provided `docker-compose.yml` automatically sets up a Postgres instance with pgvector.*
+*Note: Python and Node.js are NOT required on the host machine to run the application, as they run inside containers. However, having them installed is useful for IDE autocompletion.*
+
+### Containerized Environment (Managed by Docker)
+-   **Backend**: Python 3.11-slim
+-   **Frontend**: Node.js 18-alpine
+-   **Database**: PostgreSQL 16 with pgvector
 
 ### AI & Cloud Services
 You must have access to **ONE** of the following LLM providers:

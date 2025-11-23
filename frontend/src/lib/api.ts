@@ -54,11 +54,11 @@ export async function deleteServer(serverId: number) {
 }
 
 
-export async function diagnoseProblem(serverId: number, problem: string) {
+export async function diagnoseProblem(serverId: number, problem: string, language: string = "en") {
     const res = await fetch(`${API_BASE_URL}/agent/diagnose`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ server_id: serverId, problem_description: problem }),
+        body: JSON.stringify({ server_id: serverId, problem_description: problem, language }),
     });
     if (!res.ok) throw new Error("Failed to diagnose problem");
     return res.json();

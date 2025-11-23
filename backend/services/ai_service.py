@@ -119,10 +119,11 @@ class AIService:
         logger.warning("Could not extract command from AI response")
         return None
 
-    def analyze_problem(self, db: Session, problem_description: str, server_info: str) -> str:
+    def analyze_problem(self, db: Session, problem_description: str, server_info: str, language: str = "en") -> str:
         """
         Analyzes a problem using RAG and proposes a solution.
         Now with improved conversational analysis and problem verification.
+        Supports multiple languages.
         """
         # 1. Retrieve relevant context
         similar_cases = self.search_knowledge_base(db, problem_description)
@@ -134,9 +135,16 @@ class AIService:
         if not context_str:
             context_str = "No previous similar cases found."
 
+        # Language-specific instructions
+        language_instruction = ""
+        if language == "es":
+            language_instruction = "\n\n**IMPORTANTE: Debes responder COMPLETAMENTE en ESPAÑOL. Toda tu respuesta, análisis, recomendaciones y explicaciones deben estar en español.**"
+        else:
+            language_instruction = "\n\n**IMPORTANT: You must respond COMPLETELY in ENGLISH. All your response, analysis, recommendations and explanations must be in English.**"
+
         # 2. Construct Enhanced Prompt for conversational analysis
-        prompt = ChatPromptTemplate.from_messages([
-            ("system", """You are an expert Sysadmin AI Agent with deep Linux expertise. Your role is to have an INTELLIGENT CONVERSATION with the user about their server issues.
+        # Build system message with language instruction
+        system_message = """You are an expert Sysadmin AI Agent with deep Linux expertise. Your role is to have an INTELLIGENT CONVERSATION with the user about their server issues.
 
 CRITICAL INSTRUCTIONS:
 1. **ANALYZE THE ACTUAL DATA**: You will receive REAL diagnostic data from the server (CPU usage, memory, processes, logs, etc.). READ IT CAREFULLY.
@@ -179,7 +187,10 @@ CRITICAL INSTRUCTIONS:
    your-command-here
    ```
 
-Remember: You're having a conversation, not just executing commands. Be helpful, thorough, and honest about what the data shows."""),
+Remember: You're having a conversation, not just executing commands. Be helpful, thorough, and honest about what the data shows.""" + language_instruction
+
+        prompt = ChatPromptTemplate.from_messages([
+            ("system", system_message),
             ("user", """Server Information:
 {server_info}
 

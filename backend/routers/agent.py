@@ -15,6 +15,7 @@ router = APIRouter()
 class AgentQuery(BaseModel):
     server_id: int
     problem_description: str
+    language: Optional[str] = "en"  # "en" or "es"
 
 class AgentResponse(BaseModel):
     analysis: Dict[str, Any]
@@ -100,7 +101,7 @@ DIAGNOSTIC RESULTS:
         server_info = f"Hostname: {server.hostname}, OS: {server.os_info}, IP: {server.ip_address}"
         full_context = f"{server_info}\n\n{diagnostic_summary}"
         
-        response_data = ai_service.analyze_problem(db, full_context, server_info)
+        response_data = ai_service.analyze_problem(db, full_context, server_info, query.language)
         
         return AgentResponse(analysis=response_data, diagnostics=diagnostics if not has_embedded_results else None)
         

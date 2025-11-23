@@ -1,0 +1,69 @@
+{
+    "common": {
+        "loading": "Loading...",
+        "error": "Error",
+        "success": "Success",
+        "cancel": "Cancel",
+        "save": "Save",
+        "delete": "Delete",
+        "edit": "Edit",
+        "close": "Close",
+        "confirm": "Confirm"
+    },
+    "header": {
+        "title": "Sysadmin AI Agent",
+        "subtitle": "Manage your infrastructure with intelligent assistance",
+        "addServer": "Add Server"
+    },
+    "serverList": {
+        "noServers": "No servers found. Add one to get started.",
+        "diagnose": "Diagnose",
+        "deleteConfirm": "Are you sure you want to delete this server?",
+        "deleteError": "Error deleting server"
+    },
+    "addServer": {
+        "title": "Add New Server",
+        "hostname": "Hostname",
+        "hostnamePlaceholder": "e.g., web-server-01",
+        "ipAddress": "IP Address",
+        "ipPlaceholder": "e.g., 192.168.1.100",
+        "description": "Description",
+        "descriptionPlaceholder": "Optional description",
+        "osInfo": "OS Information",
+        "osPlaceholder": "e.g., Ubuntu 22.04",
+        "sshPort": "SSH Port",
+        "sshUsername": "SSH Username",
+        "sshPassword": "SSH Password (Optional)",
+        "sshKeyPath": "SSH Private Key Path (Optional)",
+        "sshKeyPlaceholder": "e.g., /home/user/.ssh/id_rsa",
+        "client": "Client",
+        "selectClient": "Select a client",
+        "createClient": "Or create new client",
+        "clientName": "Client Name",
+        "clientDescription": "Client Description (Optional)",
+        "submit": "Add Server",
+        "authNote": "Provide either SSH password or private key path (not both)",
+        "errors": {
+            "required": "This field is required",
+            "invalidKey": "SSH Key Path must be a path to private key file, not the public key content"
+        }
+    },
+    "chat": {
+        "title": "AI Chat",
+        "systemMessage": "🤖 **AI Sysadmin Assistant** connected to **{hostname}**\n\nI'm here to help you diagnose and resolve server issues. I'll analyze real diagnostic data and have a conversation with you about what I find.\n\n**What can I help you with today?**",
+        "inputPlaceholder": "Describe the issue or ask a question...",
+        "thinking": "AI is thinking...",
+        "tip": "💡 Tip: Be specific about the issue. The AI will analyze real server data and have a conversation with you.",
+        "proposedCommand": "⚙️ Proposed Command:",
+        "executeCommand": "Execute Command",
+        "executionResult": "Execution Result (Exit Code: {code})",
+        "executionSuccess": "✅ Command executed successfully!",
+        "executionError": "❌ Failed to execute the command. Please check the server connection and try again.",
+        "analyzeError": "❌ Error analyzing the problem. Please try again."
+    },
+    "language": {
+        "switch": "Switch Language",
+        "english": "English",
+        "spanish": "Español"
+    }
+}

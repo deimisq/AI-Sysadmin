@@ -1,0 +1,69 @@
+{
+    "common": {
+        "loading": "Cargando...",
+        "error": "Error",
+        "success": "Éxito",
+        "cancel": "Cancelar",
+        "save": "Guardar",
+        "delete": "Eliminar",
+        "edit": "Editar",
+        "close": "Cerrar",
+        "confirm": "Confirmar"
+    },
+    "header": {
+        "title": "Agente IA Sysadmin",
+        "subtitle": "Gestiona tu infraestructura con asistencia inteligente",
+        "addServer": "Agregar Servidor"
+    },
+    "serverList": {
+        "noServers": "No se encontraron servidores. Agrega uno para comenzar.",
+        "diagnose": "Diagnosticar",
+        "deleteConfirm": "¿Estás seguro de que deseas eliminar este servidor?",
+        "deleteError": "Error al eliminar el servidor"
+    },
+    "addServer": {
+        "title": "Agregar Nuevo Servidor",
+        "hostname": "Nombre del Host",
+        "hostnamePlaceholder": "ej., servidor-web-01",
+        "ipAddress": "Dirección IP",
+        "ipPlaceholder": "ej., 192.168.1.100",
+        "description": "Descripción",
+        "descriptionPlaceholder": "Descripción opcional",
+        "osInfo": "Información del SO",
+        "osPlaceholder": "ej., Ubuntu 22.04",
+        "sshPort": "Puerto SSH",
+        "sshUsername": "Usuario SSH",
+        "sshPassword": "Contraseña SSH (Opcional)",
+        "sshKeyPath": "Ruta de Clave Privada SSH (Opcional)",
+        "sshKeyPlaceholder": "ej., /home/usuario/.ssh/id_rsa",
+        "client": "Cliente",
+        "selectClient": "Selecciona un cliente",
+        "createClient": "O crear nuevo cliente",
+        "clientName": "Nombre del Cliente",
+        "clientDescription": "Descripción del Cliente (Opcional)",
+        "submit": "Agregar Servidor",
+        "authNote": "Proporciona contraseña SSH o ruta de clave privada (no ambas)",
+        "errors": {
+            "required": "Este campo es requerido",
+            "invalidKey": "La ruta de clave SSH debe ser una ruta al archivo de clave privada, no el contenido de la clave pública"
+        }
+    },
+    "chat": {
+        "title": "Chat IA",
+        "systemMessage": "🤖 **Asistente IA Sysadmin** conectado a **{hostname}**\n\nEstoy aquí para ayudarte a diagnosticar y resolver problemas del servidor. Analizaré datos diagnósticos reales y tendré una conversación contigo sobre lo que encuentre.\n\n**¿En qué puedo ayudarte hoy?**",
+        "inputPlaceholder": "Describe el problema o haz una pregunta...",
+        "thinking": "La IA está pensando...",
+        "tip": "💡 Consejo: Sé específico sobre el problema. La IA analizará datos reales del servidor y conversará contigo.",
+        "proposedCommand": "⚙️ Comando Propuesto:",
+        "executeCommand": "Ejecutar Comando",
+        "executionResult": "Resultado de Ejecución (Código de Salida: {code})",
+        "executionSuccess": "✅ ¡Comando ejecutado exitosamente!",
+        "executionError": "❌ Error al ejecutar el comando. Por favor verifica la conexión al servidor e intenta nuevamente.",
+        "analyzeError": "❌ Error al analizar el problema. Por favor intenta nuevamente."
+    },
+    "language": {
+        "switch": "Cambiar Idioma",
+        "english": "English",
+        "spanish": "Español"
+    }
+}

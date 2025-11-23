@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Play, Send, X } from "lucide-react";
 import ReactMarkdown from 'react-markdown';
+import { useI18n } from "@/lib/i18n-context";
 
 interface Message {
     role: "user" | "assistant" | "system";
@@ -21,10 +22,11 @@ interface ConversationalChatProps {
 }
 
 export function ConversationalChat({ server, onClose }: ConversationalChatProps) {
+    const { t, locale } = useI18n();
     const [messages, setMessages] = useState<Message[]>([
         {
             role: "system",
-            content: `🤖 **AI Sysadmin Assistant** connected to **${server.hostname}**\n\nI'm here to help you diagnose and resolve server issues. I'll analyze real diagnostic data and have a conversation with you about what I find.\n\n**What can I help you with today?**`
+            content: t.chat.systemMessage.replace('{hostname}', server.hostname)
         }
     ]);
     const [input, setInput] = useState("");
@@ -39,7 +41,7 @@ export function ConversationalChat({ server, onClose }: ConversationalChatProps)
         setLoading(true);
 
         try {
-            const res = await diagnoseProblem(server.id, input);
+            const res = await diagnoseProblem(server.id, input, locale);
             const analysisText = typeof res.analysis === 'string'
                 ? res.analysis
                 : res.analysis.analysis || JSON.stringify(res.analysis);
@@ -59,7 +61,7 @@ export function ConversationalChat({ server, onClose }: ConversationalChatProps)
             console.error(error);
             setMessages(prev => [...prev, {
                 role: "assistant",
-                content: "❌ Error analyzing the problem. Please try again."
+                content: t.chat.analyzeError
             }]);
         } finally {
             setLoading(false);
@@ -89,7 +91,7 @@ export function ConversationalChat({ server, onClose }: ConversationalChatProps)
             }]);
 
             // Get AI analysis of the results
-            const analysisRes = await diagnoseProblem(server.id, resultSummary);
+            const analysisRes = await diagnoseProblem(server.id, resultSummary, locale);
             const analysisText = typeof analysisRes.analysis === 'string'
                 ? analysisRes.analysis
                 : analysisRes.analysis.analysis || JSON.stringify(analysisRes.analysis);
@@ -108,7 +110,7 @@ export function ConversationalChat({ server, onClose }: ConversationalChatProps)
             console.error(error);
             setMessages(prev => [...prev, {
                 role: "assistant",
-                content: "❌ Failed to execute the command. Please check the server connection and try again."
+                content: t.chat.executionError
             }]);
         } finally {
             setLoading(false);
@@ -120,7 +122,7 @@ export function ConversationalChat({ server, onClose }: ConversationalChatProps)
             <CardHeader className="flex flex-row items-center justify-between border-b">
                 <CardTitle className="flex items-center gap-2">
                     <span className="text-2xl">💬</span>
-                    <span>AI Chat: {server.hostname}</span>
+                    <span>{t.chat.title}: {server.hostname}</span>
                 </CardTitle>
                 <Button variant="ghost" size="sm" onClick={onClose}>
                     <X className="h-4 w-4" />
@@ -147,7 +149,7 @@ export function ConversationalChat({ server, onClose }: ConversationalChatProps)
 
                             {message.proposedCommand && !message.executionResult && (
                                 <div className="mt-4 border border-yellow-500 bg-yellow-500/10 p-3 rounded">
-                                    <p className="text-xs font-bold text-yellow-600 mb-2">⚙️ Proposed Command:</p>
+                                    <p className="text-xs font-bold text-yellow-600 mb-2">{t.chat.proposedCommand}</p>
                                     <code className="block bg-black text-white p-2 rounded text-xs mb-3 overflow-x-auto">
                                         {message.proposedCommand}
                                     </code>
@@ -157,7 +159,7 @@ export function ConversationalChat({ server, onClose }: ConversationalChatProps)
                                         size="sm"
                                         className="w-full"
                                     >
-                                        <Play className="mr-2 h-3 w-3" /> Execute Command
+                                        <Play className="mr-2 h-3 w-3" /> {t.chat.executeCommand}
                                     </Button>
                                 </div>
                             )}
@@ -184,7 +186,7 @@ export function ConversationalChat({ server, onClose }: ConversationalChatProps)
                     <div className="flex justify-start">
                         <div className="bg-muted rounded-lg p-4 flex items-center gap-2">
                             <Loader2 className="h-4 w-4 animate-spin" />
-                            <span className="text-sm text-muted-foreground">AI is thinking...</span>
+                            <span className="text-sm text-muted-foreground">{t.chat.thinking}</span>
                         </div>
                     </div>
                 )}
@@ -195,7 +197,7 @@ export function ConversationalChat({ server, onClose }: ConversationalChatProps)
                     <Input
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
-                        placeholder="Describe the issue or ask a question..."
+                        placeholder={t.chat.inputPlaceholder}
                         onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
                         disabled={loading}
                     />
@@ -204,7 +206,7 @@ export function ConversationalChat({ server, onClose }: ConversationalChatProps)
                     </Button>
                 </div>
                 <p className="text-xs text-muted-foreground mt-2">
-                    💡 Tip: Be specific about the issue. The AI will analyze real server data and have a conversation with you.
+                    {t.chat.tip}
                 </p>
             </div>
         </Card>

@@ -1,55 +1,102 @@
-# Requerimientos Técnicos - AI Sysadmin Agent
+# 📋 Technical Requirements
 
-Este documento detalla los requisitos de software, red y configuración necesarios para desplegar y probar el sistema "AI Sysadmin Agent".
+This document outlines the software, hardware, and network requirements for running the **AI Sysadmin Agent**.
 
-## 1. Requisitos de Software (Servidor)
+## 🖥️ System Requirements
 
-El servidor donde se despliegue el agente (Backend + Base de Datos) debe contar con:
+### Hardware (Minimum)
+-   **CPU**: 2 vCPUs
+-   **RAM**: 4 GB (8 GB recommended for better performance with Docker)
+-   **Disk**: 20 GB SSD
 
-- **Sistema Operativo**: Linux (Ubuntu 22.04/24.04 recomendado).
-- **Docker Engine**: Versión 24.0+ (para contenedores).
-- **Docker Compose**: Plugin V2 (para orquestación).
-- **Python**: Versión 3.10 o superior (para scripts de mantenimiento).
-- **Git**: Para clonar el repositorio.
+### Operating System
+-   **Linux**: Ubuntu 20.04/22.04 LTS (Recommended)
+-   **macOS**: Sonoma or later
+-   **Windows**: WSL2 (Ubuntu distro)
 
-### Para Desarrollo Frontend (Local o Servidor de Build)
-- **Node.js**: Versión 18.17 o superior.
-- **npm**: Incluido con Node.js.
+## 🛠️ Software Dependencies
 
-## 2. Requisitos de Red (Firewall / Security Groups)
+### Core Runtime
+-   **Python**: Version 3.10 or higher
+-   **Node.js**: Version 18 LTS or higher
+-   **npm**: Version 9 or higher
+-   **Docker Engine**: Version 24.0+
+-   **Docker Compose**: Version 2.0+
 
-Para permitir el acceso y las pruebas online, se deben abrir los siguientes puertos en el firewall del servidor (AWS Security Groups, UFW, etc.):
+### Database
+-   **PostgreSQL**: Version 14 or higher
+-   **pgvector Extension**: Required for vector similarity search.
+    -   *Note: The provided `docker-compose.yml` automatically sets up a Postgres instance with pgvector.*
 
-| Puerto | Protocolo | Servicio | Descripción | Acceso Recomendado |
-| :--- | :--- | :--- | :--- | :--- |
-| **22** | TCP | SSH | Acceso administrativo al servidor. | Restringido a IPs de admins. |
-| **8000** | TCP | Backend API | API REST del Agente (FastAPI). | Público (o restringido a Frontend/n8n). |
-| **3000** | TCP | Frontend | Interfaz de Usuario (Next.js). | Público (Usuarios finales). |
-| **5432** | TCP | PostgreSQL | Base de Datos. | **Privado** (localhost/Docker network). Solo abrir si se requiere acceso externo para debug. |
+### AI & Cloud Services
+You must have access to **ONE** of the following LLM providers:
 
-> [!IMPORTANT]
-> Si se usa **n8n** en la nube, el puerto **8000** debe ser accesible desde las IPs de n8n para que los webhooks funcionen.
+1.  **Amazon Bedrock (Recommended)**
+    -   **AWS Account** with Bedrock access enabled.
+    -   **Models Enabled**:
+        -   `anthropic.claude-3-5-sonnet-20240620-v1:0` (Reasoning)
+        -   `amazon.titan-embed-text-v1` (Embeddings)
+    -   **Credentials**: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` (or IAM Role), and `AWS_REGION`.
 
-## 3. Variables de Entorno
+2.  **Google Gemini**
+    -   **Google Cloud Project** with Vertex AI or Gemini API enabled.
+    -   **API Key**.
 
-El sistema requiere las siguientes variables de entorno configuradas (crear archivo `.env` en `backend/`):
+3.  **OpenAI**
+    -   **API Key** with access to GPT-4o.
 
-```bash
-# Base de Datos
-POSTGRES_USER=sysadmin_agent
-POSTGRES_PASSWORD=secure_password_dev
-POSTGRES_DB=sysadmin_agent_db
-DATABASE_URL=postgresql://sysadmin_agent:secure_password_dev@localhost:5432/sysadmin_agent_db
+## 🌐 Network Requirements
 
-# OpenAI (Inteligencia del Agente)
-OPENAI_API_KEY=sk-... (Tu llave de API)
+### Inbound
+-   **Port 3000**: Frontend Web UI (HTTP).
+-   **Port 8000**: Backend API (HTTP).
+-   **Port 22**: SSH (for server management access).
 
-# Seguridad (Opcional para MVP, crítico para Prod)
-SECRET_KEY=super-secret-key-for-jwt
-ALLOWED_ORIGINS=*
+### Outbound
+The server running the agent needs outbound access to:
+-   **Target Servers**: Port 22 (SSH) to manage them.
+-   **LLM APIs**:
+    -   AWS Bedrock endpoints (`bedrock-runtime.us-east-1.amazonaws.com`)
+    -   Or OpenAI/Google APIs via HTTPS (443).
+-   **Package Repositories**: PyPI, npm registry, Docker Hub.
+
+## 📦 Python Dependencies (Backend)
+*See `backend/requirements.txt` for exact versions.*
+
+-   `fastapi`, `uvicorn`: Web server
+-   `sqlalchemy`, `alembic`, `psycopg2-binary`, `pgvector`: Database
+-   `langchain`, `langchain-aws`, `langchain-google-genai`, `langchain-openai`: AI Framework
+-   `boto3`: AWS SDK
+-   `asyncssh`, `paramiko`: SSH connectivity
+-   `cryptography`: Security
+-   `pydantic`, `pydantic-settings`: Validation
+
+## 📦 Node.js Dependencies (Frontend)
+*See `frontend/package.json` for exact versions.*
+
+-   `next`, `react`, `react-dom`: Core framework
+-   `tailwindcss`, `postcss`, `autoprefixer`: Styling
+-   `lucide-react`: Icons
+-   `shadcn/ui` (@radix-ui/*): UI Components
+-   `react-markdown`: Markdown rendering
+-   `next-intl`: Internationalization
+
+## 🔑 Environment Variables
+
+### Backend (`backend/.env`)
+```ini
+DATABASE_URL=postgresql://user:pass@localhost:5432/dbname
+SECRET_KEY=your_secret_key
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+
+# AI Provider Configuration
+LLM_PROVIDER=bedrock
+AWS_BEARER_TOKEN_BEDROCK=...
+AWS_REGION=us-east-1
 ```
 
-## 4. Arquitectura de Despliegue Sugerida
-
-1.  **Backend + DB**: Corren en el servidor Linux vía Docker Compose.
-2.  **Frontend**: Puede correr en el mismo servidor (vía `npm start` o Docker) o desplegarse en Vercel/Netlify apuntando a la IP del servidor Backend.
+### Frontend (`frontend/.env.local`)
+```ini
+NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
+```

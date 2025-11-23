@@ -8,6 +8,7 @@ pydantic-settings
 langchain
 langchain-community
 langchain-openai
+langchain-google-genai
 paramiko
 asyncssh
 python-dotenv
@@ -16,3 +17,5 @@ psycopg2-binary
 ansible-runner
 ansible
 cryptography
+boto3
+langchain-aws

@@ -15,6 +15,7 @@ interface AgentChatProps {
 export function AgentChat({ server, onClose }: AgentChatProps) {
     const [problem, setProblem] = useState("");
     const [analysis, setAnalysis] = useState<string | null>(null);
+    const [proposedCommand, setProposedCommand] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [executionResult, setExecutionResult] = useState<any>(null);
 
@@ -22,6 +23,7 @@ export function AgentChat({ server, onClose }: AgentChatProps) {
         if (!problem) return;
         setLoading(true);
         setAnalysis(null);
+        setProposedCommand(null);
         setExecutionResult(null);
         try {
             const res = await diagnoseProblem(server.id, problem);
@@ -30,6 +32,12 @@ export function AgentChat({ server, onClose }: AgentChatProps) {
                 ? res.analysis
                 : res.analysis.analysis || JSON.stringify(res.analysis);
             setAnalysis(analysisText);
+
+            // Use the proposed_command from the backend instead of extracting it
+            const command = typeof res.analysis === 'object' && res.analysis.proposed_command
+                ? res.analysis.proposed_command
+                : null;
+            setProposedCommand(command);
         } catch (error) {
             console.error(error);
             setAnalysis("Error diagnosing problem. Please try again.");
@@ -38,21 +46,11 @@ export function AgentChat({ server, onClose }: AgentChatProps) {
         }
     };
 
-    // Extract command from analysis (simple heuristic for MVP)
-    // In a real app, the API should return structured data including the command
-    const extractCommand = (text: string) => {
-        if (!text || typeof text !== 'string') return null;
-        const match = text.match(/Command to Execute:?\s*`?([^`\n]+)`?/i);
-        return match ? match[1].trim() : null;
-    };
-
-    const suggestedCommand = analysis ? extractCommand(analysis) : null;
-
     const handleExecute = async () => {
-        if (!suggestedCommand) return;
+        if (!proposedCommand) return;
         setLoading(true);
         try {
-            const res = await executeCommand(server.id, suggestedCommand);
+            const res = await executeCommand(server.id, proposedCommand);
             setExecutionResult(res);
         } catch (error) {
             console.error(error);
@@ -89,10 +87,10 @@ export function AgentChat({ server, onClose }: AgentChatProps) {
                     </div>
                 )}
 
-                {suggestedCommand && !executionResult && (
+                {proposedCommand && !executionResult && (
                     <div className="border border-yellow-500 bg-yellow-500/10 p-4 rounded-md">
                         <p className="text-sm font-bold text-yellow-600 mb-2">Proposed Action:</p>
-                        <code className="block bg-black text-white p-2 rounded mb-4">{suggestedCommand}</code>
+                        <code className="block bg-black text-white p-2 rounded mb-4">{proposedCommand}</code>
                         <Button onClick={handleExecute} disabled={loading} className="w-full">
                             <Play className="mr-2 h-4 w-4" /> Approve & Execute
                         </Button>

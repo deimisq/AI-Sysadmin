@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { ServerList } from "@/components/server-list";
 import { AddServerForm } from "@/components/add-server-form";
-import { AgentChat } from "@/components/agent-chat";
+import { ConversationalChat } from "@/components/conversational-chat";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Server as ServerIcon } from "lucide-react";
 
@@ -48,7 +48,7 @@ export default function Home() {
 
                     {selectedServer ? (
                         <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
-                            <AgentChat
+                            <ConversationalChat
                                 server={selectedServer}
                                 onClose={() => setSelectedServer(null)}
                             />

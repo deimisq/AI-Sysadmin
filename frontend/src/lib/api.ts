@@ -1,15 +1,16 @@
 // Dynamically determine API URL based on environment
 const getApiBaseUrl = () => {
-    // If NEXT_PUBLIC_API_URL is set, use it
-    if (process.env.NEXT_PUBLIC_API_URL) {
-        return process.env.NEXT_PUBLIC_API_URL;
-    }
-
-    // Otherwise, use the same host as the frontend but port 8000
+    // Client-side: use the current hostname with port 8000
     if (typeof window !== 'undefined') {
         const protocol = window.location.protocol;
         const hostname = window.location.hostname;
+        console.log(`[API] Using backend at: ${protocol}//${hostname}:8000/api/v1`);
         return `${protocol}//${hostname}:8000/api/v1`;
+    }
+
+    // Server-side: use environment variable or fallback to localhost
+    if (process.env.NEXT_PUBLIC_API_URL) {
+        return process.env.NEXT_PUBLIC_API_URL;
     }
 
     // Fallback for SSR

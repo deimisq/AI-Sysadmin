@@ -6,8 +6,12 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     
-    # OpenAI / LLM Settings
+    # LLM Settings - supports OpenAI and Google Gemini
+    LLM_PROVIDER: str = "gemini"  # "openai" or "gemini"
     OPENAI_API_KEY: str = ""
+    GOOGLE_API_KEY: str = ""
+    AWS_BEARER_TOKEN_BEDROCK: str = ""
+    AWS_REGION: str = "us-east-1"
     
     class Config:
         env_file = ".env"

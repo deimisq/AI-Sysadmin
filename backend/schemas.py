@@ -51,3 +51,9 @@ class CommandResponse(BaseModel):
     stdout: str
     stderr: str
     exit_code: int
+    # Diagnostic information
+    hostname: Optional[str] = None
+    username: Optional[str] = None
+    command: Optional[str] = None
+    auth_method: Optional[str] = None
+

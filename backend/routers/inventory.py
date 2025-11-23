@@ -74,20 +74,41 @@ async def execute_command(request: schemas.CommandRequest, db: Session = Depends
     if not server:
         raise HTTPException(status_code=404, detail="Server not found")
     
-    # In a real app, we would retrieve the private key from the credentials table
-    # For now, we assume the ssh_key_path is valid or we use password if stored
+    # Decrypt SSH credentials before using them
+    from utils.encryption import decrypt_data
     
-    # Check for credentials
-    credential = db.query(models.Credential).filter(models.Credential.server_id == server.id).first()
+    ssh_key_path = None
     password = None
-    # Decrypt password if available (logic to be added with security utils)
+    auth_method = "None"
+    
+    # Decrypt SSH key path if available
+    if server.ssh_key_path:
+        ssh_key_path = decrypt_data(server.ssh_key_path)
+        auth_method = f"SSH Key: {ssh_key_path}"
+    
+    # Decrypt password if available
+    if server.ssh_password:
+        password = decrypt_data(server.ssh_password)
+        if auth_method == "None":
+            auth_method = "Password"
+        else:
+            auth_method += " + Password"
     
     stdout, stderr, exit_code = await ssh_service.execute_command(
         hostname=server.ip_address,
         username=server.ssh_username,
         command=request.command,
-        private_key=server.ssh_key_path,
+        private_key=ssh_key_path,
+        password=password,
         port=server.ssh_port
     )
     
-    return schemas.CommandResponse(stdout=stdout, stderr=stderr, exit_code=exit_code)
+    return schemas.CommandResponse(
+        stdout=stdout,
+        stderr=stderr,
+        exit_code=exit_code,
+        hostname=server.ip_address,
+        username=server.ssh_username,
+        command=request.command,
+        auth_method=auth_method
+    )

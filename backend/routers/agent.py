@@ -68,26 +68,41 @@ def diagnose_problem(query: AgentQuery, db: Session = Depends(get_db)):
             }
         
         # Step 2: Build context with real data
-        diagnostic_summary = f"""
+        # Check if the user message already contains execution results (follow-up message)
+        has_embedded_results = "Exit Code:" in query.problem_description or "Output:" in query.problem_description or "```" in query.problem_description
+        
+        if has_embedded_results:
+            # User is providing results from a previous command execution
+            # Don't gather new diagnostics, just analyze what they provided
+            diagnostic_summary = f"""
+Server: {server.hostname} ({server.ip_address})
+OS: {server.os_info}
+
+USER PROVIDED DATA:
+{query.problem_description}
+"""
+        else:
+            # First-time diagnosis - gather fresh diagnostic data
+            diagnostic_summary = f"""
 Server: {server.hostname} ({server.ip_address})
 OS: {server.os_info}
 
 DIAGNOSTIC RESULTS:
 """
-        if diagnostics.get("checks"):
-            for check_name, result in diagnostics.get("checks", {}).items():
-                if result.get("success"):
-                    diagnostic_summary += f"\n{check_name.upper()}:\n{result['output']}\n"
-        else:
-            diagnostic_summary += "\nUnable to gather diagnostic data. Analysis will be limited.\n"
+            if diagnostics.get("checks"):
+                for check_name, result in diagnostics.get("checks", {}).items():
+                    if result.get("success"):
+                        diagnostic_summary += f"\n{check_name.upper()}:\n{result['output']}\n"
+            else:
+                diagnostic_summary += "\nUnable to gather diagnostic data. Analysis will be limited.\n"
         
         # Step 3: Analyze with AI using real data
         server_info = f"Hostname: {server.hostname}, OS: {server.os_info}, IP: {server.ip_address}"
-        full_context = f"{server_info}\n\n{diagnostic_summary}\n\nUser Problem: {query.problem_description}"
+        full_context = f"{server_info}\n\n{diagnostic_summary}"
         
         response_data = ai_service.analyze_problem(db, full_context, server_info)
         
-        return AgentResponse(analysis=response_data, diagnostics=diagnostics)
+        return AgentResponse(analysis=response_data, diagnostics=diagnostics if not has_embedded_results else None)
         
     except Exception as e:
         logger.error(f"Error during diagnosis: {e}")

@@ -68,6 +68,36 @@ def delete_server(server_id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"message": "Server deleted successfully"}
 
+@router.put("/servers/{server_id}", response_model=schemas.Server)
+def update_server(server_id: int, server_update: schemas.ServerUpdate, db: Session = Depends(get_db)):
+    db_server = db.query(models.Server).filter(models.Server.id == server_id).first()
+    if not db_server:
+        raise HTTPException(status_code=404, detail="Server not found")
+    
+    update_data = server_update.dict(exclude_unset=True)
+    
+    # Validate SSH key path if provided
+    if update_data.get('ssh_key_path'):
+        ssh_key = update_data['ssh_key_path']
+        if ssh_key.startswith("ssh-rsa") or ssh_key.startswith("ssh-ed25519") or "AAAAB3NzaC" in ssh_key:
+             raise HTTPException(
+                status_code=400, 
+                detail="SSH Key Path debe ser una ruta al archivo de clave privada, no el contenido de la clave pública"
+            )
+            
+    # Encrypt sensitive data if they are being updated
+    if update_data.get('ssh_password'):
+        update_data['ssh_password'] = encrypt_data(update_data['ssh_password'])
+    if update_data.get('ssh_key_path'):
+        update_data['ssh_key_path'] = encrypt_data(update_data['ssh_key_path'])
+        
+    for key, value in update_data.items():
+        setattr(db_server, key, value)
+        
+    db.commit()
+    db.refresh(db_server)
+    return db_server
+
 @router.post("/execute/", response_model=schemas.CommandResponse)
 async def execute_command(request: schemas.CommandRequest, db: Session = Depends(get_db)):
     server = db.query(models.Server).filter(models.Server.id == request.server_id).first()

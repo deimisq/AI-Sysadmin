@@ -16,9 +16,10 @@ interface Server {
 
 interface ServerListProps {
     onDiagnose: (server: Server) => void;
+    onEdit: (server: Server) => void;
 }
 
-export function ServerList({ onDiagnose }: ServerListProps) {
+export function ServerList({ onDiagnose, onEdit }: ServerListProps) {
     const [servers, setServers] = useState<Server[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -76,6 +77,14 @@ export function ServerList({ onDiagnose }: ServerListProps) {
                             onClick={() => onDiagnose(server)}
                         >
                             <Terminal className="mr-2 h-4 w-4" /> Diagnose
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => onEdit(server)}
+                        >
+                            <span className="sr-only">Edit</span>
+                            ✏️
                         </Button>
                         <Button
                             variant="destructive"

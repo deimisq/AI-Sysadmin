@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { createServer, createClient } from "@/lib/api";
+import { useState, useEffect } from "react";
+import { createServer, createClient, updateServer } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,7 +26,13 @@ const OS_OPTIONS = [
     "Other"
 ];
 
-export function AddServerForm({ onServerAdded }: { onServerAdded: () => void }) {
+interface ServerFormProps {
+    onServerAdded: () => void;
+    initialData?: any;
+    onCancel?: () => void;
+}
+
+export function AddServerForm({ onServerAdded, initialData, onCancel }: ServerFormProps) {
     const [formData, setFormData] = useState({
         hostname: "",
         ip_address: "",
@@ -38,32 +44,54 @@ export function AddServerForm({ onServerAdded }: { onServerAdded: () => void }) 
     });
     const [loading, setLoading] = useState(false);
 
+    useEffect(() => {
+        if (initialData) {
+            setFormData({
+                hostname: initialData.hostname || "",
+                ip_address: initialData.ip_address || "",
+                description: initialData.description || "",
+                os_info: initialData.os_info || "",
+                ssh_username: initialData.ssh_username || "",
+                ssh_password: "", // Don't populate sensitive data
+                ssh_key_path: "", // Don't populate sensitive data
+            });
+        }
+    }, [initialData]);
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        // Validate that at least password or SSH key is provided
-        if (!formData.ssh_password && !formData.ssh_key_path) {
+        // Validate that at least password or SSH key is provided (only for new servers)
+        if (!initialData && !formData.ssh_password && !formData.ssh_key_path) {
             alert("Debes proporcionar una contraseña o una clave SSH");
             return;
         }
 
         setLoading(true);
         try {
-            // Create a default client first (or use existing one)
-            let clientId = 1;
-            try {
-                const client = await createClient({
-                    name: "Default Client",
-                    description: "Auto-created client"
-                });
-                clientId = client.id;
-            } catch (error) {
-                // Client might already exist, use default ID 1
-                console.log("Using default client ID");
-            }
+            if (initialData) {
+                // Update existing server
+                // Only send fields that are not empty for sensitive data
+                const updateData: any = { ...formData };
+                if (!updateData.ssh_password) delete updateData.ssh_password;
+                if (!updateData.ssh_key_path) delete updateData.ssh_key_path;
 
-            // Create server with the client ID
-            await createServer({ ...formData, client_id: clientId });
+                await updateServer(initialData.id, updateData);
+            } else {
+                // Create new server
+                let clientId = 1;
+                try {
+                    const client = await createClient({
+                        name: "Default Client",
+                        description: "Auto-created client"
+                    });
+                    clientId = client.id;
+                } catch (error) {
+                    console.log("Using default client ID");
+                }
+
+                await createServer({ ...formData, client_id: clientId });
+            }
 
             // Reset form completely
             setFormData({
@@ -78,8 +106,8 @@ export function AddServerForm({ onServerAdded }: { onServerAdded: () => void }) 
 
             onServerAdded();
         } catch (error) {
-            console.error("Failed to create server", error);
-            alert("Failed to create server. Please try again.");
+            console.error("Failed to save server", error);
+            alert("Failed to save server. Please try again.");
         } finally {
             setLoading(false);
         }
@@ -88,7 +116,7 @@ export function AddServerForm({ onServerAdded }: { onServerAdded: () => void }) 
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Add New Server</CardTitle>
+                <CardTitle>{initialData ? "Edit Server" : "Add New Server"}</CardTitle>
             </CardHeader>
             <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -126,21 +154,18 @@ export function AddServerForm({ onServerAdded }: { onServerAdded: () => void }) 
                         />
                         <Input
                             type="password"
-                            placeholder="SSH Password (opcional si hay SSH Key)"
+                            placeholder={initialData ? "SSH Password (leave blank to keep unchanged)" : "SSH Password (optional if SSH Key)"}
                             value={formData.ssh_password}
                             onChange={(e) => setFormData({ ...formData, ssh_password: e.target.value })}
                         />
                         <div className="col-span-2">
                             <Input
-                                placeholder="SSH Private Key Path (opcional si hay contraseña)"
+                                placeholder={initialData ? "SSH Private Key Path (leave blank to keep unchanged)" : "SSH Private Key Path (optional if Password)"}
                                 value={formData.ssh_key_path}
                                 onChange={(e) => setFormData({ ...formData, ssh_key_path: e.target.value })}
                             />
                             <p className="text-xs text-muted-foreground mt-1">
                                 ⚠️ Ruta al archivo de clave PRIVADA en el servidor backend (ej: /home/user/.ssh/id_rsa)
-                            </p>
-                            <p className="text-xs text-yellow-600 mt-1">
-                                Nota: NO ingresar la clave pública (ssh-rsa...). Debe ser la ruta al archivo de clave privada.
                             </p>
                         </div>
                     </div>
@@ -149,9 +174,16 @@ export function AddServerForm({ onServerAdded }: { onServerAdded: () => void }) 
                         value={formData.description}
                         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     />
-                    <Button type="submit" className="w-full" disabled={loading}>
-                        {loading ? "Adding..." : "Add Server"}
-                    </Button>
+                    <div className="flex gap-2">
+                        <Button type="submit" className="flex-1" disabled={loading}>
+                            {loading ? "Saving..." : (initialData ? "Update Server" : "Add Server")}
+                        </Button>
+                        {initialData && onCancel && (
+                            <Button type="button" variant="outline" onClick={onCancel} disabled={loading}>
+                                Cancel
+                            </Button>
+                        )}
+                    </div>
                 </form>
             </CardContent>
         </Card>

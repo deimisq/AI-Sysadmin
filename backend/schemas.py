@@ -28,6 +28,16 @@ class ServerBase(BaseModel):
 class ServerCreate(ServerBase):
     client_id: int
 
+class ServerUpdate(BaseModel):
+    hostname: Optional[str] = None
+    ip_address: Optional[str] = None
+    description: Optional[str] = None
+    os_info: Optional[str] = None
+    ssh_port: Optional[int] = None
+    ssh_username: Optional[str] = None
+    ssh_password: Optional[str] = None
+    ssh_key_path: Optional[str] = None
+
 # Response model - excludes sensitive data
 class Server(BaseModel):
     id: int
@@ -56,4 +66,3 @@ class CommandResponse(BaseModel):
     username: Optional[str] = None
     command: Optional[str] = None
     auth_method: Optional[str] = None
-

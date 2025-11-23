@@ -45,6 +45,16 @@ export async function createServer(data: any) {
     return res.json();
 }
 
+export async function updateServer(serverId: number, data: any) {
+    const res = await fetch(`${API_BASE_URL}/servers/${serverId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error("Failed to update server");
+    return res.json();
+}
+
 export async function deleteServer(serverId: number) {
     const res = await fetch(`${API_BASE_URL}/servers/${serverId}`, {
         method: "DELETE",

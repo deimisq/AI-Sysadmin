@@ -12,6 +12,7 @@ import { ServerManagement } from "@/components/admin/server-management";
 import { AIParameters } from "@/components/admin/ai-parameters";
 import { BackendParameters } from "@/components/admin/backend-parameters";
 import { FrontendParameters } from "@/components/admin/frontend-parameters";
+import { CommunicationSettings } from "@/components/admin/communication-settings";
 import { SystemStats } from "@/components/admin/system-stats";
 import { AuditLogs } from "@/components/admin/audit-logs";
 
@@ -195,15 +196,7 @@ export default function AdminPage() {
                     </TabsContent>
 
                     <TabsContent value="communication" className="space-y-4">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Communication Settings</CardTitle>
-                                <CardDescription>Configure email and notification settings.</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-muted-foreground">Communication settings interface coming soon (Issue #10).</p>
-                            </CardContent>
-                        </Card>
+                        <CommunicationSettings currentUser={currentUser} />
                     </TabsContent>
                 </Tabs>
             </div>

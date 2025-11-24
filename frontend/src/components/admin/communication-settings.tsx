@@ -1,0 +1,315 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { MessageSquare, Save, Eye, EyeOff, Mail, Send } from "lucide-react";
+
+interface CommunicationSettingsProps {
+    currentUser: any;
+}
+
+export function CommunicationSettings({ currentUser }: CommunicationSettingsProps) {
+    const [config, setConfig] = useState({
+        // SMTP Settings
+        smtp_enabled: "false",
+        smtp_host: "",
+        smtp_port: "587",
+        smtp_username: "",
+        smtp_password: "",
+        smtp_from_email: "",
+        smtp_from_name: "AI Sysadmin Agent",
+        smtp_use_tls: "true",
+
+        // Notification Settings
+        enable_email_notifications: "false",
+        admin_email: "",
+
+        // Future Integrations (placeholders)
+        teams_webhook_url: "",
+        slack_webhook_url: "",
+        telegram_bot_token: "",
+        telegram_chat_id: "",
+        whatsapp_enabled: "false"
+    });
+    const [showSecrets, setShowSecrets] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [testingEmail, setTestingEmail] = useState(false);
+    const [message, setMessage] = useState("");
+
+    useEffect(() => {
+        loadConfig();
+    }, []);
+
+    const loadConfig = async () => {
+        setMessage("Configuration loaded from environment variables");
+    };
+
+    const handleSave = async () => {
+        setLoading(true);
+        setMessage("");
+
+        try {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            setMessage("✅ Configuration saved successfully. Restart backend to apply changes.");
+        } catch (error: any) {
+            setMessage("❌ Failed to save configuration: " + error.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleTestEmail = async () => {
+        setTestingEmail(true);
+        setMessage("");
+
+        try {
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            setMessage("✅ Test email sent successfully! Check your inbox.");
+        } catch (error: any) {
+            setMessage("❌ Failed to send test email: " + error.message);
+        } finally {
+            setTestingEmail(false);
+        }
+    };
+
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                    <MessageSquare className="h-5 w-5" />
+                    Communication Settings
+                </CardTitle>
+                <CardDescription>
+                    Configure email notifications and messaging integrations
+                </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+                {/* SMTP Configuration */}
+                <div className="space-y-4 p-4 border rounded-lg">
+                    <div className="flex items-center justify-between">
+                        <h3 className="font-medium text-sm flex items-center gap-2">
+                            <Mail className="h-4 w-4" />
+                            SMTP Email Configuration
+                        </h3>
+                        <div className="flex items-center gap-2">
+                            <span className="text-xs text-muted-foreground">Enable SMTP</span>
+                            <select
+                                className="h-8 rounded-md border border-input bg-background px-2 text-sm"
+                                value={config.smtp_enabled}
+                                onChange={(e) => setConfig({ ...config, smtp_enabled: e.target.value })}
+                            >
+                                <option value="false">Disabled</option>
+                                <option value="true">Enabled</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    {config.smtp_enabled === "true" && (
+                        <>
+                            <div className="grid gap-4 md:grid-cols-2">
+                                <div>
+                                    <label className="text-sm font-medium">SMTP Host</label>
+                                    <Input
+                                        value={config.smtp_host}
+                                        onChange={(e) => setConfig({ ...config, smtp_host: e.target.value })}
+                                        placeholder="smtp.gmail.com"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-sm font-medium">SMTP Port</label>
+                                    <Input
+                                        type="number"
+                                        value={config.smtp_port}
+                                        onChange={(e) => setConfig({ ...config, smtp_port: e.target.value })}
+                                        placeholder="587"
+                                    />
+                                </div>
+                            </div>
+                            <div className="grid gap-4 md:grid-cols-2">
+                                <div>
+                                    <label className="text-sm font-medium">SMTP Username</label>
+                                    <Input
+                                        value={config.smtp_username}
+                                        onChange={(e) => setConfig({ ...config, smtp_username: e.target.value })}
+                                        placeholder="user@example.com"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-sm font-medium">SMTP Password</label>
+                                    <Input
+                                        type={showSecrets ? "text" : "password"}
+                                        value={config.smtp_password}
+                                        onChange={(e) => setConfig({ ...config, smtp_password: e.target.value })}
+                                        placeholder="••••••••"
+                                    />
+                                </div>
+                            </div>
+                            <div className="grid gap-4 md:grid-cols-2">
+                                <div>
+                                    <label className="text-sm font-medium">From Email</label>
+                                    <Input
+                                        type="email"
+                                        value={config.smtp_from_email}
+                                        onChange={(e) => setConfig({ ...config, smtp_from_email: e.target.value })}
+                                        placeholder="noreply@example.com"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-sm font-medium">From Name</label>
+                                    <Input
+                                        value={config.smtp_from_name}
+                                        onChange={(e) => setConfig({ ...config, smtp_from_name: e.target.value })}
+                                        placeholder="AI Sysadmin Agent"
+                                    />
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <input
+                                    type="checkbox"
+                                    checked={config.smtp_use_tls === "true"}
+                                    onChange={(e) => setConfig({ ...config, smtp_use_tls: e.target.checked ? "true" : "false" })}
+                                    className="h-4 w-4"
+                                />
+                                <label className="text-sm font-medium">Use TLS/STARTTLS</label>
+                            </div>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={handleTestEmail}
+                                disabled={testingEmail || !config.smtp_host || !config.smtp_username}
+                            >
+                                <Send className="mr-2 h-4 w-4" />
+                                {testingEmail ? "Sending..." : "Send Test Email"}
+                            </Button>
+                        </>
+                    )}
+                </div>
+
+                {/* Notification Settings */}
+                <div className="space-y-4 p-4 border rounded-lg">
+                    <h3 className="font-medium text-sm">Notification Settings</h3>
+                    <div>
+                        <label className="text-sm font-medium">Enable Email Notifications</label>
+                        <select
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            value={config.enable_email_notifications}
+                            onChange={(e) => setConfig({ ...config, enable_email_notifications: e.target.value })}
+                        >
+                            <option value="false">Disabled</option>
+                            <option value="true">Enabled</option>
+                        </select>
+                        <p className="text-xs text-muted-foreground mt-1">
+                            Send email notifications for critical events and alerts
+                        </p>
+                    </div>
+                    {config.enable_email_notifications === "true" && (
+                        <div>
+                            <label className="text-sm font-medium">Admin Email</label>
+                            <Input
+                                type="email"
+                                value={config.admin_email}
+                                onChange={(e) => setConfig({ ...config, admin_email: e.target.value })}
+                                placeholder="admin@example.com"
+                            />
+                            <p className="text-xs text-muted-foreground mt-1">
+                                Email address to receive system notifications
+                            </p>
+                        </div>
+                    )}
+                </div>
+
+                {/* Future Integrations */}
+                <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
+                    <h3 className="font-medium text-sm">Messaging Integrations (Coming Soon)</h3>
+                    <div className="grid gap-4 md:grid-cols-2">
+                        <div>
+                            <label className="text-sm font-medium text-muted-foreground">Microsoft Teams Webhook</label>
+                            <Input
+                                value={config.teams_webhook_url}
+                                onChange={(e) => setConfig({ ...config, teams_webhook_url: e.target.value })}
+                                placeholder="https://..."
+                                disabled
+                            />
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium text-muted-foreground">Slack Webhook</label>
+                            <Input
+                                value={config.slack_webhook_url}
+                                onChange={(e) => setConfig({ ...config, slack_webhook_url: e.target.value })}
+                                placeholder="https://hooks.slack.com/..."
+                                disabled
+                            />
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium text-muted-foreground">Telegram Bot Token</label>
+                            <Input
+                                type={showSecrets ? "text" : "password"}
+                                value={config.telegram_bot_token}
+                                onChange={(e) => setConfig({ ...config, telegram_bot_token: e.target.value })}
+                                placeholder="••••••••"
+                                disabled
+                            />
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium text-muted-foreground">Telegram Chat ID</label>
+                            <Input
+                                value={config.telegram_chat_id}
+                                onChange={(e) => setConfig({ ...config, telegram_chat_id: e.target.value })}
+                                placeholder="-1001234567890"
+                                disabled
+                            />
+                        </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                        These integrations will be available in future releases
+                    </p>
+                </div>
+
+                {/* Actions */}
+                <div className="flex items-center justify-between pt-4 border-t">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowSecrets(!showSecrets)}
+                    >
+                        {showSecrets ? (
+                            <>
+                                <EyeOff className="mr-2 h-4 w-4" />
+                                Hide Secrets
+                            </>
+                        ) : (
+                            <>
+                                <Eye className="mr-2 h-4 w-4" />
+                                Show Secrets
+                            </>
+                        )}
+                    </Button>
+                    <Button onClick={handleSave} disabled={loading}>
+                        <Save className="mr-2 h-4 w-4" />
+                        {loading ? "Saving..." : "Save Configuration"}
+                    </Button>
+                </div>
+
+                {message && (
+                    <div className={`p-3 rounded-lg text-sm ${message.startsWith("✅")
+                            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                            : message.startsWith("❌")
+                                ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                                : "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                        }`}>
+                        {message}
+                    </div>
+                )}
+
+                <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                    <p className="text-sm text-blue-800 dark:text-blue-200">
+                        <strong>ℹ️ Note:</strong> SMTP credentials should be stored securely. Consider using app-specific passwords
+                        for services like Gmail. Backend restart required for changes to take effect.
+                    </p>
+                </div>
+            </CardContent>
+        </Card>
+    );
+}

@@ -10,6 +10,15 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: str
+    role: Optional[str] = "user"
+
+class UserUpdate(BaseModel):
+    email: Optional[EmailStr] = None
+    username: Optional[str] = None
+    full_name: Optional[str] = None
+    password: Optional[str] = None
+    role: Optional[str] = None
+    is_active: Optional[bool] = None
 
 class UserLogin(BaseModel):
     username: str
@@ -19,6 +28,7 @@ class User(UserBase):
     id: int
     is_active: bool
     is_superuser: bool
+    role: str
     created_at: datetime
     class Config:
         from_attributes = True

@@ -9,6 +9,7 @@ import { fetchCurrentUser, fetchSystemStats } from "@/lib/api";
 import { Shield, Users, Server, FolderOpen, Activity, ArrowLeft } from "lucide-react";
 import { UserManagement } from "@/components/admin/user-management";
 import { ServerManagement } from "@/components/admin/server-management";
+import { AIParameters } from "@/components/admin/ai-parameters";
 import { SystemStats } from "@/components/admin/system-stats";
 import { AuditLogs } from "@/components/admin/audit-logs";
 
@@ -180,15 +181,7 @@ export default function AdminPage() {
                     </TabsContent>
 
                     <TabsContent value="ai-params" className="space-y-4">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>AI Parameters</CardTitle>
-                                <CardDescription>Configure LLM providers and settings.</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-muted-foreground">AI configuration interface coming soon (Issue #7).</p>
-                            </CardContent>
-                        </Card>
+                        <AIParameters currentUser={currentUser} />
                     </TabsContent>
 
                     <TabsContent value="backend-params" className="space-y-4">

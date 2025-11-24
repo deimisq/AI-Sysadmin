@@ -135,18 +135,34 @@ export default function AdminPage() {
 
                 {/* Admin Tabs */}
                 <Tabs defaultValue="users" className="space-y-4">
-                    <TabsList>
+                    <TabsList className="flex flex-wrap h-auto">
                         <TabsTrigger value="users">
                             <Users className="mr-2 h-4 w-4" />
                             Users
                         </TabsTrigger>
-                        <TabsTrigger value="stats">
-                            <Activity className="mr-2 h-4 w-4" />
-                            Statistics
+                        <TabsTrigger value="servers">
+                            <Server className="mr-2 h-4 w-4" />
+                            Servers
                         </TabsTrigger>
-                        <TabsTrigger value="audit">
+                        <TabsTrigger value="logs">
+                            <Activity className="mr-2 h-4 w-4" />
+                            Logs
+                        </TabsTrigger>
+                        <TabsTrigger value="ai-params">
                             <Shield className="mr-2 h-4 w-4" />
-                            Audit Logs
+                            AI Params
+                        </TabsTrigger>
+                        <TabsTrigger value="backend-params">
+                            <FolderOpen className="mr-2 h-4 w-4" />
+                            Backend Params
+                        </TabsTrigger>
+                        <TabsTrigger value="frontend-params">
+                            <FolderOpen className="mr-2 h-4 w-4" />
+                            Frontend Params
+                        </TabsTrigger>
+                        <TabsTrigger value="communication">
+                            <Activity className="mr-2 h-4 w-4" />
+                            Communication
                         </TabsTrigger>
                     </TabsList>
 
@@ -154,12 +170,68 @@ export default function AdminPage() {
                         <UserManagement currentUser={currentUser} />
                     </TabsContent>
 
-                    <TabsContent value="stats" className="space-y-4">
-                        <SystemStats stats={stats} />
+                    <TabsContent value="servers" className="space-y-4">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Server Management</CardTitle>
+                                <CardDescription>Manage system servers globally.</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <p className="text-muted-foreground">Server management interface coming soon (Issue #5).</p>
+                            </CardContent>
+                        </Card>
                     </TabsContent>
 
-                    <TabsContent value="audit" className="space-y-4">
+                    <TabsContent value="logs" className="space-y-4">
                         <AuditLogs />
+                    </TabsContent>
+
+                    <TabsContent value="ai-params" className="space-y-4">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>AI Parameters</CardTitle>
+                                <CardDescription>Configure LLM providers and settings.</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <p className="text-muted-foreground">AI configuration interface coming soon (Issue #7).</p>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+
+                    <TabsContent value="backend-params" className="space-y-4">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Backend Parameters</CardTitle>
+                                <CardDescription>Configure backend system settings.</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <p className="text-muted-foreground">Backend configuration interface coming soon (Issue #8).</p>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+
+                    <TabsContent value="frontend-params" className="space-y-4">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Frontend Parameters</CardTitle>
+                                <CardDescription>Configure frontend UI settings.</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <p className="text-muted-foreground">Frontend configuration interface coming soon (Issue #9).</p>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+
+                    <TabsContent value="communication" className="space-y-4">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Communication Settings</CardTitle>
+                                <CardDescription>Configure email and notification settings.</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <p className="text-muted-foreground">Communication settings interface coming soon (Issue #10).</p>
+                            </CardContent>
+                        </Card>
                     </TabsContent>
                 </Tabs>
             </div>

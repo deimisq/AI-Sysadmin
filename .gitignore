@@ -19,3 +19,12 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
+
+# Nginx / SSL
+nginx/certs/
+*.pem
+*.crt
+*.key
+
+# Frontend local env
+frontend/.env.local

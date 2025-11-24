@@ -23,13 +23,19 @@ export default function LoginPage() {
         setLoading(true);
 
         try {
+            // Determine API Base URL
+            let apiBaseUrl = "/api/v1";
+            if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+                apiBaseUrl = `${window.location.protocol}//${window.location.hostname}:8000/api/v1`;
+            }
+
             if (isLogin) {
                 // Login
                 const formBody = new URLSearchParams();
                 formBody.append("username", formData.username);
                 formBody.append("password", formData.password);
 
-                const res = await fetch(`${window.location.protocol}//${window.location.hostname}:8000/api/v1/auth/login`, {
+                const res = await fetch(`${apiBaseUrl}/auth/login`, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/x-www-form-urlencoded",
@@ -47,7 +53,7 @@ export default function LoginPage() {
                 router.push("/dashboard");
             } else {
                 // Register
-                const res = await fetch(`${window.location.protocol}//${window.location.hostname}:8000/api/v1/auth/register`, {
+                const res = await fetch(`${apiBaseUrl}/auth/register`, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",

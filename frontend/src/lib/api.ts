@@ -1,20 +1,24 @@
 // Dynamically determine API URL based on environment
 const getApiBaseUrl = () => {
-    // Client-side: use the current hostname with port 8000
-    if (typeof window !== 'undefined') {
-        const protocol = window.location.protocol;
-        const hostname = window.location.hostname;
-        console.log(`[API] Using backend at: ${protocol}//${hostname}:8000/api/v1`);
-        return `${protocol}//${hostname}:8000/api/v1`;
-    }
-
-    // Server-side: use environment variable or fallback to localhost
+    // Prioritize environment variable
     if (process.env.NEXT_PUBLIC_API_URL) {
         return process.env.NEXT_PUBLIC_API_URL;
     }
 
-    // Fallback for SSR
-    return "http://localhost:8000/api/v1";
+    if (typeof window !== 'undefined') {
+        const hostname = window.location.hostname;
+
+        // If we are NOT on localhost, ALWAYS use relative path
+        // This assumes we are behind Nginx/Cloudflare
+        if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
+            return '/api/v1';
+        }
+
+        // Only for localhost development
+        return `${window.location.protocol}//${hostname}:8000/api/v1`;
+    }
+
+    return "http://backend:8000/api/v1";
 };
 
 const API_BASE_URL = getApiBaseUrl();

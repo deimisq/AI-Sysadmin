@@ -1,14 +1,28 @@
 version: '3.8'
 
 services:
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/certs:/etc/nginx/certs
+    depends_on:
+      - frontend
+      - backend
+    restart: always
+
   db:
     image: pgvector/pgvector:pg16
     environment:
       POSTGRES_USER: sysadmin_agent
       POSTGRES_PASSWORD: secure_password_dev
       POSTGRES_DB: sysadmin_agent_db
-    ports:
-      - "5432:5432"
+    # Ports removed to secure DB, only accessible within docker network
+    # ports:
+    #   - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
@@ -17,9 +31,10 @@ services:
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
     volumes:
       - ./backend:/app
-      - /home/ubuntu/.ssh:/home/ubuntu/.ssh:ro  # Mount to same path as host so DB paths work
-    ports:
-      - "8000:8000"
+      - /home/ubuntu/.ssh:/home/ubuntu/.ssh:ro
+    # Port 8000 is no longer exposed to host, only to Nginx
+    expose:
+      - "8000"
     env_file:
       - ./backend/.env
     environment:
@@ -29,14 +44,16 @@ services:
 
   frontend:
     build: ./frontend
-    ports:
-      - "3000:3000"
+    # Port 3000 is no longer exposed to host, only to Nginx
+    expose:
+      - "3000"
     volumes:
       - ./frontend:/app
       - /app/node_modules
     environment:
-      # For client-side requests (Browser -> Backend), use public URL/IP
-      - NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
+      # Now API is available at the same domain via /api/v1
+      # Client-side requests go to https://domain.com/api/v1
+      - NEXT_PUBLIC_API_URL=/api/v1
     depends_on:
       - backend
     restart: always

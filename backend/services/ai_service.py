@@ -90,11 +90,30 @@ class AIService:
         Looks for commands in code blocks or after specific markers.
         """
         # Try to find command in code blocks first (```bash ... ```)
-        code_block_pattern = r'```(?:bash|sh)?\s*\n(.*?)\n```'
+        # Improved regex to handle optional newlines and language identifiers
+        code_block_pattern = r'```(?:bash|sh)?\s*(.*?)```'
         code_blocks = re.findall(code_block_pattern, response, re.DOTALL)
         if code_blocks:
             # Return the first code block, stripped
-            return code_blocks[0].strip()
+            # Filter out blocks that are clearly not commands (e.g. JSON output in analysis) if possible,
+            # but usually the first block in the "Command" section is what we want.
+            # For now, taking the first one is standard, but we rely on the prompt to put the command at the end.
+            # Actually, let's look for the LAST code block if there are multiple, as the analysis might contain snippets?
+            # No, the prompt asks for the command at the end. Let's stick to finding the block explicitly associated with the command section if possible.
+            
+            # Better strategy: Look for the block specifically under the "Command" header if it exists
+            if "⚙️ Comando" in response or "Command" in response:
+                # Try to find a code block appearing AFTER the command header
+                parts = re.split(r'⚙️ Comando|Command \(if applicable\):', response)
+                if len(parts) > 1:
+                    command_part = parts[-1]
+                    cmd_blocks = re.findall(code_block_pattern, command_part, re.DOTALL)
+                    if cmd_blocks:
+                        return cmd_blocks[0].strip()
+
+            # Fallback: return the last code block (often the proposed command is at the end)
+            # or the first one if it's the only one.
+            return code_blocks[-1].strip()
         
         # Try to find after "Command to Execute:" or similar markers
         command_patterns = [
@@ -104,6 +123,8 @@ class AIService:
             r'Command to Execute:\s*(.+?)(?:\n|$)',
             r'Execute:\s*`([^`]+)`',
             r'Run:\s*`([^`]+)`',
+            r'⚙️ Comando(?:\s*\(.*?\))?:\s*`([^`]+)`',
+            r'⚙️ Comando(?:\s*\(.*?\))?:\s*(.+?)(?:\n|$)',
         ]
         
         for pattern in command_patterns:
@@ -116,7 +137,6 @@ class AIService:
                 return cmd
         
         # If no command found, return None
-        logger.warning("Could not extract command from AI response")
         return None
 
     def analyze_problem(self, db: Session, problem_description: str, server_info: str, language: str = "en") -> str:
@@ -182,7 +202,10 @@ CRITICAL INSTRUCTIONS:
 
 5. **COMMAND GUIDELINES**:
    - Only propose a command if action is actually needed.
-   - Always wrap commands in bash code blocks:
+   - **SINGLE EXECUTABLE BLOCK**: If multiple steps are needed, combine them using `&&` or `;` (e.g., `apt update && apt upgrade`).
+   - **DO NOT** provide multiple separate code blocks for the command.
+   - **DO NOT** include explanations inside the code block.
+   - Always wrap the command in a bash code block:
    ```bash
    your-command-here
    ```

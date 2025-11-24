@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
-import database, models, schemas
+import database, models, schemas, dependencies
 from services.ssh_service import ssh_service
 from utils.encryption import encrypt_data
 
@@ -100,8 +100,28 @@ def create_server(server: schemas.ServerCreate, db: Session = Depends(get_db)):
     return db_server
 
 @router.get("/servers/", response_model=List[schemas.Server])
-def read_servers(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    servers = db.query(models.Server).offset(skip).limit(limit).all()
+def read_servers(
+    skip: int = 0, 
+    limit: int = 100, 
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(dependencies.get_current_active_user)
+):
+    # Superadmins and Admins can see all servers
+    if current_user.role in [models.RoleType.SUPERADMIN.value, models.RoleType.ADMIN.value]:
+        servers = db.query(models.Server).offset(skip).limit(limit).all()
+        return servers
+    
+    # Regular users can only see servers in their assigned groups
+    # Get IDs of groups the user belongs to
+    user_group_ids = [group.id for group in current_user.group_permissions]
+    
+    if not user_group_ids:
+        return []
+        
+    servers = db.query(models.Server).filter(
+        models.Server.group_id.in_(user_group_ids)
+    ).offset(skip).limit(limit).all()
+    
     return servers
 
 @router.delete("/servers/{server_id}")

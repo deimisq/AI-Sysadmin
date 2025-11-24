@@ -13,6 +13,7 @@ import { AIParameters } from "@/components/admin/ai-parameters";
 import { BackendParameters } from "@/components/admin/backend-parameters";
 import { FrontendParameters } from "@/components/admin/frontend-parameters";
 import { CommunicationSettings } from "@/components/admin/communication-settings";
+import { SecuritySettings } from "@/components/admin/security-settings";
 import { SystemStats } from "@/components/admin/system-stats";
 import { AuditLogs } from "@/components/admin/audit-logs";
 
@@ -165,6 +166,10 @@ export default function AdminPage() {
                             <FolderOpen className="mr-2 h-4 w-4" />
                             Frontend Params
                         </TabsTrigger>
+                        <TabsTrigger value="security">
+                            <Shield className="mr-2 h-4 w-4" />
+                            Security
+                        </TabsTrigger>
                         <TabsTrigger value="communication">
                             <Activity className="mr-2 h-4 w-4" />
                             Communication
@@ -193,6 +198,10 @@ export default function AdminPage() {
 
                     <TabsContent value="frontend-params" className="space-y-4">
                         <FrontendParameters currentUser={currentUser} />
+                    </TabsContent>
+
+                    <TabsContent value="security" className="space-y-4">
+                        <SecuritySettings currentUser={currentUser} />
                     </TabsContent>
 
                     <TabsContent value="communication" className="space-y-4">

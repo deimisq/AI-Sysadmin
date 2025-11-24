@@ -126,3 +126,38 @@ class CommandResponse(BaseModel):
     username: Optional[str] = None
     command: Optional[str] = None
     auth_method: Optional[str] = None
+
+class AllowedDomainBase(BaseModel):
+    domain: str
+    description: Optional[str] = None
+    is_active: bool = True
+
+class AllowedDomainCreate(AllowedDomainBase):
+    pass
+
+class AllowedDomainUpdate(BaseModel):
+    domain: Optional[str] = None
+    description: Optional[str] = None
+    is_active: Optional[bool] = None
+
+class AllowedDomain(AllowedDomainBase):
+    id: int
+    created_at: datetime
+    class Config:
+        from_attributes = True
+
+class NotificationBase(BaseModel):
+    title: str
+    message: str
+    type: str = "info"
+
+class NotificationCreate(NotificationBase):
+    user_id: int
+
+class Notification(NotificationBase):
+    id: int
+    user_id: int
+    is_read: bool
+    created_at: datetime
+    class Config:
+        from_attributes = True

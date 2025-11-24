@@ -24,18 +24,43 @@ def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
             detail="Email or username already registered"
         )
     
+    # Check allowed domains
+    email_domain = user.email.split('@')[-1]
+    allowed_domain = db.query(models.AllowedDomain).filter(
+        models.AllowedDomain.domain == email_domain,
+        models.AllowedDomain.is_active == True
+    ).first()
+    
+    is_active = False
+    if allowed_domain:
+        is_active = True
+    
     # Create new user
     hashed_password = get_password_hash(user.password)
     db_user = models.User(
         email=user.email,
         username=user.username,
         full_name=user.full_name,
-        hashed_password=hashed_password
+        hashed_password=hashed_password,
+        is_active=is_active
     )
     
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
+    
+    # Notify superadmins if user needs approval
+    if not is_active:
+        superadmins = db.query(models.User).filter(models.User.role == models.RoleType.SUPERADMIN.value).all()
+        for admin in superadmins:
+            notification = models.Notification(
+                user_id=admin.id,
+                title="New User Registration",
+                message=f"User {user.username} ({user.email}) has registered and requires approval.",
+                type="warning"
+            )
+            db.add(notification)
+        db.commit()
     
     return db_user
 

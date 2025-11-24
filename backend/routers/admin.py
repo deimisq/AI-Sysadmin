@@ -281,3 +281,57 @@ def list_all_servers(
     
     servers = db.query(models.Server).offset(skip).limit(limit).all()
     return servers
+
+# ==================== SECURITY SETTINGS ====================
+
+@router.get("/allowed-domains", response_model=List[schemas.AllowedDomain])
+def list_allowed_domains(
+    skip: int = 0,
+    limit: int = 100,
+    current_user: models.User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """List allowed domains (admin only)"""
+    if current_user.role not in [RoleType.SUPERADMIN.value, RoleType.ADMIN.value]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    domains = db.query(models.AllowedDomain).offset(skip).limit(limit).all()
+    return domains
+
+@router.post("/allowed-domains", response_model=schemas.AllowedDomain)
+def create_allowed_domain(
+    domain: schemas.AllowedDomainCreate,
+    current_user: models.User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Add allowed domain (admin only)"""
+    if current_user.role not in [RoleType.SUPERADMIN.value, RoleType.ADMIN.value]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    existing = db.query(models.AllowedDomain).filter(models.AllowedDomain.domain == domain.domain).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Domain already exists")
+        
+    new_domain = models.AllowedDomain(**domain.dict())
+    db.add(new_domain)
+    db.commit()
+    db.refresh(new_domain)
+    return new_domain
+
+@router.delete("/allowed-domains/{domain_id}")
+def delete_allowed_domain(
+    domain_id: int,
+    current_user: models.User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Delete allowed domain (admin only)"""
+    if current_user.role not in [RoleType.SUPERADMIN.value, RoleType.ADMIN.value]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    domain = db.query(models.AllowedDomain).filter(models.AllowedDomain.id == domain_id).first()
+    if not domain:
+        raise HTTPException(status_code=404, detail="Domain not found")
+        
+    db.delete(domain)
+    db.commit()
+    return {"message": "Domain deleted successfully"}

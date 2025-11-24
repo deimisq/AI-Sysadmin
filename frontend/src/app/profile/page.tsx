@@ -23,6 +23,11 @@ export default function ProfilePage() {
     });
 
     useEffect(() => {
+        const token = localStorage.getItem("token");
+        if (!token) {
+            router.push("/login");
+            return;
+        }
         loadUserData();
     }, []);
 
@@ -39,11 +44,21 @@ export default function ProfilePage() {
             });
 
             // Load user's groups
-            const groups = await fetchUserGroups(user.id);
-            setUserGroups(groups);
-        } catch (error) {
+            try {
+                const groups = await fetchUserGroups(user.id);
+                setUserGroups(groups);
+            } catch (groupError) {
+                console.error("Failed to load user groups", groupError);
+                // Don't fail the whole page if groups fail to load
+            }
+        } catch (error: any) {
             console.error("Failed to load user data", error);
-            router.push("/login");
+            if (error.message?.includes("401") || error.message?.includes("Unauthorized")) {
+                localStorage.removeItem("token");
+                router.push("/login");
+            } else {
+                alert("Failed to load profile data. Please try again.");
+            }
         } finally {
             setLoading(false);
         }
@@ -209,8 +224,8 @@ export default function ProfilePage() {
                                 <label className="text-sm text-muted-foreground">Status</label>
                                 <div className="mt-1">
                                     <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${currentUser?.is_active
-                                            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                                            : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                                        ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                                        : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
                                         }`}>
                                         {currentUser?.is_active ? "Active" : "Inactive"}
                                     </span>

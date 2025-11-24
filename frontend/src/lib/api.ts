@@ -246,6 +246,10 @@ export async function fetchCurrentUser() {
             ...(token && { "Authorization": `Bearer ${token}` }),
         },
     });
-    if (!res.ok) throw new Error("Failed to fetch current user");
+    if (!res.ok) {
+        if (res.status === 401) throw new Error("Unauthorized");
+        const error = await res.json().catch(() => ({}));
+        throw new Error(error.detail || "Failed to fetch current user");
+    }
     return res.json();
 }

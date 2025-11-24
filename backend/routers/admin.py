@@ -265,3 +265,19 @@ def get_system_stats(
         "total_groups": total_groups,
         "total_operations": total_operations
     }
+
+# ==================== SERVER MANAGEMENT ====================
+
+@router.get("/servers", response_model=List[schemas.Server])
+def list_all_servers(
+    skip: int = 0,
+    limit: int = 1000,
+    current_user: models.User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """List all servers (admin only)"""
+    if current_user.role not in [RoleType.SUPERADMIN.value, RoleType.ADMIN.value]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    servers = db.query(models.Server).offset(skip).limit(limit).all()
+    return servers

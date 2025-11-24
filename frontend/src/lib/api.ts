@@ -43,6 +43,17 @@ export async function fetchServers() {
     return res.json();
 }
 
+export async function fetchAllServers() {
+    const token = typeof window !== 'undefined' ? localStorage.getItem("token") : null;
+    const res = await fetch(`${API_BASE_URL}/admin/servers`, {
+        headers: {
+            ...(token && { "Authorization": `Bearer ${token}` }),
+        },
+    });
+    if (!res.ok) throw new Error("Failed to fetch all servers");
+    return res.json();
+}
+
 export async function createClient(data: any) {
     const res = await fetch(`${API_BASE_URL}/clients/`, {
         method: "POST",

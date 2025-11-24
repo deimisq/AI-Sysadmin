@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { fetchCurrentUser, fetchSystemStats } from "@/lib/api";
 import { Shield, Users, Server, FolderOpen, Activity, ArrowLeft } from "lucide-react";
 import { UserManagement } from "@/components/admin/user-management";
+import { ServerManagement } from "@/components/admin/server-management";
 import { SystemStats } from "@/components/admin/system-stats";
 import { AuditLogs } from "@/components/admin/audit-logs";
 
@@ -171,15 +172,7 @@ export default function AdminPage() {
                     </TabsContent>
 
                     <TabsContent value="servers" className="space-y-4">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Server Management</CardTitle>
-                                <CardDescription>Manage system servers globally.</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-muted-foreground">Server management interface coming soon (Issue #5).</p>
-                            </CardContent>
-                        </Card>
+                        <ServerManagement currentUser={currentUser} />
                     </TabsContent>
 
                     <TabsContent value="logs" className="space-y-4">

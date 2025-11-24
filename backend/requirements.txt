@@ -19,3 +19,7 @@ ansible
 cryptography
 boto3
 langchain-aws
+python-jose[cryptography]
+passlib[bcrypt]
+python-multipart
+email-validator

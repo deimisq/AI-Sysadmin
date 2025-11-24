@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from routers import inventory, agent
+from routers import inventory, agent, auth
 
 app = FastAPI(title="Sysadmin AI Agent API")
 
@@ -13,6 +13,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(auth.router, prefix="/api/v1/auth", tags=["authentication"])
 app.include_router(inventory.router, prefix="/api/v1", tags=["inventory"])
 app.include_router(agent.router, prefix="/api/v1", tags=["agent"])
 

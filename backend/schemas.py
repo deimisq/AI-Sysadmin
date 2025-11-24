@@ -11,6 +11,7 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     password: str
     role: Optional[str] = "user"
+    is_active: Optional[bool] = True
 
 class UserUpdate(BaseModel):
     email: Optional[EmailStr] = None

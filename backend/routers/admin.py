@@ -27,6 +27,43 @@ def list_users(
     users = db.query(models.User).offset(skip).limit(limit).all()
     return users
 
+@router.post("/users", response_model=schemas.User, status_code=status.HTTP_201_CREATED)
+def create_user(
+    user_create: schemas.UserCreate,
+    current_user: models.User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Create a new user (admin only)"""
+    if current_user.role not in [RoleType.SUPERADMIN.value, RoleType.ADMIN.value]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Check if user already exists
+    existing_user = db.query(models.User).filter(
+        (models.User.email == user_create.email) | (models.User.username == user_create.username)
+    ).first()
+    
+    if existing_user:
+        raise HTTPException(status_code=400, detail="User with this email or username already exists")
+    
+    # Hash password
+    hashed_password = get_password_hash(user_create.password)
+    
+    # Create user
+    new_user = models.User(
+        email=user_create.email,
+        username=user_create.username,
+        hashed_password=hashed_password,
+        full_name=user_create.full_name,
+        role=user_create.role if user_create.role else RoleType.USER.value,
+        is_active=user_create.is_active if user_create.is_active is not None else True
+    )
+    
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    
+    return new_user
+
 @router.get("/users/{user_id}", response_model=schemas.User)
 def get_user(
     user_id: int,

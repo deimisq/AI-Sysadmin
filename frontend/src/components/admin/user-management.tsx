@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { fetchAllUsers, updateUserAdmin, deleteUser, fetchGroups, grantGroupAccess, revokeGroupAccess, fetchUserGroups } from "@/lib/api";
+import { fetchAllUsers, createUser, updateUserAdmin, deleteUser, fetchGroups, grantGroupAccess, revokeGroupAccess, fetchUserGroups } from "@/lib/api";
 import { Users, Edit2, Trash2, Shield, FolderOpen, Plus, X } from "lucide-react";
 
 interface UserManagementProps {
@@ -16,6 +16,15 @@ export function UserManagement({ currentUser }: UserManagementProps) {
     const [groups, setGroups] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [editingUser, setEditingUser] = useState<any>(null);
+    const [creatingUser, setCreatingUser] = useState(false);
+    const [newUser, setNewUser] = useState<any>({
+        email: "",
+        username: "",
+        password: "",
+        full_name: "",
+        role: "user",
+        is_active: true
+    });
     const [managingPermissions, setManagingPermissions] = useState<any>(null);
     const [userGroups, setUserGroups] = useState<any[]>([]);
 
@@ -60,6 +69,31 @@ export function UserManagement({ currentUser }: UserManagementProps) {
         } catch (error: any) {
             console.error(error);
             alert(error.message || "Failed to update user");
+        }
+    };
+
+    const handleCreateUser = async () => {
+        if (!newUser.email || !newUser.username || !newUser.password) {
+            alert("Email, username, and password are required");
+            return;
+        }
+
+        try {
+            await createUser(newUser);
+            await loadData();
+            setCreatingUser(false);
+            setNewUser({
+                email: "",
+                username: "",
+                password: "",
+                full_name: "",
+                role: "user",
+                is_active: true
+            });
+            alert("User created successfully");
+        } catch (error: any) {
+            console.error(error);
+            alert(error.message || "Failed to create user");
         }
     };
 
@@ -125,6 +159,84 @@ export function UserManagement({ currentUser }: UserManagementProps) {
 
     if (loading) {
         return <div>Loading users...</div>;
+    }
+
+    // Create User Form
+    if (creatingUser) {
+        return (
+            <Card>
+                <CardHeader>
+                    <CardTitle>Create New User</CardTitle>
+                    <CardDescription>Add a new user to the system</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="grid gap-4 md:grid-cols-2">
+                        <div>
+                            <label className="text-sm font-medium">Email *</label>
+                            <Input
+                                type="email"
+                                value={newUser.email}
+                                onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+                                placeholder="user@example.com"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium">Username *</label>
+                            <Input
+                                value={newUser.username}
+                                onChange={(e) => setNewUser({ ...newUser, username: e.target.value })}
+                                placeholder="username"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium">Password *</label>
+                            <Input
+                                type="password"
+                                value={newUser.password}
+                                onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+                                placeholder="••••••••"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium">Full Name</label>
+                            <Input
+                                value={newUser.full_name}
+                                onChange={(e) => setNewUser({ ...newUser, full_name: e.target.value })}
+                                placeholder="John Doe"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium">Role</label>
+                            <select
+                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                value={newUser.role}
+                                onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
+                            >
+                                <option value="user">User</option>
+                                <option value="group_admin">Group Admin</option>
+                                <option value="admin">Admin</option>
+                                {currentUser.role === "superadmin" && (
+                                    <option value="superadmin">Superadmin</option>
+                                )}
+                            </select>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <input
+                                type="checkbox"
+                                checked={newUser.is_active}
+                                onChange={(e) => setNewUser({ ...newUser, is_active: e.target.checked })}
+                                className="h-4 w-4"
+                            />
+                            <label className="text-sm font-medium">Active</label>
+                        </div>
+                    </div>
+                    <div className="flex gap-2">
+                        <Button onClick={handleCreateUser}>Create User</Button>
+                        <Button variant="outline" onClick={() => setCreatingUser(false)}>Cancel</Button>
+                    </div>
+                </CardContent>
+            </Card>
+        );
     }
 
     // Edit User Modal
@@ -265,11 +377,19 @@ export function UserManagement({ currentUser }: UserManagementProps) {
     return (
         <Card>
             <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                    <Users className="h-5 w-5" />
-                    User Management
-                </CardTitle>
-                <CardDescription>Manage system users and their permissions</CardDescription>
+                <div className="flex items-center justify-between">
+                    <div>
+                        <CardTitle className="flex items-center gap-2">
+                            <Users className="h-5 w-5" />
+                            User Management
+                        </CardTitle>
+                        <CardDescription>Manage system users and their permissions</CardDescription>
+                    </div>
+                    <Button onClick={() => setCreatingUser(true)}>
+                        <Plus className="mr-2 h-4 w-4" />
+                        Create New User
+                    </Button>
+                </div>
             </CardHeader>
             <CardContent>
                 <div className="space-y-2">

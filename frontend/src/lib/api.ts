@@ -180,6 +180,19 @@ export async function updateUserAdmin(userId: number, data: any) {
     return res.json();
 }
 
+export async function createUser(data: any) {
+    const res = await fetch(`${API_BASE_URL}/admin/users`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+        const error = await res.json().catch(() => ({}));
+        throw new Error(error.detail || "Failed to create user");
+    }
+    return res.json();
+}
+
 export async function deleteUser(userId: number) {
     const res = await fetch(`${API_BASE_URL}/admin/users/${userId}`, {
         method: "DELETE",

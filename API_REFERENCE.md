@@ -1,46 +1,46 @@
-# 📡 API Reference
+# 📡 Referencia de la API
 
 Base URL: `http://localhost:8000/api/v1`
 
-## 🤖 Agent Endpoints
+## 🤖 Endpoints del Agente
 
-### Diagnose Problem
-Analyzes a problem on a specific server using AI and RAG.
+### Diagnosticar Problema
+Analiza un problema en un servidor específico utilizando IA y RAG.
 
 -   **URL**: `/agent/diagnose`
--   **Method**: `POST`
--   **Body**:
+-   **Método**: `POST`
+-   **Cuerpo**:
     ```json
     {
       "server_id": 1,
-      "problem_description": "High CPU usage detected",
-      "language": "en" // Optional: "en" or "es"
+      "problem_description": "Alto uso de CPU detectado",
+      "language": "es" // Opcional: "en" o "es"
     }
     ```
--   **Response**:
+-   **Respuesta**:
     ```json
     {
       "analysis": {
-        "analysis": "Markdown string with analysis...",
+        "analysis": "Cadena Markdown con el análisis...",
         "proposed_command": "top -bn1"
       },
-      "diagnostics": { ... } // Raw diagnostic data used
+      "diagnostics": { ... } // Datos de diagnóstico en bruto utilizados
     }
     ```
 
-### Execute Solution
-Executes a command on a server.
+### Ejecutar Solución
+Ejecuta un comando en un servidor.
 
 -   **URL**: `/agent/execute`
--   **Method**: `POST`
--   **Body**:
+-   **Método**: `POST`
+-   **Cuerpo**:
     ```json
     {
       "server_id": 1,
       "command": "top -bn1"
     }
     ```
--   **Response**:
+-   **Respuesta**:
     ```json
     {
       "stdout": "...",
@@ -49,57 +49,57 @@ Executes a command on a server.
     }
     ```
 
-## 🖥️ Server Management Endpoints
+## 🖥️ Endpoints de Gestión de Servidores
 
-### List Servers
-Get all managed servers.
-
--   **URL**: `/servers/`
--   **Method**: `GET`
--   **Response**: Array of Server objects.
-
-### Create Server
-Add a new server to management.
+### Listar Servidores
+Obtiene todos los servidores gestionados.
 
 -   **URL**: `/servers/`
--   **Method**: `POST`
--   **Body**:
+-   **Método**: `GET`
+-   **Respuesta**: Array de objetos Server.
+
+### Crear Servidor
+Agrega un nuevo servidor a la gestión.
+
+-   **URL**: `/servers/`
+-   **Método**: `POST`
+-   **Cuerpo**:
     ```json
     {
       "hostname": "web-01",
       "ip_address": "192.168.1.10",
       "ssh_username": "ubuntu",
-      "ssh_password": "optional_password",
-      "ssh_key_path": "/path/to/key",
+      "ssh_password": "password_opcional",
+      "ssh_key_path": "/ruta/a/la/llave",
       "client_id": 1
     }
     ```
 
-### Delete Server
-Remove a server.
+### Eliminar Servidor
+Elimina un servidor.
 
 -   **URL**: `/servers/{server_id}`
--   **Method**: `DELETE`
+-   **Método**: `DELETE`
 
-## 👥 Client Management Endpoints
+## 👥 Endpoints de Gestión de Clientes
 
-### List Clients
+### Listar Clientes
 -   **URL**: `/clients/`
--   **Method**: `GET`
+-   **Método**: `GET`
 
-### Create Client
+### Crear Cliente
 -   **URL**: `/clients/`
--   **Method**: `POST`
--   **Body**:
+-   **Método**: `POST`
+-   **Cuerpo**:
     ```json
     {
       "name": "Acme Corp",
-      "description": "Main client"
+      "description": "Cliente principal"
     }
     ```
 
-## 🏥 Health Check
+## 🏥 Comprobación de Salud (Health Check)
 
--   **URL**: `/health` (Root level, not under `/api/v1`)
--   **Method**: `GET`
--   **Response**: `{"status": "ok"}`
+-   **URL**: `/health` (Nivel raíz, no bajo `/api/v1`)
+-   **Método**: `GET`
+-   **Respuesta**: `{"status": "ok"}`

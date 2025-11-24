@@ -1,146 +1,146 @@
-# Role-Based Access Control (RBAC) System
+# Sistema de Control de Acceso Basado en Roles (RBAC)
 
-## Overview
-The AI Sysadmin Agent now includes a comprehensive RBAC system that allows fine-grained control over user permissions and access to servers and groups.
+## Resumen
+El Agente Sysadmin AI ahora incluye un sistema RBAC completo que permite un control granular sobre los permisos de usuario y el acceso a servidores y grupos.
 
 ## Roles
 
-### Global Roles
+### Roles Globales
 1. **Superadmin** (`superadmin`)
-   - Full system access
-   - Can manage all users, groups, and servers
-   - Can access system settings
-   - Cannot be restricted
+   - Acceso total al sistema
+   - Puede gestionar todos los usuarios, grupos y servidores
+   - Puede acceder a la configuración del sistema
+   - No puede ser restringido
 
 2. **Admin** (`admin`)
-   - Can manage users and groups
-   - Can view and manage all servers
-   - Can view audit logs
-   - Cannot manage system settings
+   - Puede gestionar usuarios y grupos
+   - Puede ver y gestionar todos los servidores
+   - Puede ver registros de auditoría
+   - No puede gestionar la configuración del sistema
 
 3. **Group Admin** (`group_admin`)
-   - Can manage servers within assigned groups
-   - Can create/edit servers in their groups
-   - Can execute commands on their servers
-   - Cannot manage users
+   - Puede gestionar servidores dentro de los grupos asignados
+   - Puede crear/editar servidores en sus grupos
+   - Puede ejecutar comandos en sus servidores
+   - No puede gestionar usuarios
 
 4. **User** (`user`)
-   - Can view servers in assigned groups
-   - Can execute commands (if permitted)
-   - Cannot create or modify servers
-   - Read-only access
+   - Puede ver servidores en los grupos asignados
+   - Puede ejecutar comandos (si se permite)
+   - No puede crear o modificar servidores
+   - Acceso de solo lectura
 
-## Permissions
+## Permisos
 
-### Server Permissions
-- `view_servers` - View server list and details
-- `create_servers` - Add new servers
-- `edit_servers` - Modify server configuration
-- `delete_servers` - Remove servers
-- `execute_commands` - Run commands on servers
+### Permisos de Servidor
+- `view_servers` - Ver lista y detalles de servidores
+- `create_servers` - Agregar nuevos servidores
+- `edit_servers` - Modificar configuración de servidores
+- `delete_servers` - Eliminar servidores
+- `execute_commands` - Ejecutar comandos en servidores
 
-### Group Permissions
-- `view_groups` - View group list
-- `create_groups` - Create new groups
-- `edit_groups` - Modify group settings
-- `delete_groups` - Remove groups
+### Permisos de Grupo
+- `view_groups` - Ver lista de grupos
+- `create_groups` - Crear nuevos grupos
+- `edit_groups` - Modificar configuración de grupos
+- `delete_groups` - Eliminar grupos
 
-### User Permissions
-- `view_users` - View user list
-- `create_users` - Add new users
-- `edit_users` - Modify user details
-- `delete_users` - Remove users
+### Permisos de Usuario
+- `view_users` - Ver lista de usuarios
+- `create_users` - Agregar nuevos usuarios
+- `edit_users` - Modificar detalles de usuario
+- `delete_users` - Eliminar usuarios
 
-### System Permissions
-- `view_logs` - View operation and audit logs
-- `manage_system` - System configuration
+### Permisos del Sistema
+- `view_logs` - Ver registros de operaciones y auditoría
+- `manage_system` - Configuración del sistema
 
-## Permission Matrix
+## Matriz de Permisos
 
-| Permission | Superadmin | Admin | Group Admin | User |
+| Permiso | Superadmin | Admin | Group Admin | User |
 |-----------|-----------|-------|-------------|------|
-| View Servers | ✅ All | ✅ All | ✅ Assigned | ✅ Assigned |
-| Create Servers | ✅ | ✅ | ✅ In groups | ❌ |
-| Edit Servers | ✅ | ✅ | ✅ In groups | ❌ |
-| Delete Servers | ✅ | ✅ | ❌ | ❌ |
-| Execute Commands | ✅ | ✅ | ✅ | ✅ |
-| View Groups | ✅ | ✅ | ✅ Assigned | ✅ Assigned |
-| Create Groups | ✅ | ✅ | ❌ | ❌ |
-| Edit Groups | ✅ | ✅ | ❌ | ❌ |
-| Delete Groups | ✅ | ✅ | ❌ | ❌ |
-| View Users | ✅ | ✅ | ❌ | ❌ |
-| Create Users | ✅ | ✅ | ❌ | ❌ |
-| Edit Users | ✅ | ✅ | ❌ | ❌ |
-| Delete Users | ✅ | ❌ | ❌ | ❌ |
-| View Logs | ✅ | ✅ | ❌ | ❌ |
-| Manage System | ✅ | ❌ | ❌ | ❌ |
+| Ver Servidores | ✅ Todos | ✅ Todos | ✅ Asignados | ✅ Asignados |
+| Crear Servidores | ✅ | ✅ | ✅ En grupos | ❌ |
+| Editar Servidores | ✅ | ✅ | ✅ En grupos | ❌ |
+| Eliminar Servidores | ✅ | ✅ | ❌ | ❌ |
+| Ejecutar Comandos | ✅ | ✅ | ✅ | ✅ |
+| Ver Grupos | ✅ | ✅ | ✅ Asignados | ✅ Asignados |
+| Crear Grupos | ✅ | ✅ | ❌ | ❌ |
+| Editar Grupos | ✅ | ✅ | ❌ | ❌ |
+| Eliminar Grupos | ✅ | ✅ | ❌ | ❌ |
+| Ver Usuarios | ✅ | ✅ | ❌ | ❌ |
+| Crear Usuarios | ✅ | ✅ | ❌ | ❌ |
+| Editar Usuarios | ✅ | ✅ | ❌ | ❌ |
+| Eliminar Usuarios | ✅ | ❌ | ❌ | ❌ |
+| Ver Logs | ✅ | ✅ | ❌ | ❌ |
+| Gestionar Sistema | ✅ | ❌ | ❌ | ❌ |
 
-## Group-Level Permissions
+## Permisos a Nivel de Grupo
 
-Users can be assigned to specific server groups with different roles:
-- A user can have access to multiple groups
-- Each group assignment can have a different role
-- Group-level permissions override global permissions for that group
+Los usuarios pueden ser asignados a grupos de servidores específicos con diferentes roles:
+- Un usuario puede tener acceso a múltiples grupos
+- Cada asignación de grupo puede tener un rol diferente
+- Los permisos a nivel de grupo anulan los permisos globales para ese grupo
 
-### Example Scenarios
+### Escenarios de Ejemplo
 
-1. **Developer Access**:
-   - Global Role: `user`
-   - Group Assignment: Development Servers (role: `group_admin`)
-   - Result: Can manage dev servers, view-only for others
+1. **Acceso de Desarrollador**:
+   - Rol Global: `user`
+   - Asignación de Grupo: Servidores de Desarrollo (rol: `group_admin`)
+   - Resultado: Puede gestionar servidores de desarrollo, solo lectura para otros
 
-2. **Operations Team**:
-   - Global Role: `admin`
-   - Result: Full access to all servers and groups
+2. **Equipo de Operaciones**:
+   - Rol Global: `admin`
+   - Resultado: Acceso total a todos los servidores y grupos
 
-3. **External Consultant**:
-   - Global Role: `user`
-   - Group Assignment: Client A Servers (role: `user`)
-   - Result: View-only access to Client A servers
+3. **Consultor Externo**:
+   - Rol Global: `user`
+   - Asignación de Grupo: Servidores Cliente A (rol: `user`)
+   - Resultado: Acceso de solo lectura a los servidores del Cliente A
 
-## API Endpoints
+## Endpoints de la API
 
-### User Management
+### Gestión de Usuarios
 ```
-GET    /api/v1/admin/users              # List all users
-GET    /api/v1/admin/users/{id}         # Get user details
-PUT    /api/v1/admin/users/{id}         # Update user
-DELETE /api/v1/admin/users/{id}         # Delete user (superadmin only)
-```
-
-### Group Permissions
-```
-POST   /api/v1/admin/users/{id}/groups/{gid}/grant   # Grant group access
-DELETE /api/v1/admin/users/{id}/groups/{gid}/revoke  # Revoke group access
-GET    /api/v1/admin/users/{id}/groups                # Get user's groups
+GET    /api/v1/admin/users              # Listar todos los usuarios
+GET    /api/v1/admin/users/{id}         # Obtener detalles de usuario
+PUT    /api/v1/admin/users/{id}         # Actualizar usuario
+DELETE /api/v1/admin/users/{id}         # Eliminar usuario (solo superadmin)
 ```
 
-### Audit & Stats
+### Permisos de Grupo
 ```
-GET    /api/v1/admin/audit-logs         # View audit logs
-GET    /api/v1/admin/stats               # System statistics
+POST   /api/v1/admin/users/{id}/groups/{gid}/grant   # Otorgar acceso a grupo
+DELETE /api/v1/admin/users/{id}/groups/{gid}/revoke  # Revocar acceso a grupo
+GET    /api/v1/admin/users/{id}/groups                # Obtener grupos del usuario
 ```
 
-## Audit Logging
+### Auditoría y Estadísticas
+```
+GET    /api/v1/admin/audit-logs         # Ver logs de auditoría
+GET    /api/v1/admin/stats               # Estadísticas del sistema
+```
 
-All administrative actions are logged in the `audit_logs` table:
-- User creation/modification/deletion
-- Group permission changes
-- Server modifications
-- Role changes
-- IP address tracking
-- Detailed action context
+## Registro de Auditoría
 
-### Audit Log Fields
-- `user_id` - Who performed the action
-- `action` - What was done
-- `resource_type` - What was affected (user, server, group)
-- `resource_id` - Specific resource ID
-- `details` - JSON with additional context
-- `ip_address` - Source IP
-- `created_at` - Timestamp
+Todas las acciones administrativas se registran en la tabla `audit_logs`:
+- Creación/modificación/eliminación de usuarios
+- Cambios de permisos de grupo
+- Modificaciones de servidores
+- Cambios de rol
+- Rastreo de dirección IP
+- Contexto detallado de la acción
 
-## Database Schema
+### Campos del Log de Auditoría
+- `user_id` - Quién realizó la acción
+- `action` - Qué se hizo
+- `resource_type` - Qué fue afectado (usuario, servidor, grupo)
+- `resource_id` - ID del recurso específico
+- `details` - JSON con contexto adicional
+- `ip_address` - IP de origen
+- `created_at` - Marca de tiempo
+
+## Esquema de Base de Datos
 
 ### user_group_permissions
 ```sql
@@ -167,75 +167,75 @@ CREATE TABLE audit_logs (
 );
 ```
 
-## Usage Examples
+## Ejemplos de Uso
 
-### Python Backend
+### Backend Python
 ```python
 from utils.permissions import has_permission, can_access_server
 from models import PermissionType
 
-# Check permission
+# Verificar permiso
 if has_permission(user, PermissionType.CREATE_SERVERS):
-    # Allow server creation
+    # Permitir creación de servidor
     pass
 
-# Check server access
+# Verificar acceso a servidor
 if can_access_server(user, server, db):
-    # Allow access to server
+    # Permitir acceso al servidor
     pass
 ```
 
-### Grant Group Access
+### Otorgar Acceso a Grupo
 ```bash
 curl -X POST http://localhost:8000/api/v1/admin/users/2/groups/1/grant \
   -H "Authorization: Bearer <admin_token>" \
   -d "role=group_admin"
 ```
 
-### View User's Groups
+### Ver Grupos del Usuario
 ```bash
 curl http://localhost:8000/api/v1/admin/users/2/groups \
   -H "Authorization: Bearer <token>"
 ```
 
-## Security Considerations
+## Consideraciones de Seguridad
 
-1. **Principle of Least Privilege**: Users should be assigned the minimum role necessary
-2. **Regular Audits**: Review audit logs regularly for suspicious activity
-3. **Role Separation**: Avoid giving users superadmin unless absolutely necessary
-4. **Group Isolation**: Use groups to isolate sensitive servers
-5. **Permission Review**: Periodically review user permissions
+1. **Principio de Mínimo Privilegio**: A los usuarios se les debe asignar el rol mínimo necesario
+2. **Auditorías Regulares**: Revisar los logs de auditoría regularmente en busca de actividad sospechosa
+3. **Separación de Roles**: Evitar dar superadmin a usuarios a menos que sea absolutamente necesario
+4. **Aislamiento de Grupos**: Usar grupos para aislar servidores sensibles
+5. **Revisión de Permisos**: Revisar periódicamente los permisos de usuario
 
-## Frontend Implementation
+## Implementación Frontend
 
-The RBAC system is fully integrated into the frontend interface:
+El sistema RBAC está completamente integrado en la interfaz frontend:
 
-### Admin Panel (`/admin`)
-Accessible only to users with `admin` or `superadmin` roles.
-- **User Management**: View, edit, and delete users.
-- **Group Permissions**: Assign users to specific server groups with custom roles.
-- **System Stats**: View real-time system statistics.
-- **Audit Logs**: Browse detailed logs of administrative actions.
+### Panel de Administración (`/admin`)
+Accesible solo para usuarios con roles `admin` o `superadmin`.
+- **Gestión de Usuarios**: Ver, editar y eliminar usuarios.
+- **Permisos de Grupo**: Asignar usuarios a grupos de servidores específicos con roles personalizados.
+- **Estadísticas del Sistema**: Ver estadísticas del sistema en tiempo real.
+- **Logs de Auditoría**: Explorar registros detallados de acciones administrativas.
 
-### User Profile (`/profile`)
-Accessible to all authenticated users.
-- **Personal Info**: Update email, username, and full name.
-- **Security**: Change password.
-- **Role & Status**: View current role and account status.
-- **Assigned Groups**: View list of accessible server groups.
+### Perfil de Usuario (`/profile`)
+Accesible para todos los usuarios autenticados.
+- **Información Personal**: Actualizar email, nombre de usuario y nombre completo.
+- **Seguridad**: Cambiar contraseña.
+- **Rol y Estado**: Ver rol actual y estado de la cuenta.
+- **Grupos Asignados**: Ver lista de grupos de servidores accesibles.
 
-### Dashboard Integration
-- **Role-Based Navigation**: 
-  - "Admin" button only visible to administrators.
-  - "Profile" button for quick access to settings.
-- **Visual Indicators**: Role badges displayed in user lists and profiles.
+### Integración en Dashboard
+- **Navegación Basada en Roles**: 
+  - Botón "Admin" solo visible para administradores.
+  - Botón "Perfil" para acceso rápido a la configuración.
+- **Indicadores Visuales**: Insignias de rol mostradas en listas de usuarios y perfiles.
 
-## Future Enhancements
+## Mejoras Futuras
 
-- [ ] Time-based permissions (temporary access)
-- [ ] IP-based restrictions
-- [ ] Multi-factor authentication for sensitive actions
-- [ ] Permission templates
-- [ ] Bulk permission management
-- [ ] Custom roles with specific permission sets
-- [ ] Approval workflows for sensitive operations
+- [ ] Permisos basados en tiempo (acceso temporal)
+- [ ] Restricciones basadas en IP
+- [ ] Autenticación multifactor para acciones sensibles
+- [ ] Plantillas de permisos
+- [ ] Gestión de permisos en masa
+- [ ] Roles personalizados con conjuntos de permisos específicos
+- [ ] Flujos de aprobación para operaciones sensibles

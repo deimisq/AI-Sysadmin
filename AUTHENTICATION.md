@@ -1,114 +1,114 @@
-# Authentication System
+# Sistema de Autenticación
 
-## Overview
-The AI Sysadmin Agent now includes a complete JWT-based authentication system to secure access to the application.
+## Resumen
+El Agente Sysadmin AI ahora incluye un sistema completo de autenticación basado en JWT para asegurar el acceso a la aplicación.
 
-## Features
+## Características
 
 ### Backend
-- **User Model**: Stores user credentials securely with hashed passwords
-- **JWT Tokens**: Stateless authentication using JSON Web Tokens
-- **Password Hashing**: Uses bcrypt for secure password storage
-- **Protected Routes**: All API endpoints require authentication
+- **Modelo de Usuario**: Almacena credenciales de usuario de forma segura con contraseñas hasheadas.
+- **Tokens JWT**: Autenticación sin estado (stateless) utilizando JSON Web Tokens.
+- **Hashing de Contraseñas**: Utiliza bcrypt para el almacenamiento seguro de contraseñas.
+- **Rutas Protegidas**: Todos los endpoints de la API requieren autenticación.
 
 ### Frontend
-- **Login/Register Page**: Combined authentication interface
-- **Token Storage**: JWT tokens stored in localStorage
-- **Protected Dashboard**: Automatic redirection based on auth status
-- **Logout Functionality**: Clear token and redirect to login
+- **Página de Login/Registro**: Interfaz de autenticación combinada.
+- **Almacenamiento de Token**: Tokens JWT almacenados en localStorage.
+- **Dashboard Protegido**: Redirección automática basada en el estado de autenticación.
+- **Funcionalidad de Logout**: Limpia el token y redirige al login.
 
-## API Endpoints
+## Endpoints de la API
 
-### Authentication
-- `POST /api/v1/auth/register` - Register a new user
-  - Body: `{ email, username, password, full_name? }`
-  - Returns: User object
+### Autenticación
+- `POST /api/v1/auth/register` - Registrar un nuevo usuario
+  - Cuerpo: `{ email, username, password, full_name? }`
+  - Retorna: Objeto de usuario
 
-- `POST /api/v1/auth/login` - Login and get access token
-  - Body: Form data with `username` and `password`
-  - Returns: `{ access_token, token_type }`
+- `POST /api/v1/auth/login` - Iniciar sesión y obtener token de acceso
+  - Cuerpo: Datos del formulario con `username` y `password`
+  - Retorna: `{ access_token, token_type }`
 
-- `GET /api/v1/auth/me` - Get current user information
-  - Headers: `Authorization: Bearer <token>`
-  - Returns: Current user object
+- `GET /api/v1/auth/me` - Obtener información del usuario actual
+  - Cabeceras: `Authorization: Bearer <token>`
+  - Retorna: Objeto del usuario actual
 
-## Usage
+## Uso
 
-### First Time Setup
-1. Navigate to `/login`
-2. Click "Don't have an account? Register"
-3. Fill in email, username, and password
-4. Click "Register"
-5. Login with your credentials
+### Configuración Inicial
+1. Navega a `/login`
+2. Haz clic en "¿No tienes cuenta? Regístrate"
+3. Rellena email, nombre de usuario y contraseña
+4. Haz clic en "Registrarse"
+5. Inicia sesión con tus credenciales
 
-### Accessing the Dashboard
-1. Navigate to `/login`
-2. Enter username and password
-3. Click "Login"
-4. You'll be redirected to `/dashboard`
+### Acceso al Dashboard
+1. Navega a `/login`
+2. Ingresa nombre de usuario y contraseña
+3. Haz clic en "Iniciar Sesión"
+4. Serás redirigido a `/dashboard`
 
-### Logout
-Click the "Logout" button in the dashboard header
+### Cerrar Sesión
+Haz clic en el botón "Logout" en la cabecera del dashboard.
 
-## Security Considerations
+## Consideraciones de Seguridad
 
-### Production Deployment
-1. **Change SECRET_KEY**: Set a strong, random `SECRET_KEY` in `.env`
-2. **HTTPS Only**: Always use HTTPS in production
-3. **Token Expiration**: Tokens expire after `ACCESS_TOKEN_EXPIRE_MINUTES` (default: 30 minutes)
-4. **Password Requirements**: Consider adding password strength requirements
-5. **Rate Limiting**: Add rate limiting to prevent brute force attacks
+### Despliegue en Producción
+1. **Cambiar SECRET_KEY**: Establece una `SECRET_KEY` fuerte y aleatoria en `.env`.
+2. **Solo HTTPS**: Usa siempre HTTPS en producción.
+3. **Expiración de Token**: Los tokens expiran después de `ACCESS_TOKEN_EXPIRE_MINUTES` (por defecto: 30 minutos).
+4. **Requisitos de Contraseña**: Considera agregar requisitos de fortaleza de contraseña.
+5. **Rate Limiting**: Agrega limitación de tasa para prevenir ataques de fuerza bruta.
 
-### Environment Variables
-Add to `backend/.env`:
+### Variables de Entorno
+Agregar a `backend/.env`:
 ```
-SECRET_KEY=your-super-secret-key-change-this-in-production
+SECRET_KEY=tu-clave-super-secreta-cambiala-en-produccion
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
 ```
 
-## Database Schema
+## Esquema de Base de Datos
 
-### Users Table
-- `id`: Primary key
-- `email`: Unique email address
-- `username`: Unique username
-- `hashed_password`: Bcrypt hashed password
-- `full_name`: Optional full name
-- `role`: Global role (superadmin, admin, group_admin, user)
-- `is_active`: Boolean flag for active users
-- `is_superuser`: Boolean flag for superadmin users
-- `created_at`: Timestamp
-- `updated_at`: Timestamp
+### Tabla de Usuarios
+- `id`: Clave primaria
+- `email`: Dirección de correo única
+- `username`: Nombre de usuario único
+- `hashed_password`: Contraseña hasheada con Bcrypt
+- `full_name`: Nombre completo opcional
+- `role`: Rol global (superadmin, admin, group_admin, user)
+- `is_active`: Bandera booleana para usuarios activos
+- `is_superuser`: Bandera booleana para usuarios superadmin
+- `created_at`: Marca de tiempo
+- `updated_at`: Marca de tiempo
 
-## Technical Implementation
+## Implementación Técnica
 
-### Password Hashing
+### Hashing de Contraseñas
 ```python
 from passlib.context import CryptContext
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 ```
 
-### JWT Token Creation
+### Creación de Token JWT
 ```python
 from jose import jwt
 access_token = jwt.encode({"sub": username}, SECRET_KEY, algorithm=ALGORITHM)
 ```
 
-### Protected Routes
+### Rutas Protegidas
 ```python
 from dependencies import get_current_active_user
 
 @router.get("/protected")
 def protected_route(current_user: User = Depends(get_current_active_user)):
-    return {"message": f"Hello {current_user.username}"}
+    return {"message": f"Hola {current_user.username}"}
 ```
 
-## Future Enhancements
-- [ ] Email verification
-- [ ] Password reset functionality
-- [ ] Two-factor authentication (2FA)
-- [ ] OAuth integration (Google, GitHub)
-- [x] Role-based access control (RBAC) - **Implemented**
-- [ ] Session management
-- [ ] Refresh tokens
+## Mejoras Futuras
+- [ ] Verificación de correo electrónico
+- [ ] Funcionalidad de restablecimiento de contraseña
+- [ ] Autenticación de dos factores (2FA)
+- [ ] Integración OAuth (Google, GitHub)
+- [x] Control de acceso basado en roles (RBAC) - **Implementado**
+- [ ] Gestión de sesiones
+- [ ] Tokens de refresco

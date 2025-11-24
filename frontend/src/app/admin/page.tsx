@@ -10,6 +10,8 @@ import { Shield, Users, Server, FolderOpen, Activity, ArrowLeft } from "lucide-r
 import { UserManagement } from "@/components/admin/user-management";
 import { ServerManagement } from "@/components/admin/server-management";
 import { AIParameters } from "@/components/admin/ai-parameters";
+import { BackendParameters } from "@/components/admin/backend-parameters";
+import { FrontendParameters } from "@/components/admin/frontend-parameters";
 import { SystemStats } from "@/components/admin/system-stats";
 import { AuditLogs } from "@/components/admin/audit-logs";
 
@@ -185,27 +187,11 @@ export default function AdminPage() {
                     </TabsContent>
 
                     <TabsContent value="backend-params" className="space-y-4">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Backend Parameters</CardTitle>
-                                <CardDescription>Configure backend system settings.</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-muted-foreground">Backend configuration interface coming soon (Issue #8).</p>
-                            </CardContent>
-                        </Card>
+                        <BackendParameters currentUser={currentUser} />
                     </TabsContent>
 
                     <TabsContent value="frontend-params" className="space-y-4">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Frontend Parameters</CardTitle>
-                                <CardDescription>Configure frontend UI settings.</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-muted-foreground">Frontend configuration interface coming soon (Issue #9).</p>
-                            </CardContent>
-                        </Card>
+                        <FrontendParameters currentUser={currentUser} />
                     </TabsContent>
 
                     <TabsContent value="communication" className="space-y-4">

@@ -140,3 +140,112 @@ export async function executeCommand(serverId: number, command: string) {
     if (!res.ok) throw new Error("Failed to execute command");
     return res.json();
 }
+
+// ==================== ADMIN API ====================
+
+// User Management
+export async function fetchAllUsers() {
+    const token = typeof window !== 'undefined' ? localStorage.getItem("token") : null;
+    const res = await fetch(`${API_BASE_URL}/admin/users`, {
+        headers: {
+            ...(token && { "Authorization": `Bearer ${token}` }),
+        },
+    });
+    if (!res.ok) throw new Error("Failed to fetch users");
+    return res.json();
+}
+
+export async function fetchUser(userId: number) {
+    const token = typeof window !== 'undefined' ? localStorage.getItem("token") : null;
+    const res = await fetch(`${API_BASE_URL}/admin/users/${userId}`, {
+        headers: {
+            ...(token && { "Authorization": `Bearer ${token}` }),
+        },
+    });
+    if (!res.ok) throw new Error("Failed to fetch user");
+    return res.json();
+}
+
+export async function updateUserAdmin(userId: number, data: any) {
+    const res = await fetch(`${API_BASE_URL}/admin/users/${userId}`, {
+        method: "PUT",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error("Failed to update user");
+    return res.json();
+}
+
+export async function deleteUser(userId: number) {
+    const res = await fetch(`${API_BASE_URL}/admin/users/${userId}`, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+    });
+    if (!res.ok) throw new Error("Failed to delete user");
+    return res.json();
+}
+
+// Group Permissions
+export async function grantGroupAccess(userId: number, groupId: number, role: string = "user") {
+    const res = await fetch(`${API_BASE_URL}/admin/users/${userId}/groups/${groupId}/grant?role=${role}`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+    });
+    if (!res.ok) throw new Error("Failed to grant access");
+    return res.json();
+}
+
+export async function revokeGroupAccess(userId: number, groupId: number) {
+    const res = await fetch(`${API_BASE_URL}/admin/users/${userId}/groups/${groupId}/revoke`, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+    });
+    if (!res.ok) throw new Error("Failed to revoke access");
+    return res.json();
+}
+
+export async function fetchUserGroups(userId: number) {
+    const token = typeof window !== 'undefined' ? localStorage.getItem("token") : null;
+    const res = await fetch(`${API_BASE_URL}/admin/users/${userId}/groups`, {
+        headers: {
+            ...(token && { "Authorization": `Bearer ${token}` }),
+        },
+    });
+    if (!res.ok) throw new Error("Failed to fetch user groups");
+    return res.json();
+}
+
+// Audit & Stats
+export async function fetchAuditLogs(skip: number = 0, limit: number = 100) {
+    const token = typeof window !== 'undefined' ? localStorage.getItem("token") : null;
+    const res = await fetch(`${API_BASE_URL}/admin/audit-logs?skip=${skip}&limit=${limit}`, {
+        headers: {
+            ...(token && { "Authorization": `Bearer ${token}` }),
+        },
+    });
+    if (!res.ok) throw new Error("Failed to fetch audit logs");
+    return res.json();
+}
+
+export async function fetchSystemStats() {
+    const token = typeof window !== 'undefined' ? localStorage.getItem("token") : null;
+    const res = await fetch(`${API_BASE_URL}/admin/stats`, {
+        headers: {
+            ...(token && { "Authorization": `Bearer ${token}` }),
+        },
+    });
+    if (!res.ok) throw new Error("Failed to fetch stats");
+    return res.json();
+}
+
+// Current User
+export async function fetchCurrentUser() {
+    const token = typeof window !== 'undefined' ? localStorage.getItem("token") : null;
+    const res = await fetch(`${API_BASE_URL}/auth/me`, {
+        headers: {
+            ...(token && { "Authorization": `Bearer ${token}` }),
+        },
+    });
+    if (!res.ok) throw new Error("Failed to fetch current user");
+    return res.json();
+}

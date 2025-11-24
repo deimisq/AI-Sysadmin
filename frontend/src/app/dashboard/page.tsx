@@ -8,8 +8,9 @@ import { ConversationalChat } from "@/components/conversational-chat";
 import { GroupManager } from "@/components/group-manager";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Server as ServerIcon, FolderOpen, LogOut } from "lucide-react";
+import { PlusCircle, Server as ServerIcon, FolderOpen, LogOut, User, Shield } from "lucide-react";
 import { useI18n } from "@/lib/i18n-context";
+import { fetchCurrentUser } from "@/lib/api";
 
 export default function Dashboard() {
     const router = useRouter();
@@ -20,16 +21,27 @@ export default function Dashboard() {
     const [showGroupManager, setShowGroupManager] = useState(false);
     const [refreshKey, setRefreshKey] = useState(0);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [currentUser, setCurrentUser] = useState<any>(null);
 
     useEffect(() => {
-        // Check authentication
+        // Check authentication and load user
         const token = localStorage.getItem("token");
         if (!token) {
             router.push("/login");
         } else {
             setIsAuthenticated(true);
+            loadUser();
         }
     }, [router]);
+
+    const loadUser = async () => {
+        try {
+            const user = await fetchCurrentUser();
+            setCurrentUser(user);
+        } catch (error) {
+            console.error("Failed to load user", error);
+        }
+    };
 
     const handleLogout = () => {
         localStorage.removeItem("token");
@@ -95,6 +107,16 @@ export default function Dashboard() {
                     </div>
                     <div className="flex gap-2">
                         <LanguageSwitcher />
+                        <Button variant="outline" onClick={() => router.push("/profile")}>
+                            <User className="mr-2 h-4 w-4" />
+                            Profile
+                        </Button>
+                        {currentUser && ["superadmin", "admin"].includes(currentUser.role) && (
+                            <Button variant="outline" onClick={() => router.push("/admin")}>
+                                <Shield className="mr-2 h-4 w-4" />
+                                Admin
+                            </Button>
+                        )}
                         <Button variant="outline" onClick={() => setShowGroupManager(true)}>
                             <FolderOpen className="mr-2 h-4 w-4" />
                             Manage Groups

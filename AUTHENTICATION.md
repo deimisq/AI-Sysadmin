@@ -75,8 +75,9 @@ ACCESS_TOKEN_EXPIRE_MINUTES=30
 - `username`: Unique username
 - `hashed_password`: Bcrypt hashed password
 - `full_name`: Optional full name
+- `role`: Global role (superadmin, admin, group_admin, user)
 - `is_active`: Boolean flag for active users
-- `is_superuser`: Boolean flag for admin users
+- `is_superuser`: Boolean flag for superadmin users
 - `created_at`: Timestamp
 - `updated_at`: Timestamp
 
@@ -108,6 +109,6 @@ def protected_route(current_user: User = Depends(get_current_active_user)):
 - [ ] Password reset functionality
 - [ ] Two-factor authentication (2FA)
 - [ ] OAuth integration (Google, GitHub)
-- [ ] Role-based access control (RBAC)
+- [x] Role-based access control (RBAC) - **Implemented**
 - [ ] Session management
 - [ ] Refresh tokens

@@ -206,6 +206,30 @@ curl http://localhost:8000/api/v1/admin/users/2/groups \
 4. **Group Isolation**: Use groups to isolate sensitive servers
 5. **Permission Review**: Periodically review user permissions
 
+## Frontend Implementation
+
+The RBAC system is fully integrated into the frontend interface:
+
+### Admin Panel (`/admin`)
+Accessible only to users with `admin` or `superadmin` roles.
+- **User Management**: View, edit, and delete users.
+- **Group Permissions**: Assign users to specific server groups with custom roles.
+- **System Stats**: View real-time system statistics.
+- **Audit Logs**: Browse detailed logs of administrative actions.
+
+### User Profile (`/profile`)
+Accessible to all authenticated users.
+- **Personal Info**: Update email, username, and full name.
+- **Security**: Change password.
+- **Role & Status**: View current role and account status.
+- **Assigned Groups**: View list of accessible server groups.
+
+### Dashboard Integration
+- **Role-Based Navigation**: 
+  - "Admin" button only visible to administrators.
+  - "Profile" button for quick access to settings.
+- **Visual Indicators**: Role badges displayed in user lists and profiles.
+
 ## Future Enhancements
 
 - [ ] Time-based permissions (temporary access)

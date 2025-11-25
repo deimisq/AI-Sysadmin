@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Palette, Save } from "lucide-react";
+import { getConfigByCategory, updateConfigCategory } from "@/lib/api";
 
 interface FrontendParamsProps {
     currentUser: any;
@@ -28,7 +29,22 @@ export function FrontendParameters({ currentUser }: FrontendParamsProps) {
     }, []);
 
     const loadConfig = async () => {
-        setMessage("Configuration loaded from environment variables");
+        try {
+            const data = await getConfigByCategory("frontend");
+            setConfig({
+                api_url: data.api_url || "/api/v1",
+                app_name: data.app_name || "AI Sysadmin Agent",
+                default_language: data.default_language || "en",
+                theme: data.theme || "system",
+                items_per_page: data.items_per_page || "20",
+                enable_animations: data.enable_animations || "true",
+                show_debug_info: data.show_debug_info || "false"
+            });
+            setMessage("✅ Configuration loaded successfully");
+        } catch (error: any) {
+            console.error("Failed to load config:", error);
+            setMessage("ℹ️ No saved configuration found. Using defaults.");
+        }
     };
 
     const handleSave = async () => {
@@ -36,8 +52,8 @@ export function FrontendParameters({ currentUser }: FrontendParamsProps) {
         setMessage("");
 
         try {
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            setMessage("✅ Configuration saved successfully. Rebuild frontend to apply changes.");
+            await updateConfigCategory("frontend", config);
+            setMessage("✅ Configuration saved successfully! Changes applied immediately.");
         } catch (error: any) {
             setMessage("❌ Failed to save configuration: " + error.message);
         } finally {
@@ -175,10 +191,10 @@ export function FrontendParameters({ currentUser }: FrontendParamsProps) {
 
                 {message && (
                     <div className={`p-3 rounded-lg text-sm ${message.startsWith("✅")
-                            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                            : message.startsWith("❌")
-                                ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                                : "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                        ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                        : message.startsWith("❌")
+                            ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                            : "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
                         }`}>
                         {message}
                     </div>

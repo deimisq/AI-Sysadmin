@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Brain, Save, Eye, EyeOff } from "lucide-react";
+import { getConfigByCategory, updateConfigCategory } from "@/lib/api";
 
 interface AIParamsProps {
     currentUser: any;
@@ -37,9 +38,24 @@ export function AIParameters({ currentUser }: AIParamsProps) {
     }, []);
 
     const loadConfig = async () => {
-        // In a real implementation, this would fetch from the backend
-        // For now, we'll use placeholder values
-        setMessage("Configuration loaded from environment variables");
+        try {
+            const data = await getConfigByCategory("ai");
+            setConfig({
+                llm_provider: data.llm_provider || "bedrock",
+                aws_region: data.aws_region || "us-east-1",
+                aws_access_key_id: data.aws_access_key_id || "",
+                aws_secret_access_key: data.aws_secret_access_key || "",
+                google_api_key: data.google_api_key || "",
+                openai_api_key: data.openai_api_key || "",
+                temperature: data.temperature || "0.7",
+                max_tokens: data.max_tokens || "2000",
+                model_name: data.model_name || ""
+            });
+            setMessage("✅ Configuration loaded successfully");
+        } catch (error: any) {
+            console.error("Failed to load config:", error);
+            setMessage("ℹ️ No saved configuration found. Using defaults.");
+        }
     };
 
     const handleSave = async () => {
@@ -47,10 +63,8 @@ export function AIParameters({ currentUser }: AIParamsProps) {
         setMessage("");
 
         try {
-            // In a real implementation, this would save to backend
-            // which would update environment variables or config file
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            setMessage("✅ Configuration saved successfully. Restart backend to apply changes.");
+            await updateConfigCategory("ai", config);
+            setMessage("✅ Configuration saved successfully! Changes applied immediately.");
         } catch (error: any) {
             setMessage("❌ Failed to save configuration: " + error.message);
         } finally {
@@ -225,19 +239,19 @@ export function AIParameters({ currentUser }: AIParamsProps) {
 
                 {message && (
                     <div className={`p-3 rounded-lg text-sm ${message.startsWith("✅")
-                            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                            : message.startsWith("❌")
-                                ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                                : "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                        ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                        : message.startsWith("❌")
+                            ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                            : "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
                         }`}>
                         {message}
                     </div>
                 )}
 
-                <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-                    <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                        <strong>⚠️ Note:</strong> Configuration changes require backend restart to take effect.
-                        In production, these settings should be managed through environment variables or a secure configuration management system.
+                <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                    <p className="text-sm text-blue-800 dark:text-blue-200">
+                        <strong>ℹ️ Note:</strong> API keys are stored securely in the database.
+                        Changes are applied immediately without requiring a backend restart.
                     </p>
                 </div>
             </CardContent>

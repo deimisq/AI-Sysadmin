@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Settings, Save, Eye, EyeOff } from "lucide-react";
+import { getConfigByCategory, updateConfigCategory } from "@/lib/api";
 
 interface BackendParamsProps {
     currentUser: any;
@@ -29,7 +30,22 @@ export function BackendParameters({ currentUser }: BackendParamsProps) {
     }, []);
 
     const loadConfig = async () => {
-        setMessage("Configuration loaded from environment variables");
+        try {
+            const data = await getConfigByCategory("backend");
+            setConfig({
+                database_url: data.database_url || "",
+                secret_key: data.secret_key || "",
+                algorithm: data.algorithm || "HS256",
+                access_token_expire_minutes: data.access_token_expire_minutes || "1440",
+                cors_origins: data.cors_origins || "*",
+                debug_mode: data.debug_mode || "false",
+                log_level: data.log_level || "INFO"
+            });
+            setMessage("✅ Configuration loaded successfully");
+        } catch (error: any) {
+            console.error("Failed to load config:", error);
+            setMessage("ℹ️ No saved configuration found. Using defaults.");
+        }
     };
 
     const handleSave = async () => {
@@ -37,8 +53,8 @@ export function BackendParameters({ currentUser }: BackendParamsProps) {
         setMessage("");
 
         try {
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            setMessage("✅ Configuration saved successfully. Restart backend to apply changes.");
+            await updateConfigCategory("backend", config);
+            setMessage("✅ Configuration saved successfully! Changes applied immediately.");
         } catch (error: any) {
             setMessage("❌ Failed to save configuration: " + error.message);
         } finally {
@@ -191,19 +207,19 @@ export function BackendParameters({ currentUser }: BackendParamsProps) {
 
                 {message && (
                     <div className={`p-3 rounded-lg text-sm ${message.startsWith("✅")
-                            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                            : message.startsWith("❌")
-                                ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                                : "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                        ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                        : message.startsWith("❌")
+                            ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                            : "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
                         }`}>
                         {message}
                     </div>
                 )}
 
-                <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-                    <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                        <strong>⚠️ Security Warning:</strong> These settings should be managed through environment variables
-                        in production. Never commit sensitive values to version control. Backend restart required for changes to take effect.
+                <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                    <p className="text-sm text-blue-800 dark:text-blue-200">
+                        <strong>ℹ️ Note:</strong> Configuration is stored securely in the database.
+                        Changes are applied immediately without requiring a backend restart.
                     </p>
                 </div>
             </CardContent>

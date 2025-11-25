@@ -48,21 +48,21 @@ export function CommunicationSettings({ currentUser }: CommunicationSettingsProp
             const data = await getConfigByCategory("communication");
             // Merge loaded config with defaults
             setConfig({
-                smtp_enabled: data.smtp_enabled || "false",
+                smtp_enabled: String(data.smtp_enabled ?? "false"),
                 smtp_host: data.smtp_host || "",
-                smtp_port: data.smtp_port || "587",
+                smtp_port: String(data.smtp_port || "587"),
                 smtp_username: data.smtp_username || "",
                 smtp_password: data.smtp_password || "",
                 smtp_from_email: data.smtp_from_email || "",
                 smtp_from_name: data.smtp_from_name || "AI Sysadmin Agent",
-                smtp_use_tls: data.smtp_use_tls || "true",
-                enable_email_notifications: data.enable_email_notifications || "false",
+                smtp_use_tls: String(data.smtp_use_tls ?? "true"),
+                enable_email_notifications: String(data.enable_email_notifications ?? "false"),
                 admin_email: data.admin_email || "",
                 teams_webhook_url: data.teams_webhook_url || "",
                 slack_webhook_url: data.slack_webhook_url || "",
                 telegram_bot_token: data.telegram_bot_token || "",
                 telegram_chat_id: data.telegram_chat_id || "",
-                whatsapp_enabled: data.whatsapp_enabled || "false"
+                whatsapp_enabled: String(data.whatsapp_enabled ?? "false")
             });
             setMessage("✅ Configuration loaded successfully");
         } catch (error: any) {
@@ -330,8 +330,8 @@ export function CommunicationSettings({ currentUser }: CommunicationSettingsProp
 
                 <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                     <p className="text-sm text-blue-800 dark:text-blue-200">
-                        <strong>ℹ️ Note:</strong> SMTP credentials should be stored securely. Consider using app-specific passwords
-                        for services like Gmail. Backend restart required for changes to take effect.
+                        <strong>ℹ️ Note:</strong> SMTP credentials are stored securely in the database.
+                        Changes are applied immediately without requiring a backend restart.
                     </p>
                 </div>
             </CardContent>

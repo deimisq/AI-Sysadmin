@@ -36,9 +36,9 @@ export function BackendParameters({ currentUser }: BackendParamsProps) {
                 database_url: data.database_url || "",
                 secret_key: data.secret_key || "",
                 algorithm: data.algorithm || "HS256",
-                access_token_expire_minutes: data.access_token_expire_minutes || "1440",
+                access_token_expire_minutes: String(data.access_token_expire_minutes || "1440"),
                 cors_origins: data.cors_origins || "*",
-                debug_mode: data.debug_mode || "false",
+                debug_mode: String(data.debug_mode ?? "false"),
                 log_level: data.log_level || "INFO"
             });
             setMessage("✅ Configuration loaded successfully");

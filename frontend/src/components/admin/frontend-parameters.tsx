@@ -36,9 +36,9 @@ export function FrontendParameters({ currentUser }: FrontendParamsProps) {
                 app_name: data.app_name || "AI Sysadmin Agent",
                 default_language: data.default_language || "en",
                 theme: data.theme || "system",
-                items_per_page: data.items_per_page || "20",
-                enable_animations: data.enable_animations || "true",
-                show_debug_info: data.show_debug_info || "false"
+                items_per_page: String(data.items_per_page || "20"),
+                enable_animations: String(data.enable_animations ?? "true"),
+                show_debug_info: String(data.show_debug_info ?? "false")
             });
             setMessage("✅ Configuration loaded successfully");
         } catch (error: any) {

@@ -47,8 +47,8 @@ export function AIParameters({ currentUser }: AIParamsProps) {
                 aws_secret_access_key: data.aws_secret_access_key || "",
                 google_api_key: data.google_api_key || "",
                 openai_api_key: data.openai_api_key || "",
-                temperature: data.temperature || "0.7",
-                max_tokens: data.max_tokens || "2000",
+                temperature: String(data.temperature || "0.7"),
+                max_tokens: String(data.max_tokens || "2000"),
                 model_name: data.model_name || ""
             });
             setMessage("✅ Configuration loaded successfully");

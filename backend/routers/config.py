@@ -1,23 +1,28 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from typing import List, Dict, Any
+from sqlalchemy.sql import func
+from typing import Dict, Any
 from database import get_db
-from models import SystemConfig, User
+from models import SystemConfig, User, RoleType
 from dependencies import get_current_active_user
-from utils.permissions import require_role
-from models import RoleType
 import json
 
 router = APIRouter(prefix="/config", tags=["configuration"])
 
+def check_admin_role(user: User):
+    """Check if user has admin or superadmin role"""
+    if user.role not in [RoleType.SUPERADMIN.value, RoleType.ADMIN.value]:
+        raise HTTPException(status_code=403, detail="Insufficient permissions")
+
 @router.get("/{category}")
-@require_role([RoleType.SUPERADMIN, RoleType.ADMIN])
 async def get_config_by_category(
     category: str,
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
     """Get all configuration for a specific category"""
+    check_admin_role(current_user)
+    
     configs = db.query(SystemConfig).filter(SystemConfig.category == category).all()
     
     result = {}
@@ -32,12 +37,13 @@ async def get_config_by_category(
     return result
 
 @router.get("/")
-@require_role([RoleType.SUPERADMIN, RoleType.ADMIN])
 async def get_all_config(
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
     """Get all configuration grouped by category"""
+    check_admin_role(current_user)
+    
     configs = db.query(SystemConfig).all()
     
     result = {}
@@ -53,7 +59,6 @@ async def get_all_config(
     return result
 
 @router.put("/{category}")
-@require_role([RoleType.SUPERADMIN, RoleType.ADMIN])
 async def update_config_category(
     category: str,
     config_data: Dict[str, Any],
@@ -61,6 +66,8 @@ async def update_config_category(
     db: Session = Depends(get_db)
 ):
     """Update multiple configuration values for a category"""
+    check_admin_role(current_user)
+    
     updated_keys = []
     
     for key, value in config_data.items():
@@ -97,7 +104,6 @@ async def update_config_category(
     }
 
 @router.delete("/{category}/{key}")
-@require_role([RoleType.SUPERADMIN])
 async def delete_config(
     category: str,
     key: str,
@@ -105,6 +111,10 @@ async def delete_config(
     db: Session = Depends(get_db)
 ):
     """Delete a specific configuration value"""
+    # Only superadmin can delete config
+    if current_user.role != RoleType.SUPERADMIN.value:
+        raise HTTPException(status_code=403, detail="Only superadmin can delete configuration")
+    
     config = db.query(SystemConfig).filter(
         SystemConfig.key == key,
         SystemConfig.category == category

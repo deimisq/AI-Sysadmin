@@ -143,42 +143,42 @@ def delete_user(
 def grant_group_access(
     user_id: int,
     group_id: int,
-    role: str = RoleType.USER.value,
+    role: str = "user",  # Can be "user" or "group_admin"
     current_user: models.User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
-    """Grant user access to a group"""
+    """Grant user access to a group with specific role"""
     if current_user.role not in [RoleType.SUPERADMIN.value, RoleType.ADMIN.value]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
-    # Check if user and group exist
-    user = db.query(models.User).filter(models.User.id == user_id).first()
-    group = db.query(models.ServerGroup).filter(models.ServerGroup.id == group_id).first()
-    
-    if not user or not group:
-        raise HTTPException(status_code=404, detail="User or group not found")
+    # Validate role
+    if role not in ["user", "group_admin"]:
+        raise HTTPException(status_code=400, detail="Invalid role. Must be 'user' or 'group_admin'")
     
     # Check if permission already exists
-    existing = db.query(models.user_group_permissions).filter(
-        and_(
-            models.user_group_permissions.c.user_id == user_id,
-            models.user_group_permissions.c.group_id == group_id
-        )
+    existing = db.query(models.UserGroupPermission).filter(
+        models.UserGroupPermission.user_id == user_id,
+        models.UserGroupPermission.group_id == group_id
     ).first()
     
     if existing:
-        raise HTTPException(status_code=400, detail="Permission already exists")
+        # Update role if different
+        if existing.role != role:
+            existing.role = role
+            db.commit()
+            return {"message": f"Role updated to {role} successfully"}
+        return {"message": "Permission already exists"}
     
-    # Insert permission
-    stmt = models.user_group_permissions.insert().values(
+    # Create new permission
+    permission = models.UserGroupPermission(
         user_id=user_id,
         group_id=group_id,
         role=role
     )
-    db.execute(stmt)
+    db.add(permission)
     db.commit()
     
-    return {"message": "Access granted successfully"}
+    return {"message": f"Access granted with role {role} successfully"}
 
 @router.delete("/users/{user_id}/groups/{group_id}/revoke")
 def revoke_group_access(
@@ -191,18 +191,17 @@ def revoke_group_access(
     if current_user.role not in [RoleType.SUPERADMIN.value, RoleType.ADMIN.value]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
-    # Delete permission
-    stmt = models.user_group_permissions.delete().where(
-        and_(
-            models.user_group_permissions.c.user_id == user_id,
-            models.user_group_permissions.c.group_id == group_id
-        )
-    )
-    result = db.execute(stmt)
-    db.commit()
+    # Find and delete permission
+    permission = db.query(models.UserGroupPermission).filter(
+        models.UserGroupPermission.user_id == user_id,
+        models.UserGroupPermission.group_id == group_id
+    ).first()
     
-    if result.rowcount == 0:
+    if not permission:
         raise HTTPException(status_code=404, detail="Permission not found")
+    
+    db.delete(permission)
+    db.commit()
     
     return {"message": "Access revoked successfully"}
 

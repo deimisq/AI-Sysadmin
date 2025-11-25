@@ -56,7 +56,7 @@ def read_groups(
         return groups
     
     # Regular users can only see groups they have access to
-    user_group_ids = [group.id for group in current_user.group_permissions]
+    user_group_ids = [perm.group_id for perm in current_user.group_permissions_detail]
     
     if not user_group_ids:
         return []
@@ -169,7 +169,7 @@ def read_servers(
     
     # Regular users can only see servers in their assigned groups
     # Get IDs of groups the user belongs to
-    user_group_ids = [group.id for group in current_user.group_permissions]
+    user_group_ids = [perm.group_id for perm in current_user.group_permissions_detail]
     
     if not user_group_ids:
         return []

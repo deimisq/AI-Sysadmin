@@ -25,12 +25,28 @@ class UserLogin(BaseModel):
     username: str
     password: str
 
+class UserGroupPermissionBase(BaseModel):
+    group_id: int
+    role: str = "user"  # user, group_admin
+
+class UserGroupPermissionCreate(UserGroupPermissionBase):
+    pass
+
+class UserGroupPermission(UserGroupPermissionBase):
+    id: int
+    user_id: int
+    created_at: datetime
+    
+    class Config:
+        from_attributes = True
+
 class User(UserBase):
     id: int
     is_active: bool
-    is_superuser: bool
     role: str
     created_at: datetime
+    group_permissions_detail: List[UserGroupPermission] = []
+    
     class Config:
         from_attributes = True
 
@@ -41,6 +57,7 @@ class Token(BaseModel):
 class TokenData(BaseModel):
     username: Optional[str] = None
 
+# Client Schemas
 class ClientBase(BaseModel):
     name: str
     description: Optional[str] = None
@@ -54,6 +71,7 @@ class Client(ClientBase):
     class Config:
         from_attributes = True
 
+# Server Group Schemas
 class ServerGroupBase(BaseModel):
     name: str
     description: Optional[str] = None
@@ -74,100 +92,112 @@ class ServerGroup(ServerGroupBase):
     class Config:
         from_attributes = True
 
+# Server Schemas
 class ServerBase(BaseModel):
     hostname: str
     ip_address: str
-    description: Optional[str] = None
-    os_info: Optional[str] = None
-    ssh_port: int = 22
     ssh_username: str
     ssh_password: Optional[str] = None
-    ssh_key_path: Optional[str] = None
+    ssh_private_key_path: Optional[str] = None
+    description: Optional[str] = None
+    client_id: Optional[int] = None
+    group_id: Optional[int] = None
 
 class ServerCreate(ServerBase):
-    client_id: int
-    group_id: Optional[int] = None
+    pass
 
 class ServerUpdate(BaseModel):
     hostname: Optional[str] = None
     ip_address: Optional[str] = None
-    description: Optional[str] = None
-    os_info: Optional[str] = None
-    ssh_port: Optional[int] = None
     ssh_username: Optional[str] = None
     ssh_password: Optional[str] = None
-    ssh_key_path: Optional[str] = None
+    ssh_private_key_path: Optional[str] = None
+    description: Optional[str] = None
+    client_id: Optional[int] = None
     group_id: Optional[int] = None
 
-# Response model - excludes sensitive data
-class Server(BaseModel):
+class Server(ServerBase):
     id: int
-    hostname: str
-    ip_address: str
-    description: Optional[str] = None
-    os_info: Optional[str] = None
-    ssh_port: int
-    ssh_username: str
-    client_id: int
-    group_id: Optional[int] = None
     created_at: datetime
-    # Note: ssh_password and ssh_key_path are intentionally excluded for security
     class Config:
         from_attributes = True
 
-class CommandRequest(BaseModel):
+# Diagnostic Schemas
+class DiagnosticRequest(BaseModel):
+    server_id: int
+    problem_description: str
+    language: str = "en"
+
+class DiagnosticResponse(BaseModel):
+    diagnosis: str
+    suggested_commands: Optional[List[str]] = None
+
+# Command Execution Schemas
+class CommandExecutionRequest(BaseModel):
     server_id: int
     command: str
 
-class CommandResponse(BaseModel):
-    stdout: str
-    stderr: str
-    exit_code: int
-    # Diagnostic information
-    hostname: Optional[str] = None
-    username: Optional[str] = None
-    command: Optional[str] = None
-    auth_method: Optional[str] = None
+# Alias for backwards compatibility
+CommandRequest = CommandExecutionRequest
 
+class CommandExecutionResponse(BaseModel):
+    output: str
+    return_code: int
+    error: Optional[str] = None
+
+# Alias for backwards compatibility
+CommandResponse = CommandExecutionResponse
+
+# Audit Log Schemas
+class AuditLogBase(BaseModel):
+    action: str
+    resource_type: Optional[str] = None
+    resource_id: Optional[int] = None
+    details: Optional[str] = None
+
+class AuditLog(AuditLogBase):
+    id: int
+    user_id: int
+    username: str
+    created_at: datetime
+    
+    class Config:
+        from_attributes = True
+
+# Allowed Domain Schemas
 class AllowedDomainBase(BaseModel):
     domain: str
     description: Optional[str] = None
-    is_active: bool = True
 
 class AllowedDomainCreate(AllowedDomainBase):
     pass
 
-class AllowedDomainUpdate(BaseModel):
-    domain: Optional[str] = None
-    description: Optional[str] = None
-    is_active: Optional[bool] = None
-
 class AllowedDomain(AllowedDomainBase):
     id: int
     created_at: datetime
+    
     class Config:
         from_attributes = True
 
+# Notification Schemas
 class NotificationBase(BaseModel):
-    title: str
     message: str
     type: str = "info"
-
-class NotificationCreate(NotificationBase):
-    user_id: int
+    is_read: bool = False
 
 class Notification(NotificationBase):
     id: int
     user_id: int
-    is_read: bool
     created_at: datetime
+    
     class Config:
         from_attributes = True
 
+# System Config Schemas
 class SystemConfigBase(BaseModel):
     key: str
     value: str
-    category: str
+    category: str = "general"
     is_secret: bool = False
     description: Optional[str] = None
 
@@ -175,9 +205,13 @@ class SystemConfigCreate(SystemConfigBase):
     pass
 
 class SystemConfigUpdate(BaseModel):
-    value: str
+    value: Optional[str] = None
+    description: Optional[str] = None
 
 class SystemConfig(SystemConfigBase):
-    updated_at: datetime
+    id: int
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+    
     class Config:
         from_attributes = True

@@ -55,10 +55,10 @@ def can_access_server(user: models.User, server: models.Server, db: Session) -> 
         return False
     
     # Check if user has permission for this server's group
-    user_group = db.query(models.user_group_permissions).filter(
+    user_group = db.query(models.UserGroupPermission).filter(
         and_(
-            models.user_group_permissions.c.user_id == user.id,
-            models.user_group_permissions.c.group_id == server.group_id
+            models.UserGroupPermission.user_id == user.id,
+            models.UserGroupPermission.group_id == server.group_id
         )
     ).first()
     
@@ -72,10 +72,10 @@ def can_access_group(user: models.User, group_id: int, db: Session) -> bool:
         return True
     
     # Check if user has permission for this group
-    user_group = db.query(models.user_group_permissions).filter(
+    user_group = db.query(models.UserGroupPermission).filter(
         and_(
-            models.user_group_permissions.c.user_id == user.id,
-            models.user_group_permissions.c.group_id == group_id
+            models.UserGroupPermission.user_id == user.id,
+            models.UserGroupPermission.group_id == group_id
         )
     ).first()
     
@@ -130,10 +130,10 @@ def get_user_accessible_groups(user: models.User, db: Session) -> list:
     
     # Get groups user has explicit permission for
     user_groups = db.query(models.ServerGroup).join(
-        models.user_group_permissions,
-        models.ServerGroup.id == models.user_group_permissions.c.group_id
+        models.UserGroupPermission,
+        models.ServerGroup.id == models.UserGroupPermission.group_id
     ).filter(
-        models.user_group_permissions.c.user_id == user.id
+        models.UserGroupPermission.user_id == user.id
     ).all()
     
     return user_groups

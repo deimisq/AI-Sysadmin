@@ -36,16 +36,19 @@ class PermissionType(str, enum.Enum):
     VIEW_LOGS = "view_logs"
     MANAGE_SYSTEM = "manage_system"
 
-# Association tables
-user_group_permissions = Table(
-    'user_group_permissions',
-    Base.metadata,
-    Column('id', Integer, primary_key=True),
-    Column('user_id', Integer, ForeignKey('users.id', ondelete='CASCADE')),
-    Column('group_id', Integer, ForeignKey('server_groups.id', ondelete='CASCADE')),
-    Column('role', String, default=RoleType.USER.value),
-    Column('created_at', DateTime(timezone=True), server_default=func.now())
-)
+# User Group Permission Model (for group-specific roles)
+class UserGroupPermission(Base):
+    __tablename__ = 'user_group_permissions'
+    
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    group_id = Column(Integer, ForeignKey('server_groups.id', ondelete='CASCADE'), nullable=False)
+    role = Column(String, default=RoleType.USER.value)  # Role within this group
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    
+    # Relationships
+    user = relationship("User", back_populates="group_permissions_detail")
+    group = relationship("ServerGroup", back_populates="user_permissions_detail")
 
 class User(Base):
     __tablename__ = "users"
@@ -57,15 +60,15 @@ class User(Base):
     full_name = Column(String, nullable=True)
     is_active = Column(Boolean, default=True)
     is_superuser = Column(Boolean, default=False)
-    role = Column(String, default=RoleType.USER.value)  # Global role
+    role = Column(String, default=RoleType.USER.value)  # Global role (SUPERADMIN, ADMIN only)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     
     # Relationships
-    group_permissions = relationship(
-        "ServerGroup",
-        secondary=user_group_permissions,
-        backref="authorized_users"
+    group_permissions_detail = relationship(
+        "UserGroupPermission",
+        back_populates="user",
+        cascade="all, delete-orphan"
     )
 
 class Client(Base):
@@ -90,6 +93,11 @@ class ServerGroup(Base):
     
     servers = relationship("Server", back_populates="group")
     creator = relationship("User", foreign_keys=[created_by])
+    user_permissions_detail = relationship(
+        "UserGroupPermission",
+        back_populates="group",
+        cascade="all, delete-orphan"
+    )
 
 class Server(Base):
     __tablename__ = "servers"

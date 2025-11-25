@@ -27,7 +27,7 @@ export default function NotificationPreferences({ currentUser }: NotificationPre
     const loadPreferences = async () => {
         try {
             const token = typeof window !== 'undefined' ? localStorage.getItem("token") : null;
-            const response = await fetch(`${API_BASE_URL}/users/me`, {
+            const response = await fetch(`${API_BASE_URL}/auth/me`, {
                 headers: {
                     ...(token && { "Authorization": `Bearer ${token}` }),
                 },
@@ -53,7 +53,7 @@ export default function NotificationPreferences({ currentUser }: NotificationPre
 
         try {
             const token = typeof window !== 'undefined' ? localStorage.getItem("token") : null;
-            const response = await fetch(`${API_BASE_URL}/users/me/preferences`, {
+            const response = await fetch(`${API_BASE_URL}/auth/me/preferences`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -92,8 +92,8 @@ export default function NotificationPreferences({ currentUser }: NotificationPre
             <CardContent className="space-y-6">
                 {message && (
                     <div className={`p-3 rounded-lg ${message.startsWith("✅")
-                            ? "bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-200"
-                            : "bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200"
+                        ? "bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-200"
+                        : "bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200"
                         }`}>
                         {message}
                     </div>

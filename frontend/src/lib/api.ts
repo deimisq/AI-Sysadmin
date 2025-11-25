@@ -21,7 +21,7 @@ const getApiBaseUrl = () => {
     return "http://backend:8000/api/v1";
 };
 
-const API_BASE_URL = getApiBaseUrl();
+export const API_BASE_URL = getApiBaseUrl();
 
 // Debug: log the API URL being used
 if (typeof window !== 'undefined') {
@@ -30,7 +30,7 @@ if (typeof window !== 'undefined') {
 }
 
 // Get authentication headers
-const getAuthHeaders = () => {
+export const getAuthHeaders = () => {
     const token = typeof window !== 'undefined' ? localStorage.getItem("token") : null;
     return {
         "Content-Type": "application/json",

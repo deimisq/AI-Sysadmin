@@ -7,7 +7,7 @@ from models import SystemConfig, User, RoleType
 from dependencies import get_current_active_user
 import json
 
-router = APIRouter(prefix="/config", tags=["configuration"])
+router = APIRouter(tags=["configuration"])
 
 def check_admin_role(user: User):
     """Check if user has admin or superadmin role"""

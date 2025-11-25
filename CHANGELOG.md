@@ -77,6 +77,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Group statistics
 - Recent activity tracking
 
+#### Notification System
+- **Notification Preferences**:
+  - User-configurable preferences for email notifications
+  - Toggle for new user registrations, security alerts, new servers, system events
+  - Dedicated "Notifications" tab in admin panel
+- **Email Notifications**:
+  - Automatic emails to superadmins for new user registrations
+  - HTML and plain text email support
+  - Integration with system SMTP configuration
+
+#### Advanced Access Control
+- **Group-Specific Roles**:
+  - `GROUP_ADMIN` role assigned per group
+  - Granular permissions (User vs Group Admin) within specific groups
+  - Global roles (`SUPERADMIN`, `ADMIN`) retain system-wide access
+  - Improved `grant` and `revoke` endpoints supporting role assignment
+
 ### Changed
 - Server list now filters by user group permissions
 - Non-admin users only see servers from their assigned groups
@@ -178,9 +195,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 2. Pull the latest code: `git pull origin main`
 3. Rebuild containers: `docker compose up --build -d`
 4. Run database migrations: `docker compose exec backend alembic upgrade head`
-5. Initialize new tables: `docker compose exec backend python init_tables.py`
-6. Create a superadmin user if you haven't: `docker compose exec backend python create_superuser.py`
-7. Access the admin panel at `/admin` and configure your system
+5. Create a superadmin user if you haven't: `docker compose exec backend python create_superuser.py`
+6. Access the admin panel at `/admin` and configure your system
 
 ### Breaking Changes in v2.0.0
 

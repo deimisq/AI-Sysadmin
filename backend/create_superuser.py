@@ -4,7 +4,7 @@ import asyncio
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from passlib.context import CryptContext
-from models import User, UserRole
+from models import User, RoleType
 from database import Base
 from settings import settings
 
@@ -34,7 +34,7 @@ async def create_superuser(email, username, password, full_name):
             username=username,
             hashed_password=hashed_password,
             full_name=full_name,
-            role=UserRole.ADMIN,
+            role=RoleType.SUPERADMIN.value,
             is_active=True
         )
         

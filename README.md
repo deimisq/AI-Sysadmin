@@ -25,6 +25,7 @@ Un sistema inteligente que diagnostica problemas de servidores Linux, propone so
 ### 👥 Panel de Administración Completo
 - **Gestión de Usuarios**: CRUD completo con roles y permisos
   - Roles: Superadmin, Admin, Group Admin, User
+  - **Roles por Grupo**: Asignación granular de roles (User/Group Admin) por grupo
   - Asignación de grupos y permisos granulares
   - Activación/desactivación de cuentas
 - **Gestión de Servidores**: Administración centralizada de infraestructura
@@ -44,6 +45,7 @@ Un sistema inteligente que diagnostica problemas de servidores Linux, propone so
   - Lista blanca de dominios para registro
   - Flujo de aprobación para nuevos usuarios
   - Notificaciones para superadmins
+  - **Preferencias de Notificación**: Configuración personalizada de alertas por email
 - **Estadísticas del Sistema**: Dashboard con métricas en tiempo real
 
 ### 🔍 Diagnóstico Avanzado

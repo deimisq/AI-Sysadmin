@@ -23,6 +23,12 @@ const getApiBaseUrl = () => {
 
 const API_BASE_URL = getApiBaseUrl();
 
+// Debug: log the API URL being used
+if (typeof window !== 'undefined') {
+    console.log('[API Client] Using API_BASE_URL:', API_BASE_URL);
+    console.log('[API Client] NEXT_PUBLIC_API_URL env var:', process.env.NEXT_PUBLIC_API_URL);
+}
+
 // Get authentication headers
 const getAuthHeaders = () => {
     const token = typeof window !== 'undefined' ? localStorage.getItem("token") : null;
@@ -279,5 +285,41 @@ export async function fetchCurrentUser() {
         const error = await res.json().catch(() => ({}));
         throw new Error(error.detail || "Failed to fetch current user");
     }
+    return res.json();
+}
+
+// Configuration Management
+export async function getConfigByCategory(category: string) {
+    const res = await fetch(`${API_BASE_URL}/config/${category}`, {
+        headers: getAuthHeaders(),
+    });
+    if (!res.ok) throw new Error(`Failed to fetch ${category} configuration`);
+    return res.json();
+}
+
+export async function getAllConfig() {
+    const res = await fetch(`${API_BASE_URL}/config/`, {
+        headers: getAuthHeaders(),
+    });
+    if (!res.ok) throw new Error("Failed to fetch configuration");
+    return res.json();
+}
+
+export async function updateConfigCategory(category: string, configData: Record<string, any>) {
+    const res = await fetch(`${API_BASE_URL}/config/${category}`, {
+        method: "PUT",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(configData),
+    });
+    if (!res.ok) throw new Error(`Failed to update ${category} configuration`);
+    return res.json();
+}
+
+export async function deleteConfig(category: string, key: string) {
+    const res = await fetch(`${API_BASE_URL}/config/${category}/${key}`, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+    });
+    if (!res.ok) throw new Error("Failed to delete configuration");
     return res.json();
 }

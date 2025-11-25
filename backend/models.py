@@ -194,3 +194,14 @@ class Notification(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     
     user = relationship("User", backref="notifications")
+
+class SystemConfig(Base):
+    """Dynamic system configuration"""
+    __tablename__ = "system_config"
+    
+    key = Column(String, primary_key=True, index=True)
+    value = Column(Text) # JSON encoded value
+    category = Column(String, index=True) # ai, backend, frontend, communication
+    is_secret = Column(Boolean, default=False) # If true, value is encrypted
+    description = Column(String, nullable=True)
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now(), server_default=func.now())

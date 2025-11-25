@@ -162,3 +162,21 @@ class Notification(NotificationBase):
     created_at: datetime
     class Config:
         from_attributes = True
+
+class SystemConfigBase(BaseModel):
+    key: str
+    value: str
+    category: str
+    is_secret: bool = False
+    description: Optional[str] = None
+
+class SystemConfigCreate(SystemConfigBase):
+    pass
+
+class SystemConfigUpdate(BaseModel):
+    value: str
+
+class SystemConfig(SystemConfigBase):
+    updated_at: datetime
+    class Config:
+        from_attributes = True

@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MessageSquare, Save, Eye, EyeOff, Mail, Send } from "lucide-react";
+import { getConfigByCategory, updateConfigCategory } from "@/lib/api";
 
 interface CommunicationSettingsProps {
     currentUser: any;
@@ -43,7 +44,31 @@ export function CommunicationSettings({ currentUser }: CommunicationSettingsProp
     }, []);
 
     const loadConfig = async () => {
-        setMessage("Configuration loaded from environment variables");
+        try {
+            const data = await getConfigByCategory("communication");
+            // Merge loaded config with defaults
+            setConfig({
+                smtp_enabled: data.smtp_enabled || "false",
+                smtp_host: data.smtp_host || "",
+                smtp_port: data.smtp_port || "587",
+                smtp_username: data.smtp_username || "",
+                smtp_password: data.smtp_password || "",
+                smtp_from_email: data.smtp_from_email || "",
+                smtp_from_name: data.smtp_from_name || "AI Sysadmin Agent",
+                smtp_use_tls: data.smtp_use_tls || "true",
+                enable_email_notifications: data.enable_email_notifications || "false",
+                admin_email: data.admin_email || "",
+                teams_webhook_url: data.teams_webhook_url || "",
+                slack_webhook_url: data.slack_webhook_url || "",
+                telegram_bot_token: data.telegram_bot_token || "",
+                telegram_chat_id: data.telegram_chat_id || "",
+                whatsapp_enabled: data.whatsapp_enabled || "false"
+            });
+            setMessage("✅ Configuration loaded successfully");
+        } catch (error: any) {
+            console.error("Failed to load config:", error);
+            setMessage("ℹ️ No saved configuration found. Using defaults.");
+        }
     };
 
     const handleSave = async () => {
@@ -51,8 +76,8 @@ export function CommunicationSettings({ currentUser }: CommunicationSettingsProp
         setMessage("");
 
         try {
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            setMessage("✅ Configuration saved successfully. Restart backend to apply changes.");
+            await updateConfigCategory("communication", config);
+            setMessage("✅ Configuration saved successfully! Changes applied immediately.");
         } catch (error: any) {
             setMessage("❌ Failed to save configuration: " + error.message);
         } finally {
@@ -294,10 +319,10 @@ export function CommunicationSettings({ currentUser }: CommunicationSettingsProp
 
                 {message && (
                     <div className={`p-3 rounded-lg text-sm ${message.startsWith("✅")
-                            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                            : message.startsWith("❌")
-                                ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                                : "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                        ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                        : message.startsWith("❌")
+                            ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                            : "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
                         }`}>
                         {message}
                     </div>

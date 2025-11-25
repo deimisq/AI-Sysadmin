@@ -14,6 +14,7 @@ import { BackendParameters } from "@/components/admin/backend-parameters";
 import { FrontendParameters } from "@/components/admin/frontend-parameters";
 import { CommunicationSettings } from "@/components/admin/communication-settings";
 import { SecuritySettings } from "@/components/admin/security-settings";
+import { NotificationPreferences } from "@/components/admin/notification-preferences";
 import { SystemStats } from "@/components/admin/system-stats";
 import { AuditLogs } from "@/components/admin/audit-logs";
 
@@ -174,6 +175,10 @@ export default function AdminPage() {
                             <Activity className="mr-2 h-4 w-4" />
                             Communication
                         </TabsTrigger>
+                        <TabsTrigger value="notifications">
+                            <Activity className="mr-2 h-4 w-4" />
+                            Notifications
+                        </TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="users" className="space-y-4">
@@ -206,6 +211,10 @@ export default function AdminPage() {
 
                     <TabsContent value="communication" className="space-y-4">
                         <CommunicationSettings currentUser={currentUser} />
+                    </TabsContent>
+
+                    <TabsContent value="notifications" className="space-y-4">
+                        <NotificationPreferences currentUser={currentUser} />
                     </TabsContent>
                 </Tabs>
             </div>

@@ -106,3 +106,30 @@ def login(
 def read_users_me(current_user: models.User = Depends(get_current_active_user)):
     """Get current user information"""
     return current_user
+
+@router.put("/me/preferences")
+def update_notification_preferences(
+    preferences: dict,
+    current_user: models.User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Update user notification preferences"""
+    # Update notification preferences
+    if "notify_new_users" in preferences:
+        current_user.notify_new_users = preferences["notify_new_users"]
+    if "notify_security_alerts" in preferences:
+        current_user.notify_security_alerts = preferences["notify_security_alerts"]
+    if "notify_new_servers" in preferences:
+        current_user.notify_new_servers = preferences["notify_new_servers"]
+    if "notify_system_events" in preferences:
+        current_user.notify_system_events = preferences["notify_system_events"]
+    
+    db.commit()
+    db.refresh(current_user)
+    
+    return {"message": "Preferences updated successfully", "preferences": {
+        "notify_new_users": current_user.notify_new_users,
+        "notify_security_alerts": current_user.notify_security_alerts,
+        "notify_new_servers": current_user.notify_new_servers,
+        "notify_system_events": current_user.notify_system_events
+    }}

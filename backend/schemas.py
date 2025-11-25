@@ -69,6 +69,7 @@ class ServerGroupUpdate(BaseModel):
 
 class ServerGroup(ServerGroupBase):
     id: int
+    created_by: Optional[int] = None
     created_at: datetime
     class Config:
         from_attributes = True

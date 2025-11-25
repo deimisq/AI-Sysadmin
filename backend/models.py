@@ -85,9 +85,11 @@ class ServerGroup(Base):
     name = Column(String, unique=True, index=True)
     description = Column(String, nullable=True)
     color = Column(String, nullable=True)  # For UI display (hex color)
+    created_by = Column(Integer, ForeignKey("users.id"), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     
     servers = relationship("Server", back_populates="group")
+    creator = relationship("User", foreign_keys=[created_by])
 
 class Server(Base):
     __tablename__ = "servers"

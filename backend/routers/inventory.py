@@ -30,23 +30,64 @@ def read_clients(skip: int = 0, limit: int = 100, db: Session = Depends(get_db))
 
 # Server Groups endpoints
 @router.post("/groups/", response_model=schemas.ServerGroup)
-def create_group(group: schemas.ServerGroupCreate, db: Session = Depends(get_db)):
-    db_group = models.ServerGroup(**group.dict())
+def create_group(
+    group: schemas.ServerGroupCreate,
+    current_user: models.User = Depends(dependencies.get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Create a new server group"""
+    db_group = models.ServerGroup(**group.dict(), created_by=current_user.id)
     db.add(db_group)
     db.commit()
     db.refresh(db_group)
     return db_group
 
 @router.get("/groups/", response_model=List[schemas.ServerGroup])
-def read_groups(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    groups = db.query(models.ServerGroup).offset(skip).limit(limit).all()
+def read_groups(
+    skip: int = 0,
+    limit: int = 100,
+    current_user: models.User = Depends(dependencies.get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Get groups - admins see all, users see only their assigned groups"""
+    # Superadmins and Admins can see all groups
+    if current_user.role in [models.RoleType.SUPERADMIN.value, models.RoleType.ADMIN.value]:
+        groups = db.query(models.ServerGroup).offset(skip).limit(limit).all()
+        return groups
+    
+    # Regular users can only see groups they have access to
+    user_group_ids = [group.id for group in current_user.group_permissions]
+    
+    if not user_group_ids:
+        return []
+        
+    groups = db.query(models.ServerGroup).filter(
+        models.ServerGroup.id.in_(user_group_ids)
+    ).offset(skip).limit(limit).all()
+    
     return groups
 
 @router.put("/groups/{group_id}", response_model=schemas.ServerGroup)
-def update_group(group_id: int, group_update: schemas.ServerGroupUpdate, db: Session = Depends(get_db)):
+def update_group(
+    group_id: int,
+    group_update: schemas.ServerGroupUpdate,
+    current_user: models.User = Depends(dependencies.get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Update a group - only creator or admins can edit"""
     db_group = db.query(models.ServerGroup).filter(models.ServerGroup.id == group_id).first()
     if not db_group:
         raise HTTPException(status_code=404, detail="Group not found")
+    
+    # Check permissions: only creator or admins can edit
+    is_admin = current_user.role in [models.RoleType.SUPERADMIN.value, models.RoleType.ADMIN.value]
+    is_creator = db_group.created_by == current_user.id
+    
+    if not (is_admin or is_creator):
+        raise HTTPException(
+            status_code=403,
+            detail="You can only edit groups you created or be an admin"
+        )
     
     update_data = group_update.dict(exclude_unset=True)
     for key, value in update_data.items():
@@ -57,10 +98,25 @@ def update_group(group_id: int, group_update: schemas.ServerGroupUpdate, db: Ses
     return db_group
 
 @router.delete("/groups/{group_id}")
-def delete_group(group_id: int, db: Session = Depends(get_db)):
+def delete_group(
+    group_id: int,
+    current_user: models.User = Depends(dependencies.get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Delete a group - only creator or admins can delete"""
     db_group = db.query(models.ServerGroup).filter(models.ServerGroup.id == group_id).first()
     if not db_group:
         raise HTTPException(status_code=404, detail="Group not found")
+    
+    # Check permissions: only creator or admins can delete
+    is_admin = current_user.role in [models.RoleType.SUPERADMIN.value, models.RoleType.ADMIN.value]
+    is_creator = db_group.created_by == current_user.id
+    
+    if not (is_admin or is_creator):
+        raise HTTPException(
+            status_code=403,
+            detail="You can only delete groups you created or be an admin"
+        )
     
     # Check if group has servers
     if db_group.servers:

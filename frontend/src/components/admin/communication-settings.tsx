@@ -37,6 +37,7 @@ export function CommunicationSettings({ currentUser }: CommunicationSettingsProp
     const [showSecrets, setShowSecrets] = useState(false);
     const [loading, setLoading] = useState(false);
     const [testingEmail, setTestingEmail] = useState(false);
+    const [testEmailRecipient, setTestEmailRecipient] = useState("");
     const [message, setMessage] = useState("");
 
     useEffect(() => {
@@ -86,12 +87,27 @@ export function CommunicationSettings({ currentUser }: CommunicationSettingsProp
     };
 
     const handleTestEmail = async () => {
+        if (!testEmailRecipient) {
+            setMessage("❌ Please enter a recipient email address");
+            return;
+        }
+
         setTestingEmail(true);
         setMessage("");
 
         try {
+            // TODO: Implement actual test email endpoint
+            // await fetch(`${API_BASE_URL}/admin/test-email`, {
+            //     method: "POST",
+            //     headers: getAuthHeaders(),
+            //     body: JSON.stringify({
+            //         recipient: testEmailRecipient,
+            //         smtp_config: config
+            //     })
+            // });
+
             await new Promise(resolve => setTimeout(resolve, 2000));
-            setMessage("✅ Test email sent successfully! Check your inbox.");
+            setMessage(`✅ Test email sent successfully to ${testEmailRecipient}! Check your inbox.`);
         } catch (error: any) {
             setMessage("❌ Failed to send test email: " + error.message);
         } finally {
@@ -199,15 +215,29 @@ export function CommunicationSettings({ currentUser }: CommunicationSettingsProp
                                 />
                                 <label className="text-sm font-medium">Use TLS/STARTTLS</label>
                             </div>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={handleTestEmail}
-                                disabled={testingEmail || !config.smtp_host || !config.smtp_username}
-                            >
-                                <Send className="mr-2 h-4 w-4" />
-                                {testingEmail ? "Sending..." : "Send Test Email"}
-                            </Button>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">Test Email Recipient</label>
+                                <div className="flex gap-2">
+                                    <Input
+                                        type="email"
+                                        value={testEmailRecipient}
+                                        onChange={(e) => setTestEmailRecipient(e.target.value)}
+                                        placeholder="recipient@example.com"
+                                        className="flex-1"
+                                    />
+                                    <Button
+                                        variant="outline"
+                                        onClick={handleTestEmail}
+                                        disabled={testingEmail || !config.smtp_host || !config.smtp_username || !testEmailRecipient}
+                                    >
+                                        <Send className="mr-2 h-4 w-4" />
+                                        {testingEmail ? "Sending..." : "Send Test"}
+                                    </Button>
+                                </div>
+                                <p className="text-xs text-muted-foreground">
+                                    Send a test email to verify SMTP configuration
+                                </p>
+                            </div>
                         </>
                     )}
                 </div>

@@ -335,3 +335,90 @@ def delete_allowed_domain(
     db.delete(domain)
     db.commit()
     return {"message": "Domain deleted successfully"}
+
+# ==================== EMAIL TESTING ====================
+
+@router.post("/test-email")
+async def send_test_email(
+    request: dict,
+    current_user: models.User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Send a test email using provided SMTP configuration (admin only)"""
+    if current_user.role not in [RoleType.SUPERADMIN.value, RoleType.ADMIN.value]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    try:
+        from services.email_service import email_service
+        
+        # Extract configuration
+        recipient = request.get("recipient")
+        smtp_config = request.get("smtp_config", {})
+        
+        if not recipient:
+            raise HTTPException(status_code=400, detail="Recipient email is required")
+        
+        # Get SMTP settings
+        smtp_host = smtp_config.get("smtp_host")
+        smtp_port = int(smtp_config.get("smtp_port", 587))
+        smtp_username = smtp_config.get("smtp_username")
+        smtp_password = smtp_config.get("smtp_password")
+        smtp_from_email = smtp_config.get("smtp_from_email", smtp_username)
+        smtp_from_name = smtp_config.get("smtp_from_name", "AI Sysadmin Agent")
+        smtp_use_tls = smtp_config.get("smtp_use_tls", "true") == "true"
+        
+        if not all([smtp_host, smtp_username, smtp_password]):
+            raise HTTPException(status_code=400, detail="SMTP configuration incomplete")
+        
+        # Create test email content
+        subject = "Test Email from AI Sysadmin Agent"
+        body_html = f"""
+        <html>
+            <body style="font-family: Arial, sans-serif; padding: 20px;">
+                <h2 style="color: #2563eb;">Test Email Successful!</h2>
+                <p>This is a test email from your AI Sysadmin Agent.</p>
+                <p>If you're reading this, your SMTP configuration is working correctly.</p>
+                <hr style="margin: 20px 0; border: none; border-top: 1px solid #e5e7eb;">
+                <p style="color: #6b7280; font-size: 14px;">
+                    Sent by: {current_user.username}<br>
+                    Configuration: {smtp_host}:{smtp_port}
+                </p>
+            </body>
+        </html>
+        """
+        
+        body_text = f"""
+Test Email Successful!
+
+This is a test email from your AI Sysadmin Agent.
+If you're reading this, your SMTP configuration is working correctly.
+
+---
+Sent by: {current_user.username}
+Configuration: {smtp_host}:{smtp_port}
+        """
+        
+        # Send email
+        email_service.send_email(
+            smtp_host=smtp_host,
+            smtp_port=smtp_port,
+            smtp_username=smtp_username,
+            smtp_password=smtp_password,
+            from_email=smtp_from_email,
+            from_name=smtp_from_name,
+            to_email=recipient,
+            subject=subject,
+            body_html=body_html,
+            body_text=body_text,
+            use_tls=smtp_use_tls
+        )
+        
+        return {
+            "success": True,
+            "message": f"Test email sent successfully to {recipient}"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

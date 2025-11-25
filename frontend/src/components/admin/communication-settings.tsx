@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MessageSquare, Save, Eye, EyeOff, Mail, Send } from "lucide-react";
-import { getConfigByCategory, updateConfigCategory } from "@/lib/api";
+import { getConfigByCategory, updateConfigCategory, API_BASE_URL } from "@/lib/api";
 
 interface CommunicationSettingsProps {
     currentUser: any;
@@ -96,18 +96,26 @@ export function CommunicationSettings({ currentUser }: CommunicationSettingsProp
         setMessage("");
 
         try {
-            // TODO: Implement actual test email endpoint
-            // await fetch(`${API_BASE_URL}/admin/test-email`, {
-            //     method: "POST",
-            //     headers: getAuthHeaders(),
-            //     body: JSON.stringify({
-            //         recipient: testEmailRecipient,
-            //         smtp_config: config
-            //     })
-            // });
+            const token = typeof window !== 'undefined' ? localStorage.getItem("token") : null;
+            const response = await fetch(`${API_BASE_URL}/admin/test-email`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    ...(token && { "Authorization": `Bearer ${token}` }),
+                },
+                body: JSON.stringify({
+                    recipient: testEmailRecipient,
+                    smtp_config: config
+                })
+            });
 
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            setMessage(`✅ Test email sent successfully to ${testEmailRecipient}! Check your inbox.`);
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.detail || "Failed to send test email");
+            }
+
+            const result = await response.json();
+            setMessage(`✅ ${result.message}`);
         } catch (error: any) {
             setMessage("❌ Failed to send test email: " + error.message);
         } finally {

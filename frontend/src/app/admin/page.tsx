@@ -14,7 +14,7 @@ import { BackendParameters } from "@/components/admin/backend-parameters";
 import { FrontendParameters } from "@/components/admin/frontend-parameters";
 import { CommunicationSettings } from "@/components/admin/communication-settings";
 import { SecuritySettings } from "@/components/admin/security-settings";
-import { NotificationPreferences } from "@/components/admin/notification-preferences";
+import NotificationPreferences from "@/components/admin/notification-preferences";
 import { SystemStats } from "@/components/admin/system-stats";
 import { AuditLogs } from "@/components/admin/audit-logs";
 

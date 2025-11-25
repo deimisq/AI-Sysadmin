@@ -46,6 +46,10 @@ class User(UserBase):
     role: str
     created_at: datetime
     group_permissions_detail: List[UserGroupPermission] = []
+    notify_new_users: Optional[bool] = True
+    notify_security_alerts: Optional[bool] = True
+    notify_new_servers: Optional[bool] = False
+    notify_system_events: Optional[bool] = True
     
     class Config:
         from_attributes = True

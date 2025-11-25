@@ -64,6 +64,12 @@ class User(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     
+    # Notification preferences
+    notify_new_users = Column(Boolean, default=True)  # Notify when new users register
+    notify_security_alerts = Column(Boolean, default=True)  # Security-related notifications
+    notify_new_servers = Column(Boolean, default=False)  # Notify when servers are added
+    notify_system_events = Column(Boolean, default=True)  # General system events
+    
     # Relationships
     group_permissions_detail = relationship(
         "UserGroupPermission",

@@ -51,6 +51,7 @@ def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
     
     # Notify superadmins if user needs approval
     if not is_active:
+        # Create in-app notifications
         superadmins = db.query(models.User).filter(models.User.role == models.RoleType.SUPERADMIN.value).all()
         for admin in superadmins:
             notification = models.Notification(
@@ -61,6 +62,15 @@ def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
             )
             db.add(notification)
         db.commit()
+        
+        # Send email notifications
+        try:
+            from services.email_service import notify_superadmins_new_user
+            notify_superadmins_new_user(db, user.email, user.username)
+        except Exception as e:
+            # Log error but don't fail registration
+            import logging
+            logging.error(f"Failed to send email notifications: {e}")
     
     return db_user
 

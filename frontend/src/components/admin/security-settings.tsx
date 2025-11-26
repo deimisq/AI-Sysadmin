@@ -147,6 +147,27 @@ export function SecuritySettings({ currentUser }: { currentUser: any }) {
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                    <div className="bg-muted p-4 rounded-md text-sm mb-4 border border-blue-100 dark:border-blue-900 bg-blue-50/50 dark:bg-blue-900/20">
+                        <p className="font-medium mb-2 text-blue-900 dark:text-blue-100">Redirect URI Configuration</p>
+                        <p className="text-muted-foreground mb-2">
+                            Add this URI to your application's "Authentication" settings in Azure Portal (Platform: Web):
+                        </p>
+                        <div className="flex items-center gap-2">
+                            <code className="bg-background px-3 py-2 rounded border block w-full text-xs font-mono">
+                                {typeof window !== 'undefined' ? `${window.location.origin}/auth/microsoft/callback` : '...'}
+                            </code>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                    navigator.clipboard.writeText(`${window.location.origin}/auth/microsoft/callback`);
+                                    alert("Copied to clipboard!");
+                                }}
+                            >
+                                Copy
+                            </Button>
+                        </div>
+                    </div>
                     <div className="grid gap-4">
                         <div className="grid gap-2">
                             <label className="text-sm font-medium">Application (Client) ID</label>

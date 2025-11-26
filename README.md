@@ -75,8 +75,8 @@ Un sistema inteligente que diagnostica problemas de servidores Linux, propone so
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                         Frontend                             │
-│  Next.js 14 + React + Tailwind CSS + shadcn/ui             │
+│                         Frontend                            │
+│  Next.js 14 + React + Tailwind CSS + shadcn/ui              │
 │  - Interfaz de chat conversacional                          │
 │  - Panel de administración completo                         │
 │  - Gestión de servidores y usuarios                         │
@@ -85,40 +85,40 @@ Un sistema inteligente que diagnostica problemas de servidores Linux, propone so
 └──────────────────┬──────────────────────────────────────────┘
                    │ HTTP/REST API
 ┌──────────────────▼──────────────────────────────────────────┐
-│                         Backend                              │
+│                         Backend                             │
 │  FastAPI + Python 3.10+                                     │
-│  ┌────────────────────────────────────────────────────┐    │
-│  │  AI Service (LangChain)                            │    │
-│  │  - Amazon Bedrock (Claude 3.5 Sonnet)             │    │
-│  │  - Google Gemini 2.0 Flash                        │    │
-│  │  - OpenAI GPT-4o                                  │    │
-│  └────────────────────────────────────────────────────┘    │
-│  ┌────────────────────────────────────────────────────┐    │
-│  │  Diagnostic Service                                │    │
-│  │  - SSH connection (asyncssh)                      │    │
-│  │  - System metrics collection                      │    │
-│  └────────────────────────────────────────────────────┘    │
-│  ┌────────────────────────────────────────────────────┐    │
-│  │  Ansible Service                                   │    │
-│  │  - Command execution                              │    │
-│  │  - Playbook running                               │    │
-│  └────────────────────────────────────────────────────┘    │
-│  ┌────────────────────────────────────────────────────┐    │
-│  │  Email Service                                     │    │
-│  │  - SMTP email sending                             │    │
-│  │  - Test email functionality                       │    │
-│  └────────────────────────────────────────────────────┘    │
-│  ┌────────────────────────────────────────────────────┐    │
-│  │  Admin Services                                    │    │
-│  │  - User management & RBAC                         │    │
-│  │  - Server management                              │    │
-│  │  - Audit logging                                  │    │
-│  │  - Dynamic configuration                          │    │
-│  └────────────────────────────────────────────────────┘    │
+│  ┌────────────────────────────────────────────────────┐     │
+│  │  AI Service (LangChain)                            │     │
+│  │  - Amazon Bedrock (Claude 3.5 Sonnet)              │     │
+│  │  - Google Gemini 2.0 Flash                         │     │
+│  │  - OpenAI GPT-4o                                   │     │
+│  └────────────────────────────────────────────────────┘     │
+│  ┌────────────────────────────────────────────────────┐     │
+│  │  Diagnostic Service                                │     │
+│  │  - SSH connection (asyncssh)                       │     │
+│  │  - System metrics collection                       │     │
+│  └────────────────────────────────────────────────────┘     │
+│  ┌────────────────────────────────────────────────────┐     │
+│  │  Ansible Service                                   │     │
+│  │  - Command execution                               │     │
+│  │  - Playbook running                                │     │
+│  └────────────────────────────────────────────────────┘     │
+│  ┌────────────────────────────────────────────────────┐     │
+│  │  Email Service                                     │     │
+│  │  - SMTP email sending                              │     │
+│  │  - Test email functionality                        │     │
+│  └────────────────────────────────────────────────────┘     │
+│  ┌────────────────────────────────────────────────────┐     │
+│  │  Admin Services                                    │     │
+│  │  - User management & RBAC                          │     │
+│  │  - Server management                               │     │
+│  │  - Audit logging                                   │     │
+│  │  - Dynamic configuration                           │     │
+│  └────────────────────────────────────────────────────┘     │
 └──────────────────┬──────────────────────────────────────────┘
                    │
 ┌──────────────────▼──────────────────────────────────────────┐
-│                    PostgreSQL + pgvector                     │
+│                    PostgreSQL + pgvector                    │
 │  - Usuarios, roles y permisos                               │
 │  - Servidores y credenciales (encriptadas)                  │
 │  - Grupos de servidores                                     │

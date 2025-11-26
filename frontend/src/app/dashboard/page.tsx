@@ -99,27 +99,25 @@ export default function Dashboard() {
 
                     {/* Header */}
                     <div className="space-y-4 border-b pb-6">
-                        {/* Top Bar - Theme and Language Switchers */}
-                        <div className="flex justify-end">
+                        {/* Top Bar - Title and Switchers */}
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="p-3 bg-primary/10 rounded-lg">
+                                    <ServerIcon className="h-8 w-8 text-primary" />
+                                </div>
+                                <div>
+                                    <h1 className="text-3xl font-bold tracking-tight">{t.header.title}</h1>
+                                    <p className="text-muted-foreground">{t.header.subtitle}</p>
+                                </div>
+                            </div>
                             <div className="flex gap-2">
                                 <ThemeSwitcher />
                                 <LanguageSwitcher />
                             </div>
                         </div>
 
-                        {/* Title Section */}
-                        <div className="flex items-center gap-3">
-                            <div className="p-3 bg-primary/10 rounded-lg">
-                                <ServerIcon className="h-8 w-8 text-primary" />
-                            </div>
-                            <div>
-                                <h1 className="text-3xl font-bold tracking-tight">{t.header.title}</h1>
-                                <p className="text-muted-foreground">{t.header.subtitle}</p>
-                            </div>
-                        </div>
-
-                        {/* Action Buttons Menu */}
-                        <div className="flex gap-2 flex-wrap">
+                        {/* Action Buttons Menu - Aligned Right */}
+                        <div className="flex gap-2 flex-wrap justify-end">
                             <Button variant="outline" onClick={() => router.push("/profile")}>
                                 <User className="mr-2 h-4 w-4" />
                                 {t.dashboard.profile}

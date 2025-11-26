@@ -14,6 +14,7 @@ import { BackendParameters } from "@/components/admin/backend-parameters";
 import { FrontendParameters } from "@/components/admin/frontend-parameters";
 import { CommunicationSettings } from "@/components/admin/communication-settings";
 import { SecuritySettings } from "@/components/admin/security-settings";
+import { LicenseStatus } from "@/components/admin/license-status";
 import NotificationPreferences from "@/components/admin/notification-preferences";
 import { SystemStats } from "@/components/admin/system-stats";
 import { AuditLogs } from "@/components/admin/audit-logs";
@@ -182,6 +183,10 @@ export default function AdminPage() {
                                 <Shield className="mr-2 h-4 w-4" />
                                 {t.admin.tabs.security}
                             </TabsTrigger>
+                            <TabsTrigger value="license">
+                                <Shield className="mr-2 h-4 w-4" />
+                                License
+                            </TabsTrigger>
                             <TabsTrigger value="communication">
                                 <Activity className="mr-2 h-4 w-4" />
                                 {t.admin.tabs.communication}
@@ -218,6 +223,10 @@ export default function AdminPage() {
 
                         <TabsContent value="security" className="space-y-4">
                             <SecuritySettings />
+                        </TabsContent>
+
+                        <TabsContent value="license" className="space-y-4">
+                            <LicenseStatus />
                         </TabsContent>
 
                         <TabsContent value="communication" className="space-y-4">

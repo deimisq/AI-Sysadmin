@@ -337,3 +337,13 @@ export async function fetchVersion() {
     }
     return res.json();
 }
+
+// ==================== LICENSE ====================
+
+export async function fetchLicenseStatus() {
+    const res = await fetch(`${API_BASE_URL}/config/license`, {
+        headers: getAuthHeaders(),
+    });
+    if (!res.ok) throw new Error("Failed to fetch license status");
+    return res.json();
+}

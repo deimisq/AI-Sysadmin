@@ -8,8 +8,17 @@ from dependencies import get_db, get_current_active_user, get_current_superuser
 from models import RoleType
 from utils.permissions import has_permission, can_access_group, get_user_accessible_groups
 from utils.auth import get_password_hash
+from database import engine, Base
 
 router = APIRouter()
+
+@router.post("/init-db")
+def init_db(
+    current_user: models.User = Depends(get_current_superuser)
+):
+    """Initialize database tables (Superadmin only)"""
+    Base.metadata.create_all(bind=engine)
+    return {"message": "Database tables initialized"}
 
 # ==================== USER MANAGEMENT ====================
 

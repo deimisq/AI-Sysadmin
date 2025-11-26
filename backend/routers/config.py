@@ -3,11 +3,43 @@ from sqlalchemy.orm import Session
 from sqlalchemy.sql import func
 from typing import Dict, Any
 from database import get_db
-from models import SystemConfig, User, RoleType
+from models import SystemConfig, User, RoleType, License
 from dependencies import get_current_active_user
 import json
+from datetime import datetime
 
 router = APIRouter(tags=["configuration"])
+
+@router.get("/license")
+async def get_license_status(
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Get current license status"""
+    check_admin_role(current_user)
+    
+    license = db.query(License).first()
+    
+    if not license:
+        raise HTTPException(status_code=404, detail="No license found")
+    
+    # Calculate days remaining
+    now = datetime.now()
+    days_remaining = (license.expiration_date - now).days if license.expiration_date > now else 0
+    
+    # Update status if expired
+    if days_remaining <= 0 and license.status == "ACTIVE":
+        license.status = "EXPIRED"
+        db.commit()
+    
+    return {
+        "type": license.type,
+        "status": license.status,
+        "start_date": license.start_date.isoformat(),
+        "expiration_date": license.expiration_date.isoformat(),
+        "days_remaining": days_remaining,
+        "installation_id": license.installation_id
+    }
 
 def check_admin_role(user: User):
     """Check if user has admin or superadmin role"""

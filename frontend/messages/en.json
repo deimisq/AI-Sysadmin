@@ -184,6 +184,10 @@
         "groupCreated": "Group created successfully",
         "groupUpdated": "Group updated successfully",
         "groupDeleted": "Group deleted successfully",
-        "noGroups": "No groups found"
+        "noGroups": "No groups yet. Create one to organize your servers."
+    },
+    "footer": {
+        "allRightsReserved": "All rights reserved.",
+        "version": "Version"
     }
 }

@@ -1,5 +1,8 @@
 from fastapi import FastAPI
 from routers import inventory, agent, auth, admin, config
+import json
+import os
+from datetime import datetime
 
 app = FastAPI(title="Sysadmin AI Agent API")
 
@@ -26,3 +29,20 @@ async def root():
 @app.get("/health")
 async def health_check():
     return {"status": "ok"}
+
+@app.get("/api/v1/version")
+async def get_version():
+    """Get application version information"""
+    version_file = os.path.join(os.path.dirname(__file__), "..", "VERSION.json")
+    try:
+        with open(version_file, 'r') as f:
+            version_data = json.load(f)
+        version_data["currentYear"] = datetime.now().year
+        return version_data
+    except Exception as e:
+        return {
+            "version": "1.0.0",
+            "name": "AI Sysadmin Agent",
+            "currentYear": datetime.now().year,
+            "error": str(e)
+        }

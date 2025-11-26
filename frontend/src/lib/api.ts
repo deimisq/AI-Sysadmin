@@ -323,3 +323,17 @@ export async function deleteConfig(category: string, key: string) {
     if (!res.ok) throw new Error("Failed to delete configuration");
     return res.json();
 }
+
+// ==================== VERSION ====================
+
+export async function fetchVersion() {
+    const res = await fetch(`${API_BASE_URL}/version`);
+    if (!res.ok) {
+        return {
+            version: "1.0.0",
+            name: "AI Sysadmin Agent",
+            currentYear: new Date().getFullYear()
+        };
+    }
+    return res.json();
+}

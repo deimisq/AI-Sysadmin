@@ -195,5 +195,34 @@
     "footer": {
         "allRightsReserved": "All rights reserved.",
         "version": "Version"
+    },
+    "securitySettings": {
+        "microsoftOAuth": {
+            "title": "Microsoft OAuth Integration",
+            "description": "Configure Microsoft Entra ID (Azure AD) for single sign-on",
+            "redirectUriTitle": "Redirect URI Configuration",
+            "redirectUriDescription": "Add this URI to your application's \"Authentication\" settings in Azure Portal (Platform: Web):",
+            "copy": "Copy",
+            "copiedToClipboard": "Copied to clipboard!",
+            "clientId": "Application (Client) ID",
+            "clientIdPlaceholder": "e.g., 00000000-0000-0000-0000-000000000000",
+            "clientSecret": "Client Secret",
+            "clientSecretPlaceholder": "Value from Certificates & secrets",
+            "tenantId": "Directory (Tenant) ID",
+            "tenantIdPlaceholder": "e.g., common, organizations, or UUID",
+            "tenantIdHelp": "Use 'common' for multi-tenant apps or specific UUID for single tenant.",
+            "saveConfiguration": "Save Configuration",
+            "saving": "Saving..."
+        },
+        "allowedDomains": {
+            "title": "Allowed Domains",
+            "description": "Configure allowed registration domains. Users from these domains are auto-approved.",
+            "placeholder": "example.com",
+            "addDomain": "Add Domain",
+            "adding": "Adding...",
+            "loadingDomains": "Loading domains...",
+            "noDomains": "No allowed domains configured. All registrations will require approval.",
+            "confirmDelete": "Are you sure you want to remove this domain?"
+        }
     }
 }

@@ -6,8 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Shield, Plus, Trash2, Check, X } from "lucide-react";
 import { API_BASE_URL, getAuthHeaders } from "@/lib/api";
+import { useI18n } from "@/lib/i18n-context";
 
 export function SecuritySettings({ currentUser }: { currentUser: any }) {
+    const { t } = useI18n();
     const [msConfig, setMsConfig] = useState({
         microsoft_client_id: "",
         microsoft_client_secret: "",
@@ -118,7 +120,7 @@ export function SecuritySettings({ currentUser }: { currentUser: any }) {
     };
 
     const handleDeleteDomain = async (id: number) => {
-        if (!confirm("Are you sure you want to remove this domain?")) return;
+        if (!confirm(t.securitySettings.allowedDomains.confirmDelete)) return;
 
         try {
             const res = await fetch(`${API_BASE_URL}/admin/allowed-domains/${id}`, {
@@ -140,17 +142,17 @@ export function SecuritySettings({ currentUser }: { currentUser: any }) {
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                         <Shield className="h-5 w-5" />
-                        Microsoft OAuth Integration
+                        {t.securitySettings.microsoftOAuth.title}
                     </CardTitle>
                     <CardDescription>
-                        Configure Microsoft Entra ID (Azure AD) for single sign-on
+                        {t.securitySettings.microsoftOAuth.description}
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="bg-muted p-4 rounded-md text-sm mb-4 border border-blue-100 dark:border-blue-900 bg-blue-50/50 dark:bg-blue-900/20">
-                        <p className="font-medium mb-2 text-blue-900 dark:text-blue-100">Redirect URI Configuration</p>
+                        <p className="font-medium mb-2 text-blue-900 dark:text-blue-100">{t.securitySettings.microsoftOAuth.redirectUriTitle}</p>
                         <p className="text-muted-foreground mb-2">
-                            Add this URI to your application's "Authentication" settings in Azure Portal (Platform: Web):
+                            {t.securitySettings.microsoftOAuth.redirectUriDescription}
                         </p>
                         <div className="flex items-center gap-2">
                             <code className="bg-background px-3 py-2 rounded border block w-full text-xs font-mono">
@@ -161,42 +163,42 @@ export function SecuritySettings({ currentUser }: { currentUser: any }) {
                                 size="sm"
                                 onClick={() => {
                                     navigator.clipboard.writeText(`${window.location.origin}/auth/microsoft/callback`);
-                                    alert("Copied to clipboard!");
+                                    alert(t.securitySettings.microsoftOAuth.copiedToClipboard);
                                 }}
                             >
-                                Copy
+                                {t.securitySettings.microsoftOAuth.copy}
                             </Button>
                         </div>
                     </div>
                     <div className="grid gap-4">
                         <div className="grid gap-2">
-                            <label className="text-sm font-medium">Application (Client) ID</label>
+                            <label className="text-sm font-medium">{t.securitySettings.microsoftOAuth.clientId}</label>
                             <Input
                                 value={msConfig.microsoft_client_id}
                                 onChange={(e) => setMsConfig({ ...msConfig, microsoft_client_id: e.target.value })}
-                                placeholder="e.g., 00000000-0000-0000-0000-000000000000"
+                                placeholder={t.securitySettings.microsoftOAuth.clientIdPlaceholder}
                             />
                         </div>
                         <div className="grid gap-2">
-                            <label className="text-sm font-medium">Client Secret</label>
+                            <label className="text-sm font-medium">{t.securitySettings.microsoftOAuth.clientSecret}</label>
                             <Input
                                 type="password"
                                 value={msConfig.microsoft_client_secret}
                                 onChange={(e) => setMsConfig({ ...msConfig, microsoft_client_secret: e.target.value })}
-                                placeholder="Value from Certificates & secrets"
+                                placeholder={t.securitySettings.microsoftOAuth.clientSecretPlaceholder}
                             />
                         </div>
                         <div className="grid gap-2">
-                            <label className="text-sm font-medium">Directory (Tenant) ID</label>
+                            <label className="text-sm font-medium">{t.securitySettings.microsoftOAuth.tenantId}</label>
                             <Input
                                 value={msConfig.microsoft_tenant_id}
                                 onChange={(e) => setMsConfig({ ...msConfig, microsoft_tenant_id: e.target.value })}
-                                placeholder="e.g., common, organizations, or UUID"
+                                placeholder={t.securitySettings.microsoftOAuth.tenantIdPlaceholder}
                             />
-                            <p className="text-xs text-muted-foreground">Use 'common' for multi-tenant apps or specific UUID for single tenant.</p>
+                            <p className="text-xs text-muted-foreground">{t.securitySettings.microsoftOAuth.tenantIdHelp}</p>
                         </div>
                         <Button onClick={handleSaveMsConfig} disabled={savingMs} className="w-fit">
-                            {savingMs ? "Saving..." : "Save Configuration"}
+                            {savingMs ? t.securitySettings.microsoftOAuth.saving : t.securitySettings.microsoftOAuth.saveConfiguration}
                         </Button>
                     </div>
                 </CardContent>
@@ -206,32 +208,32 @@ export function SecuritySettings({ currentUser }: { currentUser: any }) {
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                         <Shield className="h-5 w-5" />
-                        Allowed Domains
+                        {t.securitySettings.allowedDomains.title}
                     </CardTitle>
                     <CardDescription>
-                        Configure allowed registration domains. Users from these domains are auto-approved.
+                        {t.securitySettings.allowedDomains.description}
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <div className="space-y-4">
                         <div className="flex gap-2">
                             <Input
-                                placeholder="example.com"
+                                placeholder={t.securitySettings.allowedDomains.placeholder}
                                 value={newDomain}
                                 onChange={(e) => setNewDomain(e.target.value)}
                                 onKeyDown={(e) => e.key === 'Enter' && handleAddDomain()}
                             />
                             <Button onClick={handleAddDomain} disabled={adding || !newDomain.trim()}>
-                                {adding ? "Adding..." : <><Plus className="mr-2 h-4 w-4" /> Add Domain</>}
+                                {adding ? t.securitySettings.allowedDomains.adding : <><Plus className="mr-2 h-4 w-4" /> {t.securitySettings.allowedDomains.addDomain}</>}
                             </Button>
                         </div>
                         {error && <p className="text-sm text-red-500">{error}</p>}
 
                         <div className="border rounded-md divide-y">
                             {loading ? (
-                                <div className="p-4 text-sm text-muted-foreground">Loading domains...</div>
+                                <div className="p-4 text-sm text-muted-foreground">{t.securitySettings.allowedDomains.loadingDomains}</div>
                             ) : domains.length === 0 ? (
-                                <div className="p-4 text-sm text-muted-foreground">No allowed domains configured. All registrations will require approval.</div>
+                                <div className="p-4 text-sm text-muted-foreground">{t.securitySettings.allowedDomains.noDomains}</div>
                             ) : (
                                 domains.map((domain) => (
                                     <div key={domain.id} className="flex items-center justify-between p-3">

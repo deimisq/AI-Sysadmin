@@ -195,5 +195,34 @@
     "footer": {
         "allRightsReserved": "Todos los derechos reservados.",
         "version": "Versión"
+    },
+    "securitySettings": {
+        "microsoftOAuth": {
+            "title": "Integración OAuth de Microsoft",
+            "description": "Configurar Microsoft Entra ID (Azure AD) para inicio de sesión único",
+            "redirectUriTitle": "Configuración de URI de Redirección",
+            "redirectUriDescription": "Agrega esta URI a la configuración de \"Autenticación\" de tu aplicación en Azure Portal (Plataforma: Web):",
+            "copy": "Copiar",
+            "copiedToClipboard": "¡Copiado al portapapeles!",
+            "clientId": "ID de Aplicación (Cliente)",
+            "clientIdPlaceholder": "ej., 00000000-0000-0000-0000-000000000000",
+            "clientSecret": "Secreto de Cliente",
+            "clientSecretPlaceholder": "Valor de Certificados y secretos",
+            "tenantId": "ID de Directorio (Inquilino)",
+            "tenantIdPlaceholder": "ej., common, organizations, o UUID",
+            "tenantIdHelp": "Usa 'common' para aplicaciones multi-inquilino o UUID específico para inquilino único.",
+            "saveConfiguration": "Guardar Configuración",
+            "saving": "Guardando..."
+        },
+        "allowedDomains": {
+            "title": "Dominios Permitidos",
+            "description": "Configurar dominios de registro permitidos. Los usuarios de estos dominios son auto-aprobados.",
+            "placeholder": "ejemplo.com",
+            "addDomain": "Agregar Dominio",
+            "adding": "Agregando...",
+            "loadingDomains": "Cargando dominios...",
+            "noDomains": "No hay dominios permitidos configurados. Todos los registros requerirán aprobación.",
+            "confirmDelete": "¿Estás seguro de que deseas eliminar este dominio?"
+        }
     }
 }

@@ -3,6 +3,11 @@ const withNextIntl = require('next-intl/plugin')(
 );
 
 /** @type {import('next').NextConfig} */
-const nextConfig = {};
+const nextConfig = {
+    output: 'standalone',
+    experimental: {
+        outputFileTracingRoot: undefined,
+    },
+};
 
 module.exports = withNextIntl(nextConfig);

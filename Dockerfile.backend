@@ -1,0 +1,73 @@
+# ============================================
+# Stage 1: Build Backend with Nuitka
+# ============================================
+FROM python:3.11-slim as backend-builder
+
+WORKDIR /build
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    make \
+    libssl-dev \
+    libffi-dev \
+    python3-dev \
+    patchelf \
+    ccache \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy backend code
+COPY backend/ /build/backend/
+COPY requirements.txt /build/
+
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir nuitka ordered-set zstandard
+
+# Compile backend with Nuitka
+RUN python3 -m nuitka \
+    --standalone \
+    --onefile \
+    --follow-imports \
+    --include-package=fastapi \
+    --include-package=uvicorn \
+    --include-package=sqlalchemy \
+    --include-package=pydantic \
+    --include-package=jose \
+    --include-package=passlib \
+    --include-package=httpx \
+    --include-package=ansible \
+    --include-package=google.generativeai \
+    --include-module=routers \
+    --include-module=models \
+    --include-module=schemas \
+    --include-module=database \
+    --include-module=dependencies \
+    --include-module=settings \
+    --include-module=utils \
+    --include-module=services \
+    --include-module=middleware \
+    --output-dir=/build/dist \
+    --output-filename=sysadmin-agent-backend \
+    backend/main.py
+
+# ============================================
+# Stage 2: Runtime with Distroless
+# ============================================
+FROM gcr.io/distroless/cc-debian12
+
+WORKDIR /app
+
+# Copy compiled binary
+COPY --from=backend-builder /build/dist/sysadmin-agent-backend /app/backend
+
+# Copy VERSION.json
+COPY VERSION.json /app/
+
+# Expose port
+EXPOSE 8000
+
+# Run the binary
+ENTRYPOINT ["/app/backend"]
+CMD ["--host", "0.0.0.0", "--port", "8000"]

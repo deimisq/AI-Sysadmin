@@ -1,133 +1,229 @@
-# 🚀 Guía de Despliegue
+# 🚀 AI Sysadmin Agent - Production Deployment Guide
 
-Esta guía describe cómo desplegar el **AI Sysadmin Agent** en un entorno de producción.
+## 📋 Overview
 
-## 🏗️ Arquitectura de Despliegue
+This guide explains how to deploy the AI Sysadmin Agent in production using compiled binaries and Docker containers for maximum security and protection.
 
-Para producción recomendamos:
--   **Docker Compose** para orquestar los servicios (Frontend, Backend, BD).
--   **Nginx** como proxy inverso (terminación SSL).
--   **Systemd** o políticas de reinicio de Docker para alta disponibilidad.
+## 🔒 Security Features
 
-## 📋 Prerrequisitos
+- **Backend**: Compiled to native binary with Nuitka (no Python source code exposed)
+- **Frontend**: Next.js standalone build (optimized and minified)
+- **Container**: Distroless images (minimal attack surface)
+- **Licensing**: 30-day trial + commercial activation system
+- **No Source Code**: Only compiled binaries are distributed
 
--   Un servidor Linux (se recomienda Ubuntu 22.04).
--   Dirección IP pública.
--   Nombre de dominio (opcional pero recomendado para SSL).
--   Docker y Docker Compose instalados.
+## 📦 Prerequisites
 
-## 🐳 Despliegue con Docker (Recomendado)
+- Docker 20.10+
+- Docker Compose 2.0+
+- 2GB RAM minimum
+- 10GB disk space
 
-### 1. Preparar el Servidor
+## 🛠️ Installation Steps
 
-Clona el repositorio en tu servidor de producción:
-```bash
-git clone https://github.com/sentrait/ai_agent.git
-cd ai_agent
-```
-
-### 2. Configurar Variables de Entorno
-
-Crea el archivo `.env` de producción:
-```bash
-cp backend/.env.example backend/.env
-```
-Edita `backend/.env` con tus credenciales de **producción**:
--   Establece una `SECRET_KEY` fuerte.
--   Configura tu proveedor de IA (AWS Bedrock/OpenAI).
--   Ajusta `DATABASE_URL` para que apunte al servicio del contenedor de la base de datos (p. ej., `postgresql://user:pass@db:5432/dbname`).
-
-Crea el archivo de entorno del frontend:
-```bash
-cp frontend/.env.local.example frontend/.env.local
-```
-Edita `frontend/.env.local`:
--   `NEXT_PUBLIC_API_URL`: Establece esto a tu dominio/IP público del endpoint API (p. ej., `https://api.tudominio.com/api/v1` o `http://TU_IP:8000/api/v1`).
-
-### 3. Construir y Ejecutar con Docker Compose
-
-Necesitamos crear un `docker-compose.prod.yml` de producción (o actualizar el existente). Aquí hay una configuración recomendada:
-
-```yaml
-version: '3.8'
-
-services:
-  db:
-    image: ankane/pgvector:latest
-    environment:
-      POSTGRES_USER: sysadmin
-      POSTGRES_PASSWORD: secure_production_password
-      POSTGRES_DB: sysadmin_agent_db
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    restart: always
-
-  backend:
-    build: ./backend
-    command: uvicorn main:app --host 0.0.0.0 --port 8000
-    volumes:
-      - ./backend:/app
-    environment:
-      - DATABASE_URL=postgresql://sysadmin:secure_production_password@db:5432/sysadmin_agent_db
-    depends_on:
-      - db
-    restart: always
-    ports:
-      - "8000:8000"
-
-  frontend:
-    build: ./frontend
-    ports:
-      - "3000:3000"
-    restart: always
-    environment:
-      - NEXT_PUBLIC_API_URL=http://YOUR_SERVER_IP:8000/api/v1
-
-volumes:
-  postgres_data:
-```
-
-Ejecuta el despliegue:
-```bash
-docker compose -f docker-compose.prod.yml up -d --build
-```
-
-### 4. Migraciones de Base de Datos
-
-Una vez que los contenedores estén en ejecución, aplica las migraciones de la base de datos:
+### 1. Extract Deployment Package
 
 ```bash
-docker compose -f docker-compose.prod.yml exec backend alembic upgrade head
+tar -xzf sysadmin-agent-YYYYMMDD-HHMMSS.tar.gz
+cd sysadmin-agent
 ```
 
-## 🔒 Consideraciones de Seguridad para Producción
-
-1.  **SSL/TLS**: NO expongas directamente los puertos 3000/8000 a Internet sin SSL. Usa Nginx con Let's Encrypt.
-2.  **Cortafuegos**:
-    -   Permite 80/443 (HTTP/HTTPS).
-    -   Permite 22 (SSH) sólo desde IPs de confianza.
-    -   Bloquea 5432 (base de datos) para acceso externo.
-3.  **Secretos**: Nunca comites archivos `.env` al repositorio. Usa un gestor de secretos si es posible.
-4.  **Claves SSH**: Asegúrate de que el contenedor del backend tenga acceso a las claves SSH necesarias para gestionar tu infraestructura. Puede que necesites montar un volumen con las claves:
-    ```yaml
-    volumes:
-      - /ruta/en/el/host/keys:/root/.ssh:ro
-    ```
-
-## 🔄 Actualizar la Aplicación
-
-Para actualizar a la última versión:
+### 2. Configure Environment
 
 ```bash
-git pull origin main
-docker compose -f docker-compose.prod.yml down
-docker compose -f docker-compose.prod.yml up -d --build
-docker compose -f docker-compose.prod.yml exec backend alembic upgrade head
+cp .env.prod.template .env.prod
+nano .env.prod
 ```
 
-## 📊 Monitorización
+**Required Configuration:**
 
--   **Registros**: Visualiza logs con `docker compose logs -f`.
--   **Comprobaciones de salud**:
-    -   Backend: `GET /health`
-    -   Frontend: `GET /`
+```env
+# Database
+POSTGRES_PASSWORD=<strong-password>
+
+# Security Keys
+SECRET_KEY=<generate-with-openssl-rand-hex-32>
+ENCRYPTION_KEY=<generate-with-fernet>
+
+# AI API
+GEMINI_API_KEY=<your-gemini-key>
+```
+
+**Generate Keys:**
+
+```bash
+# SECRET_KEY
+openssl rand -hex 32
+
+# ENCRYPTION_KEY
+python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+```
+
+### 3. Load Docker Images (if provided separately)
+
+```bash
+docker load < sysadmin-agent-images.tar.gz
+```
+
+### 4. Start Services
+
+```bash
+docker-compose -f docker-compose.prod.yml up -d
+```
+
+### 5. Verify Installation
+
+```bash
+# Check all services are running
+docker-compose -f docker-compose.prod.yml ps
+
+# Check logs
+docker-compose -f docker-compose.prod.yml logs -f
+```
+
+### 6. Access Application
+
+Open your browser and navigate to:
+- **HTTP**: `http://your-server-ip`
+- **HTTPS**: `https://your-domain.com` (if SSL configured)
+
+### 7. Initial Setup
+
+1. **Create Superuser**:
+   ```bash
+   docker exec -it sysadmin-backend /app/backend create-superuser
+   ```
+
+2. **Login** with the credentials you just created
+
+3. **Trial License**: A 30-day trial license is automatically created on first startup
+
+## 🔑 License Activation
+
+### Trial License (30 days)
+
+Automatically created on first startup. No action required.
+
+### Commercial License
+
+After purchasing a commercial license:
+
+```bash
+python3 activate_license.py YOUR-LICENSE-KEY
+```
+
+**License Key Format**: `XXXXX-XXXXX-XXXXX-XXXXX-XXXXX`
+
+The activation script will:
+1. Validate the license key
+2. Contact the license server
+3. Update the local database
+4. Confirm activation
+
+**Restart services after activation:**
+
+```bash
+docker-compose -f docker-compose.prod.yml restart
+```
+
+## 📊 Monitoring
+
+### View Logs
+
+```bash
+# All services
+docker-compose -f docker-compose.prod.yml logs -f
+
+# Specific service
+docker-compose -f docker-compose.prod.yml logs -f backend
+```
+
+### Check License Status
+
+Navigate to: **Admin Panel → License Tab**
+
+## 🔄 Updates
+
+### Applying Updates
+
+1. Stop services:
+   ```bash
+   docker-compose -f docker-compose.prod.yml down
+   ```
+
+2. Load new images:
+   ```bash
+   docker load < sysadmin-agent-images-new.tar.gz
+   ```
+
+3. Start services:
+   ```bash
+   docker-compose -f docker-compose.prod.yml up -d
+   ```
+
+## 🛡️ Security Best Practices
+
+1. **Change Default Passwords**: Always use strong, unique passwords
+2. **Enable HTTPS**: Configure SSL certificates in nginx
+3. **Firewall**: Only expose ports 80 and 443
+4. **Backups**: Regular database backups
+5. **Updates**: Keep Docker and system packages updated
+
+## 📁 Directory Structure
+
+```
+sysadmin-agent/
+├── docker-compose.prod.yml    # Production orchestration
+├── docker-compose.override.yml # Image references
+├── .env.prod                   # Environment configuration
+├── nginx/                      # Nginx configuration
+│   └── conf.d/
+│       └── default.conf
+├── activate_license.py         # License activation script
+├── README.md                   # This file
+└── VERSION.json               # Version information
+```
+
+## 🆘 Troubleshooting
+
+### Services won't start
+
+```bash
+# Check logs
+docker-compose -f docker-compose.prod.yml logs
+
+# Check environment variables
+docker-compose -f docker-compose.prod.yml config
+```
+
+### Database connection errors
+
+```bash
+# Verify database is healthy
+docker-compose -f docker-compose.prod.yml ps postgres
+
+# Check database logs
+docker-compose -f docker-compose.prod.yml logs postgres
+```
+
+### License activation fails
+
+1. Check internet connection
+2. Verify license key format
+3. Contact support with Installation ID
+
+## 📞 Support
+
+- **Email**: support@yourdomain.com
+- **Documentation**: https://docs.yourdomain.com
+- **License Issues**: license@yourdomain.com
+
+## 📝 License
+
+This software is protected by copyright and licensing agreements.
+Unauthorized distribution, modification, or reverse engineering is prohibited.
+
+---
+
+**AI Sysadmin Agent** - Intelligent Server Management
+© 2024 Your Company. All rights reserved.

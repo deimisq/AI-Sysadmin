@@ -23,8 +23,7 @@ const OS_OPTIONS = [
     "Red Hat Enterprise Linux 8",
     "Red Hat Enterprise Linux 9",
     "Windows Server 2019",
-    "Windows Server 2022",
-    "Other"
+    "Windows Server 2022"
 ];
 
 interface ServerFormProps {
@@ -153,17 +152,18 @@ export function AddServerForm({ onServerAdded, initialData, onCancel }: ServerFo
                             required
                         />
                         <div className="col-span-2">
-                            <select
-                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            <Input
+                                list="os-options"
+                                placeholder={t.addServer.osPlaceholder}
                                 value={formData.os_info}
                                 onChange={(e) => setFormData({ ...formData, os_info: e.target.value })}
                                 required
-                            >
-                                <option value="">{t.addServer.osPlaceholder}</option>
+                            />
+                            <datalist id="os-options">
                                 {OS_OPTIONS.map((os) => (
-                                    <option key={os} value={os}>{os}</option>
+                                    <option key={os} value={os} />
                                 ))}
-                            </select>
+                            </datalist>
                         </div>
                         <div className="col-span-2">
                             <select

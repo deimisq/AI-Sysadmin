@@ -133,55 +133,168 @@ Un sistema inteligente que diagnostica problemas de servidores Linux, propone so
 
 ### Prerrequisitos
 
--   **Docker Engine** y **Docker Compose**
+-   **Docker Engine** y **Docker Compose** (v2.0+)
 -   **Git**
+-   **OpenSSL** (para generación de claves)
 
-### 1. Clonar el Repositorio
+### Opción 1: Instalación Automática (Recomendada)
+
+El script `setup.sh` configura todo automáticamente de forma interactiva:
+
+```bash
+# 1. Clonar el repositorio
+git clone https://github.com/sentrait/ai_agent.git
+cd ai_agent
+
+# 2. Ejecutar el script de instalación
+chmod +x setup.sh
+./setup.sh
+```
+
+El script te guiará a través de:
+- ✅ Verificación de dependencias (Docker, Git)
+- ✅ Configuración de base de datos
+- ✅ Generación automática de claves de seguridad
+- ✅ Selección de proveedor de IA (Bedrock/Gemini/OpenAI)
+- ✅ Configuración SMTP opcional para notificaciones
+- ✅ Construcción y despliegue de contenedores
+- ✅ Ejecución de migraciones de base de datos
+- ✅ Creación de usuario superadmin
+
+### Opción 2: Instalación Manual
+
+Si prefieres configurar manualmente:
+
+#### 1. Clonar el Repositorio
 
 ```bash
 git clone https://github.com/sentrait/ai_agent.git
 cd ai_agent
 ```
 
-### 2. Configurar Variables de Entorno
+#### 2. Configurar Variables de Entorno
+
+**Backend (`backend/.env`):**
 
 ```bash
-# Backend
 cp backend/.env.example backend/.env
-# Editar backend/.env con tus credenciales (AWS/OpenAI, DB, etc.)
-
-# Frontend
-cp frontend/.env.local.example frontend/.env.local
-# Editar frontend/.env.local (normalmente no requiere cambios para local)
 ```
 
-### 3. Iniciar con Docker Compose
+Edita `backend/.env` con tus credenciales:
+
+```env
+# Database
+DATABASE_URL=postgresql://sysadmin_agent:secure_password_dev@db:5432/sysadmin_agent_db
+
+# Security
+SECRET_KEY=<genera con: openssl rand -hex 32>
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=1440
+
+# Encryption (for SSH credentials)
+ENCRYPTION_KEY=<genera con: openssl rand -base64 32>
+
+# AI Provider (elige uno)
+LLM_PROVIDER=bedrock  # o gemini, o openai
+
+# Amazon Bedrock
+AWS_REGION=us-east-1
+AWS_ACCESS_KEY_ID=tu_access_key
+AWS_SECRET_ACCESS_KEY=tu_secret_key
+
+# Google Gemini
+GOOGLE_API_KEY=tu_google_api_key
+
+# OpenAI
+OPENAI_API_KEY=tu_openai_api_key
+
+# SMTP (Opcional - para notificaciones)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=tu_email@gmail.com
+SMTP_PASSWORD=tu_password
+SMTP_FROM=noreply@tudominio.com
+SMTP_USE_TLS=true
+
+# CORS
+CORS_ORIGINS=*
+```
+
+**Frontend (`frontend/.env.local`):**
+
+```bash
+cp frontend/.env.local.example frontend/.env.local
+```
+
+Para desarrollo local, deja el archivo vacío o comenta la línea:
+```env
+# NEXT_PUBLIC_API_URL=
+```
+
+Para producción, especifica tu dominio:
+```env
+NEXT_PUBLIC_API_URL=https://tudominio.com/api/v1
+```
+
+#### 3. Iniciar con Docker Compose
 
 ```bash
 # Levantar todo el stack (Frontend, Backend, DB, Nginx)
 sudo docker compose up --build -d
 ```
 
-### 4. Ejecutar Migraciones de Base de Datos
+#### 4. Ejecutar Migraciones de Base de Datos
 
 ```bash
 # Ejecutar migraciones dentro del contenedor backend
 sudo docker compose exec backend alembic upgrade head
 ```
 
-### 5. Crear Usuario Superadmin
+#### 5. Crear Usuario Superadmin
 
 ```bash
 # Crear el primer usuario administrador
 sudo docker compose exec backend python create_superuser.py
 ```
 
-### 6. Acceder a la Aplicación
+El script te pedirá:
+- Email
+- Username
+- Password
+- Full Name
 
--   **Frontend**: http://localhost (o tu dominio configurado)
+#### 6. Acceder a la Aplicación
+
+-   **Frontend**: http://localhost
 -   **Backend API**: http://localhost/api/v1
 -   **Documentación API**: http://localhost/api/v1/docs
 -   **Panel Admin**: http://localhost/admin (requiere login como admin)
+
+### 🔧 Comandos Útiles
+
+```bash
+# Ver logs en tiempo real
+sudo docker compose logs -f
+
+# Ver logs de un servicio específico
+sudo docker compose logs -f backend
+sudo docker compose logs -f frontend
+
+# Detener todos los servicios
+sudo docker compose down
+
+# Reiniciar servicios
+sudo docker compose restart
+
+# Reconstruir y reiniciar
+sudo docker compose up --build -d
+
+# Acceder al shell del backend
+sudo docker compose exec backend bash
+
+# Acceder al shell de PostgreSQL
+sudo docker compose exec db psql -U sysadmin_agent -d sysadmin_agent_db
+```
 
 ## ⚙️ Configuración
 

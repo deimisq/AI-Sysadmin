@@ -28,7 +28,7 @@ if ! command -v git &> /dev/null; then
     exit 1
 fi
 
-echo -e "${GREEN}Dependencies OK.${NC}"
+echo -e "${GREEN}✓ Dependencies OK.${NC}"
 echo ""
 
 # 2. Configuration
@@ -60,17 +60,25 @@ if [ ! -f "$BACKEND_ENV" ]; then
     echo ""
     
     # Security
+    echo -e "${BLUE}Generating security keys...${NC}"
     SECRET_KEY=$(openssl rand -hex 32)
-    echo "Generated Secret Key: $SECRET_KEY"
+    ENCRYPTION_KEY=$(openssl rand -base64 32)
+    echo -e "${GREEN}✓ Security keys generated${NC}"
     
     # AI Provider
     echo ""
     echo "Select AI Provider:"
-    echo "1) Amazon Bedrock (Recommended)"
-    echo "2) Google Gemini"
-    echo "3) OpenAI"
+    echo "1) Amazon Bedrock (Claude 3.5 Sonnet - Recommended)"
+    echo "2) Google Gemini 2.0 Flash"
+    echo "3) OpenAI GPT-4o"
     read -p "Choice [1]: " AI_CHOICE
     AI_CHOICE=${AI_CHOICE:-1}
+    
+    AWS_REGION=""
+    AWS_KEY=""
+    AWS_SECRET=""
+    GOOGLE_KEY=""
+    OPENAI_KEY=""
     
     if [ "$AI_CHOICE" == "1" ]; then
         PROVIDER="bedrock"
@@ -80,9 +88,6 @@ if [ ! -f "$BACKEND_ENV" ]; then
         echo ""
         read -s -p "AWS Secret Access Key: " AWS_SECRET
         echo ""
-        # Note: In a real scenario we might use IAM roles, but for .env we stick to keys or token
-        # The current backend uses AWS_BEARER_TOKEN_BEDROCK or standard AWS env vars.
-        # Let's assume standard AWS env vars for boto3
     elif [ "$AI_CHOICE" == "2" ]; then
         PROVIDER="gemini"
         read -s -p "Google API Key: " GOOGLE_KEY
@@ -91,6 +96,27 @@ if [ ! -f "$BACKEND_ENV" ]; then
         PROVIDER="openai"
         read -s -p "OpenAI API Key: " OPENAI_KEY
         echo ""
+    fi
+    
+    # SMTP Configuration (Optional)
+    echo ""
+    echo -e "${YELLOW}SMTP Configuration (Optional - for email notifications)${NC}"
+    read -p "Configure SMTP now? (y/N): " configure_smtp
+    
+    SMTP_HOST=""
+    SMTP_PORT="587"
+    SMTP_USER=""
+    SMTP_PASS=""
+    SMTP_FROM=""
+    
+    if [[ $configure_smtp =~ ^[Yy]$ ]]; then
+        read -p "SMTP Host (e.g., smtp.gmail.com): " SMTP_HOST
+        read -p "SMTP Port [587]: " SMTP_PORT_INPUT
+        SMTP_PORT=${SMTP_PORT_INPUT:-587}
+        read -p "SMTP Username: " SMTP_USER
+        read -s -p "SMTP Password: " SMTP_PASS
+        echo ""
+        read -p "From Email Address: " SMTP_FROM
     fi
     
     # Write backend .env
@@ -103,6 +129,9 @@ SECRET_KEY=${SECRET_KEY}
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=1440
 
+# Encryption (for SSH credentials)
+ENCRYPTION_KEY=${ENCRYPTION_KEY}
+
 # AI Provider
 LLM_PROVIDER=${PROVIDER}
 AWS_REGION=${AWS_REGION}
@@ -110,10 +139,21 @@ AWS_ACCESS_KEY_ID=${AWS_KEY}
 AWS_SECRET_ACCESS_KEY=${AWS_SECRET}
 GOOGLE_API_KEY=${GOOGLE_KEY}
 OPENAI_API_KEY=${OPENAI_KEY}
+
+# SMTP Configuration (Optional)
+SMTP_HOST=${SMTP_HOST}
+SMTP_PORT=${SMTP_PORT}
+SMTP_USER=${SMTP_USER}
+SMTP_PASSWORD=${SMTP_PASS}
+SMTP_FROM=${SMTP_FROM}
+SMTP_USE_TLS=true
+
+# CORS (Optional - for production)
+CORS_ORIGINS=*
 EOL
-    echo -e "${GREEN}backend/.env created.${NC}"
+    echo -e "${GREEN}✓ backend/.env created.${NC}"
 else
-    echo "Skipping backend configuration."
+    echo "Skipping backend configuration (file exists)."
 fi
 
 echo ""
@@ -122,17 +162,23 @@ echo ""
 FRONTEND_ENV="frontend/.env.local"
 if [ ! -f "$FRONTEND_ENV" ]; then
     echo -e "${BLUE}Configuring Frontend...${NC}"
-    # Detect public IP or domain
-    DEFAULT_URL="https://testing.sentrait.com.uy/api/v1"
-    read -p "API URL (Client-side) [$DEFAULT_URL]: " API_URL
-    API_URL=${API_URL:-$DEFAULT_URL}
+    echo "For local development, leave blank to use default (http://localhost:8000/api/v1)"
+    echo "For production, enter your domain (e.g., https://yourdomain.com/api/v1)"
+    read -p "API URL (leave blank for local): " API_URL
     
-    cat > "$FRONTEND_ENV" <<EOL
+    if [ -z "$API_URL" ]; then
+        cat > "$FRONTEND_ENV" <<EOL
+# Leave empty for local development
+# NEXT_PUBLIC_API_URL=
+EOL
+    else
+        cat > "$FRONTEND_ENV" <<EOL
 NEXT_PUBLIC_API_URL=${API_URL}
 EOL
-    echo -e "${GREEN}frontend/.env.local created.${NC}"
+    fi
+    echo -e "${GREEN}✓ frontend/.env.local created.${NC}"
 else
-    echo "Skipping frontend configuration."
+    echo "Skipping frontend configuration (file exists)."
 fi
 
 echo ""
@@ -145,11 +191,18 @@ if [[ ! $start_containers =~ ^[Nn]$ ]]; then
     sudo docker compose up --build -d
     
     echo -e "${BLUE}Waiting for services to be ready...${NC}"
-    sleep 10
+    sleep 15
     
     # 4. Database Setup
     echo -e "${YELLOW}Running Database Migrations...${NC}"
     sudo docker compose exec backend alembic upgrade head
+    
+    if [ $? -eq 0 ]; then
+        echo -e "${GREEN}✓ Database migrations completed${NC}"
+    else
+        echo -e "${RED}✗ Database migrations failed${NC}"
+        exit 1
+    fi
     
     # 5. Superuser Creation
     echo ""
@@ -164,14 +217,38 @@ if [[ ! $start_containers =~ ^[Nn]$ ]]; then
         
         echo -e "${BLUE}Creating superuser...${NC}"
         sudo docker compose exec backend python create_superuser.py "$ADMIN_EMAIL" "$ADMIN_USER" "$ADMIN_PASS" "$ADMIN_NAME"
+        
+        if [ $? -eq 0 ]; then
+            echo -e "${GREEN}✓ Superuser created successfully${NC}"
+        else
+            echo -e "${RED}✗ Superuser creation failed${NC}"
+        fi
     fi
     
     echo ""
-    echo -e "${GREEN}✅ Deployment Complete!${NC}"
+    echo -e "${GREEN}╔══════════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${GREEN}║                                                              ║${NC}"
+    echo -e "${GREEN}║              ✅ Deployment Complete!                          ║${NC}"
+    echo -e "${GREEN}║                                                              ║${NC}"
+    echo -e "${GREEN}╚══════════════════════════════════════════════════════════════╝${NC}"
     echo ""
-    echo "Access the application at:"
-    echo "Frontend: https://testing.sentrait.com.uy (or configured domain)"
-    echo "Backend API: https://testing.sentrait.com.uy/api/v1/docs"
+    echo -e "${BLUE}Access the application at:${NC}"
+    echo "  • Frontend:     http://localhost"
+    echo "  • Backend API:  http://localhost/api/v1"
+    echo "  • API Docs:     http://localhost/api/v1/docs"
+    echo "  • Admin Panel:  http://localhost/admin"
+    echo ""
+    echo -e "${YELLOW}Next steps:${NC}"
+    echo "  1. Login with your superuser credentials"
+    echo "  2. Configure AI parameters in Admin Panel > AI Parameters"
+    echo "  3. Add your first server in the Dashboard"
+    echo "  4. Start diagnosing!"
+    echo ""
+    echo -e "${BLUE}Useful commands:${NC}"
+    echo "  • View logs:    sudo docker compose logs -f"
+    echo "  • Stop:         sudo docker compose down"
+    echo "  • Restart:      sudo docker compose restart"
+    echo ""
 else
     echo "Deployment skipped. You can run 'sudo docker compose up --build -d' manually."
 fi

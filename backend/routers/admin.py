@@ -211,7 +211,7 @@ def get_user_groups(
     current_user: models.User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
-    """Get groups a user has access to"""
+    """Get groups a user has access to with their roles"""
     # Users can view their own groups, admins can view anyone's
     if user_id != current_user.id and current_user.role not in [RoleType.SUPERADMIN.value, RoleType.ADMIN.value]:
         raise HTTPException(status_code=403, detail="Not authorized")
@@ -220,8 +220,24 @@ def get_user_groups(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
-    groups = get_user_accessible_groups(user, db)
-    return groups
+    # Get groups with role information
+    permissions = db.query(models.UserGroupPermission).filter(
+        models.UserGroupPermission.user_id == user_id
+    ).all()
+    
+    result = []
+    for perm in permissions:
+        group = db.query(models.ServerGroup).filter(models.ServerGroup.id == perm.group_id).first()
+        if group:
+            result.append({
+                "id": group.id,
+                "name": group.name,
+                "description": group.description,
+                "color": group.color,
+                "role": perm.role  # Include the role in the group
+            })
+    
+    return result
 
 # ==================== AUDIT LOGS ====================
 

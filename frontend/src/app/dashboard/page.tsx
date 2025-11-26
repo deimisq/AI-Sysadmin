@@ -98,7 +98,16 @@ export default function Dashboard() {
                 <div className="max-w-6xl mx-auto space-y-8">
 
                     {/* Header */}
-                    <div className="flex items-center justify-between border-b pb-6">
+                    <div className="space-y-4 border-b pb-6">
+                        {/* Top Bar - Theme and Language Switchers */}
+                        <div className="flex justify-end">
+                            <div className="flex gap-2">
+                                <ThemeSwitcher />
+                                <LanguageSwitcher />
+                            </div>
+                        </div>
+
+                        {/* Title Section */}
                         <div className="flex items-center gap-3">
                             <div className="p-3 bg-primary/10 rounded-lg">
                                 <ServerIcon className="h-8 w-8 text-primary" />
@@ -108,9 +117,9 @@ export default function Dashboard() {
                                 <p className="text-muted-foreground">{t.header.subtitle}</p>
                             </div>
                         </div>
-                        <div className="flex gap-2">
-                            <ThemeSwitcher />
-                            <LanguageSwitcher />
+
+                        {/* Action Buttons Menu */}
+                        <div className="flex gap-2 flex-wrap">
                             <Button variant="outline" onClick={() => router.push("/profile")}>
                                 <User className="mr-2 h-4 w-4" />
                                 {t.dashboard.profile}

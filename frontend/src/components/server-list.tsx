@@ -5,6 +5,7 @@ import { fetchServers, deleteServer, fetchGroups } from "@/lib/api";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Terminal, Server as ServerIcon, Trash2, FolderOpen } from "lucide-react";
+import { useI18n } from "@/lib/i18n-context";
 
 interface Server {
     id: number;
@@ -28,6 +29,7 @@ interface ServerListProps {
 }
 
 export function ServerList({ onDiagnose, onEdit }: ServerListProps) {
+    const { t } = useI18n();
     const [servers, setServers] = useState<Server[]>([]);
     const [groups, setGroups] = useState<ServerGroup[]>([]);
     const [loading, setLoading] = useState(true);
@@ -52,7 +54,7 @@ export function ServerList({ onDiagnose, onEdit }: ServerListProps) {
     };
 
     const handleDelete = async (serverId: number) => {
-        if (!confirm("¿Estás seguro de que deseas eliminar este servidor?")) {
+        if (!confirm(t.serverList.deleteConfirm)) {
             return;
         }
 
@@ -61,11 +63,11 @@ export function ServerList({ onDiagnose, onEdit }: ServerListProps) {
             await loadData(); // Refresh the list
         } catch (error) {
             console.error(error);
-            alert("Error al eliminar el servidor");
+            alert(t.serverList.deleteError);
         }
     };
 
-    if (loading) return <div>Loading servers...</div>;
+    if (loading) return <div>{t.common.loading}</div>;
 
     // Group servers
     const ungroupedServers = servers.filter(s => !s.group_id);
@@ -94,7 +96,7 @@ export function ServerList({ onDiagnose, onEdit }: ServerListProps) {
                     className="flex-1"
                     onClick={() => onDiagnose(server)}
                 >
-                    <Terminal className="mr-2 h-4 w-4" /> Diagnose
+                    <Terminal className="mr-2 h-4 w-4" /> {t.serverList.diagnose}
                 </Button>
                 <Button
                     variant="outline"
@@ -154,7 +156,7 @@ export function ServerList({ onDiagnose, onEdit }: ServerListProps) {
 
             {servers.length === 0 && (
                 <div className="col-span-full text-center p-10 text-muted-foreground">
-                    No servers found. Add one to get started.
+                    {t.serverList.noServers}
                 </div>
             )}
         </div>

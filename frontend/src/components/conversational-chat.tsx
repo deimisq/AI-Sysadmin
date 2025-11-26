@@ -171,7 +171,7 @@ export function ConversationalChat({ server, onClose }: ConversationalChatProps)
                                     }`}>
                                     <p className="text-xs font-bold mb-2">
                                         {message.executionResult.exit_code === 0 ? '✅' : '❌'}
-                                        {' '}Execution Result (Exit Code: {message.executionResult.exit_code})
+                                        {' '}{t.chat.executionResult.replace('{code}', message.executionResult.exit_code.toString())}
                                     </p>
                                     <pre className="text-xs bg-black text-white p-2 rounded overflow-x-auto">
                                         {message.executionResult.stdout || message.executionResult.stderr}

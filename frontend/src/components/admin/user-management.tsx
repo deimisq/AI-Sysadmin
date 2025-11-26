@@ -6,12 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { fetchAllUsers, createUser, updateUserAdmin, deleteUser, fetchGroups, grantGroupAccess, revokeGroupAccess, fetchUserGroups } from "@/lib/api";
 import { Users, Edit2, Trash2, Shield, FolderOpen, Plus, X } from "lucide-react";
+import { useI18n } from "@/lib/i18n-context";
 
 interface UserManagementProps {
     currentUser: any;
 }
 
 export function UserManagement({ currentUser }: UserManagementProps) {
+    const { t } = useI18n();
     const [users, setUsers] = useState<any[]>([]);
     const [groups, setGroups] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -65,7 +67,7 @@ export function UserManagement({ currentUser }: UserManagementProps) {
 
             await loadData();
             setEditingUser(null);
-            alert("User updated successfully");
+            alert(t.userManagement.userUpdated);
         } catch (error: any) {
             console.error(error);
             alert(error.message || "Failed to update user");
@@ -90,7 +92,7 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                 role: "user",
                 is_active: true
             });
-            alert("User created successfully");
+            alert(t.userManagement.userCreated);
         } catch (error: any) {
             console.error(error);
             alert(error.message || "Failed to create user");
@@ -98,12 +100,12 @@ export function UserManagement({ currentUser }: UserManagementProps) {
     };
 
     const handleDeleteUser = async (userId: number) => {
-        if (!confirm("Are you sure you want to delete this user?")) return;
+        if (!confirm(t.userManagement.confirmDelete)) return;
 
         try {
             await deleteUser(userId);
             await loadData();
-            alert("User deleted successfully");
+            alert(t.userManagement.userDeleted);
         } catch (error: any) {
             console.error(error);
             alert(error.message || "Failed to delete user");
@@ -158,7 +160,7 @@ export function UserManagement({ currentUser }: UserManagementProps) {
     };
 
     if (loading) {
-        return <div>Loading users...</div>;
+        return <div>{t.userManagement.loading}</div>;
     }
 
     // Create User Form
@@ -166,13 +168,13 @@ export function UserManagement({ currentUser }: UserManagementProps) {
         return (
             <Card>
                 <CardHeader>
-                    <CardTitle>Create New User</CardTitle>
+                    <CardTitle>{t.userManagement.createUser}</CardTitle>
                     <CardDescription>Add a new user to the system</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="grid gap-4 md:grid-cols-2">
                         <div>
-                            <label className="text-sm font-medium">Email *</label>
+                            <label className="text-sm font-medium">{t.userManagement.email} *</label>
                             <Input
                                 type="email"
                                 value={newUser.email}
@@ -181,7 +183,7 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                             />
                         </div>
                         <div>
-                            <label className="text-sm font-medium">Username *</label>
+                            <label className="text-sm font-medium">{t.userManagement.username} *</label>
                             <Input
                                 value={newUser.username}
                                 onChange={(e) => setNewUser({ ...newUser, username: e.target.value })}
@@ -189,7 +191,7 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                             />
                         </div>
                         <div>
-                            <label className="text-sm font-medium">Password *</label>
+                            <label className="text-sm font-medium">{t.userManagement.password} *</label>
                             <Input
                                 type="password"
                                 value={newUser.password}
@@ -198,7 +200,7 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                             />
                         </div>
                         <div>
-                            <label className="text-sm font-medium">Full Name</label>
+                            <label className="text-sm font-medium">{t.userManagement.fullName}</label>
                             <Input
                                 value={newUser.full_name}
                                 onChange={(e) => setNewUser({ ...newUser, full_name: e.target.value })}
@@ -206,7 +208,7 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                             />
                         </div>
                         <div>
-                            <label className="text-sm font-medium">Role</label>
+                            <label className="text-sm font-medium">{t.userManagement.role}</label>
                             <select
                                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                                 value={newUser.role}
@@ -227,12 +229,12 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                                 onChange={(e) => setNewUser({ ...newUser, is_active: e.target.checked })}
                                 className="h-4 w-4"
                             />
-                            <label className="text-sm font-medium">Active</label>
+                            <label className="text-sm font-medium">{t.userManagement.active}</label>
                         </div>
                     </div>
                     <div className="flex gap-2">
-                        <Button onClick={handleCreateUser}>Create User</Button>
-                        <Button variant="outline" onClick={() => setCreatingUser(false)}>Cancel</Button>
+                        <Button onClick={handleCreateUser}>{t.userManagement.createUser}</Button>
+                        <Button variant="outline" onClick={() => setCreatingUser(false)}>{t.userManagement.cancel}</Button>
                     </div>
                 </CardContent>
             </Card>
@@ -244,7 +246,7 @@ export function UserManagement({ currentUser }: UserManagementProps) {
         return (
             <Card>
                 <CardHeader>
-                    <CardTitle>Edit User: {editingUser.username}</CardTitle>
+                    <CardTitle>{t.userManagement.editUser}: {editingUser.username}</CardTitle>
                     <CardDescription>Update user information and role</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -296,8 +298,8 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                         </div>
                     </div>
                     <div className="flex gap-2">
-                        <Button onClick={handleSaveUser}>Save Changes</Button>
-                        <Button variant="outline" onClick={() => setEditingUser(null)}>Cancel</Button>
+                        <Button onClick={handleSaveUser}>{t.userManagement.save}</Button>
+                        <Button variant="outline" onClick={() => setEditingUser(null)}>{t.userManagement.cancel}</Button>
                     </div>
                 </CardContent>
             </Card>
@@ -312,7 +314,7 @@ export function UserManagement({ currentUser }: UserManagementProps) {
         return (
             <Card>
                 <CardHeader>
-                    <CardTitle>Manage Permissions: {managingPermissions.username}</CardTitle>
+                    <CardTitle>{t.userManagement.managePermissions}: {managingPermissions.username}</CardTitle>
                     <CardDescription>Grant or revoke group access</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -367,7 +369,7 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                         )}
                     </div>
 
-                    <Button variant="outline" onClick={() => setManagingPermissions(null)}>Close</Button>
+                    <Button variant="outline" onClick={() => setManagingPermissions(null)}>{t.common.close}</Button>
                 </CardContent>
             </Card>
         );
@@ -381,13 +383,13 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                     <div>
                         <CardTitle className="flex items-center gap-2">
                             <Users className="h-5 w-5" />
-                            User Management
+                            {t.userManagement.title}
                         </CardTitle>
                         <CardDescription>Manage system users and their permissions</CardDescription>
                     </div>
                     <Button onClick={() => setCreatingUser(true)}>
                         <Plus className="mr-2 h-4 w-4" />
-                        Create New User
+                        {t.userManagement.createUser}
                     </Button>
                 </div>
             </CardHeader>
@@ -406,7 +408,7 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                                     </span>
                                     {!user.is_active && (
                                         <span className="px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800">
-                                            Inactive
+                                            {t.userManagement.inactive}
                                         </span>
                                     )}
                                 </div>

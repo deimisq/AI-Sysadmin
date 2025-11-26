@@ -15,6 +15,13 @@ export function SecuritySettings({ currentUser }: { currentUser: any }) {
     });
     const [savingMs, setSavingMs] = useState(false);
 
+    // Domain management state
+    const [domains, setDomains] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [newDomain, setNewDomain] = useState("");
+    const [adding, setAdding] = useState(false);
+    const [error, setError] = useState("");
+
     useEffect(() => {
         fetchDomains();
         fetchMsConfig();

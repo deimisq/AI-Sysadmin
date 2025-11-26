@@ -29,6 +29,12 @@ export function I18nProvider({ children }: { children: ReactNode }) {
 
         if (savedLocale && (savedLocale === "en" || savedLocale === "es")) {
             setLocaleState(savedLocale);
+        } else {
+            // Check browser language
+            const browserLang = navigator.language.split("-")[0];
+            if (browserLang === "es") {
+                setLocaleState("es");
+            }
         }
     }, []);
 

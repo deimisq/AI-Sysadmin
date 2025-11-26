@@ -18,8 +18,12 @@ import NotificationPreferences from "@/components/admin/notification-preferences
 import { SystemStats } from "@/components/admin/system-stats";
 import { AuditLogs } from "@/components/admin/audit-logs";
 
+import { useI18n } from "@/lib/i18n-context";
+import { LanguageSwitcher } from "@/components/language-switcher";
+
 export default function AdminPage() {
     const router = useRouter();
+    const { t } = useI18n();
     const [currentUser, setCurrentUser] = useState<any>(null);
     const [stats, setStats] = useState<any>(null);
     const [loading, setLoading] = useState(true);
@@ -54,7 +58,7 @@ export default function AdminPage() {
             <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-                    <p className="mt-4 text-muted-foreground">Loading...</p>
+                    <p className="mt-4 text-muted-foreground">{t.common.loading}</p>
                 </div>
             </div>
         );
@@ -65,12 +69,12 @@ export default function AdminPage() {
             <div className="min-h-screen flex items-center justify-center">
                 <Card className="w-full max-w-md">
                     <CardHeader>
-                        <CardTitle>Access Denied</CardTitle>
-                        <CardDescription>You don't have permission to access this page</CardDescription>
+                        <CardTitle>{t.admin.accessDenied}</CardTitle>
+                        <CardDescription>{t.admin.accessDeniedMsg}</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <Button onClick={() => router.push("/dashboard")}>
-                            Return to Dashboard
+                            {t.admin.returnDashboard}
                         </Button>
                     </CardContent>
                 </Card>
@@ -86,24 +90,25 @@ export default function AdminPage() {
                     <div className="flex items-center gap-4">
                         <Button variant="outline" onClick={() => router.push("/dashboard")}>
                             <ArrowLeft className="mr-2 h-4 w-4" />
-                            Dashboard
+                            {t.admin.dashboard}
                         </Button>
                         <div>
                             <h1 className="text-3xl font-bold flex items-center gap-2">
                                 <Shield className="h-8 w-8 text-primary" />
-                                System Administration
+                                {t.admin.title}
                             </h1>
-                            <p className="text-muted-foreground">Manage users, permissions, and system settings</p>
+                            <p className="text-muted-foreground">{t.admin.subtitle}</p>
                         </div>
                     </div>
+                    <LanguageSwitcher />
                 </div>
 
                 {/* Quick Stats */}
                 {stats && (
-                    <div className="grid gap-4 md:grid-cols-4">
+                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                         <Card>
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+                                <CardTitle className="text-sm font-medium">{t.admin.totalUsers}</CardTitle>
                                 <Users className="h-4 w-4 text-muted-foreground" />
                             </CardHeader>
                             <CardContent>
@@ -112,7 +117,7 @@ export default function AdminPage() {
                         </Card>
                         <Card>
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">Total Servers</CardTitle>
+                                <CardTitle className="text-sm font-medium">{t.admin.totalServers}</CardTitle>
                                 <Server className="h-4 w-4 text-muted-foreground" />
                             </CardHeader>
                             <CardContent>
@@ -121,7 +126,7 @@ export default function AdminPage() {
                         </Card>
                         <Card>
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">Total Groups</CardTitle>
+                                <CardTitle className="text-sm font-medium">{t.admin.totalGroups}</CardTitle>
                                 <FolderOpen className="h-4 w-4 text-muted-foreground" />
                             </CardHeader>
                             <CardContent>
@@ -130,7 +135,7 @@ export default function AdminPage() {
                         </Card>
                         <Card>
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">Operations</CardTitle>
+                                <CardTitle className="text-sm font-medium">{t.admin.operations}</CardTitle>
                                 <Activity className="h-4 w-4 text-muted-foreground" />
                             </CardHeader>
                             <CardContent>
@@ -145,39 +150,39 @@ export default function AdminPage() {
                     <TabsList className="flex flex-wrap h-auto">
                         <TabsTrigger value="users">
                             <Users className="mr-2 h-4 w-4" />
-                            Users
+                            {t.admin.tabs.users}
                         </TabsTrigger>
                         <TabsTrigger value="servers">
                             <Server className="mr-2 h-4 w-4" />
-                            Servers
+                            {t.admin.tabs.servers}
                         </TabsTrigger>
                         <TabsTrigger value="logs">
                             <Activity className="mr-2 h-4 w-4" />
-                            Logs
+                            {t.admin.tabs.logs}
                         </TabsTrigger>
                         <TabsTrigger value="ai-params">
                             <Shield className="mr-2 h-4 w-4" />
-                            AI Params
+                            {t.admin.tabs.aiParams}
                         </TabsTrigger>
                         <TabsTrigger value="backend-params">
                             <FolderOpen className="mr-2 h-4 w-4" />
-                            Backend Params
+                            {t.admin.tabs.backendParams}
                         </TabsTrigger>
                         <TabsTrigger value="frontend-params">
                             <FolderOpen className="mr-2 h-4 w-4" />
-                            Frontend Params
+                            {t.admin.tabs.frontendParams}
                         </TabsTrigger>
                         <TabsTrigger value="security">
                             <Shield className="mr-2 h-4 w-4" />
-                            Security
+                            {t.admin.tabs.security}
                         </TabsTrigger>
                         <TabsTrigger value="communication">
                             <Activity className="mr-2 h-4 w-4" />
-                            Communication
+                            {t.admin.tabs.communication}
                         </TabsTrigger>
                         <TabsTrigger value="notifications">
                             <Activity className="mr-2 h-4 w-4" />
-                            Notifications
+                            {t.admin.tabs.notifications}
                         </TabsTrigger>
                     </TabsList>
 

@@ -65,5 +65,52 @@
         "switch": "Switch Language",
         "english": "English",
         "spanish": "Español"
+    },
+    "login": {
+        "welcomeBack": "Welcome Back",
+        "createAccount": "Create Account",
+        "loginSubtitle": "Enter your credentials to access your account",
+        "registerSubtitle": "Fill in your information to get started",
+        "email": "Email",
+        "fullName": "Full Name (optional)",
+        "username": "Username",
+        "password": "Password",
+        "loginButton": "Login",
+        "registerButton": "Register",
+        "wait": "Please wait...",
+        "noAccount": "Don't have an account? Register",
+        "hasAccount": "Already have an account? Login",
+        "successRegister": "Registration successful! Please login.",
+        "failedLogin": "Login failed",
+        "failedRegister": "Registration failed"
+    },
+    "admin": {
+        "title": "System Administration",
+        "subtitle": "Manage users, permissions, and system settings",
+        "dashboard": "Dashboard",
+        "accessDenied": "Access Denied",
+        "accessDeniedMsg": "You don't have permission to access this page",
+        "returnDashboard": "Return to Dashboard",
+        "totalUsers": "Total Users",
+        "totalServers": "Total Servers",
+        "totalGroups": "Total Groups",
+        "operations": "Operations",
+        "tabs": {
+            "users": "Users",
+            "servers": "Servers",
+            "logs": "Logs",
+            "aiParams": "AI Params",
+            "backendParams": "Backend Params",
+            "frontendParams": "Frontend Params",
+            "security": "Security",
+            "communication": "Communication",
+            "notifications": "Notifications"
+        }
+    },
+    "dashboard": {
+        "profile": "Profile",
+        "admin": "Admin",
+        "manageGroups": "Manage Groups",
+        "logout": "Logout"
     }
 }

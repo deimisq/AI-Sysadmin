@@ -65,5 +65,52 @@
         "switch": "Cambiar Idioma",
         "english": "English",
         "spanish": "Español"
+    },
+    "login": {
+        "welcomeBack": "Bienvenido de nuevo",
+        "createAccount": "Crear Cuenta",
+        "loginSubtitle": "Ingresa tus credenciales para acceder a tu cuenta",
+        "registerSubtitle": "Completa tu información para comenzar",
+        "email": "Correo Electrónico",
+        "fullName": "Nombre Completo (opcional)",
+        "username": "Nombre de Usuario",
+        "password": "Contraseña",
+        "loginButton": "Iniciar Sesión",
+        "registerButton": "Registrarse",
+        "wait": "Por favor espera...",
+        "noAccount": "¿No tienes una cuenta? Regístrate",
+        "hasAccount": "¿Ya tienes una cuenta? Inicia Sesión",
+        "successRegister": "¡Registro exitoso! Por favor inicia sesión.",
+        "failedLogin": "Inicio de sesión fallido",
+        "failedRegister": "Registro fallido"
+    },
+    "admin": {
+        "title": "Administración del Sistema",
+        "subtitle": "Gestiona usuarios, permisos y configuración del sistema",
+        "dashboard": "Panel Principal",
+        "accessDenied": "Acceso Denegado",
+        "accessDeniedMsg": "No tienes permiso para acceder a esta página",
+        "returnDashboard": "Volver al Panel",
+        "totalUsers": "Usuarios Totales",
+        "totalServers": "Servidores Totales",
+        "totalGroups": "Grupos Totales",
+        "operations": "Operaciones",
+        "tabs": {
+            "users": "Usuarios",
+            "servers": "Servidores",
+            "logs": "Registros",
+            "aiParams": "Parámetros IA",
+            "backendParams": "Parámetros Backend",
+            "frontendParams": "Parámetros Frontend",
+            "security": "Seguridad",
+            "communication": "Comunicación",
+            "notifications": "Notificaciones"
+        }
+    },
+    "dashboard": {
+        "profile": "Perfil",
+        "admin": "Admin",
+        "manageGroups": "Gestionar Grupos",
+        "logout": "Cerrar Sesión"
     }
 }

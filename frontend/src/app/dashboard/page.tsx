@@ -109,17 +109,17 @@ export default function Dashboard() {
                         <LanguageSwitcher />
                         <Button variant="outline" onClick={() => router.push("/profile")}>
                             <User className="mr-2 h-4 w-4" />
-                            Profile
+                            {t.dashboard.profile}
                         </Button>
                         {currentUser && ["superadmin", "admin"].includes(currentUser.role) && (
                             <Button variant="outline" onClick={() => router.push("/admin")}>
                                 <Shield className="mr-2 h-4 w-4" />
-                                Admin
+                                {t.dashboard.admin}
                             </Button>
                         )}
                         <Button variant="outline" onClick={() => setShowGroupManager(true)}>
                             <FolderOpen className="mr-2 h-4 w-4" />
-                            Manage Groups
+                            {t.dashboard.manageGroups}
                         </Button>
                         <Button onClick={toggleAddForm}>
                             <PlusCircle className="mr-2 h-4 w-4" />
@@ -127,7 +127,7 @@ export default function Dashboard() {
                         </Button>
                         <Button variant="destructive" onClick={handleLogout}>
                             <LogOut className="mr-2 h-4 w-4" />
-                            Logout
+                            {t.dashboard.logout}
                         </Button>
                     </div>
                 </div>

@@ -6,9 +6,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Shield } from "lucide-react";
+import { useI18n } from "@/lib/i18n-context";
+import { LanguageSwitcher } from "@/components/language-switcher";
 
 export default function LoginPage() {
     const router = useRouter();
+    const { t } = useI18n();
     const [isLogin, setIsLogin] = useState(true);
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
@@ -45,7 +48,7 @@ export default function LoginPage() {
 
                 if (!res.ok) {
                     const error = await res.json();
-                    throw new Error(error.detail || "Login failed");
+                    throw new Error(error.detail || t.login.failedLogin);
                 }
 
                 const data = await res.json();
@@ -68,23 +71,26 @@ export default function LoginPage() {
 
                 if (!res.ok) {
                     const error = await res.json();
-                    throw new Error(error.detail || "Registration failed");
+                    throw new Error(error.detail || t.login.failedRegister);
                 }
 
-                alert("Registration successful! Please login.");
+                alert(t.login.successRegister);
                 setIsLogin(true);
                 setFormData({ username: "", email: "", password: "", full_name: "" });
             }
         } catch (error: any) {
             console.error(error);
-            alert(error.message || "An error occurred");
+            alert(error.message || t.common.error);
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4">
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4 relative">
+            <div className="absolute top-4 right-4">
+                <LanguageSwitcher />
+            </div>
             <Card className="w-full max-w-md">
                 <CardHeader className="space-y-1">
                     <div className="flex items-center justify-center mb-4">
@@ -93,12 +99,12 @@ export default function LoginPage() {
                         </div>
                     </div>
                     <CardTitle className="text-2xl text-center">
-                        {isLogin ? "Welcome Back" : "Create Account"}
+                        {isLogin ? t.login.welcomeBack : t.login.createAccount}
                     </CardTitle>
                     <CardDescription className="text-center">
                         {isLogin
-                            ? "Enter your credentials to access your account"
-                            : "Fill in your information to get started"}
+                            ? t.login.loginSubtitle
+                            : t.login.registerSubtitle}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -107,33 +113,33 @@ export default function LoginPage() {
                             <>
                                 <Input
                                     type="email"
-                                    placeholder="Email *"
+                                    placeholder={`${t.login.email} *`}
                                     value={formData.email}
                                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                                     required
                                 />
                                 <Input
-                                    placeholder="Full Name (optional)"
+                                    placeholder={t.login.fullName}
                                     value={formData.full_name}
                                     onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
                                 />
                             </>
                         )}
                         <Input
-                            placeholder="Username *"
+                            placeholder={`${t.login.username} *`}
                             value={formData.username}
                             onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                             required
                         />
                         <Input
                             type="password"
-                            placeholder="Password *"
+                            placeholder={`${t.login.password} *`}
                             value={formData.password}
                             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                             required
                         />
                         <Button type="submit" className="w-full" disabled={loading}>
-                            {loading ? "Please wait..." : isLogin ? "Login" : "Register"}
+                            {loading ? t.login.wait : isLogin ? t.login.loginButton : t.login.registerButton}
                         </Button>
                     </form>
 
@@ -147,8 +153,8 @@ export default function LoginPage() {
                             className="text-primary hover:underline"
                         >
                             {isLogin
-                                ? "Don't have an account? Register"
-                                : "Already have an account? Login"}
+                                ? t.login.noAccount
+                                : t.login.hasAccount}
                         </button>
                     </div>
                 </CardContent>

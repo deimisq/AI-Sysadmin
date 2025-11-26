@@ -8,15 +8,57 @@ import { Shield, Plus, Trash2, Check, X } from "lucide-react";
 import { API_BASE_URL, getAuthHeaders } from "@/lib/api";
 
 export function SecuritySettings({ currentUser }: { currentUser: any }) {
-    const [domains, setDomains] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [newDomain, setNewDomain] = useState("");
-    const [adding, setAdding] = useState(false);
-    const [error, setError] = useState("");
+    const [msConfig, setMsConfig] = useState({
+        microsoft_client_id: "",
+        microsoft_client_secret: "",
+        microsoft_tenant_id: ""
+    });
+    const [savingMs, setSavingMs] = useState(false);
 
     useEffect(() => {
         fetchDomains();
+        fetchMsConfig();
     }, []);
+
+    const fetchMsConfig = async () => {
+        try {
+            const res = await fetch(`${API_BASE_URL}/config/security`, {
+                headers: getAuthHeaders(),
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setMsConfig({
+                    microsoft_client_id: data.microsoft_client_id || "",
+                    microsoft_client_secret: data.microsoft_client_secret || "",
+                    microsoft_tenant_id: data.microsoft_tenant_id || ""
+                });
+            }
+        } catch (err) {
+            console.error("Failed to fetch Microsoft config", err);
+        }
+    };
+
+    const handleSaveMsConfig = async () => {
+        setSavingMs(true);
+        try {
+            const res = await fetch(`${API_BASE_URL}/config/security`, {
+                method: "PUT",
+                headers: {
+                    ...getAuthHeaders(),
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(msConfig),
+            });
+
+            if (!res.ok) throw new Error("Failed to save configuration");
+
+            // Show success feedback if needed
+        } catch (err) {
+            console.error("Failed to save Microsoft config", err);
+        } finally {
+            setSavingMs(false);
+        }
+    };
 
     const fetchDomains = async () => {
         try {
@@ -86,63 +128,104 @@ export function SecuritySettings({ currentUser }: { currentUser: any }) {
     };
 
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                    <Shield className="h-5 w-5" />
-                    Security Settings
-                </CardTitle>
-                <CardDescription>
-                    Configure security policies and allowed registration domains
-                </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-                <div className="space-y-4">
-                    <h3 className="text-sm font-medium">Allowed Registration Domains</h3>
-                    <p className="text-sm text-muted-foreground">
-                        Users registering with emails from these domains will be automatically approved.
-                        Others will require manual approval.
-                    </p>
-
-                    <div className="flex gap-2">
-                        <Input
-                            placeholder="example.com"
-                            value={newDomain}
-                            onChange={(e) => setNewDomain(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && handleAddDomain()}
-                        />
-                        <Button onClick={handleAddDomain} disabled={adding || !newDomain.trim()}>
-                            {adding ? "Adding..." : <><Plus className="mr-2 h-4 w-4" /> Add Domain</>}
+        <div className="space-y-6">
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <Shield className="h-5 w-5" />
+                        Microsoft OAuth Integration
+                    </CardTitle>
+                    <CardDescription>
+                        Configure Microsoft Entra ID (Azure AD) for single sign-on
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="grid gap-4">
+                        <div className="grid gap-2">
+                            <label className="text-sm font-medium">Application (Client) ID</label>
+                            <Input
+                                value={msConfig.microsoft_client_id}
+                                onChange={(e) => setMsConfig({ ...msConfig, microsoft_client_id: e.target.value })}
+                                placeholder="e.g., 00000000-0000-0000-0000-000000000000"
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <label className="text-sm font-medium">Client Secret</label>
+                            <Input
+                                type="password"
+                                value={msConfig.microsoft_client_secret}
+                                onChange={(e) => setMsConfig({ ...msConfig, microsoft_client_secret: e.target.value })}
+                                placeholder="Value from Certificates & secrets"
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <label className="text-sm font-medium">Directory (Tenant) ID</label>
+                            <Input
+                                value={msConfig.microsoft_tenant_id}
+                                onChange={(e) => setMsConfig({ ...msConfig, microsoft_tenant_id: e.target.value })}
+                                placeholder="e.g., common, organizations, or UUID"
+                            />
+                            <p className="text-xs text-muted-foreground">Use 'common' for multi-tenant apps or specific UUID for single tenant.</p>
+                        </div>
+                        <Button onClick={handleSaveMsConfig} disabled={savingMs} className="w-fit">
+                            {savingMs ? "Saving..." : "Save Configuration"}
                         </Button>
                     </div>
-                    {error && <p className="text-sm text-red-500">{error}</p>}
+                </CardContent>
+            </Card>
 
-                    <div className="border rounded-md divide-y">
-                        {loading ? (
-                            <div className="p-4 text-sm text-muted-foreground">Loading domains...</div>
-                        ) : domains.length === 0 ? (
-                            <div className="p-4 text-sm text-muted-foreground">No allowed domains configured. All registrations will require approval.</div>
-                        ) : (
-                            domains.map((domain) => (
-                                <div key={domain.id} className="flex items-center justify-between p-3">
-                                    <div className="flex items-center gap-2">
-                                        <Check className="h-4 w-4 text-green-500" />
-                                        <span className="font-medium">@{domain.domain}</span>
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <Shield className="h-5 w-5" />
+                        Allowed Domains
+                    </CardTitle>
+                    <CardDescription>
+                        Configure allowed registration domains. Users from these domains are auto-approved.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                    <div className="space-y-4">
+                        <div className="flex gap-2">
+                            <Input
+                                placeholder="example.com"
+                                value={newDomain}
+                                onChange={(e) => setNewDomain(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && handleAddDomain()}
+                            />
+                            <Button onClick={handleAddDomain} disabled={adding || !newDomain.trim()}>
+                                {adding ? "Adding..." : <><Plus className="mr-2 h-4 w-4" /> Add Domain</>}
+                            </Button>
+                        </div>
+                        {error && <p className="text-sm text-red-500">{error}</p>}
+
+                        <div className="border rounded-md divide-y">
+                            {loading ? (
+                                <div className="p-4 text-sm text-muted-foreground">Loading domains...</div>
+                            ) : domains.length === 0 ? (
+                                <div className="p-4 text-sm text-muted-foreground">No allowed domains configured. All registrations will require approval.</div>
+                            ) : (
+                                domains.map((domain) => (
+                                    <div key={domain.id} className="flex items-center justify-between p-3">
+                                        <div className="flex items-center gap-2">
+                                            <Check className="h-4 w-4 text-green-500" />
+                                            <span className="font-medium">@{domain.domain}</span>
+                                        </div>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
+                                            onClick={() => handleDeleteDomain(domain.id)}
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
                                     </div>
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
-                                        onClick={() => handleDeleteDomain(domain.id)}
-                                    >
-                                        <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                            ))
-                        )}
+                                ))
+                            )}
+                        </div>
                     </div>
-                </div>
-            </CardContent>
-        </Card>
+                </CardContent>
+            </Card>
+        </div>
     );
 }

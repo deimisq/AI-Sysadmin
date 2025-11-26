@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,12 +14,44 @@ export default function LoginPage() {
     const { t } = useI18n();
     const [isLogin, setIsLogin] = useState(true);
     const [loading, setLoading] = useState(false);
+    const [msConfig, setMsConfig] = useState<{ enabled: boolean; clientId: string; tenantId: string } | null>(null);
+
+    useEffect(() => { // Changed from useState to useEffect for side effects
+        // Fetch Microsoft config on mount
+        const fetchMsConfig = async () => {
+            try {
+                let apiBaseUrl = "/api/v1";
+                if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+                    apiBaseUrl = `${window.location.protocol}//${window.location.hostname}:8000/api/v1`;
+                }
+                const res = await fetch(`${apiBaseUrl}/auth/microsoft/config`);
+                if (res.ok) {
+                    const data = await res.json();
+                    setMsConfig(data);
+                }
+            } catch (err) {
+                console.error("Failed to fetch Microsoft config", err);
+            }
+        };
+        fetchMsConfig();
+    }, []);
+
     const [formData, setFormData] = useState({
         username: "",
         email: "",
         password: "",
         full_name: "",
     });
+
+    const handleMicrosoftLogin = () => {
+        if (!msConfig?.clientId) return;
+
+        const redirectUri = `${window.location.origin}/auth/microsoft/callback`;
+        const tenant = msConfig.tenantId || "common";
+        const url = `https://login.microsoftonline.com/${tenant}/oauth2/v2.0/authorize?client_id=${msConfig.clientId}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&response_mode=query&scope=openid%20profile%20email%20User.Read`;
+
+        window.location.href = url;
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -98,63 +130,91 @@ export default function LoginPage() {
                             <Shield className="h-10 w-10 text-primary" />
                         </div>
                     </div>
-                    <CardTitle className="text-2xl text-center">
-                        {isLogin ? t.login.welcomeBack : t.login.createAccount}
-                    </CardTitle>
+                    <CardTitle className="text-2xl font-bold text-center">AI Sysadmin Agent</CardTitle>
                     <CardDescription className="text-center">
-                        {isLogin
-                            ? t.login.loginSubtitle
-                            : t.login.registerSubtitle}
+                        {isLogin ? t.login.welcomeBack : t.login.createAccount}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <form onSubmit={handleSubmit} className="space-y-4">
                         {!isLogin && (
                             <>
-                                <Input
-                                    type="email"
-                                    placeholder={`${t.login.email} *`}
-                                    value={formData.email}
-                                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                    required
-                                />
-                                <Input
-                                    placeholder={t.login.fullName}
-                                    value={formData.full_name}
-                                    onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                                />
+                                <div className="space-y-2">
+                                    <Input
+                                        placeholder={t.login.fullNamePlaceholder}
+                                        value={formData.full_name}
+                                        onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Input
+                                        placeholder={t.login.emailPlaceholder}
+                                        type="email"
+                                        value={formData.email}
+                                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                        required
+                                    />
+                                </div>
                             </>
                         )}
-                        <Input
-                            placeholder={`${t.login.username} *`}
-                            value={formData.username}
-                            onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                            required
-                        />
-                        <Input
-                            type="password"
-                            placeholder={`${t.login.password} *`}
-                            value={formData.password}
-                            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                            required
-                        />
+                        <div className="space-y-2">
+                            <Input
+                                placeholder={t.login.usernamePlaceholder}
+                                value={formData.username}
+                                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                                required
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Input
+                                type="password"
+                                placeholder={t.login.passwordPlaceholder}
+                                value={formData.password}
+                                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                required
+                            />
+                        </div>
                         <Button type="submit" className="w-full" disabled={loading}>
-                            {loading ? t.login.wait : isLogin ? t.login.loginButton : t.login.registerButton}
+                            {loading ? t.common.loading : (isLogin ? t.login.signIn : t.login.signUp)}
                         </Button>
                     </form>
+
+                    {msConfig?.enabled && isLogin && (
+                        <>
+                            <div className="relative my-4">
+                                <div className="absolute inset-0 flex items-center">
+                                    <span className="w-full border-t" />
+                                </div>
+                                <div className="relative flex justify-center text-xs uppercase">
+                                    <span className="bg-background px-2 text-muted-foreground">
+                                        Or continue with
+                                    </span>
+                                </div>
+                            </div>
+                            <Button
+                                variant="outline"
+                                className="w-full"
+                                onClick={handleMicrosoftLogin}
+                                type="button"
+                            >
+                                <svg className="mr-2 h-4 w-4" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="microsoft" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
+                                    <path fill="currentColor" d="M0 32h214.6v214.6H0V32zm233.4 0H448v214.6H233.4V32zM0 265.4h214.6V480H0V265.4zm233.4 0H448V480H233.4V265.4z"></path>
+                                </svg>
+                                Microsoft
+                            </Button>
+                        </>
+                    )}
 
                     <div className="mt-4 text-center text-sm">
                         <button
                             type="button"
+                            className="text-primary hover:underline"
                             onClick={() => {
                                 setIsLogin(!isLogin);
                                 setFormData({ username: "", email: "", password: "", full_name: "" });
                             }}
-                            className="text-primary hover:underline"
                         >
-                            {isLogin
-                                ? t.login.noAccount
-                                : t.login.hasAccount}
+                            {isLogin ? t.login.noAccount : t.login.hasAccount}
                         </button>
                     </div>
                 </CardContent>

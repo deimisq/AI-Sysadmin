@@ -82,7 +82,13 @@
         "hasAccount": "Already have an account? Login",
         "successRegister": "Registration successful! Please login.",
         "failedLogin": "Login failed",
-        "failedRegister": "Registration failed"
+        "failedRegister": "Registration failed",
+        "fullNamePlaceholder": "Full Name (optional)",
+        "emailPlaceholder": "name@example.com",
+        "usernamePlaceholder": "Username",
+        "passwordPlaceholder": "Password",
+        "signIn": "Sign In",
+        "signUp": "Sign Up"
     },
     "admin": {
         "title": "System Administration",

@@ -5,6 +5,7 @@ import { createServer, createClient, updateServer, fetchGroups } from "@/lib/api
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useI18n } from "@/lib/i18n-context";
 
 const OS_OPTIONS = [
     "Ubuntu 22.04",
@@ -33,6 +34,7 @@ interface ServerFormProps {
 }
 
 export function AddServerForm({ onServerAdded, initialData, onCancel }: ServerFormProps) {
+    const { t } = useI18n();
     const [formData, setFormData] = useState({
         hostname: "",
         ip_address: "",
@@ -133,19 +135,19 @@ export function AddServerForm({ onServerAdded, initialData, onCancel }: ServerFo
     return (
         <Card>
             <CardHeader>
-                <CardTitle>{initialData ? "Edit Server" : "Add New Server"}</CardTitle>
+                <CardTitle>{initialData ? t.addServer.title.replace("Add New Server", "Edit Server") : t.addServer.title}</CardTitle>
             </CardHeader>
             <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                         <Input
-                            placeholder="Hostname *"
+                            placeholder={t.addServer.hostnamePlaceholder}
                             value={formData.hostname}
                             onChange={(e) => setFormData({ ...formData, hostname: e.target.value })}
                             required
                         />
                         <Input
-                            placeholder="IP Address *"
+                            placeholder={t.addServer.ipPlaceholder}
                             value={formData.ip_address}
                             onChange={(e) => setFormData({ ...formData, ip_address: e.target.value })}
                             required
@@ -157,7 +159,7 @@ export function AddServerForm({ onServerAdded, initialData, onCancel }: ServerFo
                                 onChange={(e) => setFormData({ ...formData, os_info: e.target.value })}
                                 required
                             >
-                                <option value="">Select Operating System *</option>
+                                <option value="">{t.addServer.osPlaceholder}</option>
                                 {OS_OPTIONS.map((os) => (
                                     <option key={os} value={os}>{os}</option>
                                 ))}
@@ -169,7 +171,7 @@ export function AddServerForm({ onServerAdded, initialData, onCancel }: ServerFo
                                 value={formData.group_id}
                                 onChange={(e) => setFormData({ ...formData, group_id: e.target.value })}
                             >
-                                <option value="">No Group (Optional)</option>
+                                <option value="">{t.addServer.selectClient}</option>
                                 {groups.map((group) => (
                                     <option key={group.id} value={group.id}>
                                         {group.name}
@@ -178,40 +180,40 @@ export function AddServerForm({ onServerAdded, initialData, onCancel }: ServerFo
                             </select>
                         </div>
                         <Input
-                            placeholder="SSH Username *"
+                            placeholder={t.addServer.sshUsername}
                             value={formData.ssh_username}
                             onChange={(e) => setFormData({ ...formData, ssh_username: e.target.value })}
                             required
                         />
                         <Input
                             type="password"
-                            placeholder={initialData ? "SSH Password (leave blank to keep unchanged)" : "SSH Password (optional if SSH Key)"}
+                            placeholder={initialData ? "SSH Password (leave blank to keep unchanged)" : t.addServer.sshPassword}
                             value={formData.ssh_password}
                             onChange={(e) => setFormData({ ...formData, ssh_password: e.target.value })}
                         />
                         <div className="col-span-2">
                             <Input
-                                placeholder={initialData ? "SSH Private Key Path (leave blank to keep unchanged)" : "SSH Private Key Path (optional if Password)"}
+                                placeholder={initialData ? "SSH Private Key Path (leave blank to keep unchanged)" : t.addServer.sshKeyPath}
                                 value={formData.ssh_key_path}
                                 onChange={(e) => setFormData({ ...formData, ssh_key_path: e.target.value })}
                             />
                             <p className="text-xs text-muted-foreground mt-1">
-                                ⚠️ Ruta al archivo de clave PRIVADA en el servidor backend (ej: /home/user/.ssh/id_rsa)
+                                {t.addServer.authNote}
                             </p>
                         </div>
                     </div>
                     <Input
-                        placeholder="Description"
+                        placeholder={t.addServer.descriptionPlaceholder}
                         value={formData.description}
                         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     />
                     <div className="flex gap-2">
                         <Button type="submit" className="flex-1" disabled={loading}>
-                            {loading ? "Saving..." : (initialData ? "Update Server" : "Add Server")}
+                            {loading ? t.common.loading : (initialData ? "Update Server" : t.addServer.submit)}
                         </Button>
                         {initialData && onCancel && (
                             <Button type="button" variant="outline" onClick={onCancel} disabled={loading}>
-                                Cancel
+                                {t.common.cancel}
                             </Button>
                         )}
                     </div>

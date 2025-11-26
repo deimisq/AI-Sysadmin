@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FolderOpen, Plus, Trash2, Edit2, X } from "lucide-react";
+import { useI18n } from "@/lib/i18n-context";
 
 interface ServerGroup {
     id: number;
@@ -26,6 +27,7 @@ const PRESET_COLORS = [
 ];
 
 export function GroupManager({ onClose }: { onClose: () => void }) {
+    const { t } = useI18n();
     const [groups, setGroups] = useState<ServerGroup[]>([]);
     const [loading, setLoading] = useState(true);
     const [editingGroup, setEditingGroup] = useState<ServerGroup | null>(null);
@@ -86,7 +88,7 @@ export function GroupManager({ onClose }: { onClose: () => void }) {
     };
 
     const handleDelete = async (groupId: number) => {
-        if (!confirm("Are you sure you want to delete this group?")) {
+        if (!confirm(t.groupManagement.confirmDelete)) {
             return;
         }
 
@@ -110,7 +112,7 @@ export function GroupManager({ onClose }: { onClose: () => void }) {
             <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="flex items-center gap-2">
                     <FolderOpen className="h-5 w-5" />
-                    Manage Server Groups
+                    {t.groupManagement.title}
                 </CardTitle>
                 <Button variant="ghost" size="icon" onClick={onClose}>
                     <X className="h-4 w-4" />
@@ -121,16 +123,16 @@ export function GroupManager({ onClose }: { onClose: () => void }) {
                 {showForm ? (
                     <form onSubmit={handleSubmit} className="space-y-4 p-4 border rounded-lg bg-muted/50">
                         <h3 className="font-semibold">
-                            {editingGroup ? "Edit Group" : "Create New Group"}
+                            {editingGroup ? t.groupManagement.editGroup : t.groupManagement.createGroup}
                         </h3>
                         <Input
-                            placeholder="Group Name *"
+                            placeholder={t.groupManagement.groupName}
                             value={formData.name}
                             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                             required
                         />
                         <Input
-                            placeholder="Description (optional)"
+                            placeholder={t.groupManagement.description}
                             value={formData.description}
                             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                         />
@@ -151,17 +153,17 @@ export function GroupManager({ onClose }: { onClose: () => void }) {
                         </div>
                         <div className="flex gap-2">
                             <Button type="submit" disabled={loading}>
-                                {loading ? "Saving..." : editingGroup ? "Update" : "Create"}
+                                {loading ? t.common.loading : editingGroup ? "Update" : "Create"}
                             </Button>
                             <Button type="button" variant="outline" onClick={handleCancel}>
-                                Cancel
+                                {t.common.cancel}
                             </Button>
                         </div>
                     </form>
                 ) : (
                     <Button onClick={() => setShowForm(true)}>
                         <Plus className="mr-2 h-4 w-4" />
-                        Add New Group
+                        {t.groupManagement.createGroup}
                     </Button>
                 )}
 
@@ -204,7 +206,7 @@ export function GroupManager({ onClose }: { onClose: () => void }) {
                     ))}
                     {groups.length === 0 && !showForm && (
                         <div className="text-center p-10 text-muted-foreground">
-                            No groups yet. Create one to organize your servers.
+                            {t.groupManagement.noGroups}
                         </div>
                     )}
                 </div>

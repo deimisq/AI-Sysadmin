@@ -110,6 +110,7 @@ class ServerBase(BaseModel):
     ssh_password: Optional[str] = None
     ssh_private_key_path: Optional[str] = None
     description: Optional[str] = None
+    os_info: Optional[str] = None
     client_id: Optional[int] = None
     group_id: Optional[int] = None
 
@@ -123,6 +124,7 @@ class ServerUpdate(BaseModel):
     ssh_password: Optional[str] = None
     ssh_private_key_path: Optional[str] = None
     description: Optional[str] = None
+    os_info: Optional[str] = None
     client_id: Optional[int] = None
     group_id: Optional[int] = None
 

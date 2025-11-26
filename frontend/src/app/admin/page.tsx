@@ -20,6 +20,7 @@ import { AuditLogs } from "@/components/admin/audit-logs";
 
 import { useI18n } from "@/lib/i18n-context";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { ThemeSwitcher } from "@/components/theme-switcher";
 import { Footer } from "@/components/footer";
 
 export default function AdminPage() {
@@ -102,7 +103,10 @@ export default function AdminPage() {
                                 <p className="text-muted-foreground">{t.admin.subtitle}</p>
                             </div>
                         </div>
-                        <LanguageSwitcher />
+                        <div className="flex gap-2">
+                            <ThemeSwitcher />
+                            <LanguageSwitcher />
+                        </div>
                     </div>
 
                     {/* Quick Stats */}

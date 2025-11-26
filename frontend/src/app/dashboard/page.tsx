@@ -7,6 +7,7 @@ import { AddServerForm } from "@/components/add-server-form";
 import { ConversationalChat } from "@/components/conversational-chat";
 import { GroupManager } from "@/components/group-manager";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { ThemeSwitcher } from "@/components/theme-switcher";
 import { Footer } from "@/components/footer";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Server as ServerIcon, FolderOpen, LogOut, User, Shield } from "lucide-react";
@@ -108,6 +109,7 @@ export default function Dashboard() {
                             </div>
                         </div>
                         <div className="flex gap-2">
+                            <ThemeSwitcher />
                             <LanguageSwitcher />
                             <Button variant="outline" onClick={() => router.push("/profile")}>
                                 <User className="mr-2 h-4 w-4" />

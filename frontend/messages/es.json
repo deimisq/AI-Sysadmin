@@ -66,6 +66,12 @@
         "english": "English",
         "spanish": "Español"
     },
+    "theme": {
+        "toggle": "Cambiar tema",
+        "light": "Claro",
+        "dark": "Oscuro",
+        "system": "Sistema"
+    },
     "login": {
         "welcomeBack": "Bienvenido de nuevo",
         "createAccount": "Crear Cuenta",

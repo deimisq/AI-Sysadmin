@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Shield } from "lucide-react";
 import { useI18n } from "@/lib/i18n-context";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { ThemeSwitcher } from "@/components/theme-switcher";
 
 export default function LoginPage() {
     const router = useRouter();
@@ -120,7 +121,8 @@ export default function LoginPage() {
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4 relative">
-            <div className="absolute top-4 right-4">
+            <div className="absolute top-4 right-4 flex gap-2">
+                <ThemeSwitcher />
                 <LanguageSwitcher />
             </div>
             <Card className="w-full max-w-md">

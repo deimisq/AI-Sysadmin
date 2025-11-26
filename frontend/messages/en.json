@@ -140,7 +140,17 @@
         "revokeAccess": "Revoke Access",
         "groupPermissions": "Group Permissions",
         "noUsers": "No users found",
-        "loading": "Loading users..."
+        "loading": "Loading users...",
+        "currentGroups": "Current Groups",
+        "availableGroups": "Available Groups",
+        "noGroupsAssigned": "No groups assigned",
+        "allGroupsAssigned": "All groups assigned",
+        "roleLabel": "Role",
+        "roleUser": "User",
+        "roleGroupAdmin": "Group Admin",
+        "grantAsUser": "Grant as User",
+        "grantAsAdmin": "Grant as Admin",
+        "manageRolesDescription": "Grant or revoke group access and manage roles"
     },
     "serverManagement": {
         "title": "Server Management",

@@ -140,7 +140,17 @@
         "revokeAccess": "Revocar Acceso",
         "groupPermissions": "Permisos de Grupo",
         "noUsers": "No se encontraron usuarios",
-        "loading": "Cargando usuarios..."
+        "loading": "Cargando usuarios...",
+        "currentGroups": "Grupos Actuales",
+        "availableGroups": "Grupos Disponibles",
+        "noGroupsAssigned": "No hay grupos asignados",
+        "allGroupsAssigned": "Todos los grupos asignados",
+        "roleLabel": "Rol",
+        "roleUser": "Usuario",
+        "roleGroupAdmin": "Administrador de Grupo",
+        "grantAsUser": "Otorgar como Usuario",
+        "grantAsAdmin": "Otorgar como Admin",
+        "manageRolesDescription": "Otorgar o revocar acceso a grupos y gestionar roles"
     },
     "serverManagement": {
         "title": "Gestión de Servidores",

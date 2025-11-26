@@ -315,11 +315,11 @@ export function UserManagement({ currentUser }: UserManagementProps) {
             <Card>
                 <CardHeader>
                     <CardTitle>{t.userManagement.managePermissions}: {managingPermissions.username}</CardTitle>
-                    <CardDescription>Grant or revoke group access and manage roles</CardDescription>
+                    <CardDescription>{t.userManagement.manageRolesDescription}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div>
-                        <h3 className="font-medium mb-2">Current Groups</h3>
+                        <h3 className="font-medium mb-2">{t.userManagement.currentGroups}</h3>
                         {userGroups.length > 0 ? (
                             <div className="space-y-2">
                                 {userGroups.map((group: any) => (
@@ -329,12 +329,12 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                                             <div className="flex-1">
                                                 <span className="font-medium">{group.name}</span>
                                                 <div className="flex items-center gap-2 mt-1">
-                                                    <span className="text-xs text-muted-foreground">Role:</span>
+                                                    <span className="text-xs text-muted-foreground">{t.userManagement.roleLabel}:</span>
                                                     <span className={`px-2 py-0.5 rounded text-xs font-medium ${group.role === 'group_admin'
                                                             ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
                                                             : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
                                                         }`}>
-                                                        {group.role === 'group_admin' ? 'Group Admin' : 'User'}
+                                                        {group.role === 'group_admin' ? t.userManagement.roleGroupAdmin : t.userManagement.roleUser}
                                                     </span>
                                                 </div>
                                             </div>
@@ -350,12 +350,12 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                                 ))}
                             </div>
                         ) : (
-                            <p className="text-sm text-muted-foreground">No groups assigned</p>
+                            <p className="text-sm text-muted-foreground">{t.userManagement.noGroupsAssigned}</p>
                         )}
                     </div>
 
                     <div>
-                        <h3 className="font-medium mb-2">Available Groups</h3>
+                        <h3 className="font-medium mb-2">{t.userManagement.availableGroups}</h3>
                         {availableGroups.length > 0 ? (
                             <div className="space-y-2">
                                 {availableGroups.map((group) => (
@@ -371,7 +371,7 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                                                 onClick={() => handleGrantAccess(group.id, "user")}
                                             >
                                                 <Plus className="h-4 w-4 mr-1" />
-                                                Grant as User
+                                                {t.userManagement.grantAsUser}
                                             </Button>
                                             <Button
                                                 variant="outline"
@@ -380,14 +380,14 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                                                 className="border-purple-500 text-purple-700 hover:bg-purple-50"
                                             >
                                                 <Shield className="h-4 w-4 mr-1" />
-                                                Grant as Admin
+                                                {t.userManagement.grantAsAdmin}
                                             </Button>
                                         </div>
                                     </div>
                                 ))}
                             </div>
                         ) : (
-                            <p className="text-sm text-muted-foreground">All groups assigned</p>
+                            <p className="text-sm text-muted-foreground">{t.userManagement.allGroupsAssigned}</p>
                         )}
                     </div>
 

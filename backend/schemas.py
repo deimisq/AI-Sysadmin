@@ -61,6 +61,12 @@ class Token(BaseModel):
 class TokenData(BaseModel):
     username: Optional[str] = None
 
+class NotificationPreferences(BaseModel):
+    notify_new_users: bool = True
+    notify_security_alerts: bool = True
+    notify_new_servers: bool = False
+    notify_system_events: bool = True
+
 # Client Schemas
 class ClientBase(BaseModel):
     name: str

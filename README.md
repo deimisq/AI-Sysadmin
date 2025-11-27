@@ -40,24 +40,48 @@ This repository contains the **production-ready distribution** of AI Sysadmin Ag
 
 ### Installation
 
-1. **Clone this repository**:
+**📦 Download Pre-compiled Binaries**
+
+Binaries are distributed via [GitHub Releases](https://github.com/sentrait/ai_agent/releases/latest) to avoid repository size limits.
+
+1. **Download the latest release**:
    ```bash
-   git clone https://github.com/yourusername/ai-sysadmin-agent.git
-   cd ai-sysadmin-agent
+   # Download all required files
+   wget https://github.com/sentrait/ai_agent/releases/download/v1.0.0/backend-binary-linux-x64.tar.gz
+   wget https://github.com/sentrait/ai_agent/releases/download/v1.0.0/frontend-build.tar.gz
+   wget https://github.com/sentrait/ai_agent/releases/download/v1.0.0/deployment-files.tar.gz
+   wget https://github.com/sentrait/ai_agent/releases/download/v1.0.0/SHA256SUMS
+   
+   # Verify integrity
+   sha256sum -c SHA256SUMS
    ```
 
-2. **Configure environment**:
+2. **Extract files**:
+   ```bash
+   # Extract deployment configuration
+   tar -xzf deployment-files.tar.gz
+   
+   # Extract backend binary
+   mkdir -p backend/dist
+   tar -xzf backend-binary-linux-x64.tar.gz -C backend/dist/
+   
+   # Extract frontend build
+   mkdir -p frontend
+   tar -xzf frontend-build.tar.gz -C frontend/
+   ```
+
+3. **Configure environment**:
    ```bash
    cp .env.prod.template .env.prod
-   nano .env.prod
+   nano .env.prod  # Edit with your values
    ```
 
-3. **Start services**:
+4. **Start services**:
    ```bash
-   docker-compose -f docker-compose.prod.yml up -d
+   docker-compose -f docker-compose.prebuilt.yml up -d
    ```
 
-4. **Access the application**:
+5. **Access the application**:
    - Open http://your-server-ip in your browser
    - Default trial license: 30 days
 

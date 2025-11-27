@@ -202,7 +202,7 @@ export default function AdminPage() {
                         </TabsContent>
 
                         <TabsContent value="servers" className="space-y-4">
-                            <ServerManagement />
+                            <ServerManagement currentUser={currentUser} />
                         </TabsContent>
 
                         <TabsContent value="logs" className="space-y-4">
@@ -210,19 +210,19 @@ export default function AdminPage() {
                         </TabsContent>
 
                         <TabsContent value="ai-params" className="space-y-4">
-                            <AIParameters />
+                            <AIParameters currentUser={currentUser} />
                         </TabsContent>
 
                         <TabsContent value="backend-params" className="space-y-4">
-                            <BackendParameters />
+                            <BackendParameters currentUser={currentUser} />
                         </TabsContent>
 
                         <TabsContent value="frontend-params" className="space-y-4">
-                            <FrontendParameters />
+                            <FrontendParameters currentUser={currentUser} />
                         </TabsContent>
 
                         <TabsContent value="security" className="space-y-4">
-                            <SecuritySettings />
+                            <SecuritySettings currentUser={currentUser} />
                         </TabsContent>
 
                         <TabsContent value="license" className="space-y-4">
@@ -230,7 +230,7 @@ export default function AdminPage() {
                         </TabsContent>
 
                         <TabsContent value="communication" className="space-y-4">
-                            <CommunicationSettings />
+                            <CommunicationSettings currentUser={currentUser} />
                         </TabsContent>
 
                         <TabsContent value="notifications" className="space-y-4">

@@ -2,15 +2,15 @@
 
 ## 📋 Overview
 
-This guide explains how to deploy the AI Sysadmin Agent in production using compiled binaries and Docker containers for maximum security and protection.
+This guide explains how to deploy the AI Sysadmin Agent in production using pre-compiled binaries and Docker containers.
 
 ## 🔒 Security Features
 
-- **Backend**: Compiled to native binary with Nuitka (no Python source code exposed)
-- **Frontend**: Next.js standalone build (optimized and minified)
-- **Container**: Distroless images (minimal attack surface)
+- **Backend**: Pre-compiled native binary (optimized and secure)
+- **Frontend**: Production-optimized standalone build
+- **Containers**: Minimal runtime images (reduced attack surface)
 - **Licensing**: 30-day trial + commercial activation system
-- **No Source Code**: Only compiled binaries are distributed
+- **Enterprise-Grade**: Professional deployment architecture
 
 ## 📦 Prerequisites
 

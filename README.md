@@ -42,15 +42,15 @@ This repository contains the **production-ready distribution** of AI Sysadmin Ag
 
 **📦 Download Pre-compiled Binaries**
 
-Binaries are distributed via [GitHub Releases](https://github.com/sentrait/ai_agent/releases/latest) to avoid repository size limits.
+Binaries are distributed via [GitHub Releases](https://github.com/sentrait/ai_agent_public/releases/latest) to avoid repository size limits.
 
 1. **Download the latest release**:
    ```bash
    # Download all required files
-   wget https://github.com/sentrait/ai_agent/releases/download/v1.0.0/backend-binary-linux-x64.tar.gz
-   wget https://github.com/sentrait/ai_agent/releases/download/v1.0.0/frontend-build.tar.gz
-   wget https://github.com/sentrait/ai_agent/releases/download/v1.0.0/deployment-files.tar.gz
-   wget https://github.com/sentrait/ai_agent/releases/download/v1.0.0/SHA256SUMS
+   wget https://github.com/sentrait/ai_agent_public/releases/download/v1.0.0/backend-binary-linux-x64.tar.gz
+   wget https://github.com/sentrait/ai_agent_public/releases/download/v1.0.0/frontend-build.tar.gz
+   wget https://github.com/sentrait/ai_agent_public/releases/download/v1.0.0/deployment-files.tar.gz
+   wget https://github.com/sentrait/ai_agent_public/releases/download/v1.0.0/SHA256SUMS
    
    # Verify integrity
    sha256sum -c SHA256SUMS

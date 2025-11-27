@@ -4,7 +4,9 @@ set -e
 echo "🔨 Compiling Backend with Nuitka..."
 
 # Install Nuitka if not present
-pip install nuitka ordered-set zstandard
+pip install nuitka ordered-set zstandard --break-system-packages
+pip install -r backend/requirements.txt --break-system-packages
+pip install google-generativeai --break-system-packages
 
 # Clean previous builds
 rm -rf backend/build backend/dist backend/*.bin backend/*.so
@@ -32,7 +34,7 @@ python3 -m nuitka \
     --include-module=utils \
     --include-module=services \
     --include-module=middleware \
-    --include-data-dir=alembic=alembic \
+    --include-data-dir=backend/alembic=alembic \
     --output-dir=backend/dist \
     --output-filename=sysadmin-agent-backend \
     backend/main.py

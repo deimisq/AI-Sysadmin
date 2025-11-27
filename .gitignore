@@ -1,92 +1,38 @@
-# ============================================
-# Public Distribution Repository
-# Only compiled binaries and deployment files
-# ============================================
+# Large binaries (distributed via GitHub Releases)
+backend/dist/
+frontend/.next/
 
 # Source Code (EXCLUDED FROM PUBLIC REPO)
 backend/**/*.py
 !backend/__init__.py
 frontend/src/**/*
-frontend/pages/**/*
-frontend/components/**/*
-# frontend/app/**/*
-frontend/public/**/*
-frontend/styles/**/*
-
-# Keep only essential config files
-!frontend/package.json
-!frontend/package-lock.json
-!frontend/next.config.js
-!frontend/tsconfig.json
+frontend/app/**/*
 
 # Development files
 .env
 .env.local
-.env.development
-.env.test
 *.env
 !.env.prod.template
 
 # Python
 __pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-*.egg-info/
-.pytest_cache/
-.coverage
-htmlcov/
+*.pyc
 
 # Node
 node_modules/
-.next/
-out/
-.cache/
 
 # Database
-*.db
-*.sqlite
-*.sqlite3
 postgres_data/
 
 # Logs
-logs/
 *.log
 
 # IDE
 .vscode/
 .idea/
-*.swp
-*.swo
 
 # OS
 .DS_Store
-Thumbs.db
 
-# Git
-.git/
-.gitignore
-
-# Build artifacts (keep compiled binaries)
-backend/build/
-backend/dist/*.build
-backend/dist/*.dist
-!backend/dist/sysadmin-agent-backend
-
-# Temporary
-tmp/
-temp/
-*.tmp
-
-# Documentation with sensitive info
-README.md
-CHANGELOG.md
-VERSION_HISTORY.md
+# Docs
 BUILD_INSTRUCTIONS.md
-
-# Keep only public docs
-!DEPLOYMENT.md
-!LICENSE
-!PUBLIC_README.md
-backend/dist/sysadmin-agent-backend

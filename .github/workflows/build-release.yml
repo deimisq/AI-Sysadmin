@@ -1,0 +1,201 @@
+name: Build and Release
+
+on:
+  push:
+    branches:
+      - Public
+    tags:
+      - 'v*'
+
+jobs:
+  build-backend:
+    name: 🐍 Build Backend (Nuitka)
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install System Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y patchelf ccache
+
+      - name: Setup Nuitka Cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/Nuitka
+            ~/.ccache
+          key: ${{ runner.os }}-nuitka-${{ hashFiles('backend/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-nuitka-
+
+      - name: Install Python Dependencies
+        run: |
+          pip install -r backend/requirements.txt
+          pip install nuitka ordered-set zstandard google-generativeai
+
+      - name: Compile Backend with Nuitka
+        run: |
+          # Usar ccache para acelerar
+          export NUITKA_CCACHE_BINARY=$(which ccache)
+          
+          # Ejecutar el script de compilación (asegurarse de que use python del entorno)
+          # Modificamos la llamada para que sea explícita si es necesario, o usamos el script existente
+          # El script existente usa 'pip install' que ya hicimos, así que podemos llamar a nuitka directamente o usar el script
+          # Para mayor control en CI, llamamos a Nuitka directamente aquí replicando el script pero optimizado para CI
+          
+          python -m nuitka \
+            --standalone \
+            --onefile \
+            --python-flag=no_site \
+            --include-package=uvicorn \
+            --include-package=sqlalchemy \
+            --include-package=pydantic \
+            --include-package=jose --include-package=passlib \
+            --include-package=httpx \
+            --include-package=ansible \
+            --include-package=google.generativeai \
+            --include-module=routers --include-module=models \
+            --include-module=schemas \
+            --include-module=database \
+            --include-module=dependencies \
+            --include-module=settings --include-module=utils \
+            --include-module=services \
+            --include-module=middleware \
+            --include-data-dir=backend/alembic=alembic \
+            --output-dir=backend/dist \
+            --output-filename=sysadmin-agent-backend \
+            --enable-plugin=anti-bloat \
+            --no-pyi-file \
+            backend/main.py
+
+      - name: Upload Backend Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-binary
+          path: backend/dist/sysadmin-agent-backend
+
+  build-frontend:
+    name: ⚛️ Build Frontend (Next.js)
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Build Frontend
+        working-directory: frontend
+        run: npm run build
+
+      - name: Package Frontend
+        working-directory: frontend
+        run: |
+          mkdir -p ../dist
+          tar -czf ../dist/frontend-build.tar.gz .next package.json next.config.js
+
+      - name: Upload Frontend Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: dist/frontend-build.tar.gz
+
+  create-release:
+    name: 🚀 Create Release
+    needs: [build-backend, build-frontend]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download Backend Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-binary
+          path: release_assets/backend
+
+      - name: Download Frontend Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-build
+          path: release_assets
+
+      - name: Prepare Release Assets
+        run: |
+          cd release_assets
+          
+          # Package backend
+          mkdir -p backend/dist
+          mv backend/sysadmin-agent-backend backend/dist/
+          tar -czf backend-binary-linux-x64.tar.gz -C backend/dist sysadmin-agent-backend
+          rm -rf backend
+          
+          # Deployment files (from repo)
+          cd ..
+          tar -czf release_assets/deployment-files.tar.gz \
+            docker-compose.prebuilt.yml \
+            Dockerfile.backend.prebuilt \
+            Dockerfile.frontend.prebuilt \
+            .env.prod.template \
+            nginx/ \
+            activate_license.py \
+            README.md \
+            LICENSE \
+            DEPLOYMENT.md \
+            RUN_INSTRUCTIONS.md \
+            VERSION.json
+            
+          # Checksums
+          cd release_assets
+          sha256sum *.tar.gz > SHA256SUMS
+
+      - name: Generate Release Tag
+        id: tag
+        run: |
+          if [[ $GITHUB_REF == refs/tags/* ]]; then
+            echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          else
+            # Use timestamp for non-tagged pushes
+            echo "version=v1.0.0-$(date +%Y%m%d%H%M%S)" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Release in Private Repo
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.tag.outputs.version }}
+          name: AI Sysadmin Agent ${{ steps.tag.outputs.version }}
+          files: |
+            release_assets/*.tar.gz
+            release_assets/SHA256SUMS
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Release in Public Repo
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.tag.outputs.version }}
+          name: AI Sysadmin Agent ${{ steps.tag.outputs.version }}
+          files: |
+            release_assets/*.tar.gz
+            release_assets/SHA256SUMS
+          repository: sentrait/ai_agent_public
+          token: ${{ secrets.PUBLIC_REPO_TOKEN }}
+          draft: false
+          prerelease: false

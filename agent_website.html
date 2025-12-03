@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Sysadmin Agent - Sentrait</title>
+    <meta name="description"
+        content="Agente de IA para administración de sistemas. Automatiza tareas, diagnostica problemas y gestiona tu infraestructura con inteligencia artificial.">
+    <link rel="icon" type="image/png" href="/favicon.png">
+    <link rel="apple-touch-icon" href="/favicon.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #0066cc;
+            --primary-dark: #004c99;
+            --secondary: #00a8e8;
+            --dark: #1a1a2e;
+            --light: #f8f9fa;
+            --gray: #6c757d;
+            --success: #28a745;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--dark);
+            background: var(--light);
+            scroll-behavior: smooth;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 6rem 0;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .hero p {
+            font-size: 1.3rem;
+            margin-bottom: 2rem;
+            opacity: 0.95;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 1rem 2.5rem;
+            background: white;
+            color: var(--primary);
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: white;
+            border: 2px solid white;
+            margin-left: 1rem;
+        }
+
+        .btn-secondary:hover {
+            background: white;
+            color: var(--primary);
+        }
+
+        .section {
+            padding: 4rem 0;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            color: var(--dark);
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-card h3 {
+            color: var(--primary);
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .requirements {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            margin-top: 2rem;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .requirements h3 {
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+            font-size: 1.8rem;
+        }
+
+        .requirements ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .requirements li {
+            padding: 0.8rem 0;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+        }
+
+        .requirements li:before {
+            content: "✓";
+            color: var(--success);
+            font-weight: bold;
+            margin-right: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .code-block {
+            background: var(--dark);
+            color: #00ff00;
+            padding: 1.5rem;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            margin: 1rem 0;
+            overflow-x: auto;
+            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .download-section {
+            background: linear-gradient(135deg, var(--dark) 0%, #2d2d44 100%);
+            color: white;
+            padding: 4rem 0;
+            text-align: center;
+        }
+
+        .download-box {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 3rem;
+            margin-top: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .version-badge {
+            display: inline-block;
+            background: var(--success);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .footer {
+            background: var(--dark);
+            color: white;
+            text-align: center;
+            padding: 2rem 0;
+        }
+
+        .footer a {
+            color: var(--secondary);
+            text-decoration: none;
+        }
+
+        .steps {
+            counter-reset: step;
+        }
+
+        .step {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            position: relative;
+            padding-left: 5rem;
+        }
+
+        .step:before {
+            counter-increment: step;
+            content: counter(step);
+            position: absolute;
+            left: 2rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--primary);
+            color: white;
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .hero p {
+                font-size: 1rem;
+            }
+
+            .btn {
+                display: block;
+                margin: 0.5rem 0;
+            }
+
+            .btn-secondary {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="header">
+        <div class="container">
+            <nav class="nav">
+                <div class="logo">
+                    🤖 AI Sysadmin Agent
+                </div>
+                <a href="https://sentrait.com.uy" style="color: white; text-decoration: none;">← Volver a Sentrait</a>
+            </nav>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="container fade-in">
+            <div
+                style="display: inline-block; background: rgba(255,255,255,0.2); padding: 0.5rem 1rem; border-radius: 20px; margin-bottom: 1rem; font-size: 0.9rem;">
+                🚧 VERSIÓN BETA 0.9.0
+            </div>
+            <h1>AI Sysadmin Agent</h1>
+            <p>Automatiza la administración de tu infraestructura con Inteligencia Artificial</p>
+            <p style="font-size: 0.9rem; opacity: 0.8; margin-top: -1rem;">Versión Beta - En desarrollo activo hacia
+                1.0.0</p>
+            <a href="#download" class="btn">Descargar Ahora</a>
+            <a href="#features" class="btn btn-secondary">Conocer Más</a>
+        </div>
+    </section>
+
+    <section class="section" id="features">
+        <div class="container">
+            <h2 class="section-title">¿Qué hace el AI Sysadmin Agent?</h2>
+            <div class="features">
+                <div class="feature-card">
+                    <div class="feature-icon">🔍</div>
+                    <h3>Diagnóstico Inteligente</h3>
+                    <p>Analiza automáticamente problemas en tus servidores y proporciona soluciones basadas en IA.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Automatización</h3>
+                    <p>Ejecuta tareas administrativas complejas con comandos simples en lenguaje natural.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🛡️</div>
+                    <h3>Gestión Segura</h3>
+                    <p>Control de acceso basado en roles (RBAC) y autenticación robusta para proteger tu
+                        infraestructura.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>Panel de Control</h3>
+                    <p>Interfaz web moderna para gestionar servidores, grupos y usuarios desde cualquier lugar.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔗</div>
+                    <h3>Integración SSH</h3>
+                    <p>Conexión directa a tus servidores Linux para ejecutar comandos y obtener información en tiempo
+                        real.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🌐</div>
+                    <h3>Multi-idioma</h3>
+                    <p>Interfaz disponible en español e inglés con soporte para más idiomas.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section" style="background: white;">
+        <div class="container">
+            <h2 class="section-title">Instalación Rápida</h2>
+            <div class="steps">
+                <div class="step">
+                    <h3>Descargar el paquete</h3>
+                    <div class="code-block">$ curl -O https://agent.sentrait.com.uy/ai-sysadmin-release.tar.gz</div>
+                </div>
+                <div class="step">
+                    <h3>Descomprimir</h3>
+                    <div class="code-block">$ tar -xzf ai-sysadmin-release.tar.gz && cd dist</div>
+                </div>
+                <div class="step">
+                    <h3>Ejecutar instalador interactivo</h3>
+                    <div class="code-block">$ ./install.sh</div>
+                    <p style="margin-top: 1rem; color: var(--gray);">El instalador te guiará paso a paso para configurar
+                        dominio, SSL y crear el usuario administrador.</p>
+                </div>
+            </div>
+
+            <div class="requirements">
+                <h3>Requisitos del Servidor</h3>
+                <ul>
+                    <li>Sistema Operativo: Linux (Ubuntu 20.04+ o Debian 11+ recomendado)</li>
+                    <li>Docker Engine 20.10 o superior</li>
+                    <li>Docker Compose v2 o superior</li>
+                    <li>4GB RAM mínimo (8GB recomendado)</li>
+                    <li>10GB de espacio en disco</li>
+                    <li>Puertos 80 y 443 disponibles</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <section class="download-section" id="download">
+        <div class="container">
+            <h2 class="section-title" style="color: white;">Descargar AI Sysadmin Agent</h2>
+            <div class="download-box">
+                <div class="version-badge" style="background: #ff9800;">Versión 0.9.0-beta</div>
+                <h3 style="margin-bottom: 1.5rem; font-size: 1.8rem;">Paquete Completo de Distribución</h3>
+                <p style="margin-bottom: 2rem; opacity: 0.9;">Incluye Backend, Frontend, Base de Datos y Servidor Web
+                    pre-configurados</p>
+
+                <div
+                    style="background: rgba(255,152,0,0.2); border: 1px solid rgba(255,152,0,0.5); padding: 1rem; border-radius: 10px; margin-bottom: 2rem;">
+                    <p style="margin: 0; font-size: 0.9rem;">
+                        ⚠️ <strong>Versión Beta:</strong> Esta es una versión en desarrollo activo.
+                        Puede contener bugs y la API puede cambiar antes de la versión 1.0.0 estable.
+                    </p>
+                </div>
+
+                <a href="/ai-sysadmin-release.tar.gz" class="btn" download
+                    style="background: var(--success); color: white; margin-right: 1rem;">
+                    ⬇️ Descargar Beta (~ 500MB)
+                </a>
+
+                <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid rgba(255,255,255,0.2);">
+                    <h4 style="margin-bottom: 1rem;">Descarga vía Terminal</h4>
+                    <div class="code-block">
+                        curl -O https://agent.sentrait.com.uy/ai-sysadmin-release.tar.gz
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 <a href="https://sentrait.com.uy">Sentrait</a> - Todos los derechos reservados</p>
+            <p style="margin-top: 0.5rem; opacity: 0.7;">AI Sysadmin Agent es un producto de Sentrait</p>
+        </div>
+    </footer>
+</body>
+
+</html>

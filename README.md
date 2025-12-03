@@ -1,23 +1,25 @@
-# 🤖 AI Sysadmin Agent - Professional Edition
+# 🤖 AI Sysadmin Agent
 
 **Intelligent Server Management & Automation Platform**
 
-[![License](https://img.shields.io/badge/license-Commercial-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-1.0.0-green.svg)](VERSION.json)
+[![License](https://img.shields.io/badge/license-Proprietary-blue.svg)](LICENSE)
+[![Version](https://img.shields.io/badge/version-0.9.0--beta-orange.svg)](VERSION.json)
 [![Docker](https://img.shields.io/badge/docker-ready-blue.svg)](docker-compose.prod.yml)
+[![Status](https://img.shields.io/badge/status-beta-yellow.svg)](ROADMAP.md)
+
+> ⚠️ **VERSIÓN BETA** - Esta es una versión en desarrollo activo. La API puede cambiar antes de la versión 1.0.0 estable. Ver [ROADMAP](ROADMAP.md) para el plan hacia 1.0.0.
 
 ## 🌟 Overview
 
-AI Sysadmin Agent is an enterprise-grade platform for intelligent server management, diagnostics, and automation powered by advanced AI technology.
+AI Sysadmin Agent es una plataforma de gestión inteligente de servidores, diagnósticos y automatización impulsada por tecnología de IA avanzada.
 
 ### Key Features
 
-- 🤖 **AI-Powered Diagnostics**: Intelligent problem detection and resolution
-- 🔐 **Secure Architecture**: Enterprise-level security with role-based access control
-- 📊 **Multi-Server Management**: Centralized control of your entire infrastructure
-- 🌐 **Multi-Language Support**: English and Spanish interfaces
-- 🎨 **Modern UI**: Beautiful, responsive interface with dark mode
-- 🔑 **Flexible Licensing**: 30-day free trial, then commercial licensing
+- 🤖 **AI-Powered Diagnostics**: Detección y resolución inteligente de problemas
+- 🔐 **Secure Architecture**: Seguridad empresarial con control de acceso basado en roles
+- 📊 **Multi-Server Management**: Control centralizado de toda tu infraestructura
+- 🌐 **Multi-Language Support**: Interfaces en inglés y español
+- 🎨 **Modern UI**: Interfaz hermosa y responsive con modo oscuro
 
 ## 📦 What's Included
 

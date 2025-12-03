@@ -1,6 +1,8 @@
 {
-    "version": "1.0.0",
+    "version": "0.9.0-beta",
     "name": "AI Sysadmin Agent",
-    "releaseDate": "2025-01-26",
-    "description": "AI-powered system administration and diagnostics platform"
+    "releaseDate": "2025-12-03",
+    "status": "beta",
+    "description": "AI-powered system administration and diagnostics platform",
+    "nextMilestone": "1.0.0"
 }

@@ -1,91 +1,55 @@
 # Git
 .git
 .gitignore
-.gitattributes
 
-# Documentation
-*.md
-!README.md
-!DEPLOYMENT.md
-docs/
-
-# Development
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
+# Environment variables
+.env
+.env.*
+!.env.example
+backend/.env
+frontend/.env
+frontend/.env.local
 
 # Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
+__pycache__
+*.pyc
+*.pyo
+*.pyd
 .Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
-.pytest_cache/
-.coverage
-htmlcov/
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
 
 # Node
 node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
+npm-debug.log
+yarn-error.log
+
+# Next.js
 .next/
 out/
-.cache/
+build/
+dist/
 
-# Environment
-.env
-.env.local
-.env.development
-.env.test
-.env.production
-.env.prod
-*.env
-
-# Database
-*.db
-*.sqlite
-*.sqlite3
-postgres_data/
-
-# Logs
-logs/
-*.log
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
 
 # OS
 .DS_Store
 Thumbs.db
 
-# Temporary files
-tmp/
-temp/
-*.tmp
+# Database
+postgres_data/
 
-# Build artifacts
-backend/dist/
-backend/build/
-frontend/.next/
-frontend/out/
-
-# Deployment
-docker-compose.override.yml
-*.tar.gz
+# Documentation and Scripts
+TROUBLESHOOTING_REPORT.md
+FIXES_SUMMARY.md
+DEPLOYMENT.md
+DEVELOPER_GUIDE.md
+setup.sh
+build-production.sh

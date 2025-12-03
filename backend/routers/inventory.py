@@ -1,0 +1,258 @@
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+from typing import List
+import database, models, schemas, dependencies
+from services.ssh_service import ssh_service
+from utils.encryption import encrypt_data
+
+router = APIRouter()
+
+
+@router.post("/clients/", response_model=schemas.Client)
+def create_client(client: schemas.ClientCreate, db: Session = Depends(dependencies.get_db)):
+    db_client = models.Client(**client.dict())
+    db.add(db_client)
+    db.commit()
+    db.refresh(db_client)
+    return db_client
+
+@router.get("/clients/", response_model=List[schemas.Client])
+def read_clients(skip: int = 0, limit: int = 100, db: Session = Depends(dependencies.get_db)):
+    clients = db.query(models.Client).offset(skip).limit(limit).all()
+    return clients
+
+# Server Groups endpoints
+@router.post("/groups/", response_model=schemas.ServerGroup)
+def create_group(
+    group: schemas.ServerGroupCreate,
+    current_user: models.User = Depends(dependencies.get_current_active_user),
+    db: Session = Depends(dependencies.get_db)
+):
+    """Create a new server group"""
+    db_group = models.ServerGroup(**group.dict(), created_by=current_user.id)
+    db.add(db_group)
+    db.commit()
+    db.refresh(db_group)
+    return db_group
+
+@router.get("/groups/", response_model=List[schemas.ServerGroup])
+def read_groups(
+    skip: int = 0,
+    limit: int = 100,
+    current_user: models.User = Depends(dependencies.get_current_active_user),
+    db: Session = Depends(dependencies.get_db)
+):
+    """Get groups - admins see all, users see only their assigned groups"""
+    # Superadmins and Admins can see all groups
+    if current_user.role in [models.RoleType.SUPERADMIN.value, models.RoleType.ADMIN.value]:
+        groups = db.query(models.ServerGroup).offset(skip).limit(limit).all()
+        return groups
+    
+    # Regular users can only see groups they have access to
+    user_group_ids = [perm.group_id for perm in current_user.group_permissions_detail]
+    
+    if not user_group_ids:
+        return []
+        
+    groups = db.query(models.ServerGroup).filter(
+        models.ServerGroup.id.in_(user_group_ids)
+    ).offset(skip).limit(limit).all()
+    
+    return groups
+
+@router.put("/groups/{group_id}", response_model=schemas.ServerGroup)
+def update_group(
+    group_id: int,
+    group_update: schemas.ServerGroupUpdate,
+    current_user: models.User = Depends(dependencies.get_current_active_user),
+    db: Session = Depends(dependencies.get_db)
+):
+    """Update a group - only creator or admins can edit"""
+    db_group = db.query(models.ServerGroup).filter(models.ServerGroup.id == group_id).first()
+    if not db_group:
+        raise HTTPException(status_code=404, detail="Group not found")
+    
+    # Check permissions: only creator or admins can edit
+    is_admin = current_user.role in [models.RoleType.SUPERADMIN.value, models.RoleType.ADMIN.value]
+    is_creator = db_group.created_by == current_user.id
+    
+    if not (is_admin or is_creator):
+        raise HTTPException(
+            status_code=403,
+            detail="You can only edit groups you created or be an admin"
+        )
+    
+    update_data = group_update.dict(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(db_group, key, value)
+        
+    db.commit()
+    db.refresh(db_group)
+    return db_group
+
+@router.delete("/groups/{group_id}")
+def delete_group(
+    group_id: int,
+    current_user: models.User = Depends(dependencies.get_current_active_user),
+    db: Session = Depends(dependencies.get_db)
+):
+    """Delete a group - only creator or admins can delete"""
+    db_group = db.query(models.ServerGroup).filter(models.ServerGroup.id == group_id).first()
+    if not db_group:
+        raise HTTPException(status_code=404, detail="Group not found")
+    
+    # Check permissions: only creator or admins can delete
+    is_admin = current_user.role in [models.RoleType.SUPERADMIN.value, models.RoleType.ADMIN.value]
+    is_creator = db_group.created_by == current_user.id
+    
+    if not (is_admin or is_creator):
+        raise HTTPException(
+            status_code=403,
+            detail="You can only delete groups you created or be an admin"
+        )
+    
+    # Check if group has servers
+    if db_group.servers:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Cannot delete group with {len(db_group.servers)} servers. Remove servers from group first."
+        )
+    
+    db.delete(db_group)
+    db.commit()
+    return {"message": "Group deleted successfully"}
+
+@router.post("/servers/", response_model=schemas.Server)
+def create_server(server: schemas.ServerCreate, db: Session = Depends(dependencies.get_db)):
+    server_data = server.dict()
+    
+    # Validate SSH key path before encrypting
+    if server_data.get('ssh_key_path'):
+        ssh_key = server_data['ssh_key_path']
+        # Check if user entered public key instead of path
+        if ssh_key.startswith("ssh-rsa") or ssh_key.startswith("ssh-ed25519") or "AAAAB3NzaC" in ssh_key:
+            raise HTTPException(
+                status_code=400, 
+                detail="SSH Key Path debe ser una ruta al archivo de clave privada (ej: /home/user/.ssh/id_rsa), no el contenido de la clave pública"
+            )
+    
+    # Encrypt sensitive data before storing
+    if server_data.get('ssh_password'):
+        server_data['ssh_password'] = encrypt_data(server_data['ssh_password'])
+    if server_data.get('ssh_key_path'):
+        server_data['ssh_key_path'] = encrypt_data(server_data['ssh_key_path'])
+    
+    db_server = models.Server(**server_data)
+    db.add(db_server)
+    db.commit()
+    db.refresh(db_server)
+    return db_server
+
+@router.get("/servers/", response_model=List[schemas.Server])
+def read_servers(
+    skip: int = 0, 
+    limit: int = 100, 
+    db: Session = Depends(dependencies.get_db),
+    current_user: models.User = Depends(dependencies.get_current_active_user)
+):
+    # Superadmins and Admins can see all servers
+    if current_user.role in [models.RoleType.SUPERADMIN.value, models.RoleType.ADMIN.value]:
+        servers = db.query(models.Server).offset(skip).limit(limit).all()
+        return servers
+    
+    # Regular users can only see servers in their assigned groups
+    # Get IDs of groups the user belongs to
+    user_group_ids = [perm.group_id for perm in current_user.group_permissions_detail]
+    
+    if not user_group_ids:
+        return []
+        
+    servers = db.query(models.Server).filter(
+        models.Server.group_id.in_(user_group_ids)
+    ).offset(skip).limit(limit).all()
+    
+    return servers
+
+@router.delete("/servers/{server_id}")
+def delete_server(server_id: int, db: Session = Depends(dependencies.get_db)):
+    server = db.query(models.Server).filter(models.Server.id == server_id).first()
+    if not server:
+        raise HTTPException(status_code=404, detail="Server not found")
+    db.delete(server)
+    db.commit()
+    return {"message": "Server deleted successfully"}
+
+@router.put("/servers/{server_id}", response_model=schemas.Server)
+def update_server(server_id: int, server_update: schemas.ServerUpdate, db: Session = Depends(dependencies.get_db)):
+    db_server = db.query(models.Server).filter(models.Server.id == server_id).first()
+    if not db_server:
+        raise HTTPException(status_code=404, detail="Server not found")
+    
+    update_data = server_update.dict(exclude_unset=True)
+    
+    # Validate SSH key path if provided
+    if update_data.get('ssh_key_path'):
+        ssh_key = update_data['ssh_key_path']
+        if ssh_key.startswith("ssh-rsa") or ssh_key.startswith("ssh-ed25519") or "AAAAB3NzaC" in ssh_key:
+             raise HTTPException(
+                status_code=400, 
+                detail="SSH Key Path debe ser una ruta al archivo de clave privada, no el contenido de la clave pública"
+            )
+            
+    # Encrypt sensitive data if they are being updated
+    if update_data.get('ssh_password'):
+        update_data['ssh_password'] = encrypt_data(update_data['ssh_password'])
+    if update_data.get('ssh_key_path'):
+        update_data['ssh_key_path'] = encrypt_data(update_data['ssh_key_path'])
+        
+    for key, value in update_data.items():
+        setattr(db_server, key, value)
+        
+    db.commit()
+    db.refresh(db_server)
+    return db_server
+
+@router.post("/execute/", response_model=schemas.CommandResponse)
+async def execute_command(request: schemas.CommandRequest, db: Session = Depends(dependencies.get_db)):
+    server = db.query(models.Server).filter(models.Server.id == request.server_id).first()
+    if not server:
+        raise HTTPException(status_code=404, detail="Server not found")
+    
+    # Decrypt SSH credentials before using them
+    from utils.encryption import decrypt_data
+    
+    ssh_key_path = None
+    password = None
+    auth_method = "None"
+    
+    # Decrypt SSH key path if available
+    if server.ssh_key_path:
+        ssh_key_path = decrypt_data(server.ssh_key_path)
+        auth_method = f"SSH Key: {ssh_key_path}"
+    
+    # Decrypt password if available
+    if server.ssh_password:
+        password = decrypt_data(server.ssh_password)
+        if auth_method == "None":
+            auth_method = "Password"
+        else:
+            auth_method += " + Password"
+    
+    stdout, stderr, exit_code = await ssh_service.execute_command(
+        hostname=server.ip_address,
+        username=server.ssh_username,
+        command=request.command,
+        private_key=ssh_key_path,
+        password=password,
+        port=server.ssh_port
+    )
+    
+    return schemas.CommandResponse(
+        stdout=stdout,
+        stderr=stderr,
+        exit_code=exit_code,
+        hostname=server.ip_address,
+        username=server.ssh_username,
+        command=request.command,
+        auth_method=auth_method
+    )

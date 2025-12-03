@@ -1,11 +1,13 @@
 # Large binaries (distributed via GitHub Releases)
 backend/dist/
 frontend/.next/
+dist/
+ai-sysadmin-release.tar.gz
 
 # Source Code (EXCLUDED FROM PUBLIC REPO)
-backend/**/*.py
+# # backend/**/*.py
 !backend/__init__.py
-frontend/src/**/*
+# frontend/src/
 frontend/app/**/*
 
 # Development files
@@ -17,6 +19,9 @@ frontend/app/**/*
 # Python
 __pycache__/
 *.pyc
+venv/
+.venv/
+env/
 
 # Node
 node_modules/
@@ -33,6 +38,9 @@ postgres_data/
 
 # OS
 .DS_Store
+
+# SSL Keys
+nginx/ssl/
 
 # Docs
 BUILD_INSTRUCTIONS.md

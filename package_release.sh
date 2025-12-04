@@ -321,22 +321,25 @@ while [ $COUNT -lt $MAX_RETRIES ]; do
         exit 1
     fi
 
-    # 2. Verificar si la tabla existe
-    if $DOCKER_COMPOSE exec postgres psql -U "$DB_USER" -d sysadmin_db -tAc "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'allowed_domains');" 2>/dev/null | grep -q 't'; then
+    # 2. Verificar si la tabla existe (simplificado para evitar bloqueos)
+    # Usamos un archivo temporal para capturar la salida y evitar problemas con pipes
+    $DOCKER_COMPOSE exec -T postgres psql -U "$DB_USER" -d sysadmin_db -tAc "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'allowed_domains');" > /tmp/migration_check.txt 2>/dev/null
+    
+    if grep -q 't' /tmp/migration_check.txt; then
         MIGRATIONS_READY=true
+        rm -f /tmp/migration_check.txt
         break
     fi
+    rm -f /tmp/migration_check.txt
 
-    # 3. Feedback visual y logs periódicos
+    # 3. Feedback visual
     sleep 2
     COUNT=$((COUNT+1))
     echo -n "."
 
-    # Cada 5 intentos (10s), mostrar qué está haciendo el backend
+    # Cada 5 intentos (10s), mostrar estado
     if [ $((COUNT % 5)) -eq 0 ]; then
-        echo -e "\n${YELLOW}🔎 Estado actual del backend:${NC}"
-        $DOCKER_COMPOSE logs --tail=2 backend | sed 's/^/   /'
-        echo -n "⏳ Siguiendo espera"
+        echo -n "⏳"
     fi
 done
 

@@ -43,6 +43,14 @@
 - Mayor verbosidad en el proceso de espera
 **Commit:** [Actual]
 
+### Iteration 7: Fix Bloqueo Visual
+**Problema:** El script parecía colgarse en la verificación de migraciones (aunque funcionaba en segundo plano).
+**Solución:** 
+- Uso de flag `-T` en `docker compose exec` para evitar asignación de TTY
+- Uso de archivos temporales en lugar de pipes directos para mayor estabilidad
+- Simplificación del feedback visual
+**Commit:** [Actual]
+
 ---
 
 ## Características Finales del Instalador

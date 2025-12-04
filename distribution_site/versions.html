@@ -81,7 +81,7 @@
             background: linear-gradient(135deg, var(--success), #16a34a);
             padding: 1.5rem 2rem;
             border-radius: 1rem;
-            margin-bottom: 3rem;
+            margin-bottom: 2rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -111,6 +111,23 @@
         .download-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .update-instructions {
+            background: var(--bg-card);
+            border-radius: 1rem;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 3rem;
+        }
+
+        .section-title {
+            color: var(--secondary);
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
         .version-list {
@@ -242,6 +259,31 @@
             content: "🔧";
         }
 
+        .code-block {
+            background: #0f172a;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            font-family: monospace;
+            overflow-x: auto;
+        }
+
+        .code-block.small {
+            font-size: 0.9rem;
+        }
+
+        .warning-box {
+            background: rgba(234, 179, 8, 0.1);
+            border: 1px solid rgba(234, 179, 8, 0.3);
+            padding: 1rem;
+            border-radius: 0.5rem;
+        }
+
+        .warning-box p {
+            color: #eab308;
+            margin: 0;
+            font-size: 0.9rem;
+        }
+
         footer {
             text-align: center;
             padding: 3rem 0;
@@ -284,6 +326,7 @@
             <p>Historial de Versiones y Changelog</p>
         </header>
 
+        <!-- Latest Version Banner -->
         <div class="latest-banner" id="latest-banner">
             <div class="latest-info">
                 <h2>🚀 Última versión: <span id="latest-version">Cargando...</span></h2>
@@ -294,16 +337,9 @@
             </a>
         </div>
 
-        <div class="version-list" id="version-list">
-            <p style="text-align: center; color: var(--text-muted);">Cargando versiones...</p>
-        </div>
-
         <!-- Update Instructions Section -->
-        <div class="update-instructions"
-            style="margin-top: 3rem; background: var(--bg-card); border-radius: 1rem; padding: 2rem; border: 1px solid rgba(255,255,255,0.1);">
-            <h2 style="color: var(--secondary); margin-bottom: 1.5rem; font-size: 1.5rem;">
-                🔄 Cómo Actualizar tu Instalación
-            </h2>
+        <div class="update-instructions">
+            <h2 class="section-title">🔄 Cómo Actualizar tu Instalación</h2>
 
             <div style="margin-bottom: 2rem;">
                 <h3 style="color: var(--text-light); margin-bottom: 1rem; font-size: 1.2rem;">
@@ -312,8 +348,7 @@
                 <p style="color: var(--text-muted); margin-bottom: 1rem;">
                     Si instalaste desde el paquete oficial, ya tienes el script de actualización:
                 </p>
-                <div
-                    style="background: #0f172a; padding: 1rem; border-radius: 0.5rem; font-family: monospace; overflow-x: auto;">
+                <div class="code-block">
                     <code style="color: #22c55e;">$ </code><code style="color: #f8fafc;">cd /opt/dist</code><br>
                     <code style="color: #22c55e;">$ </code><code style="color: #f8fafc;">./update.sh</code>
                 </div>
@@ -336,8 +371,7 @@
                 <p style="color: var(--text-muted); margin-bottom: 1rem;">
                     Si prefieres control total sobre el proceso:
                 </p>
-                <div
-                    style="background: #0f172a; padding: 1rem; border-radius: 0.5rem; font-family: monospace; overflow-x: auto; font-size: 0.9rem;">
+                <div class="code-block small">
                     <code style="color: #64748b;"># 1. Backup de la base de datos</code><br>
                     <code style="color: #22c55e;">$ </code><code
                         style="color: #f8fafc;">docker compose exec postgres pg_dump -U sysadmin sysadmin_db > backup.sql</code><br><br>
@@ -368,9 +402,8 @@
                 </div>
             </div>
 
-            <div
-                style="background: rgba(234, 179, 8, 0.1); border: 1px solid rgba(234, 179, 8, 0.3); padding: 1rem; border-radius: 0.5rem;">
-                <p style="color: #eab308; margin: 0; font-size: 0.9rem;">
+            <div class="warning-box">
+                <p>
                     <strong>⚠️ Importante:</strong> Tu archivo <code>.env</code> con la configuración nunca se
                     sobrescribe durante la actualización.
                     Si hay cambios que requieran nueva configuración, se anunciarán en el changelog.
@@ -378,8 +411,17 @@
             </div>
         </div>
 
+        <!-- Version History Title -->
+        <h2 class="section-title" style="margin-bottom: 2rem;">📦 Historial de Versiones</h2>
+
+        <!-- Version List -->
+        <div class="version-list" id="version-list">
+            <p style="text-align: center; color: var(--text-muted);">Cargando versiones...</p>
+        </div>
+
         <footer>
-            <p>© 2024 <a href="https://sentrait.com.uy">Sentrait</a>. Todos los derechos reservados.</p>
+            <p>© <span id="current-year"></span> <a href="https://sentrait.com.uy">Sentrait</a>. Todos los derechos
+                reservados.</p>
             <p style="margin-top: 0.5rem;">
                 <a href="mailto:reporte@sentrait.com.uy">Reportar un problema</a>
             </p>
@@ -387,6 +429,9 @@
     </div>
 
     <script>
+        // Set current year dynamically
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+
         async function loadVersions() {
             try {
                 const response = await fetch('versions.json');

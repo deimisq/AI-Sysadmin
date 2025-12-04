@@ -298,6 +298,86 @@
             <p style="text-align: center; color: var(--text-muted);">Cargando versiones...</p>
         </div>
 
+        <!-- Update Instructions Section -->
+        <div class="update-instructions"
+            style="margin-top: 3rem; background: var(--bg-card); border-radius: 1rem; padding: 2rem; border: 1px solid rgba(255,255,255,0.1);">
+            <h2 style="color: var(--secondary); margin-bottom: 1.5rem; font-size: 1.5rem;">
+                🔄 Cómo Actualizar tu Instalación
+            </h2>
+
+            <div style="margin-bottom: 2rem;">
+                <h3 style="color: var(--text-light); margin-bottom: 1rem; font-size: 1.2rem;">
+                    Método 1: Actualización Automática (Recomendado)
+                </h3>
+                <p style="color: var(--text-muted); margin-bottom: 1rem;">
+                    Si instalaste desde el paquete oficial, ya tienes el script de actualización:
+                </p>
+                <div
+                    style="background: #0f172a; padding: 1rem; border-radius: 0.5rem; font-family: monospace; overflow-x: auto;">
+                    <code style="color: #22c55e;">$ </code><code style="color: #f8fafc;">cd /opt/dist</code><br>
+                    <code style="color: #22c55e;">$ </code><code style="color: #f8fafc;">./update.sh</code>
+                </div>
+                <p style="color: var(--text-muted); margin-top: 1rem; font-size: 0.9rem;">
+                    El script automáticamente:
+                </p>
+                <ul style="color: var(--text-muted); margin-left: 1.5rem; font-size: 0.9rem;">
+                    <li>Crea un backup de tu base de datos</li>
+                    <li>Descarga la última versión</li>
+                    <li>Actualiza las imágenes Docker</li>
+                    <li>Reinicia los servicios</li>
+                    <li>Aplica nuevas migraciones de BD</li>
+                </ul>
+            </div>
+
+            <div style="margin-bottom: 2rem;">
+                <h3 style="color: var(--text-light); margin-bottom: 1rem; font-size: 1.2rem;">
+                    Método 2: Actualización Manual
+                </h3>
+                <p style="color: var(--text-muted); margin-bottom: 1rem;">
+                    Si prefieres control total sobre el proceso:
+                </p>
+                <div
+                    style="background: #0f172a; padding: 1rem; border-radius: 0.5rem; font-family: monospace; overflow-x: auto; font-size: 0.9rem;">
+                    <code style="color: #64748b;"># 1. Backup de la base de datos</code><br>
+                    <code style="color: #22c55e;">$ </code><code
+                        style="color: #f8fafc;">docker compose exec postgres pg_dump -U sysadmin sysadmin_db > backup.sql</code><br><br>
+
+                    <code style="color: #64748b;"># 2. Descargar nueva versión</code><br>
+                    <code style="color: #22c55e;">$ </code><code
+                        style="color: #f8fafc;">curl -O https://agent.sentrait.com.uy/ai-sysadmin-release.tar.gz</code><br><br>
+
+                    <code style="color: #64748b;"># 3. Extraer</code><br>
+                    <code style="color: #22c55e;">$ </code><code
+                        style="color: #f8fafc;">tar -xzf ai-sysadmin-release.tar.gz</code><br><br>
+
+                    <code style="color: #64748b;"># 4. Cargar nuevas imágenes</code><br>
+                    <code style="color: #22c55e;">$ </code><code
+                        style="color: #f8fafc;">for img in dist/images/*.tar.gz; do docker load < "$img"; done</code><br><br>
+
+                    <code style="color: #64748b;"># 5. Actualizar configuración (preserva tu .env)</code><br>
+                    <code style="color: #22c55e;">$ </code><code
+                        style="color: #f8fafc;">cp dist/docker-compose.yml .</code><br><br>
+
+                    <code style="color: #64748b;"># 6. Reiniciar servicios</code><br>
+                    <code style="color: #22c55e;">$ </code><code
+                        style="color: #f8fafc;">docker compose down && docker compose up -d</code><br><br>
+
+                    <code style="color: #64748b;"># 7. Aplicar migraciones</code><br>
+                    <code style="color: #22c55e;">$ </code><code
+                        style="color: #f8fafc;">docker compose exec backend alembic upgrade head</code>
+                </div>
+            </div>
+
+            <div
+                style="background: rgba(234, 179, 8, 0.1); border: 1px solid rgba(234, 179, 8, 0.3); padding: 1rem; border-radius: 0.5rem;">
+                <p style="color: #eab308; margin: 0; font-size: 0.9rem;">
+                    <strong>⚠️ Importante:</strong> Tu archivo <code>.env</code> con la configuración nunca se
+                    sobrescribe durante la actualización.
+                    Si hay cambios que requieran nueva configuración, se anunciarán en el changelog.
+                </p>
+            </div>
+        </div>
+
         <footer>
             <p>© 2024 <a href="https://sentrait.com.uy">Sentrait</a>. Todos los derechos reservados.</p>
             <p style="margin-top: 0.5rem;">

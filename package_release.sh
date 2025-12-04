@@ -307,7 +307,30 @@ done
 echo -e "\n${GREEN}✅ Base de datos lista.${NC}"
 
 echo -e "${YELLOW}⏳ Esperando a que el backend inicie y aplique migraciones...${NC}"
-sleep 5
+# Esperar a que el backend esté listo y las migraciones se hayan aplicado
+MAX_RETRIES=60
+COUNT=0
+MIGRATIONS_READY=false
+
+while [ $COUNT -lt $MAX_RETRIES ]; do
+    # Verificar si la tabla allowed_domains existe (indica que las migraciones se aplicaron)
+    if $DOCKER_COMPOSE exec postgres psql -U "$DB_USER" -d sysadmin_db -tAc "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'allowed_domains');" 2>/dev/null | grep -q 't'; then
+        MIGRATIONS_READY=true
+        break
+    fi
+    sleep 2
+    COUNT=$((COUNT+1))
+    echo -n "."
+done
+
+if [ "$MIGRATIONS_READY" = false ]; then
+    echo -e "\n${RED}❌ Las migraciones de base de datos no se completaron a tiempo.${NC}"
+    echo "Verifica los logs del backend:"
+    echo "  $DOCKER_COMPOSE logs backend"
+    exit 1
+fi
+
+echo -e "\n${GREEN}✅ Migraciones aplicadas correctamente.${NC}"
 
 # --- 6. Crear Superadmin ---
 echo -e "\n${YELLOW}👤 Creando usuario Superadmin en la base de datos...${NC}"

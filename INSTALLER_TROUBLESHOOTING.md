@@ -199,18 +199,25 @@ docker-compose down -v
 
 ---
 
-### ❌ "Error creando usuario"
+### ❌ "Error creando usuario" / "relation does not exist"
 
 **Síntoma:**
 ```
-❌ Error creando usuario: ...
+❌ Error creando usuario: relation "allowed_domains" does not exist
 ```
 
-**Soluciones:**
+**Causa:**
+Las migraciones de base de datos no se han completado antes de intentar crear el usuario.
+
+**Solución Automática:**
+El instalador ahora espera a que las migraciones se completen antes de crear el usuario.
+
+**Solución Manual:**
 
 **1. Verificar que las migraciones se aplicaron:**
 ```bash
 docker compose logs backend | grep "Running upgrade"
+# Deberías ver líneas como: "Running upgrade -> 3ec3ee70a10a"
 ```
 
 **2. Aplicar migraciones manualmente:**
@@ -218,9 +225,43 @@ docker compose logs backend | grep "Running upgrade"
 docker compose exec backend alembic upgrade head
 ```
 
-**3. Verificar conexión a BD:**
+**3. Verificar que las tablas existen:**
 ```bash
-docker compose exec backend python3 -c "from database import SessionLocal; db = SessionLocal(); print('OK')"
+docker compose exec postgres psql -U sysadmin -d sysadmin_db -c "\dt"
+# Deberías ver tablas como: allowed_domains, users, servers, etc.
+```
+
+**4. Si las migraciones fallan, verificar logs:**
+```bash
+docker compose logs backend --tail=100
+```
+
+**5. Crear usuario manualmente después de que las migraciones se completen:**
+```bash
+docker compose exec backend python3 -c "
+from database import SessionLocal
+from models import User, RoleType, AllowedDomain
+from utils.auth import get_password_hash
+
+db = SessionLocal()
+
+# Crear dominio permitido
+db.add(AllowedDomain(domain='tudominio.com', description='Dominio Admin', is_active=True))
+db.commit()
+
+# Crear usuario
+admin = User(
+    username='admin',
+    email='admin@tudominio.com',
+    full_name='Administrador',
+    hashed_password=get_password_hash('TuPassword123!'),
+    is_active=True,
+    role=RoleType.SUPERADMIN.value
+)
+db.add(admin)
+db.commit()
+print('Usuario creado exitosamente')
+"
 ```
 
 ---

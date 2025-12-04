@@ -162,6 +162,43 @@ docker compose exec postgres pg_isready -U sysadmin
 
 ---
 
+### ❌ "KeyError: 'ContainerConfig'"
+
+**Síntoma:**
+```
+KeyError: 'ContainerConfig'
+ERROR: for postgres  'ContainerConfig'
+```
+
+**Causa:**
+Este error ocurre con Docker Compose v1 cuando intenta recrear contenedores existentes con metadatos incompatibles.
+
+**Solución Automática:**
+El instalador ahora detecta y limpia contenedores existentes automáticamente.
+
+**Solución Manual:**
+```bash
+# Detener y eliminar contenedores existentes
+docker-compose down -v
+
+# O si usas Docker Compose v2
+docker compose down -v
+
+# Limpiar volúmenes huérfanos (opcional)
+docker volume prune -f
+
+# Ejecutar el instalador nuevamente
+./install.sh
+```
+
+**Prevención:**
+Si necesitas reinstalar, siempre ejecuta primero:
+```bash
+docker-compose down -v
+```
+
+---
+
 ### ❌ "Error creando usuario"
 
 **Síntoma:**

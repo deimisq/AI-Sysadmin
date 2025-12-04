@@ -280,6 +280,14 @@ done
 
 # --- 5. Inicio del Sistema ---
 echo -e "\n${YELLOW}🚀 Iniciando servicios...${NC}"
+
+# Limpiar contenedores existentes si los hay (evita errores de ContainerConfig)
+if $DOCKER_COMPOSE ps -q 2>/dev/null | grep -q .; then
+    echo -e "${YELLOW}⚠️  Detectados contenedores existentes. Limpiando...${NC}"
+    $DOCKER_COMPOSE down -v 2>/dev/null || true
+    echo -e "${GREEN}✅ Limpieza completada${NC}"
+fi
+
 $DOCKER_COMPOSE up -d
 
 echo -e "${YELLOW}⏳ Esperando a que la base de datos esté lista...${NC}"

@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { I18nProvider } from "@/lib/i18n-context";
 import { ThemeProvider } from "@/lib/theme-context";
+import { FeedbackButton } from "@/components/feedback-button";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -20,7 +21,10 @@ export default function RootLayout({
         <html lang="en" suppressHydrationWarning>
             <body className={inter.className}>
                 <ThemeProvider>
-                    <I18nProvider>{children}</I18nProvider>
+                    <I18nProvider>
+                        {children}
+                        <FeedbackButton />
+                    </I18nProvider>
                 </ThemeProvider>
             </body>
         </html>

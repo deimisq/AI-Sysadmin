@@ -100,18 +100,18 @@ export function ServerManagement({ currentUser }: ServerManagementProps) {
             alert(t.serverManagement.serverUpdated);
         } catch (error: any) {
             console.error(error);
-            alert(error.message || "Failed to update server");
+            alert(error.message || t.serverManagement.failedToUpdate);
         }
     };
 
     const handleCreateServer = async () => {
         if (!newServer.hostname || !newServer.ip_address || !newServer.os_info || !newServer.ssh_username) {
-            alert("Hostname, IP Address, OS, and SSH Username are required");
+            alert(t.serverManagement.hostnameIpOsUsernameRequired);
             return;
         }
 
         if (!newServer.ssh_password && !newServer.ssh_key_path) {
-            alert("Either SSH Password or SSH Key Path is required");
+            alert(t.serverManagement.authRequired);
             return;
         }
 
@@ -145,28 +145,28 @@ export function ServerManagement({ currentUser }: ServerManagementProps) {
                 group_id: "",
                 client_id: 1
             });
-            alert("Server created successfully");
+            alert(t.serverManagement.serverCreated);
         } catch (error: any) {
             console.error(error);
-            alert(error.message || "Failed to create server");
+            alert(error.message || t.serverManagement.failedToCreate);
         }
     };
 
     const handleDeleteServer = async (serverId: number) => {
-        if (!confirm("Are you sure you want to delete this server?")) return;
+        if (!confirm(t.serverManagement.confirmDelete)) return;
 
         try {
             await deleteServer(serverId);
             await loadData();
-            alert("Server deleted successfully");
+            alert(t.serverManagement.serverDeleted);
         } catch (error: any) {
             console.error(error);
-            alert(error.message || "Failed to delete server");
+            alert(error.message || t.serverManagement.failedToDelete);
         }
     };
 
     if (loading) {
-        return <div>Loading servers...</div>;
+        return <div>{t.serverManagement.loading}</div>;
     }
 
     // Create Server Form
@@ -174,13 +174,13 @@ export function ServerManagement({ currentUser }: ServerManagementProps) {
         return (
             <Card>
                 <CardHeader>
-                    <CardTitle>Create New Server</CardTitle>
-                    <CardDescription>Add a new server to the system</CardDescription>
+                    <CardTitle>{t.serverManagement.createNewServer}</CardTitle>
+                    <CardDescription>{t.serverManagement.addNewServer}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="grid gap-4 md:grid-cols-2">
                         <div>
-                            <label className="text-sm font-medium">Hostname *</label>
+                            <label className="text-sm font-medium">{t.serverManagement.hostnameRequired}</label>
                             <Input
                                 value={newServer.hostname}
                                 onChange={(e) => setNewServer({ ...newServer, hostname: e.target.value })}
@@ -188,7 +188,7 @@ export function ServerManagement({ currentUser }: ServerManagementProps) {
                             />
                         </div>
                         <div>
-                            <label className="text-sm font-medium">IP Address *</label>
+                            <label className="text-sm font-medium">{t.serverManagement.ipAddressRequired}</label>
                             <Input
                                 value={newServer.ip_address}
                                 onChange={(e) => setNewServer({ ...newServer, ip_address: e.target.value })}
@@ -196,20 +196,20 @@ export function ServerManagement({ currentUser }: ServerManagementProps) {
                             />
                         </div>
                         <div className="col-span-2">
-                            <label className="text-sm font-medium">Operating System *</label>
+                            <label className="text-sm font-medium">{t.serverManagement.operatingSystemRequired}</label>
                             <select
                                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                                 value={newServer.os_info}
                                 onChange={(e) => setNewServer({ ...newServer, os_info: e.target.value })}
                             >
-                                <option value="">Select OS</option>
+                                <option value="">{t.serverManagement.selectOS}</option>
                                 {OS_OPTIONS.map((os) => (
                                     <option key={os} value={os}>{os}</option>
                                 ))}
                             </select>
                         </div>
                         <div>
-                            <label className="text-sm font-medium">SSH Username *</label>
+                            <label className="text-sm font-medium">{t.serverManagement.sshUsernameRequired}</label>
                             <Input
                                 value={newServer.ssh_username}
                                 onChange={(e) => setNewServer({ ...newServer, ssh_username: e.target.value })}
@@ -217,7 +217,7 @@ export function ServerManagement({ currentUser }: ServerManagementProps) {
                             />
                         </div>
                         <div>
-                            <label className="text-sm font-medium">SSH Password</label>
+                            <label className="text-sm font-medium">{t.serverManagement.sshPassword}</label>
                             <Input
                                 type="password"
                                 value={newServer.ssh_password}
@@ -226,29 +226,29 @@ export function ServerManagement({ currentUser }: ServerManagementProps) {
                             />
                         </div>
                         <div className="col-span-2">
-                            <label className="text-sm font-medium">SSH Private Key Path</label>
+                            <label className="text-sm font-medium">{t.serverManagement.sshKeyPath}</label>
                             <Input
                                 value={newServer.ssh_key_path}
                                 onChange={(e) => setNewServer({ ...newServer, ssh_key_path: e.target.value })}
                                 placeholder="/path/to/private/key"
                             />
-                            <p className="text-xs text-muted-foreground mt-1">Path to private key file on backend server</p>
+                            <p className="text-xs text-muted-foreground mt-1">{t.serverManagement.keyPathNote}</p>
                         </div>
                         <div className="col-span-2">
-                            <label className="text-sm font-medium">Group</label>
+                            <label className="text-sm font-medium">{t.serverManagement.group}</label>
                             <select
                                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                                 value={newServer.group_id}
                                 onChange={(e) => setNewServer({ ...newServer, group_id: e.target.value })}
                             >
-                                <option value="">No Group</option>
+                                <option value="">{t.serverManagement.noGroup}</option>
                                 {groups.map((group) => (
                                     <option key={group.id} value={group.id}>{group.name}</option>
                                 ))}
                             </select>
                         </div>
                         <div className="col-span-2">
-                            <label className="text-sm font-medium">Description</label>
+                            <label className="text-sm font-medium">{t.serverManagement.description}</label>
                             <Input
                                 value={newServer.description}
                                 onChange={(e) => setNewServer({ ...newServer, description: e.target.value })}
@@ -257,8 +257,8 @@ export function ServerManagement({ currentUser }: ServerManagementProps) {
                         </div>
                     </div>
                     <div className="flex gap-2">
-                        <Button onClick={handleCreateServer}>Create Server</Button>
-                        <Button variant="outline" onClick={() => setCreatingServer(false)}>Cancel</Button>
+                        <Button onClick={handleCreateServer}>{t.serverManagement.createServer}</Button>
+                        <Button variant="outline" onClick={() => setCreatingServer(false)}>{t.serverManagement.cancel}</Button>
                     </div>
                 </CardContent>
             </Card>
@@ -270,27 +270,27 @@ export function ServerManagement({ currentUser }: ServerManagementProps) {
         return (
             <Card>
                 <CardHeader>
-                    <CardTitle>Edit Server: {editingServer.hostname}</CardTitle>
-                    <CardDescription>Update server information</CardDescription>
+                    <CardTitle>{t.serverManagement.editServer}: {editingServer.hostname}</CardTitle>
+                    <CardDescription>{t.serverManagement.updateServerInfo}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="grid gap-4 md:grid-cols-2">
                         <div>
-                            <label className="text-sm font-medium">Hostname *</label>
+                            <label className="text-sm font-medium">{t.serverManagement.hostnameRequired}</label>
                             <Input
                                 value={editingServer.hostname}
                                 onChange={(e) => setEditingServer({ ...editingServer, hostname: e.target.value })}
                             />
                         </div>
                         <div>
-                            <label className="text-sm font-medium">IP Address *</label>
+                            <label className="text-sm font-medium">{t.serverManagement.ipAddressRequired}</label>
                             <Input
                                 value={editingServer.ip_address}
                                 onChange={(e) => setEditingServer({ ...editingServer, ip_address: e.target.value })}
                             />
                         </div>
                         <div className="col-span-2">
-                            <label className="text-sm font-medium">Operating System *</label>
+                            <label className="text-sm font-medium">{t.serverManagement.operatingSystemRequired}</label>
                             <select
                                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                                 value={editingServer.os_info}
@@ -302,14 +302,14 @@ export function ServerManagement({ currentUser }: ServerManagementProps) {
                             </select>
                         </div>
                         <div>
-                            <label className="text-sm font-medium">SSH Username *</label>
+                            <label className="text-sm font-medium">{t.serverManagement.sshUsernameRequired}</label>
                             <Input
                                 value={editingServer.ssh_username}
                                 onChange={(e) => setEditingServer({ ...editingServer, ssh_username: e.target.value })}
                             />
                         </div>
                         <div>
-                            <label className="text-sm font-medium">SSH Password (leave blank to keep)</label>
+                            <label className="text-sm font-medium">{t.serverManagement.sshPasswordKeep}</label>
                             <Input
                                 type="password"
                                 value={editingServer.ssh_password}
@@ -318,7 +318,7 @@ export function ServerManagement({ currentUser }: ServerManagementProps) {
                             />
                         </div>
                         <div className="col-span-2">
-                            <label className="text-sm font-medium">SSH Private Key Path (leave blank to keep)</label>
+                            <label className="text-sm font-medium">{t.serverManagement.sshKeyPathKeep}</label>
                             <Input
                                 value={editingServer.ssh_key_path}
                                 onChange={(e) => setEditingServer({ ...editingServer, ssh_key_path: e.target.value })}
@@ -326,20 +326,20 @@ export function ServerManagement({ currentUser }: ServerManagementProps) {
                             />
                         </div>
                         <div className="col-span-2">
-                            <label className="text-sm font-medium">Group</label>
+                            <label className="text-sm font-medium">{t.serverManagement.group}</label>
                             <select
                                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                                 value={editingServer.group_id || ""}
                                 onChange={(e) => setEditingServer({ ...editingServer, group_id: e.target.value })}
                             >
-                                <option value="">No Group</option>
+                                <option value="">{t.serverManagement.noGroup}</option>
                                 {groups.map((group) => (
                                     <option key={group.id} value={group.id}>{group.name}</option>
                                 ))}
                             </select>
                         </div>
                         <div className="col-span-2">
-                            <label className="text-sm font-medium">Description</label>
+                            <label className="text-sm font-medium">{t.serverManagement.description}</label>
                             <Input
                                 value={editingServer.description || ""}
                                 onChange={(e) => setEditingServer({ ...editingServer, description: e.target.value })}
@@ -347,8 +347,8 @@ export function ServerManagement({ currentUser }: ServerManagementProps) {
                         </div>
                     </div>
                     <div className="flex gap-2">
-                        <Button onClick={handleSaveServer}>Save Changes</Button>
-                        <Button variant="outline" onClick={() => setEditingServer(null)}>Cancel</Button>
+                        <Button onClick={handleSaveServer}>{t.serverManagement.saveChanges}</Button>
+                        <Button variant="outline" onClick={() => setEditingServer(null)}>{t.serverManagement.cancel}</Button>
                     </div>
                 </CardContent>
             </Card>
@@ -363,13 +363,13 @@ export function ServerManagement({ currentUser }: ServerManagementProps) {
                     <div>
                         <CardTitle className="flex items-center gap-2">
                             <Server className="h-5 w-5" />
-                            Server Management
+                            {t.serverManagement.title}
                         </CardTitle>
-                        <CardDescription>Manage all servers in the system</CardDescription>
+                        <CardDescription>{t.serverManagement.manageAllServers}</CardDescription>
                     </div>
                     <Button onClick={() => setCreatingServer(true)}>
                         <Plus className="mr-2 h-4 w-4" />
-                        Create New Server
+                        {t.serverManagement.createNewServer}
                     </Button>
                 </div>
             </CardHeader>
@@ -422,7 +422,7 @@ export function ServerManagement({ currentUser }: ServerManagementProps) {
                     ))}
                     {servers.length === 0 && (
                         <div className="text-center p-10 text-muted-foreground">
-                            No servers yet. Create one to get started.
+                            {t.serverManagement.noServersYet}
                         </div>
                     )}
                 </div>

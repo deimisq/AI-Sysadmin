@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { fetchAllServers, createServer, updateServer, deleteServer, fetchGroups, createClient } from "@/lib/api";
 import { Server, Edit2, Trash2, Plus, X } from "lucide-react";
+import { useI18n } from "@/lib/i18n-context";
 
 const OS_OPTIONS = [
     "Ubuntu 22.04",
@@ -32,6 +33,7 @@ interface ServerManagementProps {
 }
 
 export function ServerManagement({ currentUser }: ServerManagementProps) {
+    const { t } = useI18n();
     const [servers, setServers] = useState<any[]>([]);
     const [groups, setGroups] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -95,7 +97,7 @@ export function ServerManagement({ currentUser }: ServerManagementProps) {
             await updateServer(editingServer.id, updateData);
             await loadData();
             setEditingServer(null);
-            alert("Server updated successfully");
+            alert(t.serverManagement.serverUpdated);
         } catch (error: any) {
             console.error(error);
             alert(error.message || "Failed to update server");

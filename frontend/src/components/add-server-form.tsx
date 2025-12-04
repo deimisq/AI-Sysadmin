@@ -250,13 +250,13 @@ export function AddServerForm({ onServerAdded, initialData, onCancel }: ServerFo
                     />
                     <Input
                         type="password"
-                        placeholder={initialData ? "SSH Password (leave blank to keep unchanged)" : t.addServer.sshPassword}
+                        placeholder={initialData ? t.addServer.sshPasswordKeep : t.addServer.sshPassword}
                         value={formData.ssh_password}
                         onChange={(e) => setFormData({ ...formData, ssh_password: e.target.value })}
                     />
                     <div className="col-span-2">
                         <Input
-                            placeholder={initialData ? "SSH Private Key Path (leave blank to keep unchanged)" : t.addServer.sshKeyPath}
+                            placeholder={initialData ? t.addServer.sshKeyPathKeep : t.addServer.sshKeyPath}
                             value={formData.ssh_key_path}
                             onChange={(e) => setFormData({ ...formData, ssh_key_path: e.target.value })}
                         />
@@ -272,7 +272,7 @@ export function AddServerForm({ onServerAdded, initialData, onCancel }: ServerFo
                 />
                 <div className="flex gap-2">
                     <Button type="submit" className="flex-1" disabled={loading}>
-                        {loading ? t.common.loading : (initialData ? "Update Server" : t.addServer.submit)}
+                        {loading ? t.common.loading : (initialData ? t.addServer.updateServer : t.addServer.submit)}
                     </Button>
                     {initialData && onCancel && (
                         <Button type="button" variant="outline" onClick={onCancel} disabled={loading}>

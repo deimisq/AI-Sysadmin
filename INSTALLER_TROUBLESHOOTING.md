@@ -88,7 +88,24 @@ docker ps
 Error starting userland proxy: listen tcp4 0.0.0.0:80: bind: address already in use
 ```
 
-**Solución:**
+**Solución Automática (Recomendada):**
+
+El instalador ahora detecta automáticamente conflictos de puertos y ofrece 3 opciones:
+
+1. **Detener servicios conflictivos automáticamente**
+   - El instalador detiene Apache/Nginx/httpd automáticamente
+   - Usa puertos estándar 80/443
+
+2. **Usar puertos alternativos (8080/8443)**
+   - No requiere detener otros servicios
+   - Acceso vía `https://tudominio.com:8443`
+
+3. **Salir y resolver manualmente**
+   - Te permite resolver el conflicto a tu manera
+
+**Solución Manual:**
+
+Si necesitas resolver manualmente antes de ejecutar el instalador:
 
 **Opción 1: Detener el servicio que usa el puerto**
 ```bash
@@ -99,18 +116,24 @@ sudo netstat -tulpn | grep :80
 
 # Detener el servicio (ejemplo con Apache)
 sudo systemctl stop apache2
+sudo systemctl disable apache2  # Para que no inicie automáticamente
+
 # o con Nginx
 sudo systemctl stop nginx
+sudo systemctl disable nginx
 ```
 
-**Opción 2: Cambiar puertos en .env**
+**Opción 2: Cambiar puertos manualmente en .env**
 ```bash
-# Editar .env antes de iniciar
+# Si ya ejecutaste el instalador y falló, edita .env
 nano .env
 
 # Cambiar:
 HTTP_PORT=8080
 HTTPS_PORT=8443
+
+# Luego reinicia
+docker-compose up -d
 ```
 
 ---

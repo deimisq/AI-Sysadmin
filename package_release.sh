@@ -91,6 +91,65 @@ fi
 
 echo -e "${GREEN}✅ Requisitos cumplidos.${NC}"
 
+# Verificar puertos disponibles
+echo -e "\n${YELLOW}🔍 Verificando puertos...${NC}"
+PORT_80_IN_USE=false
+PORT_443_IN_USE=false
+
+if sudo lsof -i :80 > /dev/null 2>&1 || sudo netstat -tuln | grep ':80 ' > /dev/null 2>&1; then
+    PORT_80_IN_USE=true
+    echo -e "${YELLOW}⚠️  Puerto 80 está en uso${NC}"
+    sudo lsof -i :80 2>/dev/null || sudo netstat -tulpn | grep ':80 '
+fi
+
+if sudo lsof -i :443 > /dev/null 2>&1 || sudo netstat -tuln | grep ':443 ' > /dev/null 2>&1; then
+    PORT_443_IN_USE=true
+    echo -e "${YELLOW}⚠️  Puerto 443 está en uso${NC}"
+    sudo lsof -i :443 2>/dev/null || sudo netstat -tulpn | grep ':443 '
+fi
+
+# Si hay conflictos, ofrecer soluciones
+if [ "$PORT_80_IN_USE" = true ] || [ "$PORT_443_IN_USE" = true ]; then
+    echo -e "\n${YELLOW}Los puertos 80 y/o 443 están en uso. Opciones:${NC}"
+    echo "1) Detener servicios conflictivos automáticamente (Apache/Nginx)"
+    echo "2) Usar puertos alternativos (8080/8443)"
+    echo "3) Salir y resolver manualmente"
+    read -p "Selecciona una opción [1-3]: " PORT_OPTION
+    
+    case $PORT_OPTION in
+        1)
+            echo -e "${YELLOW}Deteniendo servicios conflictivos...${NC}"
+            sudo systemctl stop apache2 2>/dev/null || true
+            sudo systemctl stop nginx 2>/dev/null || true
+            sudo systemctl stop httpd 2>/dev/null || true
+            echo -e "${GREEN}✅ Servicios detenidos${NC}"
+            HTTP_PORT=80
+            HTTPS_PORT=443
+            ;;
+        2)
+            echo -e "${YELLOW}Usando puertos alternativos...${NC}"
+            HTTP_PORT=8080
+            HTTPS_PORT=8443
+            echo -e "${GREEN}✅ Se usarán puertos $HTTP_PORT y $HTTPS_PORT${NC}"
+            ;;
+        3)
+            echo -e "${RED}Instalación cancelada.${NC}"
+            echo "Para liberar los puertos manualmente:"
+            echo "  sudo systemctl stop apache2"
+            echo "  sudo systemctl stop nginx"
+            exit 0
+            ;;
+        *)
+            echo -e "${RED}Opción inválida. Saliendo.${NC}"
+            exit 1
+            ;;
+    esac
+else
+    HTTP_PORT=80
+    HTTPS_PORT=443
+    echo -e "${GREEN}✅ Puertos 80 y 443 disponibles${NC}"
+fi
+
 # --- 2. Recolección de Datos ---
 echo -e "\n${BLUE}📝 Configuración del Sistema${NC}"
 echo "Por favor, ingresa los datos solicitados para configurar el sistema."
@@ -192,8 +251,8 @@ SMTP_FROM_EMAIL=$SMTP_FROM
 
 ALLOWED_ORIGINS=$ALLOWED_ORIGINS
 
-HTTP_PORT=80
-HTTPS_PORT=443
+HTTP_PORT=$HTTP_PORT
+HTTPS_PORT=$HTTPS_PORT
 NEXT_PUBLIC_API_URL=/api/v1
 ENVEOF
 
@@ -296,7 +355,7 @@ echo -e "\n${GREEN}
    🎉 INSTALACIÓN COMPLETADA EXITOSAMENTE
 ================================================================
 ${NC}
-El sistema está corriendo en: ${BLUE}https://$DOMAIN${NC}
+El sistema está corriendo en: ${BLUE}https://$DOMAIN:$HTTPS_PORT${NC}
 
 Credenciales de Acceso:
    Usuario:  ${YELLOW}$ADMIN_USER${NC}
@@ -305,8 +364,9 @@ Credenciales de Acceso:
 📝 Notas:
 1. Si usaste un dominio real, recuerda configurar los DNS.
 2. Los certificados SSL son autofirmados. Acepta la advertencia en el navegador.
-3. Para detener el sistema: $DOCKER_COMPOSE down
-4. Para ver logs: $DOCKER_COMPOSE logs -f
+3. Puertos en uso: HTTP=$HTTP_PORT, HTTPS=$HTTPS_PORT
+4. Para detener el sistema: $DOCKER_COMPOSE down
+5. Para ver logs: $DOCKER_COMPOSE logs -f
 "
 EOF
 

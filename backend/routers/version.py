@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends
 from typing import Dict, Any
 
 from services.version_service import version_checker
-from utils.auth import get_current_user
+from dependencies import get_current_user
 from models import User
 
 router = APIRouter(prefix="/version", tags=["version"])

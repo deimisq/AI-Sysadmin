@@ -58,15 +58,37 @@ ${NC}"
 
 # --- 1. Verificaciones Previas ---
 echo -e "${YELLOW}🔍 Verificando requisitos...${NC}"
+
+# Verificar Docker
 if ! command -v docker &> /dev/null; then
-    echo -e "${RED}❌ Docker no está instalado.${NC} Por favor instálalo primero: https://docs.docker.com/get-docker/"
+    echo -e "${RED}❌ Docker no está instalado.${NC}"
+    echo "Por favor instálalo primero:"
+    echo "  Ubuntu/Debian: curl -fsSL https://get.docker.com | sh"
+    echo "  Documentación: https://docs.docker.com/get-docker/"
     exit 1
 fi
 
-if ! docker compose version &> /dev/null; then
-    echo -e "${RED}❌ Docker Compose no está instalado o es muy antiguo.${NC}"
+# Verificar Docker Compose (v1 o v2)
+DOCKER_COMPOSE=""
+if docker compose version &> /dev/null; then
+    # Docker Compose v2 (integrado en Docker)
+    DOCKER_COMPOSE="docker compose"
+    echo -e "${GREEN}✅ Docker Compose v2 detectado${NC}"
+elif command -v docker-compose &> /dev/null; then
+    # Docker Compose v1 (standalone)
+    DOCKER_COMPOSE="docker-compose"
+    echo -e "${GREEN}✅ Docker Compose v1 detectado${NC}"
+else
+    echo -e "${RED}❌ Docker Compose no está instalado.${NC}"
+    echo "Por favor instálalo:"
+    echo "  Para Docker Compose v2 (recomendado):"
+    echo "    sudo apt-get update && sudo apt-get install docker-compose-plugin"
+    echo "  Para Docker Compose v1:"
+    echo "    sudo curl -L \"https://github.com/docker/compose/releases/latest/download/docker-compose-\$(uname -s)-\$(uname -m)\" -o /usr/local/bin/docker-compose"
+    echo "    sudo chmod +x /usr/local/bin/docker-compose"
     exit 1
 fi
+
 echo -e "${GREEN}✅ Requisitos cumplidos.${NC}"
 
 # --- 2. Recolección de Datos ---
@@ -199,14 +221,14 @@ done
 
 # --- 5. Inicio del Sistema ---
 echo -e "\n${YELLOW}🚀 Iniciando servicios...${NC}"
-sudo docker compose up -d
+$DOCKER_COMPOSE up -d
 
 echo -e "${YELLOW}⏳ Esperando a que la base de datos esté lista...${NC}"
 sleep 10 # Espera inicial
 # Loop de espera hasta que pg_isready responda
 MAX_RETRIES=30
 COUNT=0
-while ! sudo docker compose exec postgres pg_isready -U "$DB_USER" > /dev/null 2>&1; do
+while ! $DOCKER_COMPOSE exec postgres pg_isready -U "$DB_USER" > /dev/null 2>&1; do
     sleep 2
     COUNT=$((COUNT+1))
     if [ $COUNT -ge $MAX_RETRIES ]; then
@@ -226,7 +248,7 @@ echo -e "\n${YELLOW}👤 Creando usuario Superadmin en la base de datos...${NC}"
 # Escapar comillas para el comando python
 SAFE_ADMIN_PASS=$(echo "$ADMIN_PASS" | sed "s/'/\\\'/g")
 
-sudo docker compose exec backend python3 -c "
+sudo $DOCKER_COMPOSE exec backend python3 -c "
 import sys
 from database import SessionLocal
 from models import User, RoleType, AllowedDomain
@@ -283,8 +305,8 @@ Credenciales de Acceso:
 📝 Notas:
 1. Si usaste un dominio real, recuerda configurar los DNS.
 2. Los certificados SSL son autofirmados. Acepta la advertencia en el navegador.
-3. Para detener el sistema: sudo docker compose down
-4. Para ver logs: sudo docker compose logs -f
+3. Para detener el sistema: $DOCKER_COMPOSE down
+4. Para ver logs: $DOCKER_COMPOSE logs -f
 "
 EOF
 

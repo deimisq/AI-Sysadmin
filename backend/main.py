@@ -1,12 +1,24 @@
 from fastapi import FastAPI
-from routers import inventory, agent, auth, admin, config
+from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
+from routers import inventory, agent, auth, admin, config, version
+from services.version_service import start_version_check_loop
 import json
 import os
+import asyncio
 from datetime import datetime
 
-app = FastAPI(title="Sysadmin AI Agent API")
 
-from fastapi.middleware.cors import CORSMiddleware
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup: start background version check
+    version_check_task = asyncio.create_task(start_version_check_loop())
+    yield
+    # Shutdown: cancel the task
+    version_check_task.cancel()
+
+
+app = FastAPI(title="Sysadmin AI Agent API", lifespan=lifespan)
 
 # Get allowed origins from environment variable
 allowed_origins_str = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000")
@@ -25,6 +37,7 @@ app.include_router(admin.router, prefix="/api/v1/admin", tags=["administration"]
 app.include_router(config.router, prefix="/api/v1/config", tags=["configuration"])
 app.include_router(inventory.router, prefix="/api/v1", tags=["inventory"])
 app.include_router(agent.router, prefix="/api/v1", tags=["agent"])
+app.include_router(version.router, prefix="/api/v1", tags=["version"])
 
 @app.get("/")
 async def root():

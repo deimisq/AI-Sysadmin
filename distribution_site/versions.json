@@ -1,0 +1,94 @@
+{
+    "latest": "0.9.0-beta.8",
+    "latestStable": null,
+    "releaseDate": "2024-12-04",
+    "downloadUrl": "https://agent.sentrait.com.uy/ai-sysadmin-release.tar.gz",
+    "changelogUrl": "https://agent.sentrait.com.uy/versions.html",
+    "versions": [
+        {
+            "version": "0.9.0-beta.8",
+            "date": "2024-12-04",
+            "type": "beta",
+            "downloadUrl": "https://agent.sentrait.com.uy/releases/ai-sysadmin-0.9.0-beta.8.tar.gz",
+            "highlights": [
+                "Script de actualización automática (update.sh)",
+                "Botón de reporte de bugs en todas las páginas",
+                "Mejoras en el instalador interactivo",
+                "Fix: Bloqueo visual durante instalación"
+            ],
+            "changelog": [
+                "Feature: Botón flotante para reportar bugs/sugerencias vía email",
+                "Feature: Script update.sh para actualizar instalaciones existentes",
+                "Feature: Página de versiones y changelog público",
+                "Fix: Instalador no se cuelga esperando migraciones",
+                "Fix: Compatibilidad con Docker Compose v1 y v2",
+                "Fix: Detección automática de puertos en uso",
+                "Fix: Limpieza de contenedores existentes antes de instalar",
+                "Fix: Preservación de archivos de migración de Alembic"
+            ]
+        },
+        {
+            "version": "0.9.0-beta.7",
+            "date": "2024-12-04",
+            "type": "beta",
+            "downloadUrl": null,
+            "highlights": [
+                "Fix: Bloqueo visual en verificación de migraciones",
+                "Uso de flag -T para docker exec no interactivo"
+            ],
+            "changelog": [
+                "Fix: Prevent installer hang by using non-interactive docker exec",
+                "Fix: Use temp files instead of direct pipes for stability"
+            ]
+        },
+        {
+            "version": "0.9.0-beta.6",
+            "date": "2024-12-04",
+            "type": "beta",
+            "downloadUrl": null,
+            "highlights": [
+                "Diagnóstico en tiempo real durante instalación",
+                "Logs del backend visibles durante espera"
+            ],
+            "changelog": [
+                "Feature: Real-time logging during migration wait",
+                "Feature: Container health check during installation"
+            ]
+        },
+        {
+            "version": "0.9.0-beta.5",
+            "date": "2024-12-04",
+            "type": "beta",
+            "downloadUrl": null,
+            "highlights": [
+                "Fix: Migraciones de Alembic preservadas",
+                "Code obfuscation mejorado"
+            ],
+            "changelog": [
+                "Fix: Exclude alembic migrations from code obfuscation",
+                "Fix: Database migrations now run correctly on fresh installs"
+            ]
+        },
+        {
+            "version": "0.9.0-beta.1",
+            "date": "2024-12-03",
+            "type": "beta",
+            "downloadUrl": null,
+            "highlights": [
+                "Primera versión beta pública",
+                "Sistema completo de gestión de servidores",
+                "Integración con IA (Gemini)"
+            ],
+            "changelog": [
+                "Feature: Backend FastAPI con autenticación JWT y OAuth",
+                "Feature: Frontend Next.js con internacionalización",
+                "Feature: Integración con Gemini AI para asistencia",
+                "Feature: Gestión de servidores y grupos",
+                "Feature: Sistema de notificaciones",
+                "Feature: Panel de administración completo",
+                "Feature: Instalador interactivo",
+                "Feature: Código protegido (bytecode compilation)"
+            ]
+        }
+    ]
+}

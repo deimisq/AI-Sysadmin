@@ -4,6 +4,7 @@ import "./globals.css";
 import { I18nProvider } from "@/lib/i18n-context";
 import { ThemeProvider } from "@/lib/theme-context";
 import { FeedbackButton } from "@/components/feedback-button";
+import { VersionNotification } from "@/components/version-notification";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -24,6 +25,7 @@ export default function RootLayout({
                     <I18nProvider>
                         {children}
                         <FeedbackButton />
+                        <VersionNotification />
                     </I18nProvider>
                 </ThemeProvider>
             </body>

@@ -1,9 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from typing import List
 import database, models, schemas, dependencies
 from services.ssh_service import ssh_service
 from utils.encryption import encrypt_data
+import csv
+import io
 
 router = APIRouter()
 
@@ -256,3 +259,210 @@ async def execute_command(request: schemas.CommandRequest, db: Session = Depends
         command=request.command,
         auth_method=auth_method
     )
+
+
+# CSV Template Download
+@router.get("/servers/csv-template")
+async def download_csv_template():
+    """
+    Download a CSV template for bulk server import.
+    """
+    output = io.StringIO()
+    writer = csv.writer(output)
+    
+    # Header row with all fields
+    headers = [
+        "hostname",
+        "ip_address", 
+        "ssh_username",
+        "ssh_password",
+        "ssh_key_path",
+        "description",
+        "os_info",
+        "group_name"  # Will create group if doesn't exist
+    ]
+    writer.writerow(headers)
+    
+    # Example rows
+    writer.writerow([
+        "webserver-01",
+        "192.168.1.10",
+        "admin",
+        "mypassword123",
+        "",
+        "Production web server",
+        "Ubuntu 22.04",
+        "Production Servers"
+    ])
+    writer.writerow([
+        "dbserver-01",
+        "192.168.1.20",
+        "root",
+        "",
+        "/home/user/.ssh/id_rsa",
+        "Database server",
+        "Debian 12",
+        "Database Servers"
+    ])
+    
+    output.seek(0)
+    
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv",
+        headers={
+            "Content-Disposition": "attachment; filename=servers_template.csv"
+        }
+    )
+
+
+# CSV Import
+@router.post("/servers/import-csv")
+async def import_servers_from_csv(
+    file: UploadFile = File(...),
+    current_user: models.User = Depends(dependencies.get_current_active_user),
+    db: Session = Depends(dependencies.get_db)
+):
+    """
+    Import servers from a CSV file.
+    
+    - Creates groups if they don't exist
+    - Assigns group_admin role to uploader for new groups (if not superadmin/admin)
+    - Returns summary of imported servers
+    """
+    if not file.filename.endswith('.csv'):
+        raise HTTPException(status_code=400, detail="File must be a CSV")
+    
+    content = await file.read()
+    decoded = content.decode('utf-8')
+    
+    # Parse CSV
+    reader = csv.DictReader(io.StringIO(decoded))
+    
+    results = {
+        "success": [],
+        "errors": [],
+        "groups_created": [],
+        "total_processed": 0
+    }
+    
+    # Get or create default client
+    default_client = db.query(models.Client).first()
+    if not default_client:
+        default_client = models.Client(name="Default Client", description="Auto-created")
+        db.add(default_client)
+        db.commit()
+        db.refresh(default_client)
+    
+    for row_num, row in enumerate(reader, start=2):  # Start at 2 (header is row 1)
+        results["total_processed"] += 1
+        
+        try:
+            # Validate required fields
+            hostname = row.get('hostname', '').strip()
+            ip_address = row.get('ip_address', '').strip()
+            ssh_username = row.get('ssh_username', '').strip()
+            
+            if not hostname or not ip_address or not ssh_username:
+                results["errors"].append({
+                    "row": row_num,
+                    "error": "Missing required fields (hostname, ip_address, ssh_username)"
+                })
+                continue
+            
+            # Check for auth method
+            ssh_password = row.get('ssh_password', '').strip()
+            ssh_key_path = row.get('ssh_key_path', '').strip()
+            
+            if not ssh_password and not ssh_key_path:
+                results["errors"].append({
+                    "row": row_num,
+                    "hostname": hostname,
+                    "error": "Must provide either ssh_password or ssh_key_path"
+                })
+                continue
+            
+            # Handle group
+            group_id = None
+            group_name = row.get('group_name', '').strip()
+            
+            if group_name:
+                # Check if group exists
+                group = db.query(models.ServerGroup).filter(
+                    models.ServerGroup.name == group_name
+                ).first()
+                
+                if not group:
+                    # Create new group
+                    group = models.ServerGroup(
+                        name=group_name,
+                        description=f"Auto-created from CSV import",
+                        created_by=current_user.id
+                    )
+                    db.add(group)
+                    db.commit()
+                    db.refresh(group)
+                    
+                    results["groups_created"].append(group_name)
+                    
+                    # If user is not superadmin or admin, assign group_admin role
+                    if current_user.role not in ['superadmin', 'admin']:
+                        permission = models.UserGroupPermission(
+                            user_id=current_user.id,
+                            group_id=group.id,
+                            role='group_admin'
+                        )
+                        db.add(permission)
+                        db.commit()
+                
+                group_id = group.id
+            
+            # Prepare server data
+            server_data = {
+                "hostname": hostname,
+                "ip_address": ip_address,
+                "ssh_username": ssh_username,
+                "description": row.get('description', '').strip() or None,
+                "os_info": row.get('os_info', '').strip() or None,
+                "client_id": default_client.id,
+                "group_id": group_id
+            }
+            
+            # Encrypt sensitive data
+            if ssh_password:
+                server_data["ssh_password"] = encrypt_data(ssh_password)
+            if ssh_key_path:
+                # Validate it's a path, not a key
+                if ssh_key_path.startswith("ssh-rsa") or ssh_key_path.startswith("ssh-ed25519"):
+                    results["errors"].append({
+                        "row": row_num,
+                        "hostname": hostname,
+                        "error": "ssh_key_path should be a file path, not the key content"
+                    })
+                    continue
+                server_data["ssh_key_path"] = encrypt_data(ssh_key_path)
+            
+            # Create server
+            db_server = models.Server(**server_data)
+            db.add(db_server)
+            db.commit()
+            
+            results["success"].append({
+                "row": row_num,
+                "hostname": hostname,
+                "ip_address": ip_address,
+                "group": group_name or "No group"
+            })
+            
+        except Exception as e:
+            db.rollback()
+            results["errors"].append({
+                "row": row_num,
+                "hostname": row.get('hostname', 'unknown'),
+                "error": str(e)
+            })
+    
+    return {
+        "message": f"Import completed. {len(results['success'])} servers added, {len(results['errors'])} errors.",
+        "details": results
+    }

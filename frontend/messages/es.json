@@ -1,14 +1,19 @@
 {
     "common": {
         "loading": "Cargando...",
+        "saving": "Guardando...",
         "error": "Error",
         "success": "Éxito",
         "cancel": "Cancelar",
         "save": "Guardar",
+        "saveConfiguration": "Guardar Configuración",
+        "savePreferences": "Guardar Preferencias",
+        "saveChanges": "Guardar Cambios",
         "delete": "Eliminar",
         "edit": "Editar",
         "close": "Cerrar",
-        "confirm": "Confirmar"
+        "confirm": "Confirmar",
+        "loadingData": "Cargando datos..."
     },
     "header": {
         "title": "Agente IA Sysadmin",

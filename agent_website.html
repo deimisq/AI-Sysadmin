@@ -455,57 +455,6 @@
     </footer>
     <script>
         document.getElementById('current-year').textContent = new Date().getFullYear();
-
-        // Analytics Configuration
-        const NAMESPACE = 'agent.sentrait.com.uy';
-        const KEY_VISITS = 'visits';
-        const KEY_DOWNLOADS = 'downloads';
-
-        // Track Visit
-        async function trackVisit() {
-            try {
-                // Check if session already visited to avoid duplicate counts on refresh (basic)
-                if (!sessionStorage.getItem('visited')) {
-                    await fetch(`https://api.countapi.xyz/hit/${NAMESPACE}/${KEY_VISITS}`);
-                    sessionStorage.setItem('visited', 'true');
-                }
-            } catch (e) {
-                console.error('Analytics error:', e);
-            }
-        }
-
-        // Track Download
-        async function trackDownload() {
-            try {
-                await fetch(`https://api.countapi.xyz/hit/${NAMESPACE}/${KEY_DOWNLOADS}`);
-            } catch (e) {
-                console.error('Analytics error:', e);
-            }
-        }
-
-        // Initialize
-        trackVisit();
-
-        // Attach download tracker to buttons
-        document.addEventListener('DOMContentLoaded', () => {
-            const downloadLinks = document.querySelectorAll('a[href*=".tar.gz"]');
-            downloadLinks.forEach(link => {
-                link.addEventListener('click', trackDownload);
-            });
-        });
-
-        // Expose function to view stats in console
-        window.showStats = async () => {
-            try {
-                const visits = await fetch(`https://api.countapi.xyz/get/${NAMESPACE}/${KEY_VISITS}`).then(r => r.json());
-                const downloads = await fetch(`https://api.countapi.xyz/get/${NAMESPACE}/${KEY_DOWNLOADS}`).then(r => r.json());
-                console.log(`%c📊 Estadísticas del Sitio`, 'font-size: 16px; font-weight: bold; color: #2563eb;');
-                console.log(`👁️ Visitas: ${visits.value}`);
-                console.log(`⬇️ Descargas: ${downloads.value}`);
-            } catch (e) {
-                console.error('Error fetching stats:', e);
-            }
-        };
     </script>
 </body>
 

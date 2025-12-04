@@ -20,6 +20,13 @@
 **Solución:** Limpieza automática de contenedores existentes antes de iniciar
 **Commit:** 3b8b7175
 
+### Iteration 5: Migraciones Desaparecidas (Code Obfuscation)
+**Problema:** El backend no ejecutaba migraciones porque los archivos `.py` de Alembic eran eliminados por la ofuscación.
+**Solución:** Excluir el directorio `alembic/` de la eliminación de archivos fuente en `Dockerfile.backend`.
+**Commit:** [Actual]
+
+---
+
 ### Iteración 4: Migraciones de Base de Datos
 **Problema:** "relation 'allowed_domains' does not exist" - migraciones no completadas
 **Solución:** 

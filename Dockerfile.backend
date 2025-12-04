@@ -33,7 +33,7 @@ RUN chmod +x /app/backend/start.sh
 # SECURITY: Compile to bytecode and remove source files
 # This prevents source code from being readable inside the container
 RUN python -m compileall -b /app/backend && \
-    find /app/backend -type f -name "*.py" -delete
+    find /app/backend -type f -name "*.py" -not -path "/app/backend/alembic/*" -delete
 
 
 # Run the application

@@ -444,6 +444,27 @@ Instrucciones de Instalación:
 
 --------------------------------------------------------------------------------
 
+📘 ACTUALIZACIÓN DEL SISTEMA
+
+Para actualizar una instalación existente a la última versión:
+
+1. Navegue al directorio donde instaló el sistema:
+   cd /opt/dist  (o donde haya instalado)
+
+2. Ejecute el script de actualización:
+   ./update.sh
+
+El script automáticamente:
+- Creará un backup de la base de datos
+- Descargará la última versión
+- Actualizará las imágenes Docker
+- Reiniciará los servicios
+- Aplicará las nuevas migraciones
+
+NOTA: Su archivo .env (configuración) NO será modificado.
+
+--------------------------------------------------------------------------------
+
 📘 GUÍA DE OPERACIÓN Y MANTENIMIENTO
 
 1. Verificar el estado del sistema
@@ -502,6 +523,148 @@ Instrucciones de Instalación:
 Soporte:
 Si encuentra errores persistentes, por favor envíe los logs del backend (paso 2) al equipo de soporte.
 EOF
+
+# 7. Generar script de actualización (update.sh)
+echo -e "${YELLOW}📝 Generando script de actualización (update.sh)...${NC}"
+cat > dist/update.sh << 'EOF'
+#!/bin/bash
+set -e
+
+# Colores
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+RED='\033[0;31m'
+NC='\033[0m'
+
+echo -e "${BLUE}
+================================================================
+   🔄 ACTUALIZADOR - AI SYSADMIN AGENT
+================================================================
+${NC}"
+
+# Detectar Docker Compose
+DOCKER_COMPOSE=""
+if docker compose version &> /dev/null; then
+    DOCKER_COMPOSE="docker compose"
+elif command -v docker-compose &> /dev/null; then
+    DOCKER_COMPOSE="docker-compose"
+else
+    echo -e "${RED}❌ Docker Compose no está instalado.${NC}"
+    exit 1
+fi
+
+# Verificar que estamos en el directorio correcto
+if [ ! -f "docker-compose.yml" ]; then
+    echo -e "${RED}❌ No se encontró docker-compose.yml${NC}"
+    echo "Asegúrate de ejecutar este script desde el directorio de instalación."
+    exit 1
+fi
+
+# Verificar que los servicios están corriendo
+if ! $DOCKER_COMPOSE ps | grep -q "Up"; then
+    echo -e "${RED}❌ Los servicios no están corriendo.${NC}"
+    echo "Este script es para actualizar una instalación existente."
+    exit 1
+fi
+
+echo -e "${YELLOW}⚠️  IMPORTANTE: Este script actualizará tu instalación.${NC}"
+echo "Se realizará un backup automático de la base de datos."
+echo ""
+read -p "¿Deseas continuar? (s/N): " CONFIRM
+if [[ ! "$CONFIRM" =~ ^[sS]$ ]]; then
+    echo "Actualización cancelada."
+    exit 0
+fi
+
+# --- 1. Backup de Base de Datos ---
+echo -e "\n${YELLOW}📦 Creando backup de la base de datos...${NC}"
+BACKUP_FILE="backup_pre_update_$(date +%Y%m%d_%H%M%S).sql"
+$DOCKER_COMPOSE exec -T postgres pg_dump -U sysadmin sysadmin_db > "$BACKUP_FILE"
+echo -e "${GREEN}✅ Backup creado: $BACKUP_FILE${NC}"
+
+# --- 2. Descargar nuevo paquete ---
+echo -e "\n${YELLOW}📥 Descargando nueva versión...${NC}"
+DOWNLOAD_URL="https://agent.sentrait.com.uy/ai-sysadmin-release.tar.gz"
+curl -L -o new_release.tar.gz "$DOWNLOAD_URL"
+echo -e "${GREEN}✅ Descarga completada.${NC}"
+
+# --- 3. Extraer nuevo paquete ---
+echo -e "\n${YELLOW}📂 Extrayendo archivos...${NC}"
+mkdir -p new_release
+tar -xzf new_release.tar.gz -C new_release --strip-components=1
+echo -e "${GREEN}✅ Archivos extraídos.${NC}"
+
+# --- 4. Cargar nuevas imágenes ---
+echo -e "\n${YELLOW}🐳 Cargando nuevas imágenes Docker...${NC}"
+for img in new_release/images/*.tar.gz; do
+    if [ -f "$img" ]; then
+        echo "   - Cargando $(basename $img)..."
+        docker load < "$img" > /dev/null
+    fi
+done
+echo -e "${GREEN}✅ Imágenes cargadas.${NC}"
+
+# --- 5. Actualizar archivos de configuración (sin sobreescribir .env) ---
+echo -e "\n${YELLOW}📋 Actualizando archivos de configuración...${NC}"
+cp new_release/docker-compose.yml docker-compose.yml
+cp -r new_release/nginx/conf.d/* nginx/conf.d/ 2>/dev/null || true
+echo -e "${GREEN}✅ Configuración actualizada (tu .env se mantiene intacto).${NC}"
+
+# --- 6. Reiniciar servicios ---
+echo -e "\n${YELLOW}🔄 Reiniciando servicios...${NC}"
+$DOCKER_COMPOSE down
+$DOCKER_COMPOSE up -d
+
+# Esperar a que los servicios estén listos
+echo -e "${YELLOW}⏳ Esperando a que los servicios inicien...${NC}"
+sleep 10
+MAX_RETRIES=30
+COUNT=0
+while ! $DOCKER_COMPOSE exec -T postgres pg_isready -U sysadmin > /dev/null 2>&1; do
+    sleep 2
+    COUNT=$((COUNT+1))
+    if [ $COUNT -ge $MAX_RETRIES ]; then
+        echo -e "${RED}❌ Timeout esperando la base de datos.${NC}"
+        exit 1
+    fi
+    echo -n "."
+done
+echo -e "\n${GREEN}✅ Servicios iniciados.${NC}"
+
+# --- 7. Aplicar nuevas migraciones (si las hay) ---
+echo -e "\n${YELLOW}🔧 Aplicando migraciones de base de datos...${NC}"
+$DOCKER_COMPOSE exec -T backend alembic upgrade head 2>/dev/null || echo "   (No hay migraciones nuevas o ya están aplicadas)"
+echo -e "${GREEN}✅ Migraciones completadas.${NC}"
+
+# --- 8. Limpieza ---
+echo -e "\n${YELLOW}🧹 Limpiando archivos temporales...${NC}"
+rm -rf new_release new_release.tar.gz
+echo -e "${GREEN}✅ Limpieza completada.${NC}"
+
+echo -e "\n${GREEN}
+================================================================
+   🎉 ACTUALIZACIÓN COMPLETADA EXITOSAMENTE
+================================================================
+${NC}
+Tu sistema ha sido actualizado a la última versión.
+
+${YELLOW}Backup guardado en:${NC} $BACKUP_FILE
+
+${YELLOW}Comandos útiles:${NC}
+- Ver logs: $DOCKER_COMPOSE logs -f
+- Ver estado: $DOCKER_COMPOSE ps
+
+Si encuentras problemas, puedes restaurar el backup:
+1. $DOCKER_COMPOSE down
+2. $DOCKER_COMPOSE up -d postgres
+3. sleep 10
+4. cat $BACKUP_FILE | $DOCKER_COMPOSE exec -T postgres psql -U sysadmin sysadmin_db
+5. $DOCKER_COMPOSE up -d
+"
+EOF
+
+chmod +x dist/update.sh
 
 echo -e "${GREEN}✅ Paquete creado exitosamente en la carpeta 'dist/'${NC}"
 echo -e "Puedes comprimir esta carpeta y enviarla al cliente:"

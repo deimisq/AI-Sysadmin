@@ -313,14 +313,31 @@ COUNT=0
 MIGRATIONS_READY=false
 
 while [ $COUNT -lt $MAX_RETRIES ]; do
-    # Verificar si la tabla allowed_domains existe (indica que las migraciones se aplicaron)
+    # 1. Verificar si el contenedor backend sigue corriendo
+    if ! $DOCKER_COMPOSE ps backend | grep -q "Up"; then
+        echo -e "\n${RED}❌ El contenedor del backend se ha detenido o está reiniciándose.${NC}"
+        echo "Logs de error:"
+        $DOCKER_COMPOSE logs --tail=20 backend
+        exit 1
+    fi
+
+    # 2. Verificar si la tabla existe
     if $DOCKER_COMPOSE exec postgres psql -U "$DB_USER" -d sysadmin_db -tAc "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'allowed_domains');" 2>/dev/null | grep -q 't'; then
         MIGRATIONS_READY=true
         break
     fi
+
+    # 3. Feedback visual y logs periódicos
     sleep 2
     COUNT=$((COUNT+1))
     echo -n "."
+
+    # Cada 5 intentos (10s), mostrar qué está haciendo el backend
+    if [ $((COUNT % 5)) -eq 0 ]; then
+        echo -e "\n${YELLOW}🔎 Estado actual del backend:${NC}"
+        $DOCKER_COMPOSE logs --tail=2 backend | sed 's/^/   /'
+        echo -n "⏳ Siguiendo espera"
+    fi
 done
 
 if [ "$MIGRATIONS_READY" = false ]; then

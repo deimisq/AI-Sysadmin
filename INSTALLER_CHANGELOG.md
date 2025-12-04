@@ -35,6 +35,14 @@
 - Mensajes claros si las migraciones fallan
 **Commit:** [Actual]
 
+### Iteration 6: Diagnóstico en Tiempo Real
+**Problema:** El instalador se quedaba colgado esperando migraciones sin dar feedback de por qué fallaba.
+**Solución:** 
+- Logs del backend en tiempo real durante la espera
+- Verificación de estado del contenedor (si muere o reinicia)
+- Mayor verbosidad en el proceso de espera
+**Commit:** [Actual]
+
 ---
 
 ## Características Finales del Instalador

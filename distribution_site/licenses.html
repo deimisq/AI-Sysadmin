@@ -1,0 +1,440 @@
+<!DOCTYPE HTML>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Licencias - AI Sysadmin Agent | Sentrait</title>
+    <meta name="description" content="Gestiona y compra licencias para AI Sysadmin Agent">
+    <link rel="icon" type="image/png" href="favicon.png">
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-VG7FY2KW34"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+        gtag('config', 'G-VG7FY2KW34');
+    </script>
+
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary: #0ea5e9;
+            --accent: #f97316;
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --text-light: #f8fafc;
+            --text-muted: #94a3b8;
+            --success: #22c55e;
+            --warning: #eab308;
+            --danger: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, var(--bg-dark) 0%, #1e3a8a 100%);
+            color: var(--text-light);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 1.2rem;
+        }
+
+        .nav {
+            margin: 30px 0;
+            text-align: center;
+        }
+
+        .nav a {
+            color: var(--secondary);
+            text-decoration: none;
+            margin: 0 15px;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav a:hover {
+            color: var(--primary);
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin: 50px 0;
+        }
+
+        .pricing-card {
+            background: var(--bg-card);
+            border-radius: 20px;
+            padding: 40px;
+            border: 2px solid transparent;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pricing-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--primary);
+            box-shadow: 0 20px 40px rgba(37, 99, 235, 0.3);
+        }
+
+        .pricing-card.featured {
+            border-color: var(--accent);
+            transform: scale(1.05);
+        }
+
+        .pricing-card.featured::before {
+            background: linear-gradient(90deg, var(--accent), var(--danger));
+        }
+
+        .badge {
+            display: inline-block;
+            background: var(--accent);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .plan-name {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .plan-price {
+            font-size: 3rem;
+            font-weight: bold;
+            margin: 20px 0;
+            color: var(--primary);
+        }
+
+        .plan-price span {
+            font-size: 1rem;
+            color: var(--text-muted);
+        }
+
+        .plan-features {
+            list-style: none;
+            margin: 30px 0;
+        }
+
+        .plan-features li {
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .plan-features li:before {
+            content: "✓ ";
+            color: var(--success);
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 15px 40px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: bold;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(37, 99, 235, 0.5);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 2px solid var(--primary);
+        }
+
+        .coming-soon {
+            background: var(--warning);
+            color: var(--bg-dark);
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: bold;
+            display: inline-block;
+            margin-top: 20px;
+        }
+
+        .validator-section {
+            background: var(--bg-card);
+            border-radius: 20px;
+            padding: 40px;
+            margin: 50px 0;
+        }
+
+        .validator-section h2 {
+            margin-bottom: 20px;
+            color: var(--primary);
+        }
+
+        .input-group {
+            margin: 20px 0;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 15px;
+            background: var(--bg-dark);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: var(--text-light);
+            font-size: 1rem;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .result.success {
+            background: rgba(34, 197, 94, 0.2);
+            border: 2px solid var(--success);
+        }
+
+        .result.error {
+            background: rgba(239, 68, 68, 0.2);
+            border: 2px solid var(--danger);
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 80px;
+            padding-top: 40px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>🔐 Licencias AI Sysadmin Agent</h1>
+            <p class="subtitle">Elige el plan perfecto para tu organización</p>
+        </header>
+
+        <nav class="nav">
+            <a href="index.html">← Volver al inicio</a>
+            <a href="versions.html">Ver versiones</a>
+        </nav>
+
+        <div class="pricing-grid">
+            <!-- Trial License -->
+            <div class="pricing-card">
+                <div class="plan-name">Prueba Gratuita</div>
+                <div class="plan-price">
+                    $0
+                    <span>/ 180 días</span>
+                </div>
+                <ul class="plan-features">
+                    <li>Hasta 10 servidores</li>
+                    <li>Hasta 5 usuarios</li>
+                    <li>Todas las funcionalidades</li>
+                    <li>180 días de prueba</li>
+                    <li>Soporte por email</li>
+                </ul>
+                <p style="text-align: center; color: var(--text-muted); margin-top: 20px;">
+                    Se genera automáticamente al instalar
+                </p>
+            </div>
+
+            <!-- Commercial License -->
+            <div class="pricing-card featured">
+                <span class="badge">MÁS POPULAR</span>
+                <div class="plan-name">Comercial</div>
+                <div class="plan-price">
+                    A consultar
+                    <span>/ año</span>
+                </div>
+                <ul class="plan-features">
+                    <li>Servidores ilimitados</li>
+                    <li>Usuarios ilimitados</li>
+                    <li>Todas las funcionalidades</li>
+                    <li>Soporte prioritario</li>
+                    <li>Actualizaciones incluidas</li>
+                    <li>SLA garantizado</li>
+                </ul>
+                <div class="coming-soon">
+                    🚀 Disponible en versión 1.0
+                </div>
+            </div>
+
+            <!-- Enterprise License -->
+            <div class="pricing-card">
+                <div class="plan-name">Enterprise</div>
+                <div class="plan-price">
+                    Personalizado
+                </div>
+                <ul class="plan-features">
+                    <li>Todo de Comercial, más:</li>
+                    <li>Instalación on-premise</li>
+                    <li>Personalización avanzada</li>
+                    <li>Soporte 24/7</li>
+                    <li>Capacitación incluida</li>
+                    <li>Consultoría técnica</li>
+                </ul>
+                <div class="coming-soon">
+                    🚀 Disponible en versión 1.0
+                </div>
+            </div>
+        </div>
+
+        <!-- License Validator -->
+        <div class="validator-section">
+            <h2>🔍 Validar Licencia</h2>
+            <p style="color: var(--text-muted); margin-bottom: 20px;">
+                Ingresa tu clave de licencia para verificar su estado
+            </p>
+
+            <div class="input-group">
+                <label for="license-key">Clave de Licencia</label>
+                <input type="text" id="license-key" placeholder="XXXX-XXXX-XXXX-XXXX-XXXX" maxlength="24">
+            </div>
+
+            <button class="btn" onclick="validateLicense()">Validar Licencia</button>
+
+            <div id="validation-result" class="result"></div>
+        </div>
+
+        <footer>
+            <p>&copy; <span id="current-year"></span> Sentrait. Todos los derechos reservados.</p>
+            <p style="margin-top: 10px;">
+                <a href="mailto:licenses@sentrait.com.uy" style="color: var(--secondary);">licenses@sentrait.com.uy</a>
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+
+        async function validateLicense() {
+            const licenseKey = document.getElementById('license-key').value.trim();
+            const resultDiv = document.getElementById('validation-result');
+
+            if (!licenseKey) {
+                resultDiv.className = 'result error';
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = '<strong>❌ Error:</strong> Por favor ingresa una clave de licencia';
+                return;
+            }
+
+            resultDiv.innerHTML = '<strong>⏳ Validando...</strong>';
+            resultDiv.className = 'result';
+            resultDiv.style.display = 'block';
+
+            try {
+                const response = await fetch('/api/v1/license/validate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        license_key: licenseKey
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.valid) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `
+                        <strong>✅ Licencia Válida</strong><br>
+                        <strong>Tipo:</strong> ${data.license_data.license_type}<br>
+                        <strong>Máx. Servidores:</strong> ${data.license_data.max_servers === -1 ? 'Ilimitados' : data.license_data.max_servers}<br>
+                        <strong>Máx. Usuarios:</strong> ${data.license_data.max_users === -1 ? 'Ilimitados' : data.license_data.max_users}<br>
+                        <strong>Expira:</strong> ${new Date(data.license_data.expires_at).toLocaleDateString()}<br>
+                        <strong>Días restantes:</strong> ${data.license_data.days_remaining}
+                    `;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `
+                        <strong>❌ ${data.message}</strong><br>
+                        <strong>Estado:</strong> ${data.status}
+                    `;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `
+                    <strong>❌ Error de conexión</strong><br>
+                    No se pudo validar la licencia. Por favor intenta nuevamente.
+                `;
+                console.error('Error:', error);
+            }
+        }
+
+        // Allow Enter key to validate
+        document.getElementById('license-key').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                validateLicense();
+            }
+        });
+    </script>
+</body>
+
+</html>

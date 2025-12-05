@@ -222,3 +222,29 @@ class SystemConfig(Base):
     is_secret = Column(Boolean, default=False) # If true, value is encrypted
     description = Column(String, nullable=True)
     updated_at = Column(DateTime(timezone=True), onupdate=func.now(), server_default=func.now())
+
+class License(Base):
+    """System license management"""
+    __tablename__ = "licenses"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    license_key = Column(String, unique=True, index=True, nullable=False)
+    license_type = Column(String, default="trial")  # trial, commercial, enterprise
+    company_name = Column(String, nullable=True)
+    contact_email = Column(String, nullable=True)
+    max_servers = Column(Integer, default=10)  # -1 for unlimited
+    max_users = Column(Integer, default=5)  # -1 for unlimited
+    
+    issued_at = Column(DateTime(timezone=True), server_default=func.now())
+    expires_at = Column(DateTime(timezone=True), nullable=False)
+    
+    is_active = Column(Boolean, default=True)
+    last_validated = Column(DateTime(timezone=True), nullable=True)
+    validation_count = Column(Integer, default=0)
+    
+    # Installation tracking
+    installation_id = Column(String, unique=True, nullable=True)  # Unique per installation
+    
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+

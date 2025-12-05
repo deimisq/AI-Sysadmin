@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-from routers import inventory, agent, auth, admin, config, version, license
+from routers import inventory, agent, auth, admin, config, version, license, monitoring
 from services.version_service import start_version_check_loop
 import json
 import os
@@ -39,6 +39,7 @@ app.include_router(inventory.router, prefix="/api/v1", tags=["inventory"])
 app.include_router(agent.router, prefix="/api/v1", tags=["agent"])
 app.include_router(version.router, prefix="/api/v1", tags=["version"])
 app.include_router(license.router, prefix="/api/v1", tags=["license"])
+app.include_router(monitoring.router, prefix="/api/v1", tags=["monitoring"])
 
 @app.get("/")
 async def root():

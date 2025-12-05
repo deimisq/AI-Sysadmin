@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { fetchServers, deleteServer, fetchGroups } from "@/lib/api";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Terminal, Server as ServerIcon, Trash2, FolderOpen } from "lucide-react";
+import { Terminal, Server as ServerIcon, Trash2, FolderOpen, Activity } from "lucide-react";
 import { useI18n } from "@/lib/i18n-context";
 
 interface Server {
@@ -90,29 +90,38 @@ export function ServerList({ onDiagnose, onEdit }: ServerListProps) {
                     {server.os_info} - {server.description}
                 </p>
             </CardContent>
-            <CardFooter className="flex gap-2">
+            <CardFooter className="flex gap-2 flex-wrap">
+                <Button
+                    variant="default"
+                    className="flex-1 min-w-[100px]"
+                    onClick={() => window.location.href = `/dashboard/server/${server.id}/console`}
+                >
+                    <Terminal className="mr-2 h-4 w-4" /> Console
+                </Button>
                 <Button
                     variant="outline"
-                    className="flex-1"
+                    className="flex-1 min-w-[100px]"
                     onClick={() => onDiagnose(server)}
                 >
-                    <Terminal className="mr-2 h-4 w-4" /> {t.serverList.diagnose}
+                    <Activity className="mr-2 h-4 w-4" /> {t.serverList.diagnose}
                 </Button>
-                <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => onEdit(server)}
-                >
-                    <span className="sr-only">Edit</span>
-                    ✏️
-                </Button>
-                <Button
-                    variant="destructive"
-                    size="icon"
-                    onClick={() => handleDelete(server.id)}
-                >
-                    <Trash2 className="h-4 w-4" />
-                </Button>
+                <div className="flex gap-2">
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => onEdit(server)}
+                    >
+                        <span className="sr-only">Edit</span>
+                        ✏️
+                    </Button>
+                    <Button
+                        variant="destructive"
+                        size="icon"
+                        onClick={() => handleDelete(server.id)}
+                    >
+                        <Trash2 className="h-4 w-4" />
+                    </Button>
+                </div>
             </CardFooter>
         </Card>
     );

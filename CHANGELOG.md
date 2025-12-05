@@ -5,6 +5,38 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 
+## [0.9.1-beta] - 2025-12-05
+
+### 🚀 Mejoras Principales
+
+#### Agregado
+- **Soporte para Anthropic API directa**: Configuración simplificada para Claude 3.5 Sonnet usando solo API Key (sin necesidad de AWS)
+- **Bedrock con API Key única**: Simplificado el uso de AWS Bedrock para aceptar solo Bearer Token en lugar de Access Key + Secret
+- **Textarea multilínea en chat de IA**: Soporte para Shift+Enter (nueva línea) y Enter (enviar mensaje)
+- **Adjuntar imágenes en diagnóstico**: Posibilidad de subir capturas de pantalla para dar más contexto a la IA
+- **Recarga dinámica de configuración de IA**: Los cambios en la configuración de IA se aplican inmediatamente sin reiniciar
+
+#### Corregido
+- **Error 422 al actualizar servidores**: Corregida conversión de `group_id` vacío que causaba validación fallida
+- **Error 500 al ejecutar comandos**: Corregido schema `CommandExecutionResponse` para coincidir con el uso real
+- **SSH faltante en contenedor**: Instalado `openssh-client` en Docker para permitir conexiones Ansible
+- **IA respondiendo sobre temas incorrectos**: Corregido orden de parámetros en `analyze_problem` para priorizar pregunta del usuario
+- **Dimensiones de embeddings incorrectas**: Ajustado mock de embeddings de 768 a 1536 dimensiones para compatibilidad con PGVector
+- **Validación restrictiva de claves SSH**: Removida validación que impedía guardar claves privadas raw en campo `ssh_key_path`
+
+#### Cambiado
+- Frontend: Campo de texto de chat convertido a `textarea` con placeholder mejorado
+- Frontend: Interfaz de configuración de IA reorganizada para claridad (Bedrock API Key en lugar de Access + Secret)
+- Backend: Servicio de IA ahora soporta configuración dinámica desde base de datos
+- Backend: Mejorado manejo de errores de autenticación LLM (401) con mensajes amigables
+
+### Seguridad
+- Claves SSH privadas ahora se pueden guardar de forma segura como contenido raw o como ruta de archivo
+
+### Infraestructura
+- Instalación de `openssh-client` en imagen Docker del backend
+- Agregada librería `langchain-anthropic` para soporte de API directa
+
 ## [0.9.0-beta] - 2025-12-03
 
 ### 🎉 Primera Release Beta Pública

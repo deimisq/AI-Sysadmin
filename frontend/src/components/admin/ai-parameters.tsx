@@ -15,10 +15,10 @@ export function AIParameters({ currentUser }: AIParamsProps) {
     const [config, setConfig] = useState({
         llm_provider: "bedrock",
         aws_region: "us-east-1",
-        aws_access_key_id: "",
-        aws_secret_access_key: "",
+        aws_bearer_token_bedrock: "",
         google_api_key: "",
         openai_api_key: "",
+        anthropic_api_key: "",
         temperature: "0.7",
         max_tokens: "2000",
         model_name: ""
@@ -29,6 +29,7 @@ export function AIParameters({ currentUser }: AIParamsProps) {
 
     const providers = [
         { value: "bedrock", label: "Amazon Bedrock (Claude 3.5 Sonnet)", model: "anthropic.claude-3-5-sonnet-20240620-v1:0" },
+        { value: "anthropic", label: "Anthropic API (Claude 3.5 Sonnet)", model: "claude-3-5-sonnet-20240620" },
         { value: "gemini", label: "Google Gemini 2.0 Flash", model: "gemini-2.0-flash-exp" },
         { value: "openai", label: "OpenAI GPT-4o", model: "gpt-4o" }
     ];
@@ -43,10 +44,10 @@ export function AIParameters({ currentUser }: AIParamsProps) {
             setConfig({
                 llm_provider: data.llm_provider || "bedrock",
                 aws_region: data.aws_region || "us-east-1",
-                aws_access_key_id: data.aws_access_key_id || "",
-                aws_secret_access_key: data.aws_secret_access_key || "",
+                aws_bearer_token_bedrock: data.aws_bearer_token_bedrock || "",
                 google_api_key: data.google_api_key || "",
                 openai_api_key: data.openai_api_key || "",
+                anthropic_api_key: data.anthropic_api_key || "",
                 temperature: String(data.temperature || "0.7"),
                 max_tokens: String(data.max_tokens || "2000"),
                 model_name: data.model_name || ""
@@ -123,23 +124,36 @@ export function AIParameters({ currentUser }: AIParamsProps) {
                                 onChange={(e) => setConfig({ ...config, aws_region: e.target.value })}
                                 placeholder="us-east-1"
                             />
+                            <p className="text-xs text-muted-foreground mt-1">
+                                Región donde está habilitado Bedrock (ej: us-east-1, us-west-2)
+                            </p>
                         </div>
                         <div>
-                            <label className="text-sm font-medium">AWS Access Key ID</label>
+                            <label className="text-sm font-medium">Bedrock API Key</label>
                             <Input
                                 type={showSecrets ? "text" : "password"}
-                                value={config.aws_access_key_id}
-                                onChange={(e) => setConfig({ ...config, aws_access_key_id: e.target.value })}
-                                placeholder="AKIA..."
+                                value={config.aws_bearer_token_bedrock}
+                                onChange={(e) => setConfig({ ...config, aws_bearer_token_bedrock: e.target.value })}
+                                placeholder="ABSK..."
                             />
+                            <p className="text-xs text-muted-foreground mt-1">
+                                API Key de Bedrock (comienza con ABSK)
+                            </p>
                         </div>
+                    </div>
+                )}
+
+                {/* Anthropic API Configuration */}
+                {config.llm_provider === "anthropic" && (
+                    <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
+                        <h3 className="font-medium text-sm">Anthropic API Configuration</h3>
                         <div>
-                            <label className="text-sm font-medium">AWS Secret Access Key</label>
+                            <label className="text-sm font-medium">Anthropic API Key</label>
                             <Input
                                 type={showSecrets ? "text" : "password"}
-                                value={config.aws_secret_access_key}
-                                onChange={(e) => setConfig({ ...config, aws_secret_access_key: e.target.value })}
-                                placeholder="••••••••"
+                                value={config.anthropic_api_key}
+                                onChange={(e) => setConfig({ ...config, anthropic_api_key: e.target.value })}
+                                placeholder="sk-ant-..."
                             />
                         </div>
                     </div>

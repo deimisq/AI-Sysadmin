@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Versiones - AI Sysadmin Agent | Sentrait</title>
+    <meta name="description" content="Historial de versiones y changelog del AI Sysadmin Agent">
+    <link rel="icon" type="image/png" href="favicon.png">
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-VG7FY2KW34"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+        gtag('config', 'G-VG7FY2KW34');
+    </script>
+
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary: #0ea5e9;
+            --accent: #f97316;
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --text-light: #f8fafc;
+            --text-muted: #94a3b8;
+            --success: #22c55e;
+            --warning: #eab308;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, var(--bg-dark) 0%, #1a237e 100%);
+            color: var(--text-light);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            text-align: center;
+            padding: 3rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 3rem;
+        }
+
+        .logo {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--secondary);
+            text-decoration: none;
+            margin-bottom: 2rem;
+            transition: color 0.3s;
+        }
+
+        .back-link:hover {
+            color: var(--primary);
+        }
+
+        .latest-banner {
+            background: linear-gradient(135deg, var(--success), #16a34a);
+            padding: 1.5rem 2rem;
+            border-radius: 1rem;
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .latest-info h2 {
+            font-size: 1.5rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .latest-info span {
+            opacity: 0.9;
+        }
+
+        .download-btn {
+            background: white;
+            color: var(--success);
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            text-decoration: none;
+            font-weight: 600;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .update-instructions {
+            background: var(--bg-card);
+            border-radius: 1rem;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 3rem;
+        }
+
+        .section-title {
+            color: var(--secondary);
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .version-list {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .version-card {
+            background: var(--bg-card);
+            border-radius: 1rem;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .version-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        }
+
+        .version-header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            padding: 1.25rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .version-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .version-meta {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .version-date {
+            opacity: 0.9;
+        }
+
+        .version-badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .version-badge.beta {
+            background: var(--warning);
+            color: #000;
+        }
+
+        .version-badge.stable {
+            background: var(--success);
+        }
+
+        .version-body {
+            padding: 1.5rem;
+        }
+
+        .highlights {
+            margin-bottom: 1.5rem;
+        }
+
+        .highlights h3 {
+            color: var(--secondary);
+            font-size: 1rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .highlights ul {
+            list-style: none;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .highlights li {
+            background: rgba(14, 165, 233, 0.15);
+            color: var(--secondary);
+            padding: 0.35rem 0.75rem;
+            border-radius: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .changelog h3 {
+            color: var(--text-muted);
+            font-size: 1rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .changelog ul {
+            list-style: none;
+        }
+
+        .changelog li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .changelog li:last-child {
+            border-bottom: none;
+        }
+
+        .changelog li::before {
+            content: "•";
+            color: var(--primary);
+            margin-right: 0.75rem;
+        }
+
+        .changelog .feature::before {
+            content: "✨";
+        }
+
+        .changelog .fix::before {
+            content: "🔧";
+        }
+
+        .code-block {
+            background: #0f172a;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            font-family: monospace;
+            overflow-x: auto;
+        }
+
+        .code-block.small {
+            font-size: 0.9rem;
+        }
+
+        .warning-box {
+            background: rgba(234, 179, 8, 0.1);
+            border: 1px solid rgba(234, 179, 8, 0.3);
+            padding: 1rem;
+            border-radius: 0.5rem;
+        }
+
+        .warning-box p {
+            color: #eab308;
+            margin: 0;
+            font-size: 0.9rem;
+        }
+
+        footer {
+            text-align: center;
+            padding: 3rem 0;
+            margin-top: 3rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-muted);
+        }
+
+        footer a {
+            color: var(--secondary);
+            text-decoration: none;
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .latest-banner {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .version-header {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <a href="index.html" class="back-link">
+            ← Volver a la página principal
+        </a>
+
+        <header>
+            <div class="logo">AI Sysadmin Agent</div>
+            <p>Historial de Versiones y Changelog</p>
+        </header>
+
+        <!-- Latest Version Banner -->
+        <div class="latest-banner" id="latest-banner">
+            <div class="latest-info">
+                <h2>🚀 Última versión: <span id="latest-version">Cargando...</span></h2>
+                <span id="latest-date"></span>
+            </div>
+            <a href="ai-sysadmin-release.tar.gz" class="download-btn" id="download-btn">
+                ⬇️ Descargar Última Versión
+            </a>
+        </div>
+
+        <!-- Update Instructions Section -->
+        <div class="update-instructions">
+            <h2 class="section-title">🔄 Cómo Actualizar tu Instalación</h2>
+
+            <div style="margin-bottom: 2rem;">
+                <h3 style="color: var(--text-light); margin-bottom: 1rem; font-size: 1.2rem;">
+                    Método 1: Actualización Automática (Recomendado)
+                </h3>
+                <p style="color: var(--text-muted); margin-bottom: 1rem;">
+                    Si instalaste desde el paquete oficial, ya tienes el script de actualización:
+                </p>
+                <div class="code-block">
+                    <code style="color: #22c55e;">$ </code><code style="color: #f8fafc;">cd /opt/dist</code><br>
+                    <code style="color: #22c55e;">$ </code><code style="color: #f8fafc;">./update.sh</code>
+                </div>
+                <p style="color: var(--text-muted); margin-top: 1rem; font-size: 0.9rem;">
+                    El script automáticamente:
+                </p>
+                <ul style="color: var(--text-muted); margin-left: 1.5rem; font-size: 0.9rem;">
+                    <li>Crea un backup de tu base de datos</li>
+                    <li>Descarga la última versión</li>
+                    <li>Actualiza las imágenes Docker</li>
+                    <li>Reinicia los servicios</li>
+                    <li>Aplica nuevas migraciones de BD</li>
+                </ul>
+            </div>
+
+            <div style="margin-bottom: 2rem;">
+                <h3 style="color: var(--text-light); margin-bottom: 1rem; font-size: 1.2rem;">
+                    Método 2: Actualización Manual
+                </h3>
+                <p style="color: var(--text-muted); margin-bottom: 1rem;">
+                    Si prefieres control total sobre el proceso:
+                </p>
+                <div class="code-block small">
+                    <code style="color: #64748b;"># 1. Backup de la base de datos</code><br>
+                    <code style="color: #22c55e;">$ </code><code
+                        style="color: #f8fafc;">docker compose exec postgres pg_dump -U sysadmin sysadmin_db > backup.sql</code><br><br>
+
+                    <code style="color: #64748b;"># 2. Descargar nueva versión</code><br>
+                    <code style="color: #22c55e;">$ </code><code
+                        style="color: #f8fafc;">curl -O https://agent.sentrait.com.uy/ai-sysadmin-release.tar.gz</code><br><br>
+
+                    <code style="color: #64748b;"># 3. Extraer</code><br>
+                    <code style="color: #22c55e;">$ </code><code
+                        style="color: #f8fafc;">tar -xzf ai-sysadmin-release.tar.gz</code><br><br>
+
+                    <code style="color: #64748b;"># 4. Cargar nuevas imágenes</code><br>
+                    <code style="color: #22c55e;">$ </code><code
+                        style="color: #f8fafc;">for img in dist/images/*.tar.gz; do docker load < "$img"; done</code><br><br>
+
+                    <code style="color: #64748b;"># 5. Actualizar configuración (preserva tu .env)</code><br>
+                    <code style="color: #22c55e;">$ </code><code
+                        style="color: #f8fafc;">cp dist/docker-compose.yml .</code><br><br>
+
+                    <code style="color: #64748b;"># 6. Reiniciar servicios</code><br>
+                    <code style="color: #22c55e;">$ </code><code
+                        style="color: #f8fafc;">docker compose down && docker compose up -d</code><br><br>
+
+                    <code style="color: #64748b;"># 7. Aplicar migraciones</code><br>
+                    <code style="color: #22c55e;">$ </code><code
+                        style="color: #f8fafc;">docker compose exec backend alembic upgrade head</code>
+                </div>
+            </div>
+
+            <div class="warning-box">
+                <p>
+                    <strong>⚠️ Importante:</strong> Tu archivo <code>.env</code> con la configuración nunca se
+                    sobrescribe durante la actualización.
+                    Si hay cambios que requieran nueva configuración, se anunciarán en el changelog.
+                </p>
+            </div>
+        </div>
+
+        <!-- Version History Title -->
+        <h2 class="section-title" style="margin-bottom: 2rem;">📦 Historial de Versiones</h2>
+
+        <!-- Version List -->
+        <div class="version-list" id="version-list">
+            <p style="text-align: center; color: var(--text-muted);">Cargando versiones...</p>
+        </div>
+
+        <footer>
+            <p>© <span id="current-year"></span> <a href="https://sentrait.com.uy">Sentrait</a>. Todos los derechos
+                reservados.</p>
+            <p style="margin-top: 0.5rem;">
+                <a href="/cdn-cgi/l/email-protection#621007120d1016072211070c1610030b164c010d0f4c171b">Reportar un problema</a>
+            </p>
+        </footer>
+    </div>
+
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+        // Set current year dynamically
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+
+        async function loadVersions() {
+            try {
+                const response = await fetch('versions.json');
+                const data = await response.json();
+
+                // Update latest banner
+                document.getElementById('latest-version').textContent = data.latest;
+                document.getElementById('latest-date').textContent = `Publicado: ${data.releaseDate}`;
+
+                // Generate version cards
+                const container = document.getElementById('version-list');
+                container.innerHTML = '';
+
+                data.versions.forEach((version, index) => {
+                    const card = document.createElement('div');
+                    card.className = 'version-card';
+
+                    const highlightsHtml = version.highlights.map(h => `<li>${h}</li>`).join('');
+                    const changelogHtml = version.changelog.map(c => {
+                        const cssClass = c.startsWith('Feature') ? 'feature' : (c.startsWith('Fix') ? 'fix' : '');
+                        return `<li class="${cssClass}">${c}</li>`;
+                    }).join('');
+
+                    card.innerHTML = `
+                        <div class="version-header">
+                            <span class="version-number">v${version.version}</span>
+                            <div class="version-meta">
+                                <span class="version-date">📅 ${version.date}</span>
+                                <span class="version-badge ${version.type}">${version.type}</span>
+                            </div>
+                        </div>
+                        <div class="version-body">
+                            <div class="highlights">
+                                <h3>⭐ Destacados</h3>
+                                <ul>${highlightsHtml}</ul>
+                            </div>
+                            <div class="changelog">
+                                <h3>📋 Changelog completo</h3>
+                                <ul>${changelogHtml}</ul>
+                            </div>
+                        </div>
+                    `;
+
+                    container.appendChild(card);
+                });
+
+            } catch (error) {
+                console.error('Error loading versions:', error);
+                document.getElementById('version-list').innerHTML =
+                    '<p style="text-align: center; color: #ef4444;">Error cargando versiones. Por favor, recarga la página.</p>';
+            }
+        }
+
+        loadVersions();
+    </script>
+</body>
+
+</html>

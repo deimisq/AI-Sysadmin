@@ -110,7 +110,7 @@ class ServerBase(BaseModel):
     ip_address: str
     ssh_username: str
     ssh_password: Optional[str] = None
-    ssh_private_key_path: Optional[str] = None
+    ssh_key_path: Optional[str] = None
     description: Optional[str] = None
     os_info: Optional[str] = None
     client_id: Optional[int] = None
@@ -124,7 +124,7 @@ class ServerUpdate(BaseModel):
     ip_address: Optional[str] = None
     ssh_username: Optional[str] = None
     ssh_password: Optional[str] = None
-    ssh_private_key_path: Optional[str] = None
+    ssh_key_path: Optional[str] = None
     description: Optional[str] = None
     os_info: Optional[str] = None
     client_id: Optional[int] = None
@@ -155,9 +155,13 @@ class CommandExecutionRequest(BaseModel):
 CommandRequest = CommandExecutionRequest
 
 class CommandExecutionResponse(BaseModel):
-    output: str
-    return_code: int
-    error: Optional[str] = None
+    stdout: str
+    stderr: str
+    exit_code: int
+    hostname: Optional[str] = None
+    username: Optional[str] = None
+    command: Optional[str] = None
+    auth_method: Optional[str] = None
 
 # Alias for backwards compatibility
 CommandResponse = CommandExecutionResponse

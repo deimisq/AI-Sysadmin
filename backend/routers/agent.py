@@ -95,7 +95,7 @@ DIAGNOSTIC RESULTS:
         server_info = f"Hostname: {server.hostname}, OS: {server.os_info}, IP: {server.ip_address}"
         full_context = f"{server_info}\n\n{diagnostic_summary}"
         
-        response_data = ai_service.analyze_problem(db, full_context, server_info, query.language)
+        response_data = ai_service.analyze_problem(db, query.problem_description, full_context, query.language)
         
         return AgentResponse(analysis=response_data, diagnostics=diagnostics if not has_embedded_results else None)
         

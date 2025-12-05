@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createServer, createClient, updateServer, fetchGroups } from "@/lib/api";
+import { createServer, createClient, updateServer, fetchGroups, fetchClients } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -96,21 +96,48 @@ export function AddServerForm({ onServerAdded, initialData, onCancel }: ServerFo
                 if (!updateData.ssh_password) delete updateData.ssh_password;
                 if (!updateData.ssh_key_path) delete updateData.ssh_key_path;
 
+                // Handle group_id: convert empty string to null, parse string to int
+                if (!updateData.group_id) {
+                    updateData.group_id = null;
+                } else {
+                    updateData.group_id = parseInt(updateData.group_id as string);
+                }
+
                 await updateServer(initialData.id, updateData);
             } else {
                 // Create new server
                 let clientId = 1;
                 try {
-                    const client = await createClient({
-                        name: "Default Client",
-                        description: "Auto-created client"
-                    });
-                    clientId = client.id;
+                    const clients = await fetchClients();
+                    const defaultClient = clients.find((c: any) => c.name === "Default Client");
+
+                    if (defaultClient) {
+                        clientId = defaultClient.id;
+                    } else {
+                        const client = await createClient({
+                            name: "Default Client",
+                            description: "Auto-created client"
+                        });
+                        clientId = client.id;
+                    }
                 } catch (error) {
-                    console.log("Using default client ID");
+                    console.log("Error getting/creating client, using default ID 1", error);
                 }
 
-                await createServer({ ...formData, client_id: clientId });
+                // Prepare payload
+                const payload: any = {
+                    ...formData,
+                    client_id: clientId
+                };
+
+                // Handle group_id: convert empty string to null, parse string to int
+                if (!payload.group_id) {
+                    payload.group_id = null;
+                } else {
+                    payload.group_id = parseInt(payload.group_id as string);
+                }
+
+                await createServer(payload);
             }
 
             // Reset form completely
@@ -255,8 +282,9 @@ export function AddServerForm({ onServerAdded, initialData, onCancel }: ServerFo
                         onChange={(e) => setFormData({ ...formData, ssh_password: e.target.value })}
                     />
                     <div className="col-span-2">
-                        <Input
-                            placeholder={initialData ? t.addServer.sshKeyPathKeep : t.addServer.sshKeyPath}
+                        <textarea
+                            className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            placeholder={initialData ? t.addServer.sshKeyPathKeep : "Ruta a la clave privada (/home/user/.ssh/id_rsa) O pega el contenido de la clave aquí"}
                             value={formData.ssh_key_path}
                             onChange={(e) => setFormData({ ...formData, ssh_key_path: e.target.value })}
                         />

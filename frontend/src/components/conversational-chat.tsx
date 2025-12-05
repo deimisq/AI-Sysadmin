@@ -1,11 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { diagnoseProblem, executeCommand } from "@/lib/api";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Play, Send, X } from "lucide-react";
+import { Loader2, Play, Send, X, Image as ImageIcon } from "lucide-react";
 import ReactMarkdown from 'react-markdown';
 import { useI18n } from "@/lib/i18n-context";
 
@@ -31,17 +30,30 @@ export function ConversationalChat({ server, onClose }: ConversationalChatProps)
     ]);
     const [input, setInput] = useState("");
     const [loading, setLoading] = useState(false);
+    const [selectedImage, setSelectedImage] = useState<string | null>(null);
+    const [imageFile, setImageFile] = useState<File | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleSendMessage = async () => {
         if (!input.trim()) return;
 
+        // Include image if attached
+        let messageContent = input;
+        if (selectedImage) {
+            messageContent += `\n\n[Image attached: ${imageFile?.name}]\nBase64: ${selectedImage}`;
+        }
+
         const userMessage: Message = { role: "user", content: input };
         setMessages(prev => [...prev, userMessage]);
         setInput("");
+        setSelectedImage(null);
+        setImageFile(null);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+
         setLoading(true);
 
         try {
-            const res = await diagnoseProblem(server.id, input, locale);
+            const res = await diagnoseProblem(server.id, messageContent, locale);
             const analysisText = typeof res.analysis === 'string'
                 ? res.analysis
                 : res.analysis.analysis || JSON.stringify(res.analysis);
@@ -114,6 +126,26 @@ export function ConversationalChat({ server, onClose }: ConversationalChatProps)
             }]);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setSelectedImage(reader.result as string);
+                setImageFile(file);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const removeImage = () => {
+        setSelectedImage(null);
+        setImageFile(null);
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
         }
     };
 
@@ -193,17 +225,61 @@ export function ConversationalChat({ server, onClose }: ConversationalChatProps)
             </CardContent>
 
             <div className="border-t p-4">
-                <div className="flex gap-2">
-                    <Input
+                <div className="space-y-2">
+                    {selectedImage && (
+                        <div className="relative inline-block">
+                            <img
+                                src={selectedImage}
+                                alt="Preview"
+                                className="max-w-xs max-h-32 rounded border"
+                            />
+                            <Button
+                                size="sm"
+                                variant="destructive"
+                                className="absolute top-1 right-1"
+                                onClick={removeImage}
+                            >
+                                <X className="h-4 w-4" />
+                            </Button>
+                            <p className="text-xs text-muted-foreground mt-1">{imageFile?.name}</p>
+                        </div>
+                    )}
+
+                    <textarea
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
-                        placeholder={t.chat.inputPlaceholder}
-                        onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
+                        placeholder={t.chat.inputPlaceholder + "\n\nTip: Presiona Shift+Enter para nueva línea, Enter para enviar"}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                                e.preventDefault();
+                                handleSendMessage();
+                            }
+                        }}
                         disabled={loading}
+                        className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-y"
                     />
-                    <Button onClick={handleSendMessage} disabled={loading || !input.trim()}>
-                        {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                    </Button>
+
+                    <div className="flex gap-2">
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/*"
+                            onChange={handleImageSelect}
+                            className="hidden"
+                        />
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={loading}
+                        >
+                            <ImageIcon className="h-4 w-4 mr-2" />
+                            Adjuntar Imagen
+                        </Button>
+                        <Button onClick={handleSendMessage} disabled={loading || !input.trim()} className="flex-1">
+                            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                        </Button>
+                    </div>
                 </div>
                 <p className="text-xs text-muted-foreground mt-2">
                     {t.chat.tip}

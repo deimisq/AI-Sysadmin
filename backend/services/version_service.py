@@ -129,10 +129,15 @@ class VersionChecker:
             if current_suffix and not latest_suffix:
                 return True  # Stable is newer than any suffix
             
-            # Compare beta versions (beta.8 > beta.7)
+            # Compare beta versions (beta.8 > beta.7 or beta8 > beta7)
             if 'beta' in latest and 'beta' in current_suffix:
-                latest_beta = int(latest.split('beta.')[-1]) if 'beta.' in latest else 0
-                current_beta = int(current.split('beta.')[-1]) if 'beta.' in current else 0
+                import re
+                def get_beta_number(v: str) -> int:
+                    match = re.search(r'beta\.?(\d+)', v)
+                    return int(match.group(1)) if match else 0
+                
+                latest_beta = get_beta_number(latest)
+                current_beta = get_beta_number(current)
                 return latest_beta > current_beta
             
             return False

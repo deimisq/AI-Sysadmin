@@ -78,6 +78,17 @@ export async function createClient(data: any) {
     return res.json();
 }
 
+export async function fetchClients() {
+    const token = typeof window !== 'undefined' ? localStorage.getItem("token") : null;
+    const res = await fetch(`${API_BASE_URL}/clients/`, {
+        headers: {
+            ...(token && { "Authorization": `Bearer ${token}` }),
+        },
+    });
+    if (!res.ok) throw new Error("Failed to fetch clients");
+    return res.json();
+}
+
 // Server Groups
 export async function fetchGroups() {
     const token = typeof window !== 'undefined' ? localStorage.getItem("token") : null;
@@ -167,6 +178,22 @@ export async function executeCommand(serverId: number, command: string) {
         body: JSON.stringify({ server_id: serverId, command: command }),
     });
     if (!res.ok) throw new Error("Failed to execute command");
+    return res.json();
+}
+
+export async function fetchServerStats(serverId: number) {
+    const res = await fetch(`${API_BASE_URL}/servers/${serverId}/stats`, {
+        headers: getAuthHeaders(),
+    });
+    if (!res.ok) throw new Error("Failed to fetch stats");
+    return res.json();
+}
+
+export async function fetchServerFiles(serverId: number, path: string = "/") {
+    const res = await fetch(`${API_BASE_URL}/servers/${serverId}/files?path=${encodeURIComponent(path)}`, {
+        headers: getAuthHeaders(),
+    });
+    if (!res.ok) throw new Error("Failed to fetch files");
     return res.json();
 }
 

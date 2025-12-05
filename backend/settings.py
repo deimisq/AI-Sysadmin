@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     GOOGLE_API_KEY: str = ""
     AWS_BEARER_TOKEN_BEDROCK: str = ""
     AWS_REGION: str = "us-east-1"
+    ANTHROPIC_API_KEY: str = ""
     
     class Config:
         env_file = ".env"

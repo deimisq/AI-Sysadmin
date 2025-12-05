@@ -129,15 +129,8 @@ def delete_group(
 def create_server(server: schemas.ServerCreate, db: Session = Depends(dependencies.get_db)):
     server_data = server.dict()
     
-    # Validate SSH key path before encrypting
-    if server_data.get('ssh_key_path'):
-        ssh_key = server_data['ssh_key_path']
-        # Check if user entered public key instead of path
-        if ssh_key.startswith("ssh-rsa") or ssh_key.startswith("ssh-ed25519") or "AAAAB3NzaC" in ssh_key:
-            raise HTTPException(
-                status_code=400, 
-                detail="SSH Key Path debe ser una ruta al archivo de clave privada (ej: /home/user/.ssh/id_rsa), no el contenido de la clave pública"
-            )
+    # Validation removed to allow raw private keys
+    # if server_data.get('ssh_key_path'): ...
     
     # Encrypt sensitive data before storing
     if server_data.get('ssh_password'):
@@ -193,14 +186,8 @@ def update_server(server_id: int, server_update: schemas.ServerUpdate, db: Sessi
     
     update_data = server_update.dict(exclude_unset=True)
     
-    # Validate SSH key path if provided
-    if update_data.get('ssh_key_path'):
-        ssh_key = update_data['ssh_key_path']
-        if ssh_key.startswith("ssh-rsa") or ssh_key.startswith("ssh-ed25519") or "AAAAB3NzaC" in ssh_key:
-             raise HTTPException(
-                status_code=400, 
-                detail="SSH Key Path debe ser una ruta al archivo de clave privada, no el contenido de la clave pública"
-            )
+    # Validation removed to allow raw private keys
+    # if update_data.get('ssh_key_path'): ...
             
     # Encrypt sensitive data if they are being updated
     if update_data.get('ssh_password'):

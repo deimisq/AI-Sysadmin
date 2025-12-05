@@ -33,14 +33,20 @@ class SSHService:
             client_keys = None
             if private_key:
                 # If it looks like a path, use it, otherwise treat as content
-                if private_key.startswith('/') or private_key.startswith('./'):
+                if private_key.strip().startswith('/') or private_key.strip().startswith('./'):
                     client_keys = [private_key]
                     logger.info(f"Using SSH key file: {private_key}")
                 else:
-                    logger.warning(f"SSH key doesn't look like a path: {private_key[:50]}...")
-                    # Importing key from string content would require more handling
-                    # For MVP let's assume path or we'd need to write to temp file
-                    pass
+                    # Treat as raw content
+                    try:
+                        # asyncssh.import_private_key can handle the string content directly
+                        key_obj = asyncssh.import_private_key(private_key)
+                        client_keys = [key_obj]
+                        logger.info("Imported SSH key from content")
+                    except Exception as e:
+                        logger.error(f"Failed to import SSH key content: {e}")
+                        # Fallback or let it fail later
+                        pass
 
             logger.info(f"Attempting SSH connection to {username}@{hostname}:{port}")
             logger.debug(f"Authentication: {auth_info}")

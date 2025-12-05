@@ -9,8 +9,9 @@ import { Shield, ShieldCheck, ShieldAlert, Key, ExternalLink, X } from "lucide-r
 
 export function Footer() {
     const { t } = useI18n();
-    const [versionInfo, setVersionInfo] = useState({
+    const [versionInfo, setVersionInfo] = useState<any>({
         version: "1.0.0",
+        fullVersion: "1.0.0",
         name: "AI Sysadmin Agent",
         currentYear: new Date().getFullYear()
     });
@@ -143,7 +144,7 @@ export function Footer() {
                     {/* Right side - Version */}
                     <div className="flex items-center gap-2">
                         <span className="text-xs text-muted-foreground">
-                            {t.footer.version}: <span className="font-mono font-semibold">{versionInfo.version}</span>
+                            {t.footer.version}: <span className="font-mono font-semibold">{versionInfo.fullVersion || versionInfo.version}</span>
                         </span>
                     </div>
                 </div>

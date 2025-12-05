@@ -1,15 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { fetchVersion, fetchLicenseStatus, activateLicenseKey, LicenseStatus } from "@/lib/api";
+import { fetchVersion, fetchLicenseStatus, activateLicenseKey, LicenseStatus, fetchCurrentUser } from "@/lib/api";
 import { useI18n } from "@/lib/i18n-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Shield, ShieldCheck, ShieldAlert, Key, ExternalLink, X } from "lucide-react";
-
-interface User {
-    role: string;
-}
 
 export function Footer() {
     const { t } = useI18n();
@@ -30,21 +26,20 @@ export function Footer() {
         checkUserRole();
     }, []);
 
-    const checkUserRole = () => {
-        // Check if user is logged in and is superadmin
-        if (typeof window !== 'undefined') {
-            const userStr = localStorage.getItem("user");
-            if (userStr) {
-                try {
-                    const user: User = JSON.parse(userStr);
-                    if (user.role === "superadmin") {
-                        setIsSuperadmin(true);
-                        loadLicenseStatus();
-                    }
-                } catch (e) {
-                    console.error("Error parsing user data", e);
-                }
+    const checkUserRole = async () => {
+        // Check if user is logged in and is superadmin via API
+        try {
+            const token = typeof window !== 'undefined' ? localStorage.getItem("token") : null;
+            if (!token) return;
+
+            const user = await fetchCurrentUser();
+            if (user && user.role === "superadmin") {
+                setIsSuperadmin(true);
+                loadLicenseStatus();
             }
+        } catch (e) {
+            // User not logged in or error fetching - silently ignore
+            console.debug("Could not fetch user role for license display");
         }
     };
 

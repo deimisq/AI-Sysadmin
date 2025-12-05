@@ -32,8 +32,12 @@ RUN chmod +x /app/backend/start.sh
 
 # SECURITY: Compile to bytecode and remove source files
 # This prevents source code from being readable inside the container
+# Keep alembic migrations and startup scripts as they need to be readable
 RUN python -m compileall -b /app/backend && \
-    find /app/backend -type f -name "*.py" -not -path "/app/backend/alembic/*" -delete
+    find /app/backend -type f -name "*.py" \
+    -not -path "/app/backend/alembic/*" \
+    -not -name "init_license.py" \
+    -delete
 
 
 # Run the application

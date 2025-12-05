@@ -21,7 +21,12 @@ def init_license():
         
         if any_license:
             # License exists - show status but DON'T create new one
-            days_remaining = (any_license.expires_at - datetime.utcnow()).days
+            # Handle timezone-aware datetimes
+            now = datetime.utcnow()
+            if any_license.expires_at.tzinfo is not None:
+                from datetime import timezone
+                now = datetime.now(timezone.utc)
+            days_remaining = (any_license.expires_at.replace(tzinfo=None) - datetime.utcnow()).days
             status = "ACTIVA" if any_license.is_active and days_remaining > 0 else "EXPIRADA"
             
             print(f"✓ Licencia existente encontrada: {any_license.license_key}")

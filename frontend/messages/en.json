@@ -1,14 +1,38 @@
 {
     "common": {
         "loading": "Loading...",
+        "saving": "Saving...",
         "error": "Error",
         "success": "Success",
         "cancel": "Cancel",
         "save": "Save",
+        "saveConfiguration": "Save Configuration",
+        "savePreferences": "Save Preferences",
+        "saveChanges": "Save Changes",
         "delete": "Delete",
         "edit": "Edit",
         "close": "Close",
-        "confirm": "Confirm"
+        "confirm": "Confirm",
+        "loadingData": "Loading data..."
+    },
+    "license": {
+        "title": "License Management",
+        "currentLicense": "Current License",
+        "type": "Type",
+        "status": "Status",
+        "trial": "Trial",
+        "commercial": "Commercial",
+        "enterprise": "Enterprise",
+        "active": "Active",
+        "expired": "Expired",
+        "daysRemaining": "days remaining",
+        "maxServers": "Max Servers",
+        "maxUsers": "Max Users",
+        "activateNew": "Activate New License",
+        "activate": "Activate License",
+        "buyLicense": "Buy License",
+        "activationSuccess": "License activated successfully",
+        "activationError": "Error activating license"
     },
     "header": {
         "title": "Sysadmin AI Agent",
@@ -23,6 +47,7 @@
     },
     "addServer": {
         "title": "Add New Server",
+        "updateServer": "Update Server",
         "hostname": "Hostname",
         "hostnamePlaceholder": "e.g., web-server-01",
         "ipAddress": "IP Address",
@@ -34,7 +59,9 @@
         "sshPort": "SSH Port",
         "sshUsername": "SSH Username",
         "sshPassword": "SSH Password (Optional)",
+        "sshPasswordKeep": "SSH Password (leave blank to keep unchanged)",
         "sshKeyPath": "SSH Private Key Path (Optional)",
+        "sshKeyPathKeep": "SSH Private Key Path (leave blank to keep unchanged)",
         "sshKeyPlaceholder": "e.g., /home/user/.ssh/id_rsa",
         "client": "Client",
         "selectClient": "Select a client",
@@ -43,6 +70,7 @@
         "clientDescription": "Client Description (Optional)",
         "submit": "Add Server",
         "authNote": "Provide either SSH password or private key path (not both)",
+        "authRequired": "Either SSH Password or SSH Key Path is required",
         "errors": {
             "required": "This field is required",
             "invalidKey": "SSH Key Path must be a path to private key file, not the public key content"

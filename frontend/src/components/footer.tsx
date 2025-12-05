@@ -7,6 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Shield, ShieldCheck, ShieldAlert, Key, ExternalLink, X } from "lucide-react";
 
+interface User {
+    role: string;
+}
+
 export function Footer() {
     const { t } = useI18n();
     const [versionInfo, setVersionInfo] = useState({
@@ -19,11 +23,30 @@ export function Footer() {
     const [newLicenseKey, setNewLicenseKey] = useState("");
     const [activating, setActivating] = useState(false);
     const [activationError, setActivationError] = useState("");
+    const [isSuperadmin, setIsSuperadmin] = useState(false);
 
     useEffect(() => {
         loadVersion();
-        loadLicenseStatus();
+        checkUserRole();
     }, []);
+
+    const checkUserRole = () => {
+        // Check if user is logged in and is superadmin
+        if (typeof window !== 'undefined') {
+            const userStr = localStorage.getItem("user");
+            if (userStr) {
+                try {
+                    const user: User = JSON.parse(userStr);
+                    if (user.role === "superadmin") {
+                        setIsSuperadmin(true);
+                        loadLicenseStatus();
+                    }
+                } catch (e) {
+                    console.error("Error parsing user data", e);
+                }
+            }
+        }
+    };
 
     const loadVersion = async () => {
         try {
@@ -95,30 +118,32 @@ export function Footer() {
                         </p>
                     </div>
 
-                    {/* Center - License Status */}
-                    <div className="flex items-center gap-3">
-                        <button
-                            onClick={() => setShowLicenseModal(true)}
-                            className={`flex items-center gap-2 text-xs hover:opacity-80 transition-opacity cursor-pointer ${getLicenseStatusClass()}`}
-                        >
-                            {getLicenseIcon()}
-                            {licenseStatus ? (
-                                <span>
-                                    <span className="font-medium">{getLicenseTypeLabel(licenseStatus.license_type)}</span>
-                                    {" · "}
-                                    {licenseStatus.is_expired ? (
-                                        <span className="text-red-500">{t.license?.expired || "Expirada"}</span>
-                                    ) : (
-                                        <span>
-                                            {licenseStatus.days_remaining} {t.license?.daysRemaining || "días restantes"}
-                                        </span>
-                                    )}
-                                </span>
-                            ) : (
-                                <span>{t.common?.loading || "Cargando..."}</span>
-                            )}
-                        </button>
-                    </div>
+                    {/* Center - License Status (only for superadmin) */}
+                    {isSuperadmin && (
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={() => setShowLicenseModal(true)}
+                                className={`flex items-center gap-2 text-xs hover:opacity-80 transition-opacity cursor-pointer ${getLicenseStatusClass()}`}
+                            >
+                                {getLicenseIcon()}
+                                {licenseStatus ? (
+                                    <span>
+                                        <span className="font-medium">{getLicenseTypeLabel(licenseStatus.license_type)}</span>
+                                        {" · "}
+                                        {licenseStatus.is_expired ? (
+                                            <span className="text-red-500">{t.license?.expired || "Expirada"}</span>
+                                        ) : (
+                                            <span>
+                                                {licenseStatus.days_remaining} {t.license?.daysRemaining || "días restantes"}
+                                            </span>
+                                        )}
+                                    </span>
+                                ) : (
+                                    <span>{t.common?.loading || "Cargando..."}</span>
+                                )}
+                            </button>
+                        </div>
+                    )}
 
                     {/* Right side - Version */}
                     <div className="flex items-center gap-2">
@@ -129,8 +154,8 @@ export function Footer() {
                 </div>
             </footer>
 
-            {/* License Modal */}
-            {showLicenseModal && (
+            {/* License Modal (only for superadmin) */}
+            {isSuperadmin && showLicenseModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
                     <div className="bg-background border rounded-lg shadow-xl w-full max-w-md mx-4 p-6">
                         <div className="flex items-center justify-between mb-4">

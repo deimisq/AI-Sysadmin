@@ -70,6 +70,7 @@ class User(Base):
     notify_security_alerts = Column(Boolean, default=True)  # Security-related notifications
     notify_new_servers = Column(Boolean, default=False)  # Notify when servers are added
     notify_system_events = Column(Boolean, default=True)  # General system events
+    notify_version_updates = Column(Boolean, default=True)  # Notify when new versions are available
     
     # Relationships
     group_permissions_detail = relationship(

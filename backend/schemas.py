@@ -50,6 +50,7 @@ class User(UserBase):
     notify_security_alerts: Optional[bool] = True
     notify_new_servers: Optional[bool] = False
     notify_system_events: Optional[bool] = True
+    notify_version_updates: Optional[bool] = True
     
     class Config:
         from_attributes = True
@@ -66,6 +67,7 @@ class NotificationPreferences(BaseModel):
     notify_security_alerts: bool = True
     notify_new_servers: bool = False
     notify_system_events: bool = True
+    notify_version_updates: bool = True
 
 # Client Schemas
 class ClientBase(BaseModel):

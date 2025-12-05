@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { Bell, X, Download, ExternalLink } from "lucide-react"
+import { fetchCurrentUser } from "@/lib/api"
 
 interface VersionInfo {
     current_version: string
@@ -16,13 +17,31 @@ export function VersionNotification() {
     const [versionInfo, setVersionInfo] = useState<VersionInfo | null>(null)
     const [dismissed, setDismissed] = useState(false)
     const [loading, setLoading] = useState(true)
+    const [isAdmin, setIsAdmin] = useState(false)
 
     useEffect(() => {
-        const checkVersion = async () => {
+        const checkVersionAndUser = async () => {
             try {
                 const token = localStorage.getItem("token")
-                if (!token) return
+                if (!token) {
+                    setLoading(false)
+                    return
+                }
 
+                // First check if user is admin/superadmin
+                try {
+                    const user = await fetchCurrentUser()
+                    if (!user || !["admin", "superadmin"].includes(user.role)) {
+                        setLoading(false)
+                        return // Don't show to non-admin users
+                    }
+                    setIsAdmin(true)
+                } catch (error) {
+                    setLoading(false)
+                    return
+                }
+
+                // Only check for version updates for admins
                 const response = await fetch("/api/v1/version/check", {
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -46,7 +65,7 @@ export function VersionNotification() {
             }
         }
 
-        checkVersion()
+        checkVersionAndUser()
     }, [])
 
     const handleDismiss = () => {
@@ -56,7 +75,8 @@ export function VersionNotification() {
         setDismissed(true)
     }
 
-    if (loading || !versionInfo || !versionInfo.update_available || dismissed) {
+    // Only show to admin/superadmin users with available updates
+    if (loading || !isAdmin || !versionInfo || !versionInfo.update_available || dismissed) {
         return null
     }
 

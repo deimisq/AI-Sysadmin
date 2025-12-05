@@ -118,6 +118,7 @@ def update_preferences(
     current_user.notify_security_alerts = preferences.notify_security_alerts
     current_user.notify_new_servers = preferences.notify_new_servers
     current_user.notify_system_events = preferences.notify_system_events
+    current_user.notify_version_updates = preferences.notify_version_updates
     
     db.commit()
     return {"status": "success"}

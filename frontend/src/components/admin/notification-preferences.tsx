@@ -15,7 +15,8 @@ export default function NotificationPreferences({ currentUser }: NotificationPre
         notify_new_users: true,
         notify_security_alerts: true,
         notify_new_servers: false,
-        notify_system_events: true
+        notify_system_events: true,
+        notify_version_updates: true
     });
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState("");
@@ -40,7 +41,8 @@ export default function NotificationPreferences({ currentUser }: NotificationPre
                 notify_new_users: data.notify_new_users ?? true,
                 notify_security_alerts: data.notify_security_alerts ?? true,
                 notify_new_servers: data.notify_new_servers ?? false,
-                notify_system_events: data.notify_system_events ?? true
+                notify_system_events: data.notify_system_events ?? true,
+                notify_version_updates: data.notify_version_updates ?? true
             });
         } catch (error: any) {
             setMessage("❌ Failed to load preferences: " + error.message);
@@ -192,6 +194,30 @@ export default function NotificationPreferences({ currentUser }: NotificationPre
                             </div>
                             <p className="text-sm text-muted-foreground">
                                 General system events and important updates
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Version Updates */}
+                    <div className="flex items-start gap-4 p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                        <div className="mt-1">
+                            <input
+                                type="checkbox"
+                                id="notify_version_updates"
+                                checked={preferences.notify_version_updates}
+                                onChange={(e) => setPreferences({ ...preferences, notify_version_updates: e.target.checked })}
+                                className="h-4 w-4 rounded border-gray-300"
+                            />
+                        </div>
+                        <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                                <Bell className="h-4 w-4 text-orange-600" />
+                                <label htmlFor="notify_version_updates" className="font-medium cursor-pointer">
+                                    New Version Notifications
+                                </label>
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                                Get notified by email when a new version of the system is available
                             </p>
                         </div>
                     </div>

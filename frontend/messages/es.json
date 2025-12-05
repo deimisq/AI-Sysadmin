@@ -15,6 +15,25 @@
         "confirm": "Confirmar",
         "loadingData": "Cargando datos..."
     },
+    "license": {
+        "title": "Gestión de Licencia",
+        "currentLicense": "Licencia Actual",
+        "type": "Tipo",
+        "status": "Estado",
+        "trial": "Prueba",
+        "commercial": "Comercial",
+        "enterprise": "Enterprise",
+        "active": "Activa",
+        "expired": "Expirada",
+        "daysRemaining": "días restantes",
+        "maxServers": "Máx. Servidores",
+        "maxUsers": "Máx. Usuarios",
+        "activateNew": "Activar Nueva Licencia",
+        "activate": "Activar Licencia",
+        "buyLicense": "Comprar Licencia",
+        "activationSuccess": "Licencia activada exitosamente",
+        "activationError": "Error al activar la licencia"
+    },
     "header": {
         "title": "Agente IA Sysadmin",
         "subtitle": "Gestiona tu infraestructura con asistencia inteligente",

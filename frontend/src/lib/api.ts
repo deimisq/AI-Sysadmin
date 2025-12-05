@@ -326,3 +326,58 @@ export async function fetchVersion() {
     }
     return res.json();
 }
+
+// ==================== LICENSE ====================
+
+export interface LicenseStatus {
+    license_type: string;
+    days_remaining: number;
+    expires_at: string | null;
+    is_active: boolean;
+    is_expired: boolean;
+    max_servers: number;
+    max_users: number;
+    message: string;
+}
+
+export async function fetchLicenseStatus(): Promise<LicenseStatus> {
+    try {
+        const res = await fetch(`${API_BASE_URL}/license/public-status`);
+        if (!res.ok) {
+            return {
+                license_type: "unknown",
+                days_remaining: 0,
+                expires_at: null,
+                is_active: false,
+                is_expired: true,
+                max_servers: 0,
+                max_users: 0,
+                message: "Error al obtener licencia"
+            };
+        }
+        return res.json();
+    } catch (error) {
+        return {
+            license_type: "unknown",
+            days_remaining: 0,
+            expires_at: null,
+            is_active: false,
+            is_expired: true,
+            max_servers: 0,
+            max_users: 0,
+            message: "Error de conexión"
+        };
+    }
+}
+
+export async function activateLicenseKey(licenseKey: string) {
+    const res = await fetch(`${API_BASE_URL}/license/activate-key?license_key=${encodeURIComponent(licenseKey)}`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+    });
+    if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.detail || "Error al activar licencia");
+    }
+    return res.json();
+}

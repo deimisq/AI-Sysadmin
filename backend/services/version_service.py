@@ -44,7 +44,13 @@ class VersionChecker:
             if version_file.exists():
                 with open(version_file, 'r') as f:
                     data = json.load(f)
-                    self._current_version = data.get('version', 'unknown')
+                    # Use fullVersion if available, otherwise construct from version + build
+                    full_version = data.get('fullVersion')
+                    if not full_version:
+                        version = data.get('version', 'unknown')
+                        build = data.get('build', '')
+                        full_version = f"{version}{build}" if build else version
+                    self._current_version = full_version
                     logger.info(f"Current version: {self._current_version}")
             else:
                 self._current_version = "unknown"

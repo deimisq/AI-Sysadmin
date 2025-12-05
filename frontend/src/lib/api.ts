@@ -27,6 +27,25 @@ export const getAuthHeaders = () => {
     };
 };
 
+// Handle unauthorized responses (expired/invalid token)
+export const handleUnauthorized = () => {
+    if (typeof window !== 'undefined') {
+        // Clear token and user data
+        localStorage.removeItem("token");
+        // Redirect to login
+        window.location.href = "/login";
+    }
+};
+
+// Check response for auth errors and handle appropriately
+export const checkAuthResponse = async (res: Response) => {
+    if (res.status === 401) {
+        handleUnauthorized();
+        throw new Error("Session expired. Redirecting to login...");
+    }
+    return res;
+};
+
 export async function fetchServers() {
     const token = typeof window !== 'undefined' ? localStorage.getItem("token") : null;
     const res = await fetch(`${API_BASE_URL}/servers/`, {
@@ -264,13 +283,19 @@ export async function fetchSystemStats() {
 // Current User
 export async function fetchCurrentUser() {
     const token = typeof window !== 'undefined' ? localStorage.getItem("token") : null;
+    if (!token) {
+        throw new Error("No token");
+    }
     const res = await fetch(`${API_BASE_URL}/auth/me`, {
         headers: {
-            ...(token && { "Authorization": `Bearer ${token}` }),
+            "Authorization": `Bearer ${token}`,
         },
     });
     if (!res.ok) {
-        if (res.status === 401) throw new Error("Unauthorized");
+        if (res.status === 401) {
+            handleUnauthorized();
+            throw new Error("Session expired");
+        }
         const error = await res.json().catch(() => ({}));
         throw new Error(error.detail || "Failed to fetch current user");
     }

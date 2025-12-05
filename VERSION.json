@@ -1,5 +1,7 @@
 {
     "version": "0.9.0-beta",
+    "build": "8",
+    "fullVersion": "0.9.0-beta8",
     "name": "AI Sysadmin Agent",
     "releaseDate": "2025-12-03",
     "status": "beta",

@@ -71,7 +71,9 @@ def get_public_license_status(db: Session = Depends(dependencies.get_db)):
         }
     
     from datetime import datetime
-    days_remaining = (license.expires_at - datetime.utcnow()).days
+    # Handle timezone-aware datetimes
+    expires_at = license.expires_at.replace(tzinfo=None) if license.expires_at.tzinfo else license.expires_at
+    days_remaining = (expires_at - datetime.utcnow()).days
     is_expired = days_remaining <= 0
     
     return {

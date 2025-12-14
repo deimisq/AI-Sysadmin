@@ -433,3 +433,14 @@ export async function activateLicenseKey(licenseKey: string) {
     }
     return res.json();
 }
+
+export async function fetchServer(serverId: number) {
+    const token = typeof window !== 'undefined' ? localStorage.getItem("token") : null;
+    const res = await fetch(`/api/v1/servers/${serverId}`, {
+        headers: {
+            "Authorization": `Bearer ${token}`,
+        },
+    });
+    if (!res.ok) throw new Error("Failed to fetch server");
+    return res.json();
+}

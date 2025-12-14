@@ -9,6 +9,7 @@ import { Shield } from "lucide-react";
 import { useI18n } from "@/lib/i18n-context";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { ThemeSwitcher } from "@/components/theme-switcher";
+import { setAuthToken } from "@/utils/auth";
 
 export default function LoginPage() {
     const router = useRouter();
@@ -79,7 +80,7 @@ export default function LoginPage() {
                 }
 
                 const data = await res.json();
-                localStorage.setItem("token", data.access_token);
+                setAuthToken(data.access_token);
                 router.push("/dashboard");
             } else {
                 // Register

@@ -1,4 +1,5 @@
 "use client";
+import { removeAuthToken } from "@/utils/auth";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -46,7 +47,7 @@ export default function Dashboard() {
     };
 
     const handleLogout = () => {
-        localStorage.removeItem("token");
+        removeAuthToken();
         router.push("/login");
     };
 
@@ -99,47 +100,23 @@ export default function Dashboard() {
 
                     {/* Header */}
                     <div className="space-y-4 border-b pb-6">
-                        {/* Top Bar - Title and Switchers */}
                         <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <div className="p-3 bg-primary/10 rounded-lg">
-                                    <ServerIcon className="h-8 w-8 text-primary" />
-                                </div>
-                                <div>
-                                    <h1 className="text-3xl font-bold tracking-tight">{t.header.title}</h1>
-                                    <p className="text-muted-foreground">{t.header.subtitle}</p>
-                                </div>
+                            <div>
+                                <h1 className="text-3xl font-bold tracking-tight">{t.header.title}</h1>
+                                <p className="text-muted-foreground">{t.header.subtitle}</p>
                             </div>
-                            <div className="flex gap-2">
-                                <ThemeSwitcher />
-                                <LanguageSwitcher />
-                            </div>
-                        </div>
 
-                        {/* Action Buttons Menu - Aligned Right */}
-                        <div className="flex gap-2 flex-wrap justify-end">
-                            <Button variant="outline" onClick={() => router.push("/profile")}>
-                                <User className="mr-2 h-4 w-4" />
-                                {t.dashboard.profile}
-                            </Button>
-                            {currentUser && ["superadmin", "admin"].includes(currentUser.role) && (
-                                <Button variant="outline" onClick={() => router.push("/admin")}>
-                                    <Shield className="mr-2 h-4 w-4" />
-                                    {t.dashboard.admin}
+                            {/* Action Buttons for Dashboard View */}
+                            <div className="flex gap-2">
+                                <Button variant="outline" onClick={() => setShowGroupManager(true)}>
+                                    <FolderOpen className="mr-2 h-4 w-4" />
+                                    {t.dashboard.manageGroups}
                                 </Button>
-                            )}
-                            <Button variant="outline" onClick={() => setShowGroupManager(true)}>
-                                <FolderOpen className="mr-2 h-4 w-4" />
-                                {t.dashboard.manageGroups}
-                            </Button>
-                            <Button onClick={toggleAddForm}>
-                                <PlusCircle className="mr-2 h-4 w-4" />
-                                {showAddForm ? t.common.cancel : t.header.addServer}
-                            </Button>
-                            <Button variant="destructive" onClick={handleLogout}>
-                                <LogOut className="mr-2 h-4 w-4" />
-                                {t.dashboard.logout}
-                            </Button>
+                                <Button onClick={toggleAddForm}>
+                                    <PlusCircle className="mr-2 h-4 w-4" />
+                                    {showAddForm ? t.common.cancel : t.header.addServer}
+                                </Button>
+                            </div>
                         </div>
                     </div>
 

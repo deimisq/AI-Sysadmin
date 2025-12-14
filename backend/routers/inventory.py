@@ -144,6 +144,30 @@ def create_server(server: schemas.ServerCreate, db: Session = Depends(dependenci
     db.refresh(db_server)
     return db_server
 
+@router.get("/servers/{server_id}", response_model=schemas.Server)
+def get_server(
+    server_id: int,
+    db: Session = Depends(dependencies.get_db),
+    current_user: models.User = Depends(dependencies.get_current_active_user)
+):
+    """Get a single server by ID"""
+    server = db.query(models.Server).filter(models.Server.id == server_id).first()
+    if not server:
+        raise HTTPException(status_code=404, detail="Server not found")
+    
+    # Check permissions
+    if current_user.role not in [models.RoleType.SUPERADMIN.value, models.RoleType.ADMIN.value]:
+        # Check if user has access to this server's group
+        if server.group_id:
+            permission = db.query(models.UserGroupPermission).filter(
+                models.UserGroupPermission.user_id == current_user.id,
+                models.UserGroupPermission.group_id == server.group_id
+            ).first()
+            if not permission:
+                raise HTTPException(status_code=403, detail="Access denied to this server")
+    
+    return server
+
 @router.get("/servers/", response_model=List[schemas.Server])
 def read_servers(
     skip: int = 0, 

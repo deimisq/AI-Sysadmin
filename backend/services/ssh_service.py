@@ -6,6 +6,34 @@ logger = logging.getLogger(__name__)
 
 class SSHService:
     @staticmethod
+    def get_client_keys(private_key: str):
+        """Helper to process private key string into asyncssh usable keys"""
+        if not private_key:
+            return None
+            
+        try:
+            # If it looks like a path, use it
+            if private_key.strip().startswith('/') or private_key.strip().startswith('./'):
+                logger.info(f"Using SSH key file: {private_key}")
+                return [private_key.strip()]
+            
+            # Treat as raw content
+            try:
+                logger.info("Importing SSH key from content")
+                return [asyncssh.import_private_key(private_key)]
+            except Exception as e:
+                # Last resort: try sanitizing escaped newlines if present
+                if "\\n" in private_key:
+                     logger.warning("Sanitizing escaped newlines in SSH key")
+                     return [asyncssh.import_private_key(private_key.replace("\\n", "\n"))]
+                raise e
+        except Exception as e:
+            logger.error(f"Failed to process SSH key: {e}")
+            # Do not return None here to mask error, let caller handle or fail
+            # returning None means asyncssh will try other auth methods (password, agent, etc)
+            return None
+
+    @staticmethod
     async def execute_command(
         hostname: str,
         username: str,
@@ -18,10 +46,10 @@ class SSHService:
         Executes a command on a remote server via SSH.
         Returns (stdout, stderr, exit_code).
         """
-        # Build diagnostic info for better error reporting
+        # Build diagnostic info
         auth_method = []
         if private_key:
-            auth_method.append(f"SSH Key: {private_key}")
+            auth_method.append(f"SSH Key: {private_key[:20]}...")
         if password:
             auth_method.append("Password: [REDACTED]")
         if not auth_method:
@@ -29,25 +57,9 @@ class SSHService:
         
         auth_info = ", ".join(auth_method)
         
+        client_keys = SSHService.get_client_keys(private_key) if private_key else None
+        
         try:
-            client_keys = None
-            if private_key:
-                # If it looks like a path, use it, otherwise treat as content
-                if private_key.strip().startswith('/') or private_key.strip().startswith('./'):
-                    client_keys = [private_key]
-                    logger.info(f"Using SSH key file: {private_key}")
-                else:
-                    # Treat as raw content
-                    try:
-                        # asyncssh.import_private_key can handle the string content directly
-                        key_obj = asyncssh.import_private_key(private_key)
-                        client_keys = [key_obj]
-                        logger.info("Imported SSH key from content")
-                    except Exception as e:
-                        logger.error(f"Failed to import SSH key content: {e}")
-                        # Fallback or let it fail later
-                        pass
-
             logger.info(f"Attempting SSH connection to {username}@{hostname}:{port}")
             logger.debug(f"Authentication: {auth_info}")
             logger.debug(f"Command to execute: {command}")

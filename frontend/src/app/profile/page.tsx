@@ -1,4 +1,5 @@
 "use client";
+import { removeAuthToken } from "@/utils/auth";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -54,7 +55,7 @@ export default function ProfilePage() {
         } catch (error: any) {
             console.error("Failed to load user data", error);
             if (error.message?.includes("401") || error.message?.includes("Unauthorized")) {
-                localStorage.removeItem("token");
+                removeAuthToken();
                 router.push("/login");
             } else {
                 alert("Failed to load profile data. Please try again.");

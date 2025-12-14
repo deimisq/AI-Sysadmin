@@ -13,6 +13,14 @@ from datetime import datetime
 async def lifespan(app: FastAPI):
     # Startup: start background version check
     version_check_task = asyncio.create_task(start_version_check_loop())
+    
+    # Debug routes
+    print("--- REGISTERED ROUTES ---")
+    for route in app.routes:
+        if hasattr(route, 'path'):
+            print(f"Route: {route.path}")
+    print("-------------------------")
+    
     yield
     # Shutdown: cancel the task
     version_check_task.cancel()
@@ -40,6 +48,8 @@ app.include_router(agent.router, prefix="/api/v1", tags=["agent"])
 app.include_router(version.router, prefix="/api/v1", tags=["version"])
 app.include_router(license.router, prefix="/api/v1", tags=["license"])
 app.include_router(monitoring.router, prefix="/api/v1", tags=["monitoring"])
+from routers import console_ws
+app.include_router(console_ws.router, prefix="/api/v1", tags=["console"])
 
 @app.get("/")
 async def root():

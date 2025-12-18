@@ -47,6 +47,7 @@
     },
     "addServer": {
         "title": "Agregar Nuevo Servidor",
+        "updateServer": "Actualizar Servidor",
         "hostname": "Nombre del Host",
         "hostnamePlaceholder": "ej., servidor-web-01",
         "ipAddress": "Dirección IP",
@@ -68,7 +69,6 @@
         "groupName": "Nombre del Grupo",
         "groupDescription": "Descripción del Grupo (Opcional)",
         "submit": "Agregar Servidor",
-        "updateServer": "Actualizar Servidor",
         "authNote": "Proporciona contraseña SSH o ruta de clave privada (no ambas)",
         "authRequired": "Se requiere Contraseña SSH o Ruta de Clave SSH",
         "errors": {
@@ -251,7 +251,9 @@
         "groupCreated": "Grupo creado exitosamente",
         "groupUpdated": "Grupo actualizado exitosamente",
         "groupDeleted": "Grupo eliminado exitosamente",
-        "noGroups": "Aún no hay grupos. Crea uno para organizar tus servidores."
+        "noGroups": "Aún no hay grupos. Crea uno para organizar tus servidores.",
+        "defaultGroupName": "Grupo por defecto",
+        "defaultGroupDescription": "Grupo creado automáticamente"
     },
     "footer": {
         "allRightsReserved": "Todos los derechos reservados.",
@@ -260,7 +262,7 @@
     "securitySettings": {
         "microsoftOAuth": {
             "title": "Integración OAuth de Microsoft",
-            "description": "Configurar Microsoft Entra ID (Azure AD) para inicio de sesión único",
+            "description": "Configurar Microsoft Entra ID (Azure AD) for inicio de sesión único",
             "redirectUriTitle": "Configuración de URI de Redirección",
             "redirectUriDescription": "Agrega esta URI a la configuración de \"Autenticación\" de tu aplicación en Azure Portal (Plataforma: Web):",
             "copy": "Copiar",

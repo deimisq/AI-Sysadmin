@@ -251,7 +251,9 @@
         "groupCreated": "Group created successfully",
         "groupUpdated": "Group updated successfully",
         "groupDeleted": "Group deleted successfully",
-        "noGroups": "No groups yet. Create one to organize your servers."
+        "noGroups": "No groups yet. Create one to organize your servers.",
+        "defaultGroupName": "Default Group",
+        "defaultGroupDescription": "Auto-created group"
     },
     "footer": {
         "allRightsReserved": "All rights reserved.",

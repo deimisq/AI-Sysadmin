@@ -120,12 +120,12 @@ export function ServerManagement({ currentUser }: ServerManagementProps) {
             let clientId = 1;
             try {
                 const client = await createClient({
-                    name: "Default Client",
-                    description: "Auto-created client"
+                    name: t.groupManagement.defaultGroupName,
+                    description: t.groupManagement.defaultGroupDescription
                 });
                 clientId = client.id;
             } catch (error) {
-                console.log("Using default client ID");
+                console.log("Using default group ID");
             }
 
             const serverData = { ...newServer, client_id: clientId };

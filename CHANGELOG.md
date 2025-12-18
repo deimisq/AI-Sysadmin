@@ -5,6 +5,25 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 
+## [0.9.2-beta] - 2025-12-17
+
+### 🚀 Mejoras Principales
+
+#### Agregado
+- **Interfaz Modular Redimensionable**: Nuevo layout tipo IDE con paneles ajustables (Sidebar, Consola, AI Copilot) para máxima eficiencia de espacio.
+- **Bucle de Retroalimentación de IA**: La IA ahora puede ejecutar comandos y leer automáticamente su salida para continuar el diagnóstico sin intervención del usuario.
+- **Sidebar Global Redimensionable**: Navegación mejorada con un panel lateral ajustable que optimiza el área de trabajo en todo el sistema.
+- **Terminal Interactiva Mejorada**: Soporte optimizado para comandos interactivos y redimensionamiento dinámico de la terminal.
+
+#### Corregido
+- **Error de compilación de frontend**: Corregida referencia a función `handleFileClick` faltante y componente `Separator`.
+- **Sincronización de Sesión SSH**: Mejorada la estabilidad de las conexiones WebSocket en la consola.
+- **Layout en Dashboard**: Eliminada redundancia de elementos de navegación global tras la implementación del nuevo Sidebar.
+
+#### Cambiado
+- Estructura de navegación global: Movidos controles de perfil, administración y cerrado de sesión al Sidebar redimensionable.
+- Visualización de comandos en chat: Los comandos sugeridos y ejecutados ahora se muestran con mejor contraste y feedback de estado.
+
 ## [0.9.1-beta] - 2025-12-05
 
 ### 🚀 Mejoras Principales

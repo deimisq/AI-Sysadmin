@@ -13,8 +13,10 @@ class Settings(BaseSettings):
     AWS_BEARER_TOKEN_BEDROCK: str = ""
     AWS_REGION: str = "us-east-1"
     ANTHROPIC_API_KEY: str = ""
+    ENCRYPTION_KEY: str = "default-encryption-key-change-in-production"
     
     class Config:
         env_file = ".env"
+        extra = "ignore"
 
 settings = Settings()

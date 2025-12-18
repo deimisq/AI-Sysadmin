@@ -8,23 +8,27 @@ services:
       - "443:443"
     volumes:
       - ./nginx/conf.d:/etc/nginx/conf.d
-      - ./nginx/certs:/etc/nginx/certs
+      - ./nginx/ssl:/etc/nginx/ssl
     depends_on:
       - frontend
       - backend
     restart: always
+    networks:
+      - sysadmin-network
 
   db:
-    image: pgvector/pgvector:pg16
+    image: pgvector/pgvector:pg15
     environment:
-      POSTGRES_USER: sysadmin_agent
-      POSTGRES_PASSWORD: secure_password_dev
-      POSTGRES_DB: sysadmin_agent_db
+      POSTGRES_USER: sysadmin
+      POSTGRES_PASSWORD: SecurePasse6ab2dd2
+      POSTGRES_DB: sysadmin_db
     # Ports removed to secure DB, only accessible within docker network
     # ports:
     #   - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - sysadmin-network
 
   backend:
     build: ./backend
@@ -38,9 +42,11 @@ services:
     env_file:
       - ./backend/.env
     environment:
-      DATABASE_URL: postgresql://sysadmin_agent:secure_password_dev@db:5432/sysadmin_agent_db
+      DATABASE_URL: postgresql://sysadmin:SecurePasse6ab2dd2@db:5432/sysadmin_db
     depends_on:
       - db
+    networks:
+      - sysadmin-network
 
   frontend:
     build: ./frontend
@@ -57,6 +63,13 @@ services:
     depends_on:
       - backend
     restart: always
+    networks:
+      - sysadmin-network
+
+networks:
+  sysadmin-network:
+    external: true
+    name: ai_agent_sysadmin-network
 
 volumes:
   postgres_data:

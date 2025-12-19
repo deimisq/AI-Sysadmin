@@ -29,6 +29,10 @@ export const getAuthHeaders = () => {
 
 // Handle unauthorized responses (expired/invalid token)
 export const handleUnauthorized = () => {
+    // Dispatch event for AuthProvider to handle
+    if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('auth:unauthorized'));
+    }
     if (typeof window !== 'undefined') {
         // Clear token and user data
         localStorage.removeItem("token");

@@ -1,0 +1,106 @@
+{
+    "latest": "0.9.3-beta3",
+    "latestVersion": "0.9.3-beta3",
+    "releaseDate": "2025-12-19",
+    "demoUrl": "https://testing.sentrait.com.uy",
+    "versions": [
+        {
+            "version": "0.9.3-beta3",
+            "date": "2025-12-19",
+            "type": "beta",
+            "downloadUrl": "https://agent.sentrait.com.uy/ai-sysadmin-release.tar.gz",
+            "highlights": [
+                "Vistas estilo Windows Explorer para servidores",
+                "Ordenación y filtrado avanzado de servidores",
+                "Navegación móvil responsive con menú hamburguesa",
+                "Cierre de sesión automático al expirar token"
+            ],
+            "changelog": [
+                "Funcionalidad: Modos de vista (Tarjetas, Compacto, Lista, Detalles)",
+                "Funcionalidad: Ordenar por nombre, IP, grupo, sistema operativo",
+                "Funcionalidad: Búsqueda y filtro por grupo",
+                "Funcionalidad: Grupos colapsables con un clic",
+                "Funcionalidad: Navegación móvil con menú drawer",
+                "Funcionalidad: Cierre de sesión automático cuando expira JWT",
+                "Corrección: Botones no desbordan tarjetas",
+                "Corrección: Todas las traducciones en español"
+            ]
+        },
+        {
+            "version": "0.9.3-beta2",
+            "date": "2025-12-19",
+            "type": "beta",
+            "downloadUrl": "https://agent.sentrait.com.uy/releases/ai-sysadmin-0.9.3-beta2.tar.gz",
+            "highlights": [
+                "Cierre de sesión automático al expirar",
+                "Navegación móvil mejorada",
+                "Botones del dashboard responsivos"
+            ],
+            "changelog": [
+                "Funcionalidad: AuthProvider con monitoreo de expiración JWT",
+                "Funcionalidad: Navegación móvil con Sheet drawer",
+                "Corrección: Botones apilados verticalmente en móvil"
+            ]
+        },
+        {
+            "version": "0.9.3-beta1",
+            "date": "2025-12-19",
+            "type": "beta",
+            "downloadUrl": "https://agent.sentrait.com.uy/releases/ai-sysadmin-0.9.3-beta1.tar.gz",
+            "highlights": [
+                "Informes de Salud Programados con PDF y Email",
+                "Recarga dinámica de configuración de IA",
+                "Navegación mejorada con acceso desde Sidebar",
+                "Demo disponible en testing.sentrait.com.uy"
+            ],
+            "changelog": [
+                "Funcionalidad: Chequeos de salud programados con generación de PDF",
+                "Funcionalidad: Envío de reportes por email con adjuntos",
+                "Funcionalidad: Soporte para programación diaria/semanal/mensual/cron",
+                "Funcionalidad: Navegación desde sidebar a informes programados",
+                "Funcionalidad: Comparación con reportes anteriores en PDF",
+                "Funcionalidad: Análisis de IA en formato formal sin elementos interactivos",
+                "Funcionalidad: Recarga dinámica del token de IA al cambiar configuración",
+                "Corrección: Endpoints API con slashes finales",
+                "Corrección: Resolución DNS entre contenedores nginx y backend",
+                "Infraestructura: Nuevas dependencias apscheduler y reportlab",
+                "Infraestructura: Nuevas tablas scheduled_health_checks y health_check_reports"
+            ]
+        },
+        {
+            "version": "0.9.2-beta1",
+            "date": "2025-12-17",
+            "type": "beta",
+            "downloadUrl": "https://agent.sentrait.com.uy/releases/ai-sysadmin-0.9.2-beta1.tar.gz",
+            "highlights": [
+                "Interfaz Modular Redimensionable (tipo IDE)",
+                "Bucle de Retroalimentación de IA automático",
+                "Sidebar Global Redimensionable",
+                "Terminal Interactiva Mejorada"
+            ],
+            "changelog": [
+                "Funcionalidad: Nuevo layout con paneles ajustables",
+                "Funcionalidad: IA con capacidad de lectura automática de terminal",
+                "Funcionalidad: Sidebar global para mejor navegación",
+                "Corrección: Errores de compilación en el frontend",
+                "Corrección: Sincronización de sesiones SSH en WebSocket"
+            ]
+        },
+        {
+            "version": "0.9.1-beta10",
+            "date": "2025-12-05",
+            "type": "beta",
+            "downloadUrl": null,
+            "highlights": [
+                "Soporte para Anthropic API directa (Claude 3.5 Sonnet)",
+                "Configuración simplificada de AWS Bedrock",
+                "Textarea multilínea en chat de IA con Shift+Enter"
+            ],
+            "changelog": [
+                "Funcionalidad: Soporte directo para Anthropic API (Claude 3.5 Sonnet)",
+                "Funcionalidad: Configuración simplificada de Bedrock",
+                "Corrección: Error 422 al actualizar servidores"
+            ]
+        }
+    ]
+}

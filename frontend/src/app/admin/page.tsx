@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { fetchCurrentUser, fetchSystemStats } from "@/lib/api";
-import { Shield, Users, Server, FolderOpen, Activity, ArrowLeft } from "lucide-react";
+import { Shield, Users, Server, FolderOpen, Activity, ArrowLeft, Calendar } from "lucide-react";
 import { UserManagement } from "@/components/admin/user-management";
 import { ServerManagement } from "@/components/admin/server-management";
 import { AIParameters } from "@/components/admin/ai-parameters";
@@ -17,6 +17,7 @@ import { SecuritySettings } from "@/components/admin/security-settings";
 import NotificationPreferences from "@/components/admin/notification-preferences";
 import { SystemStats } from "@/components/admin/system-stats";
 import { AuditLogs } from "@/components/admin/audit-logs";
+import { ScheduledReports } from "@/components/admin/scheduled-reports";
 
 import { useI18n } from "@/lib/i18n-context";
 import { LanguageSwitcher } from "@/components/language-switcher";
@@ -192,6 +193,10 @@ export default function AdminPage() {
                                 <Activity className="mr-2 h-4 w-4" />
                                 {t.admin.tabs.notifications}
                             </TabsTrigger>
+                            <TabsTrigger value="scheduled-reports">
+                                <Calendar className="mr-2 h-4 w-4" />
+                                {t.admin.tabs.scheduledReports || "Informes"}
+                            </TabsTrigger>
                         </TabsList>
 
                         <TabsContent value="users" className="space-y-4">
@@ -229,6 +234,10 @@ export default function AdminPage() {
                         <TabsContent value="notifications" className="space-y-4">
                             <NotificationPreferences currentUser={currentUser} />
                         </TabsContent>
+
+                        <TabsContent value="scheduled-reports" className="space-y-4">
+                            <ScheduledReports currentUser={currentUser} />
+                        </TabsContent>
                     </Tabs>
                 </div>
             </main>
@@ -236,3 +245,4 @@ export default function AdminPage() {
         </div>
     );
 }
+

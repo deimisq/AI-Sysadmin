@@ -5,12 +5,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Bell, Save, Mail, Shield, Server, Activity } from "lucide-react";
 import { API_BASE_URL } from "@/lib/api";
+import { useI18n } from "@/lib/i18n-context";
 
 interface NotificationPreferencesProps {
     currentUser: any;
 }
 
 export default function NotificationPreferences({ currentUser }: NotificationPreferencesProps) {
+    const { t } = useI18n();
     const [preferences, setPreferences] = useState({
         notify_new_users: true,
         notify_security_alerts: true,
@@ -66,10 +68,10 @@ export default function NotificationPreferences({ currentUser }: NotificationPre
 
             if (!response.ok) throw new Error("Failed to save preferences");
 
-            setMessage("✅ Preferences saved successfully!");
+            setMessage(`✅ ${t.notificationPreferences.success}`);
             setTimeout(() => setMessage(""), 3000);
         } catch (error: any) {
-            setMessage("❌ Failed to save preferences: " + error.message);
+            setMessage(`❌ ${t.notificationPreferences.error}: ` + error.message);
         } finally {
             setLoading(false);
         }
@@ -85,10 +87,10 @@ export default function NotificationPreferences({ currentUser }: NotificationPre
             <CardHeader>
                 <div className="flex items-center gap-2">
                     <Bell className="h-5 w-5 text-blue-600" />
-                    <CardTitle>Notification Preferences</CardTitle>
+                    <CardTitle>{t.notificationPreferences.title}</CardTitle>
                 </div>
                 <CardDescription>
-                    Configure which email notifications you want to receive
+                    {t.notificationPreferences.description}
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -117,11 +119,11 @@ export default function NotificationPreferences({ currentUser }: NotificationPre
                             <div className="flex items-center gap-2 mb-1">
                                 <Mail className="h-4 w-4 text-blue-600" />
                                 <label htmlFor="notify_new_users" className="font-medium cursor-pointer">
-                                    New User Registrations
+                                    {t.notificationPreferences.newUsers}
                                 </label>
                             </div>
                             <p className="text-sm text-muted-foreground">
-                                Receive emails when new users register and require approval
+                                {t.notificationPreferences.newUsersHelp}
                             </p>
                         </div>
                     </div>
@@ -141,11 +143,11 @@ export default function NotificationPreferences({ currentUser }: NotificationPre
                             <div className="flex items-center gap-2 mb-1">
                                 <Shield className="h-4 w-4 text-red-600" />
                                 <label htmlFor="notify_security_alerts" className="font-medium cursor-pointer">
-                                    Security Alerts
+                                    {t.notificationPreferences.securityAlerts}
                                 </label>
                             </div>
                             <p className="text-sm text-muted-foreground">
-                                Important security-related notifications and alerts
+                                {t.notificationPreferences.securityAlertsHelp}
                             </p>
                         </div>
                     </div>
@@ -165,11 +167,11 @@ export default function NotificationPreferences({ currentUser }: NotificationPre
                             <div className="flex items-center gap-2 mb-1">
                                 <Server className="h-4 w-4 text-green-600" />
                                 <label htmlFor="notify_new_servers" className="font-medium cursor-pointer">
-                                    New Servers Added
+                                    {t.notificationPreferences.newServers}
                                 </label>
                             </div>
                             <p className="text-sm text-muted-foreground">
-                                Get notified when new servers are added to the system
+                                {t.notificationPreferences.newServersHelp}
                             </p>
                         </div>
                     </div>
@@ -189,11 +191,11 @@ export default function NotificationPreferences({ currentUser }: NotificationPre
                             <div className="flex items-center gap-2 mb-1">
                                 <Activity className="h-4 w-4 text-purple-600" />
                                 <label htmlFor="notify_system_events" className="font-medium cursor-pointer">
-                                    System Events
+                                    {t.notificationPreferences.systemEvents}
                                 </label>
                             </div>
                             <p className="text-sm text-muted-foreground">
-                                General system events and important updates
+                                {t.notificationPreferences.systemEventsHelp}
                             </p>
                         </div>
                     </div>
@@ -213,11 +215,11 @@ export default function NotificationPreferences({ currentUser }: NotificationPre
                             <div className="flex items-center gap-2 mb-1">
                                 <Bell className="h-4 w-4 text-orange-600" />
                                 <label htmlFor="notify_version_updates" className="font-medium cursor-pointer">
-                                    New Version Notifications
+                                    {t.notificationPreferences.versionUpdates}
                                 </label>
                             </div>
                             <p className="text-sm text-muted-foreground">
-                                Get notified by email when a new version of the system is available
+                                {t.notificationPreferences.versionUpdatesHelp}
                             </p>
                         </div>
                     </div>
@@ -230,14 +232,13 @@ export default function NotificationPreferences({ currentUser }: NotificationPre
                         className="bg-blue-600 hover:bg-blue-700"
                     >
                         <Save className="mr-2 h-4 w-4" />
-                        {loading ? "Saving..." : "Save Preferences"}
+                        {loading ? t.notificationPreferences.saving : t.notificationPreferences.save}
                     </Button>
                 </div>
 
                 <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                     <p className="text-sm text-blue-800 dark:text-blue-200">
-                        <strong>ℹ️ Note:</strong> Email notifications will only be sent if SMTP is configured in Communication Settings.
-                        You can test your email configuration from the Communication tab.
+                        <strong>ℹ️ Note:</strong> {t.notificationPreferences.note}
                     </p>
                 </div>
             </CardContent>

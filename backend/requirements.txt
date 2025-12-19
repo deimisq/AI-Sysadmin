@@ -24,3 +24,6 @@ passlib[bcrypt]
 python-multipart
 email-validator
 langchain-anthropic
+apscheduler>=3.10.0
+reportlab>=4.0.0
+pytz

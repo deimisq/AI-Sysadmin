@@ -6,12 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Brain, Save, Eye, EyeOff } from "lucide-react";
 import { getConfigByCategory, updateConfigCategory } from "@/lib/api";
+import { useI18n } from "@/lib/i18n-context";
 
 interface AIParamsProps {
     currentUser: any;
 }
 
 export function AIParameters({ currentUser }: AIParamsProps) {
+    const { t } = useI18n();
     const [config, setConfig] = useState({
         llm_provider: "bedrock",
         aws_region: "us-east-1",
@@ -52,10 +54,10 @@ export function AIParameters({ currentUser }: AIParamsProps) {
                 max_tokens: String(data.max_tokens || "2000"),
                 model_name: data.model_name || ""
             });
-            setMessage("✅ Configuration loaded successfully");
+            setMessage(`✅ ${t.aiParams.loadSuccess}`);
         } catch (error: any) {
             console.error("Failed to load config:", error);
-            setMessage("ℹ️ No saved configuration found. Using defaults.");
+            setMessage(`ℹ️ ${t.aiParams.loadDefault}`);
         }
     };
 
@@ -65,9 +67,9 @@ export function AIParameters({ currentUser }: AIParamsProps) {
 
         try {
             await updateConfigCategory("ai", config);
-            setMessage("✅ Configuration saved successfully! Changes applied immediately.");
+            setMessage(`✅ ${t.aiParams.saveSuccess}`);
         } catch (error: any) {
-            setMessage("❌ Failed to save configuration: " + error.message);
+            setMessage(`❌ ${t.aiParams.saveError}: ` + error.message);
         } finally {
             setLoading(false);
         }
@@ -80,16 +82,16 @@ export function AIParameters({ currentUser }: AIParamsProps) {
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                     <Brain className="h-5 w-5" />
-                    AI Configuration
+                    {t.aiParams.title}
                 </CardTitle>
                 <CardDescription>
-                    Configure LLM provider and model parameters
+                    {t.aiParams.description}
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
                 {/* Provider Selection */}
                 <div>
-                    <label className="text-sm font-medium mb-2 block">LLM Provider</label>
+                    <label className="text-sm font-medium mb-2 block">{t.aiParams.provider}</label>
                     <select
                         className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                         value={config.llm_provider}
@@ -109,7 +111,7 @@ export function AIParameters({ currentUser }: AIParamsProps) {
                         ))}
                     </select>
                     <p className="text-xs text-muted-foreground mt-1">
-                        Model: {selectedProvider?.model}
+                        {t.aiParams.model}: {selectedProvider?.model}
                     </p>
                 </div>
 
@@ -118,18 +120,18 @@ export function AIParameters({ currentUser }: AIParamsProps) {
                     <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
                         <h3 className="font-medium text-sm">AWS Bedrock Configuration</h3>
                         <div>
-                            <label className="text-sm font-medium">AWS Region</label>
+                            <label className="text-sm font-medium">{t.aiParams.awsRegion}</label>
                             <Input
                                 value={config.aws_region}
                                 onChange={(e) => setConfig({ ...config, aws_region: e.target.value })}
                                 placeholder="us-east-1"
                             />
                             <p className="text-xs text-muted-foreground mt-1">
-                                Región donde está habilitado Bedrock (ej: us-east-1, us-west-2)
+                                {t.aiParams.awsRegionHelp}
                             </p>
                         </div>
                         <div>
-                            <label className="text-sm font-medium">Bedrock API Key</label>
+                            <label className="text-sm font-medium">{t.aiParams.bedrockKey}</label>
                             <Input
                                 type={showSecrets ? "text" : "password"}
                                 value={config.aws_bearer_token_bedrock}
@@ -137,7 +139,7 @@ export function AIParameters({ currentUser }: AIParamsProps) {
                                 placeholder="ABSK..."
                             />
                             <p className="text-xs text-muted-foreground mt-1">
-                                API Key de Bedrock (comienza con ABSK)
+                                {t.aiParams.bedrockKeyHelp}
                             </p>
                         </div>
                     </div>
@@ -148,7 +150,7 @@ export function AIParameters({ currentUser }: AIParamsProps) {
                     <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
                         <h3 className="font-medium text-sm">Anthropic API Configuration</h3>
                         <div>
-                            <label className="text-sm font-medium">Anthropic API Key</label>
+                            <label className="text-sm font-medium">{t.aiParams.anthropicKey}</label>
                             <Input
                                 type={showSecrets ? "text" : "password"}
                                 value={config.anthropic_api_key}
@@ -164,7 +166,7 @@ export function AIParameters({ currentUser }: AIParamsProps) {
                     <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
                         <h3 className="font-medium text-sm">Google Gemini Configuration</h3>
                         <div>
-                            <label className="text-sm font-medium">Google API Key</label>
+                            <label className="text-sm font-medium">{t.aiParams.googleKey}</label>
                             <Input
                                 type={showSecrets ? "text" : "password"}
                                 value={config.google_api_key}
@@ -180,7 +182,7 @@ export function AIParameters({ currentUser }: AIParamsProps) {
                     <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
                         <h3 className="font-medium text-sm">OpenAI Configuration</h3>
                         <div>
-                            <label className="text-sm font-medium">OpenAI API Key</label>
+                            <label className="text-sm font-medium">{t.aiParams.openaiKey}</label>
                             <Input
                                 type={showSecrets ? "text" : "password"}
                                 value={config.openai_api_key}
@@ -193,10 +195,10 @@ export function AIParameters({ currentUser }: AIParamsProps) {
 
                 {/* Model Parameters */}
                 <div className="space-y-4 p-4 border rounded-lg">
-                    <h3 className="font-medium text-sm">Model Parameters</h3>
+                    <h3 className="font-medium text-sm">{t.aiParams.parameters}</h3>
                     <div className="grid gap-4 md:grid-cols-2">
                         <div>
-                            <label className="text-sm font-medium">Temperature</label>
+                            <label className="text-sm font-medium">{t.aiParams.temperature}</label>
                             <Input
                                 type="number"
                                 step="0.1"
@@ -206,11 +208,11 @@ export function AIParameters({ currentUser }: AIParamsProps) {
                                 onChange={(e) => setConfig({ ...config, temperature: e.target.value })}
                             />
                             <p className="text-xs text-muted-foreground mt-1">
-                                Controls randomness (0 = deterministic, 2 = very creative)
+                                {t.aiParams.temperatureHelp}
                             </p>
                         </div>
                         <div>
-                            <label className="text-sm font-medium">Max Tokens</label>
+                            <label className="text-sm font-medium">{t.aiParams.maxTokens}</label>
                             <Input
                                 type="number"
                                 step="100"
@@ -220,7 +222,7 @@ export function AIParameters({ currentUser }: AIParamsProps) {
                                 onChange={(e) => setConfig({ ...config, max_tokens: e.target.value })}
                             />
                             <p className="text-xs text-muted-foreground mt-1">
-                                Maximum length of AI response
+                                {t.aiParams.maxTokensHelp}
                             </p>
                         </div>
                     </div>
@@ -236,18 +238,18 @@ export function AIParameters({ currentUser }: AIParamsProps) {
                         {showSecrets ? (
                             <>
                                 <EyeOff className="mr-2 h-4 w-4" />
-                                Hide Secrets
+                                {t.aiParams.hideSecrets}
                             </>
                         ) : (
                             <>
                                 <Eye className="mr-2 h-4 w-4" />
-                                Show Secrets
+                                {t.aiParams.showSecrets}
                             </>
                         )}
                     </Button>
                     <Button onClick={handleSave} disabled={loading}>
                         <Save className="mr-2 h-4 w-4" />
-                        {loading ? "Saving..." : "Save Configuration"}
+                        {loading ? t.aiParams.saving : t.aiParams.save}
                     </Button>
                 </div>
 
@@ -264,8 +266,7 @@ export function AIParameters({ currentUser }: AIParamsProps) {
 
                 <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                     <p className="text-sm text-blue-800 dark:text-blue-200">
-                        <strong>ℹ️ Note:</strong> API keys are stored securely in the database.
-                        Changes are applied immediately without requiring a backend restart.
+                        <strong>ℹ️ Note:</strong> {t.aiParams.note}
                     </p>
                 </div>
             </CardContent>

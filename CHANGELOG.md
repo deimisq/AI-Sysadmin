@@ -5,6 +5,34 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 
+## [0.9.3-beta] - 2025-12-19
+
+### 🚀 Mejoras Principales
+
+#### Agregado
+- **Informes de Salud Programados**: Nueva funcionalidad para programar chequeos de salud automáticos de servidores con generación de reportes PDF y envío por email.
+  - Soporte para programación diaria, semanal, mensual o expresiones cron personalizadas
+  - Selección de servidor individual o grupo de servidores
+  - Generación automática de PDF con análisis de IA
+  - Comparación con reportes anteriores
+  - Envío automático por email con PDF adjunto
+- **Navegación desde Sidebar**: Nuevo acceso directo a "Informes Programados" desde el menú lateral del dashboard
+- **Demo en Línea**: Los usuarios pueden probar el sistema en testing.sentrait.com.uy sin necesidad de despliegue
+
+#### Corregido
+- **Formato de reportes PDF**: El análisis de IA en reportes ahora usa un formato de informe formal sin preguntas interactivas
+- **Carga de servidores/grupos**: Corregidos endpoints de API con slashes finales requeridos
+- **Conectividad de Docker**: Mejorado manejo de resolución DNS entre contenedores nginx y backend
+
+#### Cambiado
+- Servicio de IA con token dinámico: El sistema ahora detecta cambios de token y recarga la configuración automáticamente
+- Reportes PDF con estructura profesional: Resumen Ejecutivo, Análisis Detallado, Alertas y Conclusión
+
+### Infraestructura
+- Nuevas dependencias: `apscheduler` para tareas programadas, `reportlab` para generación de PDF
+- Nuevas tablas de base de datos: `scheduled_health_checks`, `health_check_reports`
+- Directorio `/app/reports` para almacenamiento de PDFs generados
+
 ## [0.9.2-beta] - 2025-12-17
 
 ### 🚀 Mejoras Principales

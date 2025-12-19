@@ -43,19 +43,42 @@ class AIService:
             self.embeddings = OpenAIEmbeddings(api_key=settings.OPENAI_API_KEY)
         elif self.provider == "bedrock":
             logger.info("Using Amazon Bedrock as LLM provider")
+            
+            # Try to get token from database first (admin configuration)
+            bedrock_token = settings.AWS_BEARER_TOKEN_BEDROCK
+            aws_region = settings.AWS_REGION
+            
+            try:
+                from database import SessionLocal
+                db = SessionLocal()
+                configs = db.query(models.SystemConfig).filter(
+                    models.SystemConfig.category == "ai"
+                ).all()
+                config_dict = {c.key: c.value for c in configs}
+                db.close()
+                
+                # Use DB values if available
+                if config_dict.get("aws_bearer_token_bedrock"):
+                    bedrock_token = config_dict["aws_bearer_token_bedrock"]
+                    logger.info("Using Bedrock token from database configuration")
+                if config_dict.get("aws_region"):
+                    aws_region = config_dict["aws_region"]
+            except Exception as e:
+                logger.warning(f"Could not read DB config at startup: {e}")
+            
             # Ensure the token is in os.environ for boto3 to pick it up
-            if settings.AWS_BEARER_TOKEN_BEDROCK:
-                os.environ["AWS_BEARER_TOKEN_BEDROCK"] = settings.AWS_BEARER_TOKEN_BEDROCK
+            if bedrock_token:
+                os.environ["AWS_BEARER_TOKEN_BEDROCK"] = bedrock_token
             
             self.mock_mode = False
             self.llm = ChatBedrock(
                 model_id="anthropic.claude-3-5-sonnet-20240620-v1:0",
                 model_kwargs={"temperature": 0},
-                region_name=settings.AWS_REGION
+                region_name=aws_region
             )
             self.embeddings = BedrockEmbeddings(
                 model_id="amazon.titan-embed-text-v1",
-                region_name=settings.AWS_REGION
+                region_name=aws_region
             )
         elif self.provider == "anthropic" and settings.ANTHROPIC_API_KEY:
             logger.info("Using Anthropic API as LLM provider")
@@ -212,8 +235,16 @@ class AIService:
                 aws_region = config_dict.get("aws_region") or settings.AWS_REGION
                 
                 if bearer_token:
-                    if self.mock_mode or not isinstance(self.llm, ChatBedrock):
-                        logger.info("Reloading AI Service: Switching to Bedrock")
+                    # Always update the environment variable with DB token
+                    current_env_token = os.environ.get("AWS_BEARER_TOKEN_BEDROCK", "")
+                    token_changed = current_env_token != bearer_token
+                    
+                    if self.mock_mode or not isinstance(self.llm, ChatBedrock) or token_changed:
+                        if token_changed:
+                            logger.info("Reloading AI Service: Bedrock token changed, reinitializing...")
+                        else:
+                            logger.info("Reloading AI Service: Switching to Bedrock")
+                        
                         os.environ["AWS_BEARER_TOKEN_BEDROCK"] = bearer_token
                         self.mock_mode = False
                         self.llm = ChatBedrock(
@@ -257,45 +288,52 @@ class AIService:
 
         # 2. Construct Enhanced Prompt for conversational analysis
         # Build system message with language instruction
-        system_message = """You are an expert Sysadmin AI Agent with deep Linux expertise. Your role is to have an INTELLIGENT CONVERSATION with the user about their server issues.
+        system_message = """You are an expert Sysadmin AI Agent with deep Linux expertise. Your role is to provide COMPREHENSIVE SERVER HEALTH ANALYSIS.
 
 CRITICAL INSTRUCTIONS:
 
-1. **PRIORITIZE THE USER'S REPORT**: 
-   - The user's description of the problem is the MOST IMPORTANT signal.
-   - If the user reports a specific error (e.g., "Database error", "No route to host"), FOCUS ON THAT, even if the diagnostic data looks normal.
-   - Do NOT dismiss the user's report just because CPU/RAM usage is low.
+1. **HOLISTIC SYSTEM ANALYSIS (MOST IMPORTANT)**:
+   - When the user asks for "server status", "system state", or general health checks, provide a COMPLETE OVERVIEW covering ALL major aspects:
+     * **CPU & Load**: Current usage, load average, any anomalies
+     * **Memory & Swap**: Usage, available, swap status
+     * **Disk Space**: Usage across partitions, any near-capacity warnings
+     * **Network**: Connectivity, open ports, unusual traffic
+     * **Security**: Failed login attempts, suspicious processes, firewall status
+     * **Services**: Overall service health, any failed units
+     * **System Uptime**: How long the server has been running
+   - Do NOT fixate on a single service or application. Give a broad picture first.
+   - Only drill down into specifics if the user explicitly asks about a particular service.
 
-2. **ANALYZE DATA INTELLIGENTLY (FILTER NOISE)**:
+2. **CONTEXT AWARENESS**:
+   - If the user asks a GENERAL question (e.g., "check server status", "how is the server doing"), provide the HOLISTIC analysis above.
+   - If the user asks about a SPECIFIC issue (e.g., "Zabbix isn't working", "database error"), then focus on that specific problem.
+   - Don't assume context from previous conversations - treat each request independently.
+
+3. **ANALYZE DATA INTELLIGENTLY (FILTER NOISE)**:
    - You will receive diagnostic data (CPU, memory, processes).
    - **WARNING**: Diagnostic commands themselves (like `top`, `ps`, `grep`, `bash`) often show up as high-CPU processes for a split second. **IGNORE THEM**. Do not report "High CPU on bash/ps" unless it's sustained.
-   - Look for REAL anomalies: sustained high load, out of memory, disk full, specific error logs related to the user's report.
-
-3. **BE CONVERSATIONAL & CONTEXT AWARE**: 
-   - Don't act like a robot reading a stat sheet.
-   - If the user says "Zabbix isn't working", don't just say "CPU is 0%". Ask about Zabbix logs, check ports, check database connectivity.
-   - Explain your thinking process.
+   - Look for REAL anomalies: sustained high load, out of memory, disk full, specific error logs.
 
 4. **STRUCTURE YOUR RESPONSE**:
    
-   **🔍 Analysis of Current State:**
-   [Briefly summarize key findings. Focus on what's RELEVANT to the user's report.]
+   **🔍 System Health Overview:**
+   [Provide a comprehensive summary covering CPU, Memory, Disk, Network, Security, and Services]
    
-   **💡 Assessment:**
-   [Connect the dots. Does the data explain the user's error? If not, what might be happening?]
+   **💡 Key Findings:**
+   [Highlight anything noteworthy - both good and concerning]
    
-   **🎯 Recommendation:**
-   [Concrete next steps. If the user reported a DB error, suggest checking DB logs or connectivity, not just "monitor CPU".]
+   **🎯 Recommendations:**
+   [Actionable suggestions based on findings]
    
    **💬 Questions/Next Steps:**
-   [Clarifying questions]
+   [Clarifying questions if needed]
    
    **⚙️ Command (if applicable):**
-   [Provide diagnostic commands relevant to the SPECIFIC error reported]
+   [Provide commands for deeper investigation if needed]
 
 5. **COMMAND GUIDELINES**:
-   - Only propose a command if action is actually needed.
-   - **SINGLE EXECUTABLE BLOCK**: If multiple steps are needed, combine them using `&&` or `;` (e.g., `apt update && apt upgrade`).
+   - For GENERAL health checks, propose comprehensive diagnostic commands that cover multiple areas.
+   - **SINGLE EXECUTABLE BLOCK**: Combine multiple checks using `&&` or `;`.
    - **DO NOT** provide multiple separate code blocks for the command.
    - **DO NOT** include explanations inside the code block.
    - Always wrap the command in a bash code block:
@@ -303,7 +341,16 @@ CRITICAL INSTRUCTIONS:
    your-command-here
    ```
 
-Remember: You are a helpful senior sysadmin helping a junior admin. Listen to them first, then look at the data.""" + language_instruction
+6. **GENERAL HEALTH CHECK COMMANDS**:
+   When the user asks for general server status, a good comprehensive command would check:
+   - System uptime and load
+   - Memory usage
+   - Disk usage
+   - Failed services
+   - Recent security events
+   Example: `uptime && free -h && df -h && systemctl --failed && lastlog | head -20`
+
+Remember: You are a helpful senior sysadmin. When asked for general status, give a COMPLETE picture. Only focus on specifics when explicitly asked.""" + language_instruction
 
         prompt = ChatPromptTemplate.from_messages([
             ("system", system_message),

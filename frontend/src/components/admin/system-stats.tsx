@@ -2,14 +2,17 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Activity, TrendingUp } from "lucide-react";
+import { useI18n } from "@/lib/i18n-context";
 
 interface SystemStatsProps {
     stats: any;
 }
 
 export function SystemStats({ stats }: SystemStatsProps) {
+    const { t } = useI18n();
+
     if (!stats) {
-        return <div>Loading statistics...</div>;
+        return <div>{t.systemStats.loading}</div>;
     }
 
     return (
@@ -17,40 +20,40 @@ export function SystemStats({ stats }: SystemStatsProps) {
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                     <Activity className="h-5 w-5" />
-                    System Statistics
+                    {t.systemStats.title}
                 </CardTitle>
-                <CardDescription>Overview of system usage and activity</CardDescription>
+                <CardDescription>{t.systemStats.description}</CardDescription>
             </CardHeader>
             <CardContent>
                 <div className="grid gap-4 md:grid-cols-2">
                     <div className="space-y-2">
-                        <h3 className="font-medium">Resources</h3>
+                        <h3 className="font-medium">{t.systemStats.resources}</h3>
                         <div className="space-y-1">
                             <div className="flex justify-between">
-                                <span className="text-sm text-muted-foreground">Total Users:</span>
+                                <span className="text-sm text-muted-foreground">{t.systemStats.totalUsers}:</span>
                                 <span className="font-medium">{stats.total_users}</span>
                             </div>
                             <div className="flex justify-between">
-                                <span className="text-sm text-muted-foreground">Total Servers:</span>
+                                <span className="text-sm text-muted-foreground">{t.systemStats.totalServers}:</span>
                                 <span className="font-medium">{stats.total_servers}</span>
                             </div>
                             <div className="flex justify-between">
-                                <span className="text-sm text-muted-foreground">Total Groups:</span>
+                                <span className="text-sm text-muted-foreground">{t.systemStats.totalGroups}:</span>
                                 <span className="font-medium">{stats.total_groups}</span>
                             </div>
                         </div>
                     </div>
 
                     <div className="space-y-2">
-                        <h3 className="font-medium">Activity</h3>
+                        <h3 className="font-medium">{t.systemStats.activity}</h3>
                         <div className="space-y-1">
                             <div className="flex justify-between">
-                                <span className="text-sm text-muted-foreground">Total Operations:</span>
+                                <span className="text-sm text-muted-foreground">{t.systemStats.totalOperations}:</span>
                                 <span className="font-medium">{stats.total_operations}</span>
                             </div>
                             <div className="flex items-center gap-2 text-sm text-green-600">
-                                <TrendingUp className="h-4 w-4" />
-                                <span>System operational</span>
+                                <Activity className="h-4 w-4" />
+                                <span>{t.systemStats.operational}</span>
                             </div>
                         </div>
                     </div>

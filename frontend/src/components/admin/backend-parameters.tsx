@@ -6,12 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Settings, Save, Eye, EyeOff } from "lucide-react";
 import { getConfigByCategory, updateConfigCategory } from "@/lib/api";
+import { useI18n } from "@/lib/i18n-context";
 
 interface BackendParamsProps {
     currentUser: any;
 }
 
 export function BackendParameters({ currentUser }: BackendParamsProps) {
+    const { t } = useI18n();
     const [config, setConfig] = useState({
         database_url: "",
         secret_key: "",
@@ -41,10 +43,10 @@ export function BackendParameters({ currentUser }: BackendParamsProps) {
                 debug_mode: String(data.debug_mode ?? "false"),
                 log_level: data.log_level || "INFO"
             });
-            setMessage("✅ Configuration loaded successfully");
+            setMessage(`✅ ${t.aiParams.loadSuccess}`);
         } catch (error: any) {
             console.error("Failed to load config:", error);
-            setMessage("ℹ️ No saved configuration found. Using defaults.");
+            setMessage(`ℹ️ ${t.aiParams.loadDefault}`);
         }
     };
 
@@ -54,9 +56,9 @@ export function BackendParameters({ currentUser }: BackendParamsProps) {
 
         try {
             await updateConfigCategory("backend", config);
-            setMessage("✅ Configuration saved successfully! Changes applied immediately.");
+            setMessage(`✅ ${t.aiParams.saveSuccess}`);
         } catch (error: any) {
-            setMessage("❌ Failed to save configuration: " + error.message);
+            setMessage(`❌ ${t.aiParams.saveError}: ` + error.message);
         } finally {
             setLoading(false);
         }
@@ -67,18 +69,18 @@ export function BackendParameters({ currentUser }: BackendParamsProps) {
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                     <Settings className="h-5 w-5" />
-                    Backend Configuration
+                    {t.backendParams.title}
                 </CardTitle>
                 <CardDescription>
-                    Configure backend server settings and security parameters
+                    {t.backendParams.description}
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
                 {/* Database Configuration */}
                 <div className="space-y-4 p-4 border rounded-lg">
-                    <h3 className="font-medium text-sm">Database Settings</h3>
+                    <h3 className="font-medium text-sm">{t.backendParams.databaseUrl}</h3>
                     <div>
-                        <label className="text-sm font-medium">Database URL</label>
+                        <label className="text-sm font-medium">{t.backendParams.databaseUrl}</label>
                         <Input
                             type={showSecrets ? "text" : "password"}
                             value={config.database_url}
@@ -86,7 +88,7 @@ export function BackendParameters({ currentUser }: BackendParamsProps) {
                             placeholder="postgresql://user:pass@host:5432/dbname"
                         />
                         <p className="text-xs text-muted-foreground mt-1">
-                            PostgreSQL connection string
+                            {t.backendParams.databaseUrlHelp}
                         </p>
                     </div>
                 </div>
@@ -95,7 +97,7 @@ export function BackendParameters({ currentUser }: BackendParamsProps) {
                 <div className="space-y-4 p-4 border rounded-lg">
                     <h3 className="font-medium text-sm">Security Settings</h3>
                     <div>
-                        <label className="text-sm font-medium">Secret Key</label>
+                        <label className="text-sm font-medium">{t.backendParams.secretKey}</label>
                         <Input
                             type={showSecrets ? "text" : "password"}
                             value={config.secret_key}
@@ -103,12 +105,12 @@ export function BackendParameters({ currentUser }: BackendParamsProps) {
                             placeholder="••••••••"
                         />
                         <p className="text-xs text-muted-foreground mt-1">
-                            Used for JWT token signing (keep this secret!)
+                            {t.backendParams.secretKeyHelp}
                         </p>
                     </div>
                     <div className="grid gap-4 md:grid-cols-2">
                         <div>
-                            <label className="text-sm font-medium">Algorithm</label>
+                            <label className="text-sm font-medium">{t.backendParams.algorithm}</label>
                             <select
                                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                                 value={config.algorithm}
@@ -120,7 +122,7 @@ export function BackendParameters({ currentUser }: BackendParamsProps) {
                             </select>
                         </div>
                         <div>
-                            <label className="text-sm font-medium">Token Expiry (minutes)</label>
+                            <label className="text-sm font-medium">{t.backendParams.tokenExpiry}</label>
                             <Input
                                 type="number"
                                 value={config.access_token_expire_minutes}
@@ -134,14 +136,14 @@ export function BackendParameters({ currentUser }: BackendParamsProps) {
                 <div className="space-y-4 p-4 border rounded-lg">
                     <h3 className="font-medium text-sm">CORS Settings</h3>
                     <div>
-                        <label className="text-sm font-medium">Allowed Origins</label>
+                        <label className="text-sm font-medium">{t.backendParams.corsOrigins}</label>
                         <Input
                             value={config.cors_origins}
                             onChange={(e) => setConfig({ ...config, cors_origins: e.target.value })}
                             placeholder="*"
                         />
                         <p className="text-xs text-muted-foreground mt-1">
-                            Comma-separated list of allowed origins. Use * for all (not recommended in production)
+                            {t.backendParams.corsOriginsHelp}
                         </p>
                     </div>
                 </div>
@@ -151,21 +153,21 @@ export function BackendParameters({ currentUser }: BackendParamsProps) {
                     <h3 className="font-medium text-sm">Application Settings</h3>
                     <div className="grid gap-4 md:grid-cols-2">
                         <div>
-                            <label className="text-sm font-medium">Debug Mode</label>
+                            <label className="text-sm font-medium">{t.backendParams.debugMode}</label>
                             <select
                                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                                 value={config.debug_mode}
                                 onChange={(e) => setConfig({ ...config, debug_mode: e.target.value })}
                             >
-                                <option value="false">Disabled</option>
-                                <option value="true">Enabled</option>
+                                <option value="false">{t.backendParams.disabled}</option>
+                                <option value="true">{t.backendParams.enabled}</option>
                             </select>
                             <p className="text-xs text-muted-foreground mt-1">
-                                Enable detailed error messages (disable in production)
+                                {t.frontendParams.showDebugHelp}
                             </p>
                         </div>
                         <div>
-                            <label className="text-sm font-medium">Log Level</label>
+                            <label className="text-sm font-medium">{t.backendParams.logLevel}</label>
                             <select
                                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                                 value={config.log_level}
@@ -190,18 +192,18 @@ export function BackendParameters({ currentUser }: BackendParamsProps) {
                         {showSecrets ? (
                             <>
                                 <EyeOff className="mr-2 h-4 w-4" />
-                                Hide Secrets
+                                {t.aiParams.hideSecrets}
                             </>
                         ) : (
                             <>
                                 <Eye className="mr-2 h-4 w-4" />
-                                Show Secrets
+                                {t.aiParams.showSecrets}
                             </>
                         )}
                     </Button>
                     <Button onClick={handleSave} disabled={loading}>
                         <Save className="mr-2 h-4 w-4" />
-                        {loading ? "Saving..." : "Save Configuration"}
+                        {loading ? t.aiParams.saving : t.aiParams.save}
                     </Button>
                 </div>
 
@@ -218,8 +220,7 @@ export function BackendParameters({ currentUser }: BackendParamsProps) {
 
                 <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                     <p className="text-sm text-blue-800 dark:text-blue-200">
-                        <strong>ℹ️ Note:</strong> Configuration is stored securely in the database.
-                        Changes are applied immediately without requiring a backend restart.
+                        <strong>ℹ️ Note:</strong> {t.backendParams.note}
                     </p>
                 </div>
             </CardContent>

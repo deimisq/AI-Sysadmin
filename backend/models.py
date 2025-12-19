@@ -249,3 +249,78 @@ class License(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
+
+class ScheduledHealthCheck(Base):
+    """Configuration for scheduled health checks"""
+    __tablename__ = "scheduled_health_checks"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)  # Friendly name for this check
+    
+    # Target: either server_id OR group_id (not both)
+    server_id = Column(Integer, ForeignKey("servers.id", ondelete="CASCADE"), nullable=True)
+    group_id = Column(Integer, ForeignKey("server_groups.id", ondelete="CASCADE"), nullable=True)
+    
+    # Schedule configuration
+    schedule_type = Column(String, default="daily")  # 'daily', 'weekly', 'monthly', 'custom'
+    cron_expression = Column(String, nullable=True)  # For custom schedules (e.g., "0 9 * * 1")
+    schedule_hour = Column(Integer, default=9)  # Hour of day (0-23)
+    schedule_minute = Column(Integer, default=0)  # Minute (0-59)
+    schedule_day_of_week = Column(Integer, nullable=True)  # For weekly: 0=Monday, 6=Sunday
+    schedule_day_of_month = Column(Integer, nullable=True)  # For monthly: 1-31
+    
+    # Email configuration
+    email_recipients = Column(Text, nullable=False)  # Comma-separated email addresses
+    
+    # Status tracking
+    is_active = Column(Boolean, default=True)
+    last_run = Column(DateTime(timezone=True), nullable=True)
+    next_run = Column(DateTime(timezone=True), nullable=True)
+    last_status = Column(String, nullable=True)  # 'success', 'failed', 'running'
+    
+    # Audit
+    created_by = Column(Integer, ForeignKey("users.id"), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    # Relationships
+    server = relationship("Server", foreign_keys=[server_id])
+    group = relationship("ServerGroup", foreign_keys=[group_id])
+    creator = relationship("User", foreign_keys=[created_by])
+    reports = relationship("HealthCheckReport", back_populates="scheduled_check", cascade="all, delete-orphan")
+
+
+class HealthCheckReport(Base):
+    """Stored health check reports for history and comparison"""
+    __tablename__ = "health_check_reports"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    scheduled_check_id = Column(Integer, ForeignKey("scheduled_health_checks.id", ondelete="CASCADE"), nullable=False)
+    
+    # Server identification (for group checks, one report per server)
+    server_id = Column(Integer, ForeignKey("servers.id", ondelete="SET NULL"), nullable=True)
+    server_hostname = Column(String, nullable=False)  # Cached hostname
+    
+    # Report content
+    report_data = Column(JSON)  # Full diagnostic data
+    ai_analysis = Column(Text, nullable=True)  # AI-generated analysis
+    comparison_summary = Column(Text, nullable=True)  # Comparison with previous report
+    
+    # Metrics summary (for quick comparison)
+    cpu_usage = Column(String, nullable=True)
+    memory_usage = Column(String, nullable=True)
+    disk_usage = Column(String, nullable=True)
+    services_status = Column(String, nullable=True)  # 'all_ok', 'issues_found'
+    
+    # PDF storage
+    pdf_filename = Column(String, nullable=True)  # Filename in reports directory
+    
+    # Status
+    status = Column(String, default="completed")  # 'completed', 'failed', 'partial'
+    error_message = Column(Text, nullable=True)
+    
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    
+    # Relationships
+    scheduled_check = relationship("ScheduledHealthCheck", back_populates="reports")
+    server = relationship("Server", foreign_keys=[server_id])

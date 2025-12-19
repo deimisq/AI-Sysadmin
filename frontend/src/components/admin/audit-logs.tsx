@@ -6,8 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { fetchAuditLogs } from "@/lib/api";
 import { Shield, Clock, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { useI18n } from "@/lib/i18n-context";
 
 export function AuditLogs() {
+    const { t } = useI18n();
     const [logs, setLogs] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
@@ -67,7 +69,7 @@ export function AuditLogs() {
     };
 
     if (loading) {
-        return <div>Loading audit logs...</div>;
+        return <div className="text-center py-10">{t.common.loadingData}</div>;
     }
 
     return (
@@ -77,15 +79,15 @@ export function AuditLogs() {
                     <div>
                         <CardTitle className="flex items-center gap-2">
                             <Shield className="h-5 w-5" />
-                            System Logs
+                            {t.auditLogs.title}
                         </CardTitle>
-                        <CardDescription>Track all system activities and administrative actions</CardDescription>
+                        <CardDescription>{t.auditLogs.description}</CardDescription>
                     </div>
                     <div className="flex items-center gap-2">
                         <div className="relative">
                             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                             <Input
-                                placeholder="Search logs..."
+                                placeholder={t.auditLogs.search}
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 className="pl-8 w-64"
@@ -116,17 +118,17 @@ export function AuditLogs() {
                                                             {log.action}
                                                         </span>
                                                         <span className="text-xs text-muted-foreground">
-                                                            on {log.resource_type}
+                                                            {t.auditLogs.on} {log.resource_type}
                                                         </span>
                                                     </div>
                                                     <p className="text-sm text-muted-foreground">
-                                                        User ID: {log.user_id}
-                                                        {log.ip_address && ` • IP: ${log.ip_address}`}
+                                                        {t.auditLogs.userId}: {log.user_id}
+                                                        {log.ip_address && ` • ${t.auditLogs.ip}: ${log.ip_address}`}
                                                     </p>
                                                     {log.details && (
                                                         <details className="mt-2">
                                                             <summary className="text-xs text-muted-foreground cursor-pointer hover:text-foreground">
-                                                                View details
+                                                                {t.auditLogs.viewDetails}
                                                             </summary>
                                                             <pre className="text-xs bg-muted p-2 rounded mt-1 overflow-x-auto">
                                                                 {JSON.stringify(log.details, null, 2)}
@@ -148,7 +150,7 @@ export function AuditLogs() {
                         {totalPages > 1 && (
                             <div className="flex items-center justify-between mt-6 pt-4 border-t">
                                 <p className="text-sm text-muted-foreground">
-                                    Page {currentPage} of {totalPages}
+                                    {t.auditLogs.page} {currentPage} {t.auditLogs.of} {totalPages}
                                 </p>
                                 <div className="flex gap-2">
                                     <Button
@@ -158,7 +160,7 @@ export function AuditLogs() {
                                         disabled={currentPage === 1}
                                     >
                                         <ChevronLeft className="h-4 w-4 mr-1" />
-                                        Previous
+                                        {t.auditLogs.previous}
                                     </Button>
                                     <Button
                                         variant="outline"
@@ -166,7 +168,7 @@ export function AuditLogs() {
                                         onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                                         disabled={currentPage === totalPages}
                                     >
-                                        Next
+                                        {t.auditLogs.next}
                                         <ChevronRight className="h-4 w-4 ml-1" />
                                     </Button>
                                 </div>
@@ -175,7 +177,7 @@ export function AuditLogs() {
                     </>
                 ) : (
                     <p className="text-sm text-muted-foreground text-center py-10">
-                        {searchTerm ? "No logs found matching your search" : "No audit logs found"}
+                        {searchTerm ? t.auditLogs.noResults : t.auditLogs.noLogs}
                     </p>
                 )}
             </CardContent>

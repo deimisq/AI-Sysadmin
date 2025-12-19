@@ -12,7 +12,8 @@ import {
     User,
     LogOut,
     Settings,
-    Activity
+    Activity,
+    Calendar
 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import { removeAuthToken } from "@/utils/auth";
@@ -38,6 +39,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
     const navItems = [
         { label: t.header.title || "Dashboard", icon: LayoutDashboard, href: "/dashboard", exact: true },
+        { label: t.sidebar?.scheduledReports || "Informes Programados", icon: Calendar, href: "/dashboard/scheduled-reports" },
         { label: t.dashboard.profile || "Profile", icon: User, href: "/profile" },
     ];
 

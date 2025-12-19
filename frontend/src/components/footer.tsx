@@ -10,8 +10,8 @@ import { Shield, ShieldCheck, ShieldAlert, Key, ExternalLink, X } from "lucide-r
 export function Footer() {
     const { t } = useI18n();
     const [versionInfo, setVersionInfo] = useState<any>({
-        version: "1.0.0",
-        fullVersion: "1.0.0",
+        version: "0.9.3-beta3",
+        fullVersion: "0.9.3-beta3",
         name: "AI Sysadmin Agent",
         currentYear: new Date().getFullYear()
     });

@@ -375,7 +375,7 @@ export async function fetchVersion() {
     const res = await fetch(`${API_BASE_URL}/version`);
     if (!res.ok) {
         return {
-            version: "1.0.0",
+            version: "0.9.3-beta3",
             name: "AI Sysadmin Agent",
             currentYear: new Date().getFullYear()
         };

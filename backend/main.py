@@ -69,7 +69,9 @@ async def health_check():
 @app.get("/api/v1/version")
 async def get_version():
     """Get application version information"""
-    version_file = os.path.join(os.path.dirname(__file__), "..", "VERSION.json")
+    version_file = "/app/VERSION.json"
+    if not os.path.exists(version_file):
+        version_file = os.path.join(os.path.dirname(__file__), "..", "VERSION.json")
     try:
         with open(version_file, 'r') as f:
             version_data = json.load(f)
@@ -77,7 +79,7 @@ async def get_version():
         return version_data
     except Exception as e:
         return {
-            "version": "1.0.0",
+            "version": "0.9.3-beta3",
             "name": "AI Sysadmin Agent",
             "currentYear": datetime.now().year,
             "error": str(e)

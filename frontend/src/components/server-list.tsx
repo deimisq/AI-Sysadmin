@@ -462,8 +462,8 @@ export function ServerList({ onDiagnose, onEdit, refreshKey }: ServerListProps) 
         }
     };
 
-    // Group servers for grouped display (only in cards and compact modes when not filtering)
-    const shouldShowGrouped = ['cards', 'compact'].includes(viewMode) && filterGroup === null && !searchQuery;
+    // Group servers for grouped display (all view modes when not filtering)
+    const shouldShowGrouped = filterGroup === null && !searchQuery;
     
     const ungroupedServers = filteredAndSortedServers.filter(s => !s.group_id);
     const groupedServers = groups.map(group => ({

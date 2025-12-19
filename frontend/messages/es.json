@@ -58,7 +58,15 @@
         "searchPlaceholder": "Buscar servidores...",
         "allGroups": "Todos los grupos",
         "ungrouped": "Sin agrupar",
-        "noResults": "No se encontraron servidores con esos filtros"
+        "noResults": "No se encontraron servidores con esos filtros",
+        "colHostname": "Nombre del Host",
+        "colIP": "Dirección IP",
+        "colOS": "Sistema Operativo",
+        "colGroup": "Grupo",
+        "colActions": "Acciones",
+        "console": "Consola",
+        "server": "servidor",
+        "servers": "servidores"
     },
     "addServer": {
         "title": "Agregar Nuevo Servidor",

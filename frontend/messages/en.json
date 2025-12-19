@@ -58,7 +58,15 @@
         "searchPlaceholder": "Search servers...",
         "allGroups": "All Groups",
         "ungrouped": "Ungrouped",
-        "noResults": "No servers match your filters"
+        "noResults": "No servers match your filters",
+        "colHostname": "Hostname",
+        "colIP": "IP Address",
+        "colOS": "OS",
+        "colGroup": "Group",
+        "colActions": "Actions",
+        "console": "Console",
+        "server": "server",
+        "servers": "servers"
     },
     "addServer": {
         "title": "Add New Server",

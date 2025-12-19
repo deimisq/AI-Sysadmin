@@ -312,11 +312,11 @@ export function ServerList({ onDiagnose, onEdit, refreshKey }: ServerListProps) 
             <Button
                 variant="default"
                 size={compact ? "sm" : "default"}
-                title="Console"
+                title={t.serverList?.console || "Console"}
                 onClick={() => window.location.href = `/dashboard/server/${server.id}/console`}
             >
                 <Terminal className={`${compact ? '' : 'mr-2'} h-4 w-4`} />
-                {!compact && "Console"}
+                {!compact && (t.serverList?.console || "Console")}
             </Button>
             <Button
                 variant="outline"
@@ -423,29 +423,29 @@ export function ServerList({ onDiagnose, onEdit, refreshKey }: ServerListProps) 
                     <TableRow>
                         <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort('hostname')}>
                             <div className="flex items-center gap-1">
-                                Hostname
+                                {t.serverList?.colHostname || "Hostname"}
                                 {sortField === 'hostname' && (sortOrder === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />)}
                             </div>
                         </TableHead>
                         <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort('ip_address')}>
                             <div className="flex items-center gap-1">
-                                IP Address
+                                {t.serverList?.colIP || "IP Address"}
                                 {sortField === 'ip_address' && (sortOrder === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />)}
                             </div>
                         </TableHead>
                         <TableHead className="cursor-pointer hover:bg-muted/50 hidden md:table-cell" onClick={() => handleSort('os_info')}>
                             <div className="flex items-center gap-1">
-                                OS
+                                {t.serverList?.colOS || "OS"}
                                 {sortField === 'os_info' && (sortOrder === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />)}
                             </div>
                         </TableHead>
                         <TableHead className="cursor-pointer hover:bg-muted/50 hidden lg:table-cell" onClick={() => handleSort('group')}>
                             <div className="flex items-center gap-1">
-                                Group
+                                {t.serverList?.colGroup || "Group"}
                                 {sortField === 'group' && (sortOrder === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />)}
                             </div>
                         </TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
+                        <TableHead className="text-right">{t.serverList?.colActions || "Actions"}</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>

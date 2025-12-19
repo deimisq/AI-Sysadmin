@@ -361,8 +361,35 @@ export function ServerList({ onDiagnose, onEdit, refreshKey }: ServerListProps) 
                         <div className="text-xl font-bold truncate">{server.ip_address}</div>
                         <p className="text-xs text-muted-foreground truncate">{server.os_info} - {server.description}</p>
                     </CardContent>
-                    <CardFooter className="pt-0 flex-wrap gap-2">
-                        <ActionButtons server={server} compact />
+                    <CardFooter className="pt-0">
+                        <div className="flex flex-wrap gap-2 w-full">
+                            <Button
+                                variant="default"
+                                size="sm"
+                                className="flex-1 min-w-0"
+                                title={t.serverList?.console || "Console"}
+                                onClick={() => window.location.href = `/dashboard/server/${server.id}/console`}
+                            >
+                                <Terminal className="mr-1 h-3 w-3" />
+                                <span className="truncate">{t.serverList?.console || "Console"}</span>
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="flex-1 min-w-0"
+                                title={t.serverList?.diagnose || "Diagnose"}
+                                onClick={() => onDiagnose(server)}
+                            >
+                                <Activity className="mr-1 h-3 w-3" />
+                                <span className="truncate">{t.serverList?.diagnose || "Diagnose"}</span>
+                            </Button>
+                            <Button variant="outline" size="icon" className="h-8 w-8 flex-shrink-0" title={t.common?.edit || "Edit"} onClick={() => onEdit(server)}>
+                                ✏️
+                            </Button>
+                            <Button variant="destructive" size="icon" className="h-8 w-8 flex-shrink-0" title={t.common?.delete || "Delete"} onClick={() => handleDelete(server.id)}>
+                                <Trash2 className="h-3 w-3" />
+                            </Button>
+                        </div>
                     </CardFooter>
                 </Card>
             ))}

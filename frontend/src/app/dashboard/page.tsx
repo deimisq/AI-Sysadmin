@@ -100,14 +100,14 @@ export default function Dashboard() {
 
                     {/* Header */}
                     <div className="space-y-4 border-b pb-6">
-                        <div className="flex items-center justify-between">
+                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                             <div>
                                 <h1 className="text-3xl font-bold tracking-tight">{t.header.title}</h1>
                                 <p className="text-muted-foreground">{t.header.subtitle}</p>
                             </div>
 
                             {/* Action Buttons for Dashboard View */}
-                            <div className="flex gap-2">
+                            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                                 <Button variant="outline" onClick={() => setShowGroupManager(true)}>
                                     <FolderOpen className="mr-2 h-4 w-4" />
                                     {t.dashboard.manageGroups}

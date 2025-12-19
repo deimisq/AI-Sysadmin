@@ -46,7 +46,19 @@
         "noServers": "No se encontraron servidores. Agrega uno para comenzar.",
         "diagnose": "Diagnosticar",
         "deleteConfirm": "¿Estás seguro de que deseas eliminar este servidor?",
-        "deleteError": "Error al eliminar el servidor"
+        "deleteError": "Error al eliminar el servidor",
+        "viewCards": "Tarjetas",
+        "viewCompact": "Compacto",
+        "viewList": "Lista",
+        "viewDetails": "Detalles",
+        "sortName": "Nombre",
+        "sortIP": "Dirección IP",
+        "sortGroup": "Grupo",
+        "sortOS": "Sistema Operativo",
+        "searchPlaceholder": "Buscar servidores...",
+        "allGroups": "Todos los grupos",
+        "ungrouped": "Sin agrupar",
+        "noResults": "No se encontraron servidores con esos filtros"
     },
     "addServer": {
         "title": "Agregar Nuevo Servidor",

@@ -352,17 +352,17 @@ export function ServerList({ onDiagnose, onEdit, refreshKey }: ServerListProps) 
     const renderCardsView = (serverList: Server[]) => (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {serverList.map(server => (
-                <Card key={server.id} className="hover:shadow-lg transition-shadow">
+                <Card key={server.id} className="hover:shadow-lg transition-shadow overflow-hidden">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">{server.hostname}</CardTitle>
-                        <ServerIcon className="h-4 w-4 text-muted-foreground" />
+                        <CardTitle className="text-sm font-medium truncate flex-1 mr-2">{server.hostname}</CardTitle>
+                        <ServerIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                     </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{server.ip_address}</div>
-                        <p className="text-xs text-muted-foreground">{server.os_info} - {server.description}</p>
+                    <CardContent className="pb-3">
+                        <div className="text-xl font-bold truncate">{server.ip_address}</div>
+                        <p className="text-xs text-muted-foreground truncate">{server.os_info} - {server.description}</p>
                     </CardContent>
-                    <CardFooter>
-                        <ActionButtons server={server} />
+                    <CardFooter className="pt-0 flex-wrap gap-2">
+                        <ActionButtons server={server} compact />
                     </CardFooter>
                 </Card>
             ))}

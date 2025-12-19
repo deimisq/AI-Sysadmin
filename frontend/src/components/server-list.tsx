@@ -308,11 +308,11 @@ export function ServerList({ onDiagnose, onEdit, refreshKey }: ServerListProps) 
 
     // Action Buttons (shared across views)
     const ActionButtons = ({ server, compact = false }: { server: Server; compact?: boolean }) => (
-        <div className={`flex gap-1 ${compact ? '' : 'gap-2 flex-wrap'}`}>
+        <div className={`flex gap-1 justify-end ${compact ? '' : 'gap-2'}`}>
             <Button
                 variant="default"
                 size={compact ? "sm" : "default"}
-                className={compact ? "" : "flex-1 min-w-[100px]"}
+                title="Console"
                 onClick={() => window.location.href = `/dashboard/server/${server.id}/console`}
             >
                 <Terminal className={`${compact ? '' : 'mr-2'} h-4 w-4`} />
@@ -321,16 +321,28 @@ export function ServerList({ onDiagnose, onEdit, refreshKey }: ServerListProps) 
             <Button
                 variant="outline"
                 size={compact ? "sm" : "default"}
-                className={compact ? "" : "flex-1 min-w-[100px]"}
+                title={t.serverList?.diagnose || "Diagnose"}
                 onClick={() => onDiagnose(server)}
             >
                 <Activity className={`${compact ? '' : 'mr-2'} h-4 w-4`} />
                 {!compact && (t.serverList?.diagnose || "Diagnose")}
             </Button>
-            <Button variant="outline" size="icon" onClick={() => onEdit(server)} className={compact ? "h-8 w-8" : ""}>
-                <span className="sr-only">Edit</span>✏️
+            <Button 
+                variant="outline" 
+                size="icon" 
+                title={t.common?.edit || "Edit"}
+                onClick={() => onEdit(server)} 
+                className={compact ? "h-8 w-8" : ""}
+            >
+                ✏️
             </Button>
-            <Button variant="destructive" size="icon" onClick={() => handleDelete(server.id)} className={compact ? "h-8 w-8" : ""}>
+            <Button 
+                variant="destructive" 
+                size="icon" 
+                title={t.common?.delete || "Delete"}
+                onClick={() => handleDelete(server.id)} 
+                className={compact ? "h-8 w-8" : ""}
+            >
                 <Trash2 className="h-4 w-4" />
             </Button>
         </div>

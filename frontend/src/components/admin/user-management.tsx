@@ -58,13 +58,20 @@ export function UserManagement({ currentUser }: UserManagementProps) {
         if (!editingUser) return;
 
         try {
-            await updateUserAdmin(editingUser.id, {
+            const updatePayload: any = {
                 email: editingUser.email,
                 username: editingUser.username,
                 full_name: editingUser.full_name,
                 role: editingUser.role,
                 is_active: editingUser.is_active,
-            });
+            };
+
+            // Only include password if it was changed
+            if (editingUser.newPassword && editingUser.newPassword.trim()) {
+                updatePayload.password = editingUser.newPassword;
+            }
+
+            await updateUserAdmin(editingUser.id, updatePayload);
 
             await loadData();
             setEditingUser(null);
@@ -328,6 +335,18 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                                 value={editingUser.full_name || ""}
                                 onChange={(e) => setEditingUser({ ...editingUser, full_name: e.target.value })}
                             />
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium">Nueva Contraseña (opcional)</label>
+                            <Input
+                                type="password"
+                                placeholder="Dejar vacío para no cambiar"
+                                value={editingUser.newPassword || ""}
+                                onChange={(e) => setEditingUser({ ...editingUser, newPassword: e.target.value })}
+                            />
+                            <p className="text-xs text-muted-foreground mt-1">
+                                Solo completar si desea cambiar la contraseña del usuario
+                            </p>
                         </div>
                         <div>
                             <label className="text-sm font-medium">Role</label>

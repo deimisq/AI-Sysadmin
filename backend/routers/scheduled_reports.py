@@ -97,10 +97,18 @@ async def list_scheduled_checks(
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
-    """List all scheduled health checks"""
-    check_admin_role(current_user)
-    
-    checks = db.query(ScheduledHealthCheck).all()
+    """
+    List scheduled health checks.
+    - Admins/Superadmins: See ALL reports
+    - Regular users: See only reports they created
+    """
+    # Admins see all, users see only their own
+    if current_user.role in [RoleType.SUPERADMIN.value, RoleType.ADMIN.value]:
+        checks = db.query(ScheduledHealthCheck).all()
+    else:
+        checks = db.query(ScheduledHealthCheck).filter(
+            ScheduledHealthCheck.created_by == current_user.id
+        ).all()
     
     result = []
     for check in checks:

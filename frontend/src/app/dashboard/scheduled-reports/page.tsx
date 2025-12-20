@@ -21,12 +21,8 @@ export default function ScheduledReportsPage() {
         try {
             const user = await fetchCurrentUser();
             setCurrentUser(user);
-
-            // Check if user is admin
-            if (!["superadmin", "admin"].includes(user.role)) {
-                router.push("/dashboard");
-                return;
-            }
+            // All users can access - they'll see only their reports
+            // Admins will see all reports
         } catch (error: any) {
             console.error("Failed to load user data", error);
             router.push("/login");
@@ -41,16 +37,6 @@ export default function ScheduledReportsPage() {
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
                     <p className="mt-4 text-muted-foreground">{t.common.loading}</p>
-                </div>
-            </div>
-        );
-    }
-
-    if (!currentUser || !["superadmin", "admin"].includes(currentUser.role)) {
-        return (
-            <div className="h-full flex items-center justify-center">
-                <div className="text-center">
-                    <p className="text-muted-foreground">{t.admin?.accessDeniedMsg || "Access denied"}</p>
                 </div>
             </div>
         );

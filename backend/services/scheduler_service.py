@@ -187,10 +187,16 @@ class SchedulerService:
                 ).first()
                 if server:
                     servers.append(server)
+                    logger.info(f"Check '{check.name}' targeting SPECIFIC server: {server.hostname} (ID: {server.id})")
+                else:
+                    logger.error(f"Server ID {check.server_id} not found for check '{check.name}'")
             elif check.group_id:
                 servers = db.query(models.Server).filter(
                     models.Server.group_id == check.group_id
                 ).all()
+                logger.info(f"Check '{check.name}' targeting GROUP (ID: {check.group_id}) with {len(servers)} servers")
+                if servers:
+                    logger.info(f"  Servers in group: {[s.hostname for s in servers]}")
             
             if not servers:
                 logger.warning(f"No servers found for check {check.name}")

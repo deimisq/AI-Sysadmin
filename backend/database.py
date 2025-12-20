@@ -11,7 +11,11 @@ from settings import settings
 SQLALCHEMY_DATABASE_URL = settings.DATABASE_URL
 
 engine = create_engine(
-    SQLALCHEMY_DATABASE_URL
+    SQLALCHEMY_DATABASE_URL,
+    pool_size=20,  # Increased from default 5
+    max_overflow=40,  # Increased from default 10
+    pool_pre_ping=True,  # Test connections before using
+    pool_recycle=3600  # Recycle connections after 1 hour
 )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

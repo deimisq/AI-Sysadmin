@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Upload, Download, FileSpreadsheet, CheckCircle, XCircle, AlertCircle } from "lucide-react";
 import { useI18n } from "@/lib/i18n-context";
+import { toast } from "sonner";
 
 interface ImportResult {
     message: string;
@@ -59,13 +60,13 @@ export function CSVImport({ onImportComplete, onCancel }: CSVImportProps) {
             window.URL.revokeObjectURL(url);
         } catch (error) {
             console.error("Error downloading template:", error);
-            alert("Error downloading template");
+            toast.error("Error downloading template");
         }
     };
 
     const handleFileUpload = async (file: File) => {
         if (!file.name.endsWith(".csv")) {
-            alert("Please select a CSV file");
+            toast.error("Please select a CSV file");
             return;
         }
 
@@ -201,10 +202,10 @@ export function CSVImport({ onImportComplete, onCancel }: CSVImportProps) {
                 {result && (
                     <div className="space-y-4">
                         <div className={`p-4 rounded-lg ${result.details.errors.length === 0
-                                ? "bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800"
-                                : result.details.success.length > 0
-                                    ? "bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800"
-                                    : "bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800"
+                            ? "bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800"
+                            : result.details.success.length > 0
+                                ? "bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800"
+                                : "bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800"
                             }`}>
                             <div className="flex items-center gap-2 mb-2">
                                 {result.details.errors.length === 0 ? (

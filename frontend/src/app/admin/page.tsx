@@ -23,6 +23,7 @@ import { useI18n } from "@/lib/i18n-context";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { Footer } from "@/components/footer";
+import { toast } from "sonner";
 
 export default function AdminPage() {
     const router = useRouter();
@@ -52,7 +53,7 @@ export default function AdminPage() {
             console.error("Failed to load admin data", error);
             // Don't redirect immediately to debug
             // router.push("/login");
-            alert(`Error loading admin data: ${error.message}`);
+            toast.error(`Error loading admin data: ${error.message}`);
         } finally {
             setLoading(false);
         }

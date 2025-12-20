@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { fetchAllServers, createServer, updateServer, deleteServer, fetchGroups, createClient } from "@/lib/api";
 import { Server, Edit2, Trash2, Plus, X } from "lucide-react";
 import { useI18n } from "@/lib/i18n-context";
+import { toast } from "sonner";
 
 const OS_OPTIONS = [
     "Ubuntu 22.04",
@@ -97,21 +98,21 @@ export function ServerManagement({ currentUser }: ServerManagementProps) {
             await updateServer(editingServer.id, updateData);
             await loadData();
             setEditingServer(null);
-            alert(t.serverManagement.serverUpdated);
+            toast.success(t.serverManagement.serverUpdated);
         } catch (error: any) {
             console.error(error);
-            alert(error.message || t.serverManagement.failedToUpdate);
+            toast.error(error.message || t.serverManagement.failedToUpdate);
         }
     };
 
     const handleCreateServer = async () => {
         if (!newServer.hostname || !newServer.ip_address || !newServer.os_info || !newServer.ssh_username) {
-            alert(t.serverManagement.hostnameIpOsUsernameRequired);
+            toast.error(t.serverManagement.hostnameIpOsUsernameRequired);
             return;
         }
 
         if (!newServer.ssh_password && !newServer.ssh_key_path) {
-            alert(t.serverManagement.authRequired);
+            toast.error(t.serverManagement.authRequired);
             return;
         }
 
@@ -145,23 +146,37 @@ export function ServerManagement({ currentUser }: ServerManagementProps) {
                 group_id: "",
                 client_id: 1
             });
-            alert(t.serverManagement.serverCreated);
+            toast.success(t.serverManagement.serverCreated);
         } catch (error: any) {
             console.error(error);
-            alert(error.message || t.serverManagement.failedToCreate);
+            toast.error(error.message || t.serverManagement.failedToCreate);
         }
     };
 
     const handleDeleteServer = async (serverId: number) => {
-        if (!confirm(t.serverManagement.confirmDelete)) return;
+        const confirmed = await new Promise<boolean>((resolve) => {
+            const toastId = toast(t.serverManagement.confirmDelete, {
+                action: {
+                    label: t.common.confirm,
+                    onClick: () => { resolve(true); toast.dismiss(toastId); }
+                },
+                cancel: {
+                    label: t.common.cancel,
+                    onClick: () => { resolve(false); toast.dismiss(toastId); }
+                },
+                duration: Infinity,
+            });
+        });
+
+        if (!confirmed) return;
 
         try {
             await deleteServer(serverId);
             await loadData();
-            alert(t.serverManagement.serverDeleted);
+            toast.success(t.serverManagement.serverDeleted);
         } catch (error: any) {
             console.error(error);
-            alert(error.message || t.serverManagement.failedToDelete);
+            toast.error(error.message || t.serverManagement.failedToDelete);
         }
     };
 

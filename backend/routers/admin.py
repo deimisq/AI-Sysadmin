@@ -97,6 +97,9 @@ def update_user(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
+    # Check if user is being activated (approved)
+    was_inactive = not user.is_active
+    
     update_data = user_update.dict(exclude_unset=True)
     
     # Only admins can change roles
@@ -117,6 +120,17 @@ def update_user(
     
     db.commit()
     db.refresh(user)
+    
+    # Send approval notification if user was just activated
+    if was_inactive and user.is_active:
+        try:
+            from services.email_service import notify_user_approved
+            notify_user_approved(db, user.email, user.username, user.preferred_language or 'en')
+        except Exception as e:
+            # Log error but don't fail the update
+            import logging
+            logging.error(f"Failed to send approval notification: {e}")
+    
     return user
 
 @router.delete("/users/{user_id}")
@@ -136,6 +150,49 @@ def delete_user(
     db.delete(user)
     db.commit()
     return {"message": "User deleted successfully"}
+
+@router.post("/users/{user_id}/send-approval-notification")
+def send_approval_notification(
+    user_id: int,
+    current_user: models.User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Send approval notification to a user (admin only)"""
+    if current_user.role not in [RoleType.SUPERADMIN.value, RoleType.ADMIN.value]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Check if user is active
+    if not user.is_active:
+        raise HTTPException(
+            status_code=400, 
+            detail="Cannot send approval notification to inactive user. Please activate the user first."
+        )
+    
+    try:
+        from services.email_service import notify_user_approved
+        success = notify_user_approved(db, user.email, user.username, user.preferred_language or 'en')
+        
+        if success:
+            return {
+                "success": True,
+                "message": f"Approval notification sent successfully to {user.email}"
+            }
+        else:
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to send notification. Please check SMTP configuration."
+            )
+    except Exception as e:
+        import logging
+        logging.error(f"Failed to send approval notification: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to send notification: {str(e)}"
+        )
 
 # ==================== GROUP PERMISSIONS ====================
 

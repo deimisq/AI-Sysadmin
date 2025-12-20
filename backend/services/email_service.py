@@ -200,3 +200,97 @@ You can manage your notification preferences in your user settings.
             logger.info(f"Sent new user notification to {admin.email}")
         except Exception as e:
             logger.error(f"Failed to send notification to {admin.email}: {e}")
+
+
+def notify_user_approved(db, user_email: str, user_username: str, language: str = 'en'):
+    """Notify a user that their account has been approved by a superadmin
+    
+    Args:
+        db: Database session
+        user_email: User's email address
+        user_username: User's username
+        language: Preferred language ('en' or 'es'), defaults to 'en'
+    """
+    import os
+    
+    # Get frontend URL from environment or default
+    frontend_url = os.getenv('FRONTEND_URL', 'https://testing.sentrait.com.uy')
+    login_url = f"{frontend_url}/login"
+    
+    # Email templates for different languages
+    templates = {
+        'en': {
+            'subject': 'Your Account Has Been Approved - AI Sysadmin Agent',
+            'heading': 'Account Approved!',
+            'greeting': f'Hello <strong>{user_username}</strong>,',
+            'message': 'Great news! Your account has been approved by an administrator and is now active.',
+            'access_message': 'You can now log in and start using AI Sysadmin Agent with full access to your assigned permissions.',
+            'button_text': 'Log In Now',
+            'footer': 'If you have any questions or need assistance, please contact your system administrator.',
+            'auto_notice': 'This is an automated notification from AI Sysadmin Agent.'
+        },
+        'es': {
+            'subject': 'Tu Cuenta Ha Sido Aprobada - AI Sysadmin Agent',
+            'heading': '¡Cuenta Aprobada!',
+            'greeting': f'Hola <strong>{user_username}</strong>,',
+            'message': '¡Buenas noticias! Tu cuenta ha sido aprobada por un administrador y ahora está activa.',
+            'access_message': 'Ahora puedes iniciar sesión y comenzar a usar AI Sysadmin Agent con acceso completo a tus permisos asignados.',
+            'button_text': 'Iniciar Sesión Ahora',
+            'footer': 'Si tienes alguna pregunta o necesitas asistencia, por favor contacta a tu administrador del sistema.',
+            'auto_notice': 'Esta es una notificación automatizada de AI Sysadmin Agent.'
+        }
+    }
+    
+    # Get template for specified language, fallback to English
+    template = templates.get(language, templates['en'])
+    subject = template['subject']
+    
+    # HTML body
+    body_html = f"""
+    <html>
+        <body style="font-family: Arial, sans-serif; padding: 20px;">
+            <h2 style="color: #10b981;">{template['heading']}</h2>
+            <p>{template['greeting']}</p>
+            <p>{template['message']}</p>
+            <p>{template['access_message']}</p>
+            <p>
+                <a href="{login_url}" 
+                   style="background-color: #10b981; color: white; 
+                          padding: 10px 20px; text-decoration: none; 
+                          border-radius: 5px; display: inline-block;">
+                    {template['button_text']}
+                </a>
+            </p>
+            <hr style="margin: 20px 0; border: none; border-top: 1px solid #e5e7eb;">
+            <p style="color: #6b7280; font-size: 14px;">
+                {template['footer']}<br>
+                {template['auto_notice']}
+            </p>
+        </body>
+    </html>
+    """
+    
+    # Text body
+    body_text = f"""
+{template['heading']}
+
+{template['greeting'].replace('<strong>', '').replace('</strong>', '')}
+
+{template['message']}
+
+{template['access_message']}
+
+{login_url}
+
+---
+{template['footer']}
+{template['auto_notice']}
+    """
+    
+    try:
+        send_notification_email(db, user_email, subject, body_html, body_text)
+        logger.info(f"Sent account approval notification to {user_email} in {language}")
+        return True
+    except Exception as e:
+        logger.error(f"Failed to send approval notification to {user_email}: {e}")
+        return False

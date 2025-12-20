@@ -5,6 +5,53 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 
+## [0.9.4-beta] - 2025-12-20
+
+### 🎊 Mejoras de UX y Multi-idioma
+
+#### Agregado
+- **Toast Notifications Modernas**: Reemplazo completo de alertas bloqueantes del navegador con notificaciones toast elegantes y no-bloqueantes
+  - Sistema de notificaciones usando biblioteca `sonner`
+  - Toasts verdes para éxitos, rojos para errores
+  - Confirmaciones interactivas con botones Confirm/Cancel
+  - Auto-desaparición configurable (3-5 segundos)
+  - Soporte para cierre manual con botón X
+  - Diseño responsive y compatible con tema oscuro/claro
+  - 46 instancias reemplazadas en 11 componentes del frontend
+- **Emails de Aprobación Multi-idioma**: Los emails de aprobación ahora se envían en el idioma preferido del usuario
+  - Detección automática del idioma del navegador en registro
+  - Campo `preferred_language` en modelo de usuario
+  - Plantillas de email en español e inglés
+  - Variable de entorno `FRONTEND_URL` para links dinámicos de login
+  - Preservación del idioma en actualizaciones de usuario
+
+#### Corregido
+- **Error 403 en eliminación de usuarios**: Corregida dependencia `get_current_superuser` para verificar campo `role` en lugar del boolean deprecado `is_superuser`
+- **Error 500 en panel de admin**: Campo `preferred_language` ahora es opcional en schema de usuario para compatibilidad con usuarios existentes
+- **Compilación de frontend en Docker**: Mejorado proceso de build para incluir dependencias de toast correctamente
+
+#### Cambiado
+- **Experiencia de usuario mejorada**: Eliminadas todas las alertas bloqueantes del navegador para mejor fluidez
+- **Internacionalización de comunicaciones**: Sistema completamente multi-idioma incluye emails automáticos
+
+### Componentes Actualizados con Toast Notifications
+- `user-management.tsx` (13 reemplazos)
+- `server-management.tsx` (8 reemplazos)
+- `login/page.tsx` (2 reemplazos)
+- `profile/page.tsx` (4 reemplazos)
+- `server-list.tsx` (2 reemplazos)
+- `add-server-form.tsx` (2 reemplazos)
+- `group-manager.tsx` (2 reemplazos)
+- `scheduled-reports.tsx` (1 reemplazo)
+- `security-settings.tsx` (2 reemplazos)
+- `csv-import.tsx` (2 reemplazos)
+- `admin/page.tsx` (1 reemplazo)
+
+### Infraestructura
+- Nueva dependencia frontend: `sonner@^2.0.7` para toast notifications
+- Schema de BD actualizado: columna `preferred_language` en tabla `users`
+- Componente global `Toaster` integrado en layout raíz del frontend
+
 ## [0.9.3-beta] - 2025-12-19
 
 ### 🚀 Mejoras Principales
@@ -136,12 +183,6 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 ---
 
 ## Roadmap hacia 1.0.0
-
-### [0.9.1-beta] - Próximo
-- Corrección de bugs reportados
-- Mejoras en la UI/UX
-- Optimización de rendimiento
-- Tests unitarios críticos
 
 ### [0.9.5-rc] - Release Candidate
 - Testing exhaustivo en producción

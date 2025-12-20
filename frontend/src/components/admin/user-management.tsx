@@ -5,8 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { fetchAllUsers, createUser, updateUserAdmin, deleteUser, fetchGroups, grantGroupAccess, revokeGroupAccess, fetchUserGroups } from "@/lib/api";
-import { Users, Edit2, Trash2, Shield, FolderOpen, Plus, X } from "lucide-react";
+import { Users, Edit2, Trash2, Shield, FolderOpen, Plus, X, Mail } from "lucide-react";
 import { useI18n } from "@/lib/i18n-context";
+import { toast } from "sonner";
 
 interface UserManagementProps {
     currentUser: any;
@@ -67,16 +68,16 @@ export function UserManagement({ currentUser }: UserManagementProps) {
 
             await loadData();
             setEditingUser(null);
-            alert(t.userManagement.userUpdated);
+            toast.success(t.userManagement.userUpdated);
         } catch (error: any) {
             console.error(error);
-            alert(error.message || "Failed to update user");
+            toast.error(error.message || "Failed to update user");
         }
     };
 
     const handleCreateUser = async () => {
         if (!newUser.email || !newUser.username || !newUser.password) {
-            alert("Email, username, and password are required");
+            toast.error("Email, username, and password are required");
             return;
         }
 
@@ -92,23 +93,38 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                 role: "user",
                 is_active: true
             });
-            alert(t.userManagement.userCreated);
+            toast.success(t.userManagement.userCreated);
         } catch (error: any) {
             console.error(error);
-            alert(error.message || "Failed to create user");
+            toast.error(error.message || "Failed to create user");
         }
     };
 
     const handleDeleteUser = async (userId: number) => {
-        if (!confirm(t.userManagement.confirmDelete)) return;
+        // Show confirmation toast
+        const confirmed = await new Promise<boolean>((resolve) => {
+            const toastId = toast(t.userManagement.confirmDelete, {
+                action: {
+                    label: t.common.confirm,
+                    onClick: () => { resolve(true); toast.dismiss(toastId); }
+                },
+                cancel: {
+                    label: t.common.cancel,
+                    onClick: () => { resolve(false); toast.dismiss(toastId); }
+                },
+                duration: Infinity,
+            });
+        });
+
+        if (!confirmed) return;
 
         try {
             await deleteUser(userId);
             await loadData();
-            alert(t.userManagement.userDeleted);
+            toast.success(t.userManagement.userDeleted);
         } catch (error: any) {
             console.error(error);
-            alert(error.message || "Failed to delete user");
+            toast.error(error.message || "Failed to delete user");
         }
     };
 
@@ -129,10 +145,10 @@ export function UserManagement({ currentUser }: UserManagementProps) {
             await grantGroupAccess(managingPermissions.id, groupId, role);
             const userGroupsData = await fetchUserGroups(managingPermissions.id);
             setUserGroups(userGroupsData);
-            alert("Access granted successfully");
+            toast.success("Access granted successfully");
         } catch (error: any) {
             console.error(error);
-            alert(error.message || "Failed to grant access");
+            toast.error(error.message || "Failed to grant access");
         }
     };
 
@@ -143,10 +159,51 @@ export function UserManagement({ currentUser }: UserManagementProps) {
             await revokeGroupAccess(managingPermissions.id, groupId);
             const userGroupsData = await fetchUserGroups(managingPermissions.id);
             setUserGroups(userGroupsData);
-            alert("Access revoked successfully");
+            toast.success("Access revoked successfully");
         } catch (error: any) {
             console.error(error);
-            alert(error.message || "Failed to revoke access");
+            toast.error(error.message || "Failed to revoke access");
+        }
+    };
+
+    const handleSendApprovalNotification = async (user: any) => {
+        // Show confirmation toast
+        const confirmed = await new Promise<boolean>((resolve) => {
+            const toastId = toast(`Send account approval notification to ${user.email}?`, {
+                action: {
+                    label: t.common.confirm,
+                    onClick: () => { resolve(true); toast.dismiss(toastId); }
+                },
+                cancel: {
+                    label: t.common.cancel,
+                    onClick: () => { resolve(false); toast.dismiss(toastId); }
+                },
+                duration: Infinity,
+            });
+        });
+
+        if (!confirmed) return;
+
+        try {
+            const token = localStorage.getItem("token");
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || '/api/v1'}/admin/users/${user.id}/send-approval-notification`, {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                }
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.detail || "Failed to send notification");
+            }
+
+            const result = await response.json();
+            toast.success(result.message || "Notification sent successfully");
+        } catch (error: any) {
+            console.error(error);
+            toast.error(error.message || "Failed to send notification");
         }
     };
 
@@ -331,8 +388,8 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                                                 <div className="flex items-center gap-2 mt-1">
                                                     <span className="text-xs text-muted-foreground">{t.userManagement.roleLabel}:</span>
                                                     <span className={`px-2 py-0.5 rounded text-xs font-medium ${group.role === 'group_admin'
-                                                            ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
-                                                            : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                                                        ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
+                                                        : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
                                                         }`}>
                                                         {group.role === 'group_admin' ? t.userManagement.roleGroupAdmin : t.userManagement.roleUser}
                                                     </span>
@@ -448,6 +505,16 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                                     <FolderOpen className="h-4 w-4 mr-1" />
                                     Groups
                                 </Button>
+                                {user.is_active && (
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => handleSendApprovalNotification(user)}
+                                        title="Send approval notification email"
+                                    >
+                                        <Mail className="h-4 w-4" />
+                                    </Button>
+                                )}
                                 <Button
                                     variant="outline"
                                     size="sm"

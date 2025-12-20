@@ -12,6 +12,7 @@ class UserCreate(UserBase):
     password: str
     role: Optional[str] = "user"
     is_active: Optional[bool] = True
+    preferred_language: Optional[str] = "en"
 
 class UserUpdate(BaseModel):
     email: Optional[EmailStr] = None
@@ -20,6 +21,7 @@ class UserUpdate(BaseModel):
     password: Optional[str] = None
     role: Optional[str] = None
     is_active: Optional[bool] = None
+    preferred_language: Optional[str] = None
 
 class UserLogin(BaseModel):
     username: str
@@ -51,6 +53,7 @@ class User(UserBase):
     notify_new_servers: Optional[bool] = False
     notify_system_events: Optional[bool] = True
     notify_version_updates: Optional[bool] = True
+    preferred_language: Optional[str] = "en"
     
     class Config:
         from_attributes = True

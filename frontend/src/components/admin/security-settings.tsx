@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Shield, Plus, Trash2, Check, X } from "lucide-react";
 import { API_BASE_URL, getAuthHeaders } from "@/lib/api";
 import { useI18n } from "@/lib/i18n-context";
+import { toast } from "sonner";
 
 export function SecuritySettings({ currentUser }: { currentUser: any }) {
     const { t } = useI18n();
@@ -120,7 +121,14 @@ export function SecuritySettings({ currentUser }: { currentUser: any }) {
     };
 
     const handleDeleteDomain = async (id: number) => {
-        if (!confirm(t.securitySettings.allowedDomains.confirmDelete)) return;
+        const confirmed = await new Promise<boolean>((resolve) => {
+            const toastId = toast(t.securitySettings.allowedDomains.confirmDelete, {
+                action: { label: "Confirmar", onClick: () => { resolve(true); toast.dismiss(toastId); } },
+                cancel: { label: "Cancelar", onClick: () => { resolve(false); toast.dismiss(toastId); } },
+                duration: Infinity,
+            });
+        });
+        if (!confirmed) return;
 
         try {
             const res = await fetch(`${API_BASE_URL}/admin/allowed-domains/${id}`, {
@@ -163,7 +171,7 @@ export function SecuritySettings({ currentUser }: { currentUser: any }) {
                                 size="sm"
                                 onClick={() => {
                                     navigator.clipboard.writeText(`${window.location.origin}/auth/microsoft/callback`);
-                                    alert(t.securitySettings.microsoftOAuth.copiedToClipboard);
+                                    toast.success(t.securitySettings.microsoftOAuth.copiedToClipboard);
                                 }}
                             >
                                 {t.securitySettings.microsoftOAuth.copy}

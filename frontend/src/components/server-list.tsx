@@ -24,6 +24,7 @@ import {
     Filter
 } from "lucide-react";
 import { useI18n } from "@/lib/i18n-context";
+import { toast } from "sonner";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -70,7 +71,7 @@ export function ServerList({ onDiagnose, onEdit, refreshKey }: ServerListProps) 
     const [servers, setServers] = useState<Server[]>([]);
     const [groups, setGroups] = useState<ServerGroup[]>([]);
     const [loading, setLoading] = useState(true);
-    
+
     // View and sort state
     const [viewMode, setViewMode] = useState<ViewMode>(() => {
         if (typeof window !== 'undefined') {
@@ -110,15 +111,20 @@ export function ServerList({ onDiagnose, onEdit, refreshKey }: ServerListProps) 
     };
 
     const handleDelete = async (serverId: number) => {
-        if (!confirm(t.serverList?.deleteConfirm || "Are you sure you want to delete this server?")) {
-            return;
-        }
+        const confirmed = await new Promise<boolean>((resolve) => {
+            const toastId = toast(t.serverList?.deleteConfirm || "Are you sure you want to delete this server?", {
+                action: { label: "Confirm", onClick: () => { resolve(true); toast.dismiss(toastId); } },
+                cancel: { label: "Cancel", onClick: () => { resolve(false); toast.dismiss(toastId); } },
+                duration: Infinity,
+            });
+        });
+        if (!confirmed) return;
         try {
             await deleteServer(serverId);
             await loadData();
         } catch (error) {
             console.error(error);
-            alert(t.serverList?.deleteError || "Failed to delete server");
+            toast.error(t.serverList?.deleteError || "Failed to delete server");
         }
     };
 
@@ -151,23 +157,23 @@ export function ServerList({ onDiagnose, onEdit, refreshKey }: ServerListProps) 
     // Filter and sort servers
     const filteredAndSortedServers = useMemo(() => {
         let result = [...servers];
-        
+
         // Filter by search
         if (searchQuery) {
             const query = searchQuery.toLowerCase();
-            result = result.filter(s => 
+            result = result.filter(s =>
                 s.hostname.toLowerCase().includes(query) ||
                 s.ip_address.toLowerCase().includes(query) ||
                 s.description?.toLowerCase().includes(query) ||
                 s.os_info?.toLowerCase().includes(query)
             );
         }
-        
+
         // Filter by group
         if (filterGroup !== null) {
             result = result.filter(s => s.group_id === filterGroup);
         }
-        
+
         // Sort
         result.sort((a, b) => {
             let aVal: string, bVal: string;
@@ -195,7 +201,7 @@ export function ServerList({ onDiagnose, onEdit, refreshKey }: ServerListProps) 
             const cmp = aVal.localeCompare(bVal);
             return sortOrder === 'asc' ? cmp : -cmp;
         });
-        
+
         return result;
     }, [servers, searchQuery, filterGroup, sortField, sortOrder, groups]);
 
@@ -236,13 +242,13 @@ export function ServerList({ onDiagnose, onEdit, refreshKey }: ServerListProps) 
                     className="pl-9"
                 />
             </div>
-            
+
             {/* Group Filter */}
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button variant="outline" className="min-w-[140px] justify-between">
                         <Filter className="mr-2 h-4 w-4" />
-                        {filterGroup === null 
+                        {filterGroup === null
                             ? (t.serverList?.allGroups || "All Groups")
                             : getGroupName(filterGroup) || "Unknown"
                         }
@@ -265,7 +271,7 @@ export function ServerList({ onDiagnose, onEdit, refreshKey }: ServerListProps) 
                     </DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
-            
+
             {/* Sort */}
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -284,7 +290,7 @@ export function ServerList({ onDiagnose, onEdit, refreshKey }: ServerListProps) 
                     ))}
                 </DropdownMenuContent>
             </DropdownMenu>
-            
+
             {/* View Mode Switcher */}
             <div className="flex border rounded-md">
                 {(Object.keys(viewModeIcons) as ViewMode[]).map(mode => {
@@ -327,20 +333,20 @@ export function ServerList({ onDiagnose, onEdit, refreshKey }: ServerListProps) 
                 <Activity className={`${compact ? '' : 'mr-2'} h-4 w-4`} />
                 {!compact && (t.serverList?.diagnose || "Diagnose")}
             </Button>
-            <Button 
-                variant="outline" 
-                size="icon" 
+            <Button
+                variant="outline"
+                size="icon"
                 title={t.common?.edit || "Edit"}
-                onClick={() => onEdit(server)} 
+                onClick={() => onEdit(server)}
                 className={compact ? "h-8 w-8" : ""}
             >
                 ✏️
             </Button>
-            <Button 
-                variant="destructive" 
-                size="icon" 
+            <Button
+                variant="destructive"
+                size="icon"
                 title={t.common?.delete || "Delete"}
-                onClick={() => handleDelete(server.id)} 
+                onClick={() => handleDelete(server.id)}
                 className={compact ? "h-8 w-8" : ""}
             >
                 <Trash2 className="h-4 w-4" />
@@ -503,7 +509,7 @@ export function ServerList({ onDiagnose, onEdit, refreshKey }: ServerListProps) 
 
     // Group servers for grouped display (all view modes when not filtering)
     const shouldShowGrouped = filterGroup === null && !searchQuery;
-    
+
     const ungroupedServers = filteredAndSortedServers.filter(s => !s.group_id);
     const groupedServers = groups.map(group => ({
         group,
@@ -513,7 +519,7 @@ export function ServerList({ onDiagnose, onEdit, refreshKey }: ServerListProps) 
     return (
         <div className="space-y-6">
             <Toolbar />
-            
+
             {/* Server count */}
             <div className="text-sm text-muted-foreground">
                 {filteredAndSortedServers.length} {filteredAndSortedServers.length === 1 ? 'server' : 'servers'}
@@ -570,7 +576,7 @@ export function ServerList({ onDiagnose, onEdit, refreshKey }: ServerListProps) 
 
             {filteredAndSortedServers.length === 0 && (
                 <div className="text-center p-10 text-muted-foreground border rounded-lg">
-                    {searchQuery || filterGroup !== null 
+                    {searchQuery || filterGroup !== null
                         ? (t.serverList?.noResults || "No servers match your filters")
                         : (t.serverList?.noServers || "No servers added yet")
                     }

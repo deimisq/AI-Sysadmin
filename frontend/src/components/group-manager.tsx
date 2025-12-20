@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FolderOpen, Plus, Trash2, Edit2, X } from "lucide-react";
 import { useI18n } from "@/lib/i18n-context";
+import { toast } from "sonner";
 
 interface ServerGroup {
     id: number;
@@ -81,23 +82,28 @@ export function GroupManager({ onClose }: { onClose: () => void }) {
             await loadGroups();
         } catch (error) {
             console.error("Failed to save group", error);
-            alert("Failed to save group. Please try again.");
+            toast.error("Failed to save group. Please try again.");
         } finally {
             setLoading(false);
         }
     };
 
     const handleDelete = async (groupId: number) => {
-        if (!confirm(t.groupManagement.confirmDelete)) {
-            return;
-        }
+        const confirmed = await new Promise<boolean>((resolve) => {
+            const toastId = toast(t.groupManagement.confirmDelete, {
+                action: { label: t.common.confirm, onClick: () => { resolve(true); toast.dismiss(toastId); } },
+                cancel: { label: t.common.cancel, onClick: () => { resolve(false); toast.dismiss(toastId); } },
+                duration: Infinity,
+            });
+        });
+        if (!confirmed) return;
 
         try {
             await deleteGroup(groupId);
             await loadGroups();
         } catch (error: any) {
             console.error(error);
-            alert(error.message || "Failed to delete group");
+            toast.error(error.message || "Failed to delete group");
         }
     };
 

@@ -52,8 +52,8 @@ async def get_current_active_user(
 async def get_current_superuser(
     current_user: models.User = Depends(get_current_user)
 ) -> models.User:
-    """Ensure the current user is a superuser"""
-    if not current_user.is_superuser:
+    """Ensure the current user is a superadmin"""
+    if current_user.role != models.RoleType.SUPERADMIN.value:
         raise HTTPException(
             status_code=403,
             detail="The user doesn't have enough privileges"

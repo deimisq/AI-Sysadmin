@@ -10,6 +10,7 @@ import { useI18n } from "@/lib/i18n-context";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { setAuthToken } from "@/utils/auth";
+import { toast } from "sonner";
 
 export default function LoginPage() {
     const router = useRouter();
@@ -84,6 +85,18 @@ export default function LoginPage() {
                 router.push("/dashboard");
             } else {
                 // Register
+                // Get current language from localStorage (set by language switcher)
+                // or detect from browser if not set
+                let currentLanguage = localStorage.getItem('language');
+
+                if (!currentLanguage) {
+                    // Detect from browser
+                    const browserLang = navigator.language || (navigator.languages && navigator.languages[0]);
+                    currentLanguage = browserLang?.startsWith('es') ? 'es' : 'en';
+                }
+
+                console.log('Registering user with language:', currentLanguage);
+
                 const res = await fetch(`${apiBaseUrl}/auth/register`, {
                     method: "POST",
                     headers: {
@@ -94,6 +107,7 @@ export default function LoginPage() {
                         email: formData.email,
                         password: formData.password,
                         full_name: formData.full_name || null,
+                        preferredLanguage: currentLanguage,
                     }),
                 });
 
@@ -102,13 +116,13 @@ export default function LoginPage() {
                     throw new Error(error.detail || t.login.failedRegister);
                 }
 
-                alert(t.login.successRegister);
+                toast.success(t.login.successRegister);
                 setIsLogin(true);
                 setFormData({ username: "", email: "", password: "", full_name: "" });
             }
         } catch (error: any) {
             console.error(error);
-            alert(error.message || t.common.error);
+            toast.error(error.message || t.common.error);
         } finally {
             setLoading(false);
         }

@@ -3,7 +3,7 @@
 **Intelligent Server Management & Automation Platform**
 
 [![License](https://img.shields.io/badge/license-Proprietary-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-0.9.0--beta-orange.svg)](VERSION.json)
+[![Version](https://img.shields.io/badge/version-0.9.4--beta-orange.svg)](VERSION.json)
 [![Docker](https://img.shields.io/badge/docker-ready-blue.svg)](docker-compose.prod.yml)
 [![Status](https://img.shields.io/badge/status-beta-yellow.svg)](ROADMAP.md)
 

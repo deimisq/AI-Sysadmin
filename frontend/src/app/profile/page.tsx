@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { fetchCurrentUser, updateUserAdmin, fetchUserGroups } from "@/lib/api";
 import { User, Shield, FolderOpen, ArrowLeft } from "lucide-react";
+import { toast } from "sonner";
 
 export default function ProfilePage() {
     const router = useRouter();
@@ -58,7 +59,7 @@ export default function ProfilePage() {
                 removeAuthToken();
                 router.push("/login");
             } else {
-                alert("Failed to load profile data. Please try again.");
+                toast.error("Failed to load profile data. Please try again.");
             }
         } finally {
             setLoading(false);
@@ -69,7 +70,7 @@ export default function ProfilePage() {
         e.preventDefault();
 
         if (formData.password && formData.password !== formData.confirmPassword) {
-            alert("Passwords do not match");
+            toast.error("Passwords do not match");
             return;
         }
 
@@ -86,14 +87,14 @@ export default function ProfilePage() {
             }
 
             await updateUserAdmin(currentUser.id, updateData);
-            alert("Profile updated successfully");
+            toast.success("Profile updated successfully");
 
             // Reload user data
             await loadUserData();
             setFormData({ ...formData, password: "", confirmPassword: "" });
         } catch (error: any) {
             console.error(error);
-            alert(error.message || "Failed to update profile");
+            toast.error(error.message || "Failed to update profile");
         } finally {
             setSaving(false);
         }

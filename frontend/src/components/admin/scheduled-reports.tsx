@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Calendar, Clock, Mail, Server, FolderOpen, Play, Trash2, Edit, Plus, Download, History, CheckCircle, XCircle, Loader2 } from "lucide-react";
 import { useI18n } from "@/lib/i18n-context";
+import { toast } from "sonner";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "/api/v1";
 
@@ -172,7 +173,14 @@ export function ScheduledReports({ currentUser }: { currentUser: any }) {
     };
 
     const handleDelete = async (id: number) => {
-        if (!confirm("¿Estás seguro de eliminar este chequeo programado?")) return;
+        const confirmed = await new Promise<boolean>((resolve) => {
+            const toastId = toast("¿Estás seguro de eliminar este chequeo programado?", {
+                action: { label: "Confirmar", onClick: () => { resolve(true); toast.dismiss(toastId); } },
+                cancel: { label: "Cancelar", onClick: () => { resolve(false); toast.dismiss(toastId); } },
+                duration: Infinity,
+            });
+        });
+        if (!confirmed) return;
 
         try {
             const res = await fetch(`${API_BASE_URL}/scheduled-reports/${id}`, {

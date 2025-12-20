@@ -42,7 +42,8 @@ def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
         username=user.username,
         full_name=user.full_name,
         hashed_password=hashed_password,
-        is_active=is_active
+        is_active=is_active,
+        preferred_language=user.preferred_language or 'en'
     )
     
     db.add(db_user)

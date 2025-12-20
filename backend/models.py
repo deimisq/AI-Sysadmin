@@ -72,6 +72,9 @@ class User(Base):
     notify_system_events = Column(Boolean, default=True)  # General system events
     notify_version_updates = Column(Boolean, default=True)  # Notify when new versions are available
     
+    # Language preference
+    preferred_language = Column(String, default='en')  # User's preferred language for emails ('en' or 'es')
+    
     # Relationships
     group_permissions_detail = relationship(
         "UserGroupPermission",

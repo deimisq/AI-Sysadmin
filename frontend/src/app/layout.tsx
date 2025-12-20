@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/lib/theme-context";
 import { FeedbackButton } from "@/components/feedback-button";
 import { VersionNotification } from "@/components/version-notification";
 import { AuthProvider } from "@/components/auth-provider";
+import { Toaster } from "sonner";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -29,6 +30,12 @@ export default function RootLayout({
                             <FeedbackButton />
                             <VersionNotification />
                         </AuthProvider>
+                        <Toaster
+                            position="top-right"
+                            expand={true}
+                            richColors
+                            closeButton
+                        />
                     </I18nProvider>
                 </ThemeProvider>
             </body>

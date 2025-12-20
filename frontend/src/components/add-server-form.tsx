@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { useI18n } from "@/lib/i18n-context";
 import { CSVImport } from "@/components/csv-import";
 import { FileSpreadsheet, Server } from "lucide-react";
+import { toast } from "sonner";
 
 const OS_OPTIONS = [
     "Ubuntu 22.04",
@@ -83,7 +84,7 @@ export function AddServerForm({ onServerAdded, initialData, onCancel }: ServerFo
 
         // Validate that at least password or SSH key is provided (only for new servers)
         if (!initialData && !formData.ssh_password && !formData.ssh_key_path) {
-            alert("Debes proporcionar una contraseña o una clave SSH");
+            toast.error("Debes proporcionar una contraseña o una clave SSH");
             return;
         }
 
@@ -155,7 +156,7 @@ export function AddServerForm({ onServerAdded, initialData, onCancel }: ServerFo
             onServerAdded();
         } catch (error) {
             console.error("Failed to save server", error);
-            alert("Failed to save server. Please try again.");
+            toast.error("Failed to save server. Please try again.");
         } finally {
             setLoading(false);
         }

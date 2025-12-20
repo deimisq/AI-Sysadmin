@@ -133,6 +133,7 @@ class Server(Base):
     ssh_password = Column(String, nullable=True)  # Encrypted
     ssh_key_path = Column(String, nullable=True)  # Encrypted
     
+    created_by = Column(Integer, ForeignKey("users.id"), nullable=True)  # Track who created the server
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 

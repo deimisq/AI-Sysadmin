@@ -207,11 +207,17 @@ class SchedulerService:
             # Process each server
             recipients = [e.strip() for e in check.email_recipients.split(",") if e.strip()]
             
+            logger.info(f"Will process {len(servers)} server(s) for check '{check.name}':")
+            for idx, srv in enumerate(servers):
+                logger.info(f"  [{idx+1}/{len(servers)}] Server ID:{srv.id} Hostname:{srv.hostname}")
+            
             for server in servers:
+                logger.info(f"🔄 Processing Server ID:{server.id} ({server.hostname}) for Check ID:{check.id} ({check.name})")
                 try:
                     await self._process_server_check(db, check, server, recipients)
+                    logger.info(f"✅ Completed Server ID:{server.id} ({server.hostname})")
                 except Exception as e:
-                    logger.error(f"Failed to process server {server.hostname}: {e}")
+                    logger.error(f"❌ Failed to process server {server.hostname} (ID:{server.id}): {e}")
             
             # Update status
             check.last_status = "success"

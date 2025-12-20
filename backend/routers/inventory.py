@@ -126,7 +126,12 @@ def delete_group(
     return {"message": "Group deleted successfully"}
 
 @router.post("/servers/", response_model=schemas.Server)
-def create_server(server: schemas.ServerCreate, db: Session = Depends(dependencies.get_db)):
+def create_server(
+    server: schemas.ServerCreate,
+    current_user: models.User = Depends(dependencies.get_current_active_user),
+    db: Session = Depends(dependencies.get_db)
+):
+    """Create a new server - all authenticated users can create servers"""
     server_data = server.dict()
     
     # Validation removed to allow raw private keys
@@ -137,6 +142,9 @@ def create_server(server: schemas.ServerCreate, db: Session = Depends(dependenci
         server_data['ssh_password'] = encrypt_data(server_data['ssh_password'])
     if server_data.get('ssh_key_path'):
         server_data['ssh_key_path'] = encrypt_data(server_data['ssh_key_path'])
+    
+    # Add owner information
+    server_data['created_by'] = current_user.id
     
     db_server = models.Server(**server_data)
     db.add(db_server)
@@ -175,38 +183,82 @@ def read_servers(
     db: Session = Depends(dependencies.get_db),
     current_user: models.User = Depends(dependencies.get_current_active_user)
 ):
+    """
+    Get servers based on user permissions:
+    - Admins: See ALL servers
+    - Users: See servers they created + servers in their assigned groups
+    """
     # Superadmins and Admins can see all servers
     if current_user.role in [models.RoleType.SUPERADMIN.value, models.RoleType.ADMIN.value]:
         servers = db.query(models.Server).offset(skip).limit(limit).all()
         return servers
     
-    # Regular users can only see servers in their assigned groups
+    #Regular users see:
+    # 1. Servers they created
+    # 2. Servers in groups they belong to
+    
     # Get IDs of groups the user belongs to
     user_group_ids = [perm.group_id for perm in current_user.group_permissions_detail]
     
-    if not user_group_ids:
-        return []
-        
-    servers = db.query(models.Server).filter(
-        models.Server.group_id.in_(user_group_ids)
-    ).offset(skip).limit(limit).all()
+    # Build query: servers created by user OR in their groups
+    from sqlalchemy import or_
     
+    query = db.query(models.Server).filter(
+        or_(
+            models.Server.created_by == current_user.id,  # Own servers
+            models.Server.group_id.in_(user_group_ids) if user_group_ids else False  # Group servers
+        )
+    )
+    
+    servers = query.offset(skip).limit(limit).all()
     return servers
 
 @router.delete("/servers/{server_id}")
-def delete_server(server_id: int, db: Session = Depends(dependencies.get_db)):
+def delete_server(
+    server_id: int,
+    current_user: models.User = Depends(dependencies.get_current_active_user),
+    db: Session = Depends(dependencies.get_db)
+):
+    """Delete a server - users can only delete their own servers, admins can delete any"""
     server = db.query(models.Server).filter(models.Server.id == server_id).first()
     if not server:
         raise HTTPException(status_code=404, detail="Server not found")
+    
+    # Check permissions
+    is_admin = current_user.role in [models.RoleType.SUPERADMIN.value, models.RoleType.ADMIN.value]
+    is_owner = server.created_by == current_user.id
+    
+    if not (is_admin or is_owner):
+        raise HTTPException(
+            status_code=403,
+            detail="You can only delete servers you created or be an admin"
+        )
+    
     db.delete(server)
     db.commit()
     return {"message": "Server deleted successfully"}
 
 @router.put("/servers/{server_id}", response_model=schemas.Server)
-def update_server(server_id: int, server_update: schemas.ServerUpdate, db: Session = Depends(dependencies.get_db)):
+def update_server(
+    server_id: int,
+    server_update: schemas.ServerUpdate,
+    current_user: models.User = Depends(dependencies.get_current_active_user),
+    db: Session = Depends(dependencies.get_db)
+):
+    """Update a server - users can only edit their own servers, admins can edit any"""
     db_server = db.query(models.Server).filter(models.Server.id == server_id).first()
     if not db_server:
         raise HTTPException(status_code=404, detail="Server not found")
+    
+    # Check permissions
+    is_admin = current_user.role in [models.RoleType.SUPERADMIN.value, models.RoleType.ADMIN.value]
+    is_owner = db_server.created_by == current_user.id
+    
+    if not (is_admin or is_owner):
+        raise HTTPException(
+            status_code=403,
+            detail="You can only edit servers you created or be an admin"
+        )
     
     update_data = server_update.dict(exclude_unset=True)
     

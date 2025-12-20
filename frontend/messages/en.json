@@ -13,7 +13,8 @@
         "edit": "Edit",
         "close": "Close",
         "confirm": "Confirm",
-        "loadingData": "Loading data..."
+        "loadingData": "Loading data...",
+        "back": "Back to Dashboard"
     },
     "license": {
         "title": "License Management",
@@ -40,7 +41,8 @@
         "addServer": "Add Server"
     },
     "sidebar": {
-        "scheduledReports": "Scheduled Reports"
+        "scheduledReports": "Scheduled Reports",
+        "documentation": "Documentation"
     },
     "serverList": {
         "noServers": "No servers found. Add one to get started.",
@@ -398,7 +400,28 @@
         "previous": "Previous",
         "next": "Next",
         "noLogs": "No audit logs found",
-        "noResults": "No logs found matching your search"
+        "noResults": "No logs found matching your search",
+        "filters": "Filters",
+        "startDate": "Start Date",
+        "endDate": "End Date",
+        "action": "Action",
+        "allActions": "All Actions",
+        "clearFilters": "Clear",
+        "applyFilters": "Apply Filters",
+        "filtersApplied": "Filters applied",
+        "filtersCleared": "Filters cleared",
+        "exportCSV": "Export CSV",
+        "exporting": "Exporting...",
+        "exportSuccess": "Export successful",
+        "exportError": "Failed to export",
+        "loadError": "Failed to load logs",
+        "showStats": "Show Statistics",
+        "hideStats": "Hide Statistics",
+        "today": "Today",
+        "thisWeek": "This Week",
+        "thisMonth": "This Month",
+        "total": "Total",
+        "totalRecords": "total records"
     },
     "notificationPreferences": {
         "title": "Notification Preferences",

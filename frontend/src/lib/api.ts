@@ -289,15 +289,86 @@ export async function fetchUserGroups(userId: number) {
 }
 
 // Audit & Stats
-export async function fetchAuditLogs(skip: number = 0, limit: number = 100) {
+export async function fetchAuditLogs(
+    skip: number = 0,
+    limit: number = 100,
+    filters?: {
+        start_date?: string;
+        end_date?: string;
+        action?: string;
+        resource_type?: string;
+        user_id?: number;
+    }
+) {
     const token = typeof window !== 'undefined' ? localStorage.getItem("token") : null;
-    const res = await fetch(`${API_BASE_URL}/admin/audit-logs?skip=${skip}&limit=${limit}`, {
+    
+    const params = new URLSearchParams({
+        skip: skip.toString(),
+        limit: limit.toString(),
+    });
+    
+    if (filters) {
+        if (filters.start_date) params.append('start_date', filters.start_date);
+        if (filters.end_date) params.append('end_date', filters.end_date);
+        if (filters.action) params.append('action', filters.action);
+        if (filters.resource_type) params.append('resource_type', filters.resource_type);
+        if (filters.user_id) params.append('user_id', filters.user_id.toString());
+    }
+    
+    const res = await fetch(`${API_BASE_URL}/admin/audit-logs?${params.toString()}`, {
         headers: {
             ...(token && { "Authorization": `Bearer ${token}` }),
         },
     });
     if (!res.ok) throw new Error("Failed to fetch audit logs");
     return res.json();
+}
+
+export async function fetchAuditLogStats() {
+    const token = typeof window !== 'undefined' ? localStorage.getItem("token") : null;
+    const res = await fetch(`${API_BASE_URL}/admin/audit-logs/stats`, {
+        headers: {
+            ...(token && { "Authorization": `Bearer ${token}` }),
+        },
+    });
+    if (!res.ok) throw new Error("Failed to fetch audit log stats");
+    return res.json();
+}
+
+export async function exportAuditLogsCSV(filters?: {
+    start_date?: string;
+    end_date?: string;
+    action?: string;
+    resource_type?: string;
+    user_id?: number;
+}) {
+    const token = typeof window !== 'undefined' ? localStorage.getItem("token") : null;
+    
+    const params = new URLSearchParams();
+    if (filters) {
+        if (filters.start_date) params.append('start_date', filters.start_date);
+        if (filters.end_date) params.append('end_date', filters.end_date);
+        if (filters.action) params.append('action', filters.action);
+        if (filters.resource_type) params.append('resource_type', filters.resource_type);
+        if (filters.user_id) params.append('user_id', filters.user_id.toString());
+    }
+    
+    const res = await fetch(`${API_BASE_URL}/admin/audit-logs/export/csv?${params.toString()}`, {
+        headers: {
+            ...(token && { "Authorization": `Bearer ${token}` }),
+        },
+    });
+    if (!res.ok) throw new Error("Failed to export audit logs");
+    
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `audit_logs_${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
 }
 
 export async function fetchSystemStats() {

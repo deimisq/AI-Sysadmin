@@ -32,6 +32,12 @@ class PermissionType(str, enum.Enum):
     EDIT_USERS = "edit_users"
     DELETE_USERS = "delete_users"
     
+    # Documentation permissions
+    VIEW_DOCUMENTATION = "view_documentation"
+    CREATE_DOCUMENTATION = "create_documentation"
+    EDIT_DOCUMENTATION = "edit_documentation"
+    DELETE_DOCUMENTATION = "delete_documentation"
+    
     # System permissions
     VIEW_LOGS = "view_logs"
     MANAGE_SYSTEM = "manage_system"
@@ -128,12 +134,36 @@ class Server(Base):
     ssh_key_path = Column(String, nullable=True)  # Encrypted
     
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
     client = relationship("Client", back_populates="servers")
     group = relationship("ServerGroup", back_populates="servers")
     credentials = relationship("Credential", back_populates="server")
     logs = relationship("OperationLog", back_populates="server")
+
+# Documentation Article Model
+class DocumentationArticle(Base):
+    __tablename__ = 'documentation_articles'
+    
+    id = Column(Integer, primary_key=True)
+    slug = Column(String, unique=True, nullable=False, index=True)  # URL-friendly identifier
+    title = Column(String, nullable=False)
+    description = Column(Text)  # Short description for cards/lists
+    content = Column(Text, nullable=False)  # Rich HTML content from TipTap
+    icon = Column(String)  # Icon name from lucide-react
+    category = Column(String, default="general")  # Category for organization
+    order = Column(Integer, default=0)  # Display order
+    published = Column(Boolean, default=False)  # Draft vs published
+    
+    # Author and timestamps
+    author_id = Column(Integer, ForeignKey('users.id', ondelete='SET NULL'))
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    last_edited_by_id = Column(Integer, ForeignKey('users.id', ondelete='SET NULL'))
+    
+    # Relationships
+    author = relationship("User", foreign_keys=[author_id])
+    last_edited_by = relationship("User", foreign_keys=[last_edited_by_id])
 
 class Credential(Base):
     __tablename__ = "credentials"

@@ -15,6 +15,7 @@ import {
     Settings,
     Activity,
     Calendar,
+    Book,
     Menu
 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
@@ -43,6 +44,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const navItems = [
         { label: t.header.title || "Dashboard", icon: LayoutDashboard, href: "/dashboard", exact: true },
         { label: t.sidebar?.scheduledReports || "Informes Programados", icon: Calendar, href: "/dashboard/scheduled-reports" },
+        { label: t.sidebar?.documentation || "Documentación", icon: Book, href: "/documentation" },
         { label: t.dashboard.profile || "Profile", icon: User, href: "/profile" },
     ];
 

@@ -1,13 +1,17 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
-from sqlalchemy import and_
-from typing import List
+from sqlalchemy import and_, func
+from typing import List, Optional
+from datetime import datetime, timedelta
 import models
 import schemas
 from dependencies import get_db, get_current_active_user, get_current_superuser
 from models import RoleType
 from utils.permissions import has_permission, can_access_group, get_user_accessible_groups
 from utils.auth import get_password_hash
+import io
+import csv
 
 router = APIRouter()
 
@@ -302,18 +306,237 @@ def get_user_groups(
 def get_audit_logs(
     skip: int = 0,
     limit: int = 100,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    action: Optional[str] = None,
+    resource_type: Optional[str] = None,
+    user_id: Optional[int] = None,
     current_user: models.User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
-    """Get audit logs (admin only)"""
+    """Get audit logs with advanced filtering (admin only)"""
     if current_user.role not in [RoleType.SUPERADMIN.value, RoleType.ADMIN.value]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
-    logs = db.query(models.AuditLog).order_by(
+    # Build query with joins to get user information
+    query = db.query(models.AuditLog).join(
+        models.User, 
+        models.AuditLog.user_id == models.User.id,
+        isouter=True  # Left join in case user was deleted
+    )
+    
+    # Apply filters
+    if start_date:
+        try:
+            start_dt = datetime.fromisoformat(start_date.replace('Z', '+00:00'))
+            query = query.filter(models.AuditLog.created_at >= start_dt)
+        except ValueError:
+            pass
+    
+    if end_date:
+        try:
+            end_dt = datetime.fromisoformat(end_date.replace('Z', '+00:00'))
+            query = query.filter(models.AuditLog.created_at <= end_dt)
+        except ValueError:
+            pass
+    
+    if action:
+        query = query.filter(models.AuditLog.action == action)
+    
+    if resource_type:
+        query = query.filter(models.AuditLog.resource_type == resource_type)
+    
+    if user_id:
+        query = query.filter(models.AuditLog.user_id == user_id)
+    
+    # Get total count
+    total = query.count()
+    
+    # Get paginated results
+    logs = query.order_by(
         models.AuditLog.created_at.desc()
     ).offset(skip).limit(limit).all()
     
-    return logs
+    # Enrich logs with user data
+    enriched_logs = []
+    for log in logs:
+        log_dict = {
+            "id": log.id,
+            "user_id": log.user_id,
+            "username": log.user.username if log.user else "Unknown User",
+            "user_email": log.user.email if log.user else None,
+            "user_role": log.user.role if log.user else None,
+            "action": log.action,
+            "resource_type": log.resource_type,
+            "resource_id": log.resource_id,
+            "details": log.details,
+            "ip_address": log.ip_address,
+            "created_at": log.created_at
+        }
+        enriched_logs.append(log_dict)
+    
+    return {"logs": enriched_logs, "total": total}
+
+@router.get("/audit-logs/stats")
+def get_audit_log_stats(
+    current_user: models.User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Get audit log statistics (admin only)"""
+    if current_user.role not in [RoleType.SUPERADMIN.value, RoleType.ADMIN.value]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Get date ranges
+    now = datetime.utcnow()
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    week_start = today_start - timedelta(days=7)
+    month_start = today_start - timedelta(days=30)
+    
+    # Total logs
+    total_logs = db.query(models.AuditLog).count()
+    
+    # Logs today
+    logs_today = db.query(models.AuditLog).filter(
+        models.AuditLog.created_at >= today_start
+    ).count()
+    
+    # Logs this week
+    logs_this_week = db.query(models.AuditLog).filter(
+        models.AuditLog.created_at >= week_start
+    ).count()
+    
+    # Logs this month
+    logs_this_month = db.query(models.AuditLog).filter(
+        models.AuditLog.created_at >= month_start
+    ).count()
+    
+    # Most active users (top 5)
+    top_users = db.query(
+        models.AuditLog.user_id,
+        models.User.username,
+        func.count(models.AuditLog.id).label('count')
+    ).join(models.User).group_by(
+        models.AuditLog.user_id,
+        models.User.username
+    ).order_by(func.count(models.AuditLog.id).desc()).limit(5).all()
+    
+    # Most common actions (top 5)
+    top_actions = db.query(
+        models.AuditLog.action,
+        func.count(models.AuditLog.id).label('count')
+    ).group_by(models.AuditLog.action).order_by(
+        func.count(models.AuditLog.id).desc()
+    ).limit(5).all()
+    
+    # Action breakdown
+    action_breakdown = {}
+    for action, count in top_actions:
+        action_breakdown[action] = count
+    
+    # User breakdown
+    user_breakdown = []
+    for user_id, username, count in top_users:
+        user_breakdown.append({
+            "user_id": user_id,
+            "username": username,
+            "count": count
+        })
+    
+    return {
+        "total_logs": total_logs,
+        "logs_today": logs_today,
+        "logs_this_week": logs_this_week,
+        "logs_this_month": logs_this_month,
+        "top_users": user_breakdown,
+        "top_actions": action_breakdown
+    }
+
+@router.get("/audit-logs/export/csv")
+def export_audit_logs_csv(
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    action: Optional[str] = None,
+    resource_type: Optional[str] = None,
+    user_id: Optional[int] = None,
+    current_user: models.User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Export audit logs to CSV (admin only)"""
+    if current_user.role not in [RoleType.SUPERADMIN.value, RoleType.ADMIN.value]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Build query with same filters as main endpoint
+    query = db.query(models.AuditLog).join(
+        models.User, 
+        models.AuditLog.user_id == models.User.id,
+        isouter=True
+    )
+    
+    # Apply filters
+    if start_date:
+        try:
+            start_dt = datetime.fromisoformat(start_date.replace('Z', '+00:00'))
+            query = query.filter(models.AuditLog.created_at >= start_dt)
+        except ValueError:
+            pass
+    
+    if end_date:
+        try:
+            end_dt = datetime.fromisoformat(end_date.replace('Z', '+00:00'))
+            query = query.filter(models.AuditLog.created_at <= end_dt)
+        except ValueError:
+            pass
+    
+    if action:
+        query = query.filter(models.AuditLog.action == action)
+    
+    if resource_type:
+        query = query.filter(models.AuditLog.resource_type == resource_type)
+    
+    if user_id:
+        query = query.filter(models.AuditLog.user_id == user_id)
+    
+    # Get all logs (limit to reasonable number)
+    logs = query.order_by(
+        models.AuditLog.created_at.desc()
+    ).limit(10000).all()
+    
+    # Create CSV in memory
+    output = io.StringIO()
+    writer = csv.writer(output)
+    
+    # Write header
+    writer.writerow([
+        'ID', 'Date/Time', 'User ID', 'Username', 'User Email', 'Role',
+        'Action', 'Resource Type', 'Resource ID', 'IP Address', 'Details'
+    ])
+    
+    # Write data
+    for log in logs:
+        writer.writerow([
+            log.id,
+            log.created_at.isoformat() if log.created_at else '',
+            log.user_id,
+            log.user.username if log.user else 'Unknown',
+            log.user.email if log.user else '',
+            log.user.role if log.user else '',
+            log.action,
+            log.resource_type,
+            log.resource_id or '',
+            log.ip_address or '',
+            str(log.details) if log.details else ''
+        ])
+    
+    # Prepare response
+    output.seek(0)
+    filename = f"audit_logs_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.csv"
+    
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
+
 
 # ==================== SYSTEM STATS ====================
 

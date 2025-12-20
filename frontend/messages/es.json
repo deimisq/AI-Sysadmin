@@ -13,7 +13,8 @@
         "edit": "Editar",
         "close": "Cerrar",
         "confirm": "Confirmar",
-        "loadingData": "Cargando datos..."
+        "loadingData": "Cargando datos...",
+        "back": "Volver al Dashboard"
     },
     "license": {
         "title": "Gestión de Licencia",
@@ -40,7 +41,8 @@
         "addServer": "Agregar Servidor"
     },
     "sidebar": {
-        "scheduledReports": "Informes Programados"
+        "scheduledReports": "Informes Programados",
+        "documentation": "Documentación"
     },
     "serverList": {
         "noServers": "No se encontraron servidores. Agrega uno para comenzar.",
@@ -398,7 +400,28 @@
         "previous": "Anterior",
         "next": "Siguiente",
         "noLogs": "No se encontraron registros de auditoría",
-        "noResults": "No se encontraron registros que coincidan con su búsqueda"
+        "noResults": "No se encontraron registros que coincidan con su búsqueda",
+        "filters": "Filtros",
+        "startDate": "Fecha Inicio",
+        "endDate": "Fecha Fin",
+        "action": "Acción",
+        "allActions": "Todas las Acciones",
+        "clearFilters": "Limpiar",
+        "applyFilters": "Aplicar Filtros",
+        "filtersApplied": "Filtros aplicados",
+        "filtersCleared": "Filtros limpiados",
+        "exportCSV": "Exportar CSV",
+        "exporting": "Exportando...",
+        "exportSuccess": "Exportación exitosa",
+        "exportError": "Error al exportar",
+        "loadError": "Error al cargar registros",
+        "showStats": "Mostrar Estadísticas",
+        "hideStats": "Ocultar Estadísticas",
+        "today": "Hoy",
+        "thisWeek": "Esta Semana",
+        "thisMonth": "Este Mes",
+        "total": "Total",
+        "totalRecords": "registros totales"
     },
     "notificationPreferences": {
         "title": "Preferencias de Notificación",

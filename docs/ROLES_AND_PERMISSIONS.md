@@ -209,13 +209,17 @@ AI Sysadmin Agent
 
 | Acción | SUPERADMIN | ADMIN | GROUP_ADMIN | USER |
 |--------|:----------:|:-----:|:-----------:|:----:|
-| Ver informes | ✅ | ✅ | ❌ | ❌ |
-| Crear informe | ✅ | ✅ | ❌ | ❌ |
-| Editar informe | ✅ | ✅ | ❌ | ❌ |
-| Eliminar informe | ✅ | ✅ | ❌ | ❌ |
-| Ejecutar manualmente | ✅ | ✅ | ❌ | ❌ |
-| Descargar PDF | ✅ | ✅ | ❌ | ❌ |
-| Ver historial | ✅ | ✅ | ❌ | ❌ |
+| Ver informes | ✅ Todos | ✅ Todos | ✅ Propios | ✅ Propios |
+| Crear informe | ✅ | ✅ | ✅ | ✅ |
+| Editar informe | ✅ Todos | ✅ Todos | ⚠️ Propios | ⚠️ Propios |
+| Eliminar informe | ✅ Todos | ✅ Todos | ⚠️ Propios | ⚠️ Propios |
+| Ejecutar manualmente | ✅ Todos | ✅ Todos | ⚠️ Propios | ⚠️ Propios |
+| Descargar PDF | ✅ Todos | ✅ Todos | ✅ Propios | ✅ Propios |
+| Ver historial | ✅ Todos | ✅ Todos | ✅ Propios | ✅ Propios |
+
+**Nota**: 
+- **Dashboard > Informes Programados**: Usuarios ven SOLO sus propios informes
+- **Admin > Informes**: Admins ven TODOS los informes del sistema
 
 ### 📚 Documentación
 

@@ -72,10 +72,10 @@ AI Sysadmin Agent
 │   │   └── ✅ Ver todos los usuarios
 │   │
 │   ├── ✅ Gestión de Servidores
-│   │   ├── ✅ Crear servidores
-│   │   ├── ✅ Editar cualquier servidor
-│   │   ├── ✅ Eliminar cualquier servidor
-│   │   └── ✅ Ver todos los servidores
+│   ├── ✅ Crear servidores (TODOS los usuarios)
+│   ├── ✅ Editar cualquier servidor
+│   ├── ✅ Eliminar cualquier servidor
+│   └── ✅ Ver todos los servidores
 │   │
 │   ├── ✅ Gestión de Grupos
 │   │   ├── ✅ Crear grupos
@@ -124,10 +124,11 @@ AI Sysadmin Agent
 │
 └── 👤 USER
     ├── ✅ Ver Servidores
-    │   ├── ✅ Ver servidores de sus grupos
-    │   ├── ❌ No puede ver todos los servidores
-    │   ├── ❌ No puede crear servidores
-    │   └── ❌ No puede eliminar servidores
+    │   ├── ✅ **Crear sus propios servidores**
+    │   ├── ✅ Ver servidores que creó
+    │   ├── ✅ Ver servidores de grupos asignados
+    │   ├── ✅ **Editar/Eliminar solo sus servidores**
+    │   └── ❌ No puede editar/eliminar servidores de otros
     │
     ├── ✅ AI Copilot
     │   ├── ✅ Usar AI Copilot en servidores permitidos
@@ -168,10 +169,10 @@ AI Sysadmin Agent
 | Acción | SUPERADMIN | ADMIN | GROUP_ADMIN | USER |
 |--------|:----------:|:-----:|:-----------:|:----:|
 | Ver dashboard | ✅ | ✅ | ✅ | ✅ |
-| Ver todos los servidores | ✅ | ✅ | ⚠️ Solo su grupo | ❌ Solo sus grupos |
-| Agregar servidor | ✅ | ✅ | ❌ | ❌ |
-| Editar servidor | ✅ | ✅ | ⚠️ Solo su grupo | ❌ |
-| Eliminar servidor | ✅ | ✅ | ❌ | ❌ |
+| Ver todos los servidores | ✅ | ✅ | ⚠️ Solo su grupo | ⚠️ Propios + Grupos |
+| **Agregar servidor** | ✅ | ✅ | ✅ | ✅ **NUEVO** |
+| **Editar servidor** | ✅ Todos | ✅ Todos | ⚠️ Solo su grupo | ✅ **Solo propios** |
+| **Eliminar servidor** | ✅ Todos | ✅ Todos | ⚠️ Solo propios | ✅ **Solo propios** |
 | Gestionar grupos | ✅ | ✅ | ⚠️ Solo su grupo | ❌ |
 
 ### 👥 Gestión de Usuarios
@@ -189,12 +190,18 @@ AI Sysadmin Agent
 
 | Acción | SUPERADMIN | ADMIN | GROUP_ADMIN | USER |
 |--------|:----------:|:-----:|:-----------:|:----:|
-| Ver servidores | ✅ Todos | ✅ Todos | ⚠️ Su grupo | ✅ Sus grupos |
-| Crear servidor | ✅ | ✅ | ❌ | ❌ |
-| Editar servidor | ✅ | ✅ | ⚠️ Su grupo | ❌ |
-| Eliminar servidor | ✅ | ✅ | ❌ | ❌ |
+| Ver servidores | ✅ Todos | ✅ Todos | ⚠️ Su grupo | ✅ **Propios + Grupos** |
+| **Crear servidor** | ✅ | ✅ | ✅ | ✅ **SÍ** |
+| **Editar servidor** | ✅ Todos | ✅ Todos | ⚠️ Propios | ✅ **Solo propios** |
+| **Eliminar servidor** | ✅ Todos | ✅ Todos | ⚠️ Propios | ✅ **Solo propios** |
 | Acceder consola SSH | ✅ | ✅ | ✅ | ✅ |
 | Ejecutar comandos | ✅ Todos | ✅ Todos | ⚠️ Limitados | ✅ Solo lectura |
+
+**⚠️ IMPORTANTE**: Los usuarios ahora pueden:
+- ✅ **Crear sus propios servidores**
+- ✅ **Ver servidores que crearon + servidores compartidos vía grupos**
+- ✅ **Editar/Eliminar SOLO los servidores que crearon**
+- ❌ **NO pueden modificar servidores de otros usuarios** (solo verlos si están compartidos)
 
 ### 🤖 AI Copilot
 
@@ -336,21 +343,25 @@ MANAGE_SYSTEM       # Gestionar sistema
 
 ### 👤 Usuario Normal (USER)
 
-**Escenario**: Desarrollador que necesita monitorear servidores
+**Escenario**: Desarrollador que necesita monitorear y gestionar servidores
 
 **Puede hacer**:
-- ✅ Ver estado de servidores de su equipo
+- ✅ **Crear sus propios servidores**
+- ✅ Ver estado de servidores que creó
+- ✅ Ver servidores compartidos de su equipo (vía grupos)
+- ✅ **Editar y eliminar sus propios servidores**
 - ✅ Usar AI Copilot para diagnósticos
 - ✅ Acceder a consola SSH (comandos de lectura)
 - ✅ Ver documentación del sistema
 - ✅ Cambiar idioma de la interfaz
+- ✅ **Crear y gestionar sus informes programados**
 
 **No puede hacer**:
-- ❌ Agregar o eliminar servidores
-- ❌ Ver servidores de otros equipos
+- ❌ Editar o eliminar servidores de otros usuarios
+- ❌ Ver servidores de equipos a los que no pertenece
 - ❌ Acceder a configuración del sistema
 - ❌ Ver logs de auditoría
-- ❌ Crear reportes programados
+- ❌ Gestionar usuarios
 
 ### 👥 Administrador de Grupo (GROUP_ADMIN)
 
@@ -449,3 +460,57 @@ MANAGE_SYSTEM       # Gestionar sistema
 
 **Última actualización**: 2025-12-20  
 **Versión del sistema**: 0.9.4-beta14
+
+---
+
+## 🆕 Cambios Recientes (v0.9.5)
+
+### Sistema de Permisos Mejorado
+
+**Fecha**: 2025-12-20
+
+#### Cambios Principales:
+
+1. **✅ Usuarios Pueden Crear Servidores**
+   - Antes: Solo Admin/Superadmin
+   - Ahora: TODOS los usuarios autenticados
+   - Tracking automático de propiedad (created_by)
+
+2. **✅ Visibilidad de Servidores Mejorada**
+   - Antes: Solo servidores de grupos asignados
+   - Ahora: Servidores propios + compartidos vía grupos
+   - Dashboard nunca está vacío para usuarios con servidores
+
+3. **✅ Control Granular de Edición**
+   - Usuarios: Solo editan/eliminan sus servidores
+   - Admins: Editan/eliminan cualquier servidor
+   - Compartidos: Solo lectura para no-owners
+
+4. **✅ Informes Programados Accesibles**
+   - Antes: Solo Admin/Superadmin
+   - Ahora: Todos los usuarios
+   - Usuarios ven solo sus propios informes
+   - Admins ven todos los informes
+
+5. **✅ Reset de Contraseñas por Admin**
+   - Campo opcional en edición de usuarios
+   - Solo Admin/Superadmin puede cambiar contraseñas
+   - Útil para recuperación de acceso
+
+### Migración de Base de Datos
+
+- **Tabla**: `servers`
+- **Nueva columna**: `created_by` (INTEGER, FK a users.id)
+- **Propósito**: Tracking de propiedad de servidores
+- **Nullable**: Sí (para servidores existentes)
+
+### Documentación Actualizada
+
+- ✅ Matriz de permisos actualizada
+- ✅ Casos de uso por rol actualizados
+- ✅ Guía de referencia rápida actualizada
+
+---
+
+**Última actualización**: 2025-12-20  
+**Versión del sistema**: 0.9.5-dev

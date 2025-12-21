@@ -164,6 +164,7 @@ class SchedulerService:
         """Execute a scheduled health check"""
         db = SessionLocal()
         try:
+            # Query the scheduled check with fresh data
             check = db.query(models.ScheduledHealthCheck).filter(
                 models.ScheduledHealthCheck.id == check_id
             ).first()
@@ -172,34 +173,70 @@ class SchedulerService:
                 logger.error(f"Scheduled check {check_id} not found")
                 return
             
-            logger.info(f"Executing scheduled health check: {check.name}")
+            # Refresh to ensure we have the latest data from DB
+            db.refresh(check)
+            
+            logger.info(f"=" * 80)
+            logger.info(f"EXECUTING SCHEDULED HEALTH CHECK")
+            logger.info(f"  Check ID: {check.id}")
+            logger.info(f"  Check Name: {check.name}")
+            logger.info(f"  Configured Server ID: {check.server_id}")
+            logger.info(f"  Configured Group ID: {check.group_id}")
+            logger.info(f"=" * 80)
             
             # Update status
             check.last_run = datetime.now()
             check.last_status = "running"
             db.commit()
             
-            # Get target servers
+            # Get target servers with fresh session to avoid cached data
             servers = []
             if check.server_id:
+                logger.info(f"🔍 QUERYING for SINGLE server with ID: {check.server_id}")
+                
+                # Use a fresh query with explicit options to avoid cache
                 server = db.query(models.Server).filter(
                     models.Server.id == check.server_id
                 ).first()
+                
                 if server:
+                    # Refresh to ensure fresh data
+                    db.refresh(server)
+                    
+                    logger.info(f"✅ FOUND Server:")
+                    logger.info(f"    - Server ID from query: {server.id}")
+                    logger.info(f"    - Server Hostname: {server.hostname}")
+                    logger.info(f"    - Server IP: {server.ip_address}")
+                    
+                    # CRITICAL VALIDATION: Ensure the queried server matches expected
+                    if server.id != check.server_id:
+                        logger.error(f"❌ CRITICAL BUG DETECTED!")
+                        logger.error(f"    Expected Server ID: {check.server_id}")
+                        logger.error(f"    Got Server ID: {server.id}")
+                        logger.error(f"    This indicates a session/cache issue!")
+                        # Don't process this server - abort
+                        check.last_status = "failed"
+                        db.commit()
+                        return
+                    
                     servers.append(server)
-                    logger.info(f"Check '{check.name}' targeting SPECIFIC server: {server.hostname} (ID: {server.id})")
+                    logger.info(f"✅ Check '{check.name}' will target server: {server.hostname} (ID: {server.id})")
                 else:
-                    logger.error(f"Server ID {check.server_id} not found for check '{check.name}'")
+                    logger.error(f"❌ Server ID {check.server_id} NOT FOUND for check '{check.name}'")
+                    
             elif check.group_id:
+                logger.info(f"🔍 QUERYING for GROUP servers with Group ID: {check.group_id}")
                 servers = db.query(models.Server).filter(
                     models.Server.group_id == check.group_id
                 ).all()
-                logger.info(f"Check '{check.name}' targeting GROUP (ID: {check.group_id}) with {len(servers)} servers")
+                logger.info(f"✅ Found {len(servers)} servers in group {check.group_id}")
                 if servers:
-                    logger.info(f"  Servers in group: {[s.hostname for s in servers]}")
+                    for srv in servers:
+                        db.refresh(srv)
+                        logger.info(f"    - Server ID: {srv.id}, Hostname: {srv.hostname}")
             
             if not servers:
-                logger.warning(f"No servers found for check {check.name}")
+                logger.warning(f"⚠️  No servers found for check {check.name}")
                 check.last_status = "failed"
                 db.commit()
                 return
@@ -207,17 +244,31 @@ class SchedulerService:
             # Process each server
             recipients = [e.strip() for e in check.email_recipients.split(",") if e.strip()]
             
-            logger.info(f"Will process {len(servers)} server(s) for check '{check.name}':")
+            logger.info(f"📋 Will process {len(servers)} server(s) for check '{check.name}':")
             for idx, srv in enumerate(servers):
-                logger.info(f"  [{idx+1}/{len(servers)}] Server ID:{srv.id} Hostname:{srv.hostname}")
+                logger.info(f"    [{idx+1}/{len(servers)}] Server ID: {srv.id}, Hostname: {srv.hostname}")
             
-            for server in servers:
-                logger.info(f"🔄 Processing Server ID:{server.id} ({server.hostname}) for Check ID:{check.id} ({check.name})")
+            for idx, server in enumerate(servers):
+                logger.info(f"")
+                logger.info(f"{'='*80}")
+                logger.info(f"🔄 PROCESSING SERVER [{idx+1}/{len(servers)}]")
+                logger.info(f"    Scheduled Check: {check.name} (ID: {check.id})")
+                logger.info(f"    Target Server: {server.hostname} (ID: {server.id})")
+                logger.info(f"    Server IP: {server.ip_address}")
+                logger.info(f"{'='*80}")
+                
                 try:
+                    # Validate again before processing
+                    if check.server_id and server.id != check.server_id:
+                        logger.error(f"❌ MISMATCH DETECTED BEFORE PROCESSING!")
+                        logger.error(f"    Expected: {check.server_id}, Got: {server.id}")
+                        continue
+                    
                     await self._process_server_check(db, check, server, recipients)
-                    logger.info(f"✅ Completed Server ID:{server.id} ({server.hostname})")
+                    logger.info(f"✅ Successfully completed server {server.hostname} (ID: {server.id})")
                 except Exception as e:
-                    logger.error(f"❌ Failed to process server {server.hostname} (ID:{server.id}): {e}")
+                    logger.error(f"❌ Failed to process server {server.hostname} (ID: {server.id}): {e}")
+                    logger.exception(e)
             
             # Update status
             check.last_status = "success"
@@ -228,10 +279,13 @@ class SchedulerService:
                 check.next_run = job.next_run_time
             
             db.commit()
-            logger.info(f"Completed scheduled health check: {check.name}")
+            logger.info(f"{'='*80}")
+            logger.info(f"✅ COMPLETED scheduled health check: {check.name}")
+            logger.info(f"{'='*80}")
             
         except Exception as e:
-            logger.error(f"Failed to execute health check {check_id}: {e}")
+            logger.error(f"❌ Failed to execute health check {check_id}: {e}")
+            logger.exception(e)
             try:
                 check.last_status = "failed"
                 db.commit()
@@ -248,9 +302,13 @@ class SchedulerService:
         recipients: list
     ):
         """Process health check for a single server"""
-        logger.info(f"Processing health check for server: {server.hostname}")
+        logger.info(f"▶️  STARTING _process_server_check")
+        logger.info(f"    Check ID: {check.id}, Check Name: {check.name}")
+        logger.info(f"    Server ID: {server.id}, Server Hostname: {server.hostname}")
+        logger.info(f"    Server IP: {server.ip_address}")
         
         # Gather diagnostics (run in thread to avoid blocking)
+        logger.info(f"📊 Gathering diagnostics for server {server.hostname} (ID: {server.id})...")
         loop = asyncio.get_event_loop()
         diagnostics = await loop.run_in_executor(
             None,
@@ -258,14 +316,22 @@ class SchedulerService:
             server,
             db
         )
+        logger.info(f"✅ Diagnostics gathered for {server.hostname}")
         
         # Get previous report for comparison
+        logger.info(f"🔍 Querying for previous reports of Check ID {check.id} + Server ID {server.id}...")
         previous_report = db.query(models.HealthCheckReport).filter(
             models.HealthCheckReport.scheduled_check_id == check.id,
             models.HealthCheckReport.server_id == server.id
         ).order_by(models.HealthCheckReport.created_at.desc()).first()
         
+        if previous_report:
+            logger.info(f"    Found previous report ID {previous_report.id} for this server")
+        else:
+            logger.info(f"    No previous report found for this server")
+        
         # Generate AI analysis
+        logger.info(f"🤖 Generating AI analysis for {server.hostname}...")
         ai_analysis = await loop.run_in_executor(
             None,
             report_service.generate_ai_analysis,
@@ -273,14 +339,23 @@ class SchedulerService:
             db,
             "es"
         )
+        logger.info(f"✅ AI analysis generated")
         
         # Compare with previous
+        logger.info(f"📈 Comparing with previous report...")
         comparison = report_service.compare_with_previous(diagnostics, previous_report)
         
         # Extract metrics
         metrics = report_service.extract_metrics(diagnostics)
         
         # Create report record
+        logger.info(f"")
+        logger.info(f"💾 CREATING HealthCheckReport record:")
+        logger.info(f"    scheduled_check_id = {check.id}")
+        logger.info(f"    server_id = {server.id}")
+        logger.info(f"    server_hostname = {server.hostname}")
+        logger.info(f"")
+        
         report = models.HealthCheckReport(
             scheduled_check_id=check.id,
             server_id=server.id,
@@ -297,8 +372,13 @@ class SchedulerService:
         db.add(report)
         db.flush()  # Get the ID
         
+        logger.info(f"✅ Report record created with ID: {report.id}")
+        logger.info(f"    Confirmed - Report.server_id: {report.server_id}")
+        logger.info(f"    Confirmed - Report.server_hostname: {report.server_hostname}")
+        
         # Generate PDF
         try:
+            logger.info(f"📄 Generating PDF report for {server.hostname}...")
             pdf_filename = report_service.generate_pdf_report(
                 server_hostname=server.hostname,
                 diagnostics=diagnostics,
@@ -307,15 +387,19 @@ class SchedulerService:
                 report_id=report.id
             )
             report.pdf_filename = pdf_filename
+            logger.info(f"✅ PDF generated: {pdf_filename}")
         except Exception as e:
-            logger.error(f"Failed to generate PDF: {e}")
+            logger.error(f"❌ Failed to generate PDF: {e}")
+            logger.exception(e)
             report.error_message = f"PDF generation failed: {str(e)}"
         
         db.commit()
+        logger.info(f"✅ Report committed to database")
         
         # Send email
         if recipients and report.pdf_filename:
             try:
+                logger.info(f"📧 Sending email to {len(recipients)} recipient(s)...")
                 await loop.run_in_executor(
                     None,
                     report_service.send_report_email,
@@ -325,10 +409,13 @@ class SchedulerService:
                     report.pdf_filename,
                     ai_analysis[:500] if ai_analysis else "No analysis available"
                 )
+                logger.info(f"✅ Email sent successfully")
             except Exception as e:
-                logger.error(f"Failed to send email: {e}")
+                logger.error(f"❌ Failed to send email: {e}")
+                logger.exception(e)
         
-        logger.info(f"Completed health check for {server.hostname}")
+        logger.info(f"✅ COMPLETED _process_server_check for {server.hostname} (ID: {server.id})")
+
     
     def run_now(self, check_id: int):
         """Trigger immediate execution of a health check"""

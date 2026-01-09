@@ -7,7 +7,7 @@
     "frontendDist": "../out",
     "devUrl": "http://localhost:3000",
     "beforeDevCommand": "npm run dev",
-    "beforeBuildCommand": "DESKTOP_BUILD=true npm run build"
+    "beforeBuildCommand": "npm run export"
   },
   "app": {
     "windows": [

@@ -4,7 +4,6 @@
   "version": "0.9.4",
   "identifier": "com.aisysadmin.agent",
   "build": {
-    "frontendDist": "public",
     "devUrl": "http://localhost:3000",
     "beforeDevCommand": "npm run dev"
   },
@@ -12,19 +11,21 @@
     "windows": [
       {
         "title": "AI Sysadmin Agent",
+        "url": "https://testing.sentrait.com.uy",
         "width": 1400,
         "height": 900,
         "minWidth": 1024,
         "minHeight": 768,
         "resizable": true,
         "fullscreen": false,
-        "center": true
+        "center": true,
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
       }
     ],
     "security": {
-      "csp": "default-src 'self' https://testing.sentrait.com.uy; connect-src 'self' https://testing.sentrait.com.uy wss://testing.sentrait.com.uy; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://testing.sentrait.com.uy; style-src 'self' 'unsafe-inline' https://testing.sentrait.com.uy; img-src 'self' data: https: blob:; font-src 'self' data: https:; frame-src https://testing.sentrait.com.uy; child-src https://testing.sentrait.com.uy"
+      "csp": null
     },
-    "withGlobalTauri": true
+    "withGlobalTauri": false
   },
   "bundle": {
     "active": true,

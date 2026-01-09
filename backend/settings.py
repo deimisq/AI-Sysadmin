@@ -1,7 +1,10 @@
 from pydantic_settings import BaseSettings
+from desktop_config import DESKTOP_MODE, get_database_url, DESKTOP_SETTINGS
 
 class Settings(BaseSettings):
-    DATABASE_URL: str = "postgresql://sysadmin_agent:secure_password_dev@localhost:5432/sysadmin_agent_db"
+    # Database URL - automatically uses SQLite in desktop mode, PostgreSQL in SaaS mode
+    DATABASE_URL: str = get_database_url()
+    
     SECRET_KEY: str = "supersecretkey"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
@@ -15,8 +18,15 @@ class Settings(BaseSettings):
     ANTHROPIC_API_KEY: str = ""
     ENCRYPTION_KEY: str = "default-encryption-key-change-in-production"
     
+    # Desktop mode flag
+    DESKTOP_MODE: bool = DESKTOP_MODE
+    
     class Config:
         env_file = ".env"
         extra = "ignore"
 
 settings = Settings()
+
+# Print database info
+if DESKTOP_MODE:
+    print(f"🖥️  Desktop Mode: Using SQLite database at {settings.DATABASE_URL}")

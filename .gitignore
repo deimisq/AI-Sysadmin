@@ -9,6 +9,10 @@ backend/dist/
 ai-sysadmin-release.tar.gz
 distribution_site/
 
+# ----- PyInstaller -----
+backend/build/
+backend/*.spec
+
 # ----- Environment Files -----
 .env
 .env.local

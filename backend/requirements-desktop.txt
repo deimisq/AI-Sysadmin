@@ -1,0 +1,46 @@
+# Desktop Mode Requirements
+# These are dependencies specifically for building the desktop application
+
+# Core
+fastapi
+uvicorn
+sqlalchemy
+pydantic
+pydantic-settings
+python-dotenv
+alembic
+
+# LLM Support
+langchain
+langchain-community
+langchain-openai
+langchain-google-genai
+langchain-aws
+langchain-anthropic
+
+# SSH/Ansible
+paramiko
+asyncssh
+ansible-runner
+ansible
+
+# Security & Auth
+cryptography
+python-jose[cryptography]
+passlib[bcrypt]
+python-multipart
+email-validator
+
+# Scheduling & Reports
+apscheduler>=3.10.0
+reportlab>=4.0.0
+pytz
+
+# AWS
+boto3
+
+# Build tool
+pyinstaller>=6.0.0
+
+# Note: Removed PostgreSQL dependencies (asyncpg, pgvector, psycopg2-binary)
+# using SQLite instead for desktop mode

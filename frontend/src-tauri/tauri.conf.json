@@ -43,6 +43,10 @@
           "es-ES"
         ]
       }
-    }
+    },
+    "resources": [],
+    "externalBin": [
+      "binaries/ai-sysadmin-backend"
+    ]
   }
 }

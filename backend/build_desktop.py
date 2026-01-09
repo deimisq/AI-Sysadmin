@@ -94,11 +94,10 @@ def build():
         # Optimization
         '--optimize=2',  # Python optimization level
         
-        # Exclude unnecessary modules to reduce size
-        # Note: numpy is needed by langchain, so we don't exclude it
+        # Exclude unnecessary modules to reduce size  
+        # Note: numpy is needed by langchain, PIL by reportlab
         '--exclude-module=matplotlib',
-        '--exclude-module=pandas',  
-        '--exclude-module=PIL',
+        '--exclude-module=pandas',
         '--exclude-module=tkinter',
         '--exclude-module=pytest',
         '--exclude-module=notebook',

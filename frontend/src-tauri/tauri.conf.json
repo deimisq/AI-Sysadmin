@@ -22,8 +22,9 @@
       }
     ],
     "security": {
-      "csp": null
-    }
+      "csp": "default-src 'self' https://testing.sentrait.com.uy; connect-src 'self' https://testing.sentrait.com.uy wss://testing.sentrait.com.uy; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://testing.sentrait.com.uy; style-src 'self' 'unsafe-inline' https://testing.sentrait.com.uy; img-src 'self' data: https: blob:; font-src 'self' data: https:"
+    },
+    "withGlobalTauri": true
   },
   "bundle": {
     "active": true,
@@ -42,10 +43,6 @@
           "es-ES"
         ]
       }
-    },
-    "resources": [],
-    "externalBin": [
-      "binaries/ai-sysadmin-backend"
-    ]
+    }
   }
 }

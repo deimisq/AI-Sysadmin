@@ -71,26 +71,110 @@
         onload="document.getElementById('loader').style.display='none';"></iframe>
 
     <script>
-        // Hide loader after max 5 seconds even if iframe doesn't load
+        console.log('🚀 Desktop App Initialized');
+        console.log('Target URL:', 'https://testing.sentrait.com.uy');
+
+        const iframe = document.getElementById('app-frame');
+        const loader = document.getElementById('loader');
+
+        // Track iframe load
+        iframe.addEventListener('load', function () {
+            console.log('✅ Iframe loaded successfully');
+            loader.style.display = 'none';
+        });
+
+        // Track iframe errors
+        iframe.addEventListener('error', function (e) {
+            console.error('❌ Iframe failed to load:', e);
+            loader.innerHTML = `
+                <div style="text-align: center; max-width: 500px;">
+                    <h2 style="color: #ef4444;">Error de Carga</h2>
+                    <p>No se pudo cargar la aplicación</p>
+                    <p style="font-size: 12px; color: #666;">
+                        URL: https://testing.sentrait.com.uy
+                    </p>
+                    <p style="font-size: 12px; color: #666;">
+                        Verifica tu conexión o que el servidor esté disponible
+                    </p>
+                    <button onclick="location.reload()" style="
+                        margin-top: 20px;
+                        padding: 10px 20px;
+                        background: #3b82f6;
+                        color: white;
+                        border: none;
+                        border-radius: 5px;
+                        cursor: pointer;
+                    ">Reintentar</button>
+                </div>
+            `;
+        });
+
+        // Hide loader after max 10 seconds
         setTimeout(() => {
-            document.getElementById('loader').style.display = 'none';
-        }, 5000);
+            if (loader.style.display !== 'none') {
+                console.warn('⚠️ Loader timeout - forcing hide');
+                loader.style.display = 'none';
+
+                // Check if iframe actually loaded
+                try {
+                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                    if (!iframeDoc || iframeDoc.body.innerHTML === '') {
+                        console.error('❌ Iframe appears empty');
+                        loader.innerHTML = `
+                            <div style="text-align: center; max-width: 500px;">
+                                <h2 style="color: #f59e0b;">Carga Lenta</h2>
+                                <p>La aplicación está tardando más de lo esperado</p>
+                                <p style="font-size: 12px; color: #666;">
+                                    Esto podría deberse a:
+                                </p>
+                                <ul style="text-align: left; font-size: 12px; color: #888;">
+                                    <li>Conexión lenta a internet</li>
+                                    <li>El servidor está ocupado</li>
+                                    <li>Problemas de CORS o X-Frame-Options</li>
+                                </ul>
+                                <button onclick="location.reload()" style="
+                                    margin-top: 20px;
+                                    padding: 10px 20px;
+                                    background: #3b82f6;
+                                    color: white;
+                                    border: none;
+                                    border-radius: 5px;
+                                    cursor: pointer;
+                                ">Reintentar</button>
+                            </div>
+                        `;
+                        loader.style.display = 'flex';
+                    }
+                } catch (e) {
+                    console.log('ℹ️ Cannot access iframe content (normal for cross-origin)');
+                }
+            }
+        }, 10000);
 
         // Detect if offline
         window.addEventListener('offline', () => {
-            document.getElementById('loader').innerHTML = `
+            console.warn('📡 Connection lost');
+            loader.innerHTML = `
                 <div style="text-align: center;">
                     <h2>Sin Conexión</h2>
                     <p>No se puede conectar a testing.sentrait.com.uy</p>
                     <p>Verifica tu conexión a internet</p>
                 </div>
             `;
-            document.getElementById('loader').style.display = 'flex';
+            loader.style.display = 'flex';
         });
 
         window.addEventListener('online', () => {
+            console.log('📡 Connection restored');
             location.reload();
         });
+
+        // Log any console errors
+        window.addEventListener('error', function (e) {
+            console.error('Window error:', e.error);
+        });
+
+        console.log('📝 Debugging enabled - check console for details');
     </script>
 </body>
 

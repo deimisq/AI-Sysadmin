@@ -15,9 +15,11 @@ os.environ["DESKTOP_MODE"] = "true"
 def main():
     """Start the FastAPI server for desktop mode."""
     
+    # Import the app here (after DESKTOP_MODE is set)
+    from main import app
+    
     # Configuration for desktop mode
     config = {
-        "app": "main:app",
         "host": "127.0.0.1",  # Only localhost in desktop mode
         "port": 8000,
         "log_level": "info",
@@ -35,13 +37,15 @@ def main():
     print("=" * 60)
     
     try:
-        # Start uvicorn server
-        uvicorn.run(**config)
+        # Start uvicorn server with app object directly
+        uvicorn.run(app, **config)
     except KeyboardInterrupt:
         print("\n👋 Shutting down server...")
         sys.exit(0)
     except Exception as e:
         print(f"\n❌ Error starting server: {e}")
+        import traceback
+        traceback.print_exc()
         sys.exit(1)
 
 if __name__ == "__main__":

@@ -34,7 +34,7 @@ def build():
         # Output settings
         '--name=ai-sysadmin-backend',
         f'--distpath={dist_path}',
-        f'--buildpath={build_path}',
+        f'--workpath={build_path}',  # Changed from --buildpath
         f'--specpath={spec_path}',
         
         # Bundling options

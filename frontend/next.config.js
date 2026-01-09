@@ -4,15 +4,24 @@ const withNextIntl = require('next-intl/plugin')(
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    // Use 'export' for desktop (Tauri) builds, 'standalone' for SaaS/Docker
-    output: process.env.DESKTOP_BUILD === 'true' ? 'export' : 'standalone',
+    // Always use 'export' for Tauri desktop builds
+    output: 'export',
 
-    // Disable image optimization for static export (desktop mode)
-    ...(process.env.DESKTOP_BUILD === 'true' && {
-        images: {
-            unoptimized: true,
-        },
-    }),
+    // Disable image optimization for static export
+    images: {
+        unoptimized: true,
+    },
+
+    // Exclude problematic pages from build
+    webpack: (config, { isServer }) => {
+        if (!isServer) {
+            config.resolve.fallback = {
+                ...config.resolve.fallback,
+                fs: false,
+            };
+        }
+        return config;
+    },
 };
 
 module.exports = withNextIntl(nextConfig);

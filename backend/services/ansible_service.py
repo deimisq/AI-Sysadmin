@@ -1,21 +1,44 @@
-import ansible_runner
 import logging
 import os
 from typing import Dict, Any, Tuple
+
+# ansible_runner uses fcntl which is Unix-only, not available on Windows
+# Make it optional for desktop mode
+try:
+    import ansible_runner
+    ANSIBLE_AVAILABLE = True
+except (ImportError, ModuleNotFoundError):
+    ANSIBLE_AVAILABLE = False
+    ansible_runner = None
 
 logger = logging.getLogger(__name__)
 
 class AnsibleService:
     def __init__(self, private_data_dir: str = "/tmp/ansible_runner"):
         self.private_data_dir = private_data_dir
+        
+        if not ANSIBLE_AVAILABLE:
+            logger.warning("Ansible Runner not available (Windows/Desktop mode). Ansible features disabled.")
+            return
+            
         if not os.path.exists(self.private_data_dir):
             os.makedirs(self.private_data_dir)
+
+    def _check_ansible_available(self):
+        """Check if ansible is available, raise error if not"""
+        if not ANSIBLE_AVAILABLE:
+            raise RuntimeError(
+                "Ansible is not available in this environment (Windows/Desktop mode). "
+                "Ansible features require a Unix-like system."
+            )
 
     def _handle_raw_ssh_key(self, inventory: Dict[str, Any]) -> Tuple[Dict[str, Any], str]:
         """
         Checks if inventory contains raw SSH key content and writes it to a temp file.
         Returns modified inventory and the path to the temp file (or None).
         """
+        self._check_ansible_available()
+        
         temp_key_path = None
         try:
             # Navigate to the host vars
@@ -46,6 +69,8 @@ class AnsibleService:
         """
         Runs an Ansible playbook.
         """
+        self._check_ansible_available()
+        
         inventory, temp_key_path = self._handle_raw_ssh_key(inventory)
         try:
             r = ansible_runner.run(
@@ -72,6 +97,8 @@ class AnsibleService:
         """
         Runs an ad-hoc Ansible command.
         """
+        self._check_ansible_available()
+        
         inventory, temp_key_path = self._handle_raw_ssh_key(inventory)
         try:
             r = ansible_runner.run(

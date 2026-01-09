@@ -53,9 +53,10 @@ services:
     # Port 3000 is no longer exposed to host, only to Nginx
     expose:
       - "3000"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
+    # Commented out bind mount to use built-in node_modules
+    # volumes:
+    #   - ./frontend:/app
+    #   - /app/node_modules
     environment:
       # Now API is available at the same domain via /api/v1
       # Client-side requests go to https://domain.com/api/v1

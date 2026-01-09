@@ -1,7 +1,16 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, Text, DateTime, Boolean, JSON, Table, Enum
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from pgvector.sqlalchemy import Vector
+import os
+
+# Only import pgvector in SaaS mode (not needed for SQLite in desktop mode)
+DESKTOP_MODE = os.getenv("DESKTOP_MODE", "false").lower() == "true"
+if not DESKTOP_MODE:
+    from pgvector.sqlalchemy import Vector
+else:
+    # Dummy Vector type for desktop mode
+    Vector = lambda x: Text  # Use Text column instead
+
 from database import Base
 import enum
 

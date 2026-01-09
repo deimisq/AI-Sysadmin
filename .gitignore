@@ -50,6 +50,12 @@ yarn-error.log*
 .next/
 out/
 frontend/.next/
+frontend/out/
+
+# ----- Tauri / Rust -----
+frontend/src-tauri/target/
+frontend/src-tauri/Cargo.lock
+
 
 # ----- Generated Files -----
 backend/reports/

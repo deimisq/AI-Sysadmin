@@ -13,6 +13,13 @@
 
 AI Sysadmin Agent es una plataforma de gestión inteligente de servidores, diagnósticos y automatización impulsada por tecnología de IA avanzada.
 
+### 🖥️ Disponible en Dos Versiones
+
+- **☁️ SaaS / Web Application**: Despliega en tu servidor con Docker (este repositorio)
+- **💻 Desktop Application**: Aplicación de escritorio nativa para Windows (🆕 En desarrollo)
+  - Ver [QUICKSTART_DESKTOP.md](QUICKSTART_DESKTOP.md) para inicio rápido
+  - Ver [frontend/DESKTOP_README.md](frontend/DESKTOP_README.md) para documentación completa
+
 ### Key Features
 
 - 🤖 **AI-Powered Diagnostics**: Detección y resolución inteligente de problemas
@@ -47,6 +54,7 @@ This repository contains the **production-ready distribution** of AI Sysadmin Ag
 Binaries are distributed via [GitHub Releases](https://github.com/sentrait/ai_agent_public/releases/latest) to avoid repository size limits.
 
 1. **Download the latest release**:
+
    ```bash
    # Download all required files
    wget https://github.com/sentrait/ai_agent_public/releases/download/v1.0.0/backend-binary-linux-x64.tar.gz
@@ -59,6 +67,7 @@ Binaries are distributed via [GitHub Releases](https://github.com/sentrait/ai_ag
    ```
 
 2. **Extract files**:
+
    ```bash
    # Extract deployment configuration
    tar -xzf deployment-files.tar.gz
@@ -73,18 +82,20 @@ Binaries are distributed via [GitHub Releases](https://github.com/sentrait/ai_ag
    ```
 
 3. **Configure environment**:
+
    ```bash
    cp .env.prod.template .env.prod
    nano .env.prod  # Edit with your values
    ```
 
 4. **Start services**:
+
    ```bash
    docker-compose -f docker-compose.prebuilt.yml up -d
    ```
 
 5. **Access the application**:
-   - Open http://your-server-ip in your browser
+   - Open <http://your-server-ip> in your browser
    - Default trial license: 30 days
 
 For detailed installation instructions, see [DEPLOYMENT.md](DEPLOYMENT.md)
@@ -127,18 +138,19 @@ This software is distributed as compiled binaries to protect intellectual proper
 This software is licensed for commercial use. Each installation requires a valid license key.
 
 **Features**:
+
 - Unlimited servers
 - Priority support
 - Regular updates
 - Custom integrations available
 
-**Contact**: sales@yourdomain.com
+**Contact**: <sales@yourdomain.com>
 
 ## 🆘 Support
 
 - **Documentation**: Full guides included in this repository
-- **Email Support**: support@yourdomain.com
-- **License Issues**: license@yourdomain.com
+- **Email Support**: <support@yourdomain.com>
+- **License Issues**: <license@yourdomain.com>
 - **Enterprise Support**: Available with commercial licenses
 
 ## 📋 System Requirements
@@ -178,9 +190,9 @@ See [LICENSE](LICENSE) for full terms.
 
 ## 🌐 Links
 
-- **Website**: https://yourdomain.com
-- **Documentation**: https://docs.yourdomain.com
-- **Support Portal**: https://support.yourdomain.com
+- **Website**: <https://yourdomain.com>
+- **Documentation**: <https://docs.yourdomain.com>
+- **Support Portal**: <https://support.yourdomain.com>
 
 ---
 

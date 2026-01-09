@@ -4,23 +4,12 @@ const withNextIntl = require('next-intl/plugin')(
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    // Always use 'export' for Tauri desktop builds
-    output: 'export',
+    // Use standalone for better compatibility with dynamic routes
+    output: 'standalone',
 
-    // Disable image optimization for static export
+    // Optimize images
     images: {
-        unoptimized: true,
-    },
-
-    // Exclude problematic pages from build
-    webpack: (config, { isServer }) => {
-        if (!isServer) {
-            config.resolve.fallback = {
-                ...config.resolve.fallback,
-                fs: false,
-            };
-        }
-        return config;
+        unoptimized: false,
     },
 };
 

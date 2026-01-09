@@ -13,10 +13,8 @@ pub fn run() {
         )?;
       }
 
-      println!("🚀 AI Sysadmin Agent - Desktop Mode");
-      println!("⚠️  Backend sidecar integration temporarily disabled");
-      println!("   Backend must be run manually: backend/dist/ai-sysadmin-backend.exe");
-      println!("   This will be re-enabled once we confirm Tauri shell plugin setup");
+      println!("🚀 AI Sysadmin Agent - Desktop Wrapper");
+      println!("   Loading from: https://testing.sentrait.com.uy");
 
       Ok(())
     })

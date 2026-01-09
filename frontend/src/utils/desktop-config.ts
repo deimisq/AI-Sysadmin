@@ -22,8 +22,10 @@ export function isDesktopMode(): boolean {
  */
 export function getApiBaseUrl(): string {
     if (isDesktopMode()) {
-        // Desktop mode: backend runs locally
-        return 'http://127.0.0.1:8000';
+        // Desktop mode: use production backend URL from environment
+        // This allows the desktop app to connect to your SaaS backend
+        const apiUrl = typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_API_URL;
+        return apiUrl || 'https://your-backend-domain.com';
     }
 
     // SaaS mode: use environment variable or default

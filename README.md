@@ -16,11 +16,12 @@ AI Sysadmin Agent es una plataforma de gestión inteligente de servidores, diagn
 ### 🖥️ Disponible en Dos Versiones
 
 - **☁️ SaaS / Web Application**: Despliega en tu servidor con Docker (este repositorio)
-- **💻 Desktop Application**: Aplicación de escritorio nativa para Windows (🆕 En desarrollo)
-  - 🚀 **[Quick Start Windows](WINDOWS_QUICKSTART.md)** - Para probarlo YA (5 minutos)
-  - 📚 **[Guía Completa Windows](WINDOWS_TESTING_GUIDE.md)** - Instrucciones detalladas
-  - ✅ **[Checklist Verificación](WINDOWS_CHECKLIST.md)** - Verifica que tienes todo
-  - 📋 **[Estado del Proyecto](TAURI_INTEGRATION_STATUS.md)** - Progreso y próximos pasos
+- **💻 Desktop Application**: Aplicación de escritorio nativa para Windows
+  - Frontend empaquetado con Tauri
+  - Se conecta a tu backend SaaS
+  - Experiencia de app nativa (ventanas, notificaciones)
+  - Build simple y rápido (~15-20 MB)
+  - 📚 **[Guía de Build Desktop](BUILD_DESKTOP_SIMPLE.md)** - Todo lo que necesitas
 
 ### Key Features
 

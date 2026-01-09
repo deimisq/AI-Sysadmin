@@ -4,7 +4,7 @@
   "version": "0.9.4",
   "identifier": "com.aisysadmin.agent",
   "build": {
-    "frontendDist": ".",
+    "frontendDist": "dist",
     "devUrl": "http://localhost:3000",
     "beforeDevCommand": "npm run dev"
   },

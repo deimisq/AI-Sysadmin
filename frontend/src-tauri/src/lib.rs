@@ -17,10 +17,8 @@ pub fn run() {
     .invoke_handler(tauri::generate_handler![start_oauth_server])
     .setup(|app| {
       println!("🚀 AI Sysadmin Agent");
-      
-      // Open DevTools for debugging
-      let window = app.get_webview_window("main").unwrap();
-      window.open_devtools();
+      println!("   URL: https://testing.sentrait.com.uy");
+      println!("   Right-click → Inspect to see console");
       
       Ok(())
     })

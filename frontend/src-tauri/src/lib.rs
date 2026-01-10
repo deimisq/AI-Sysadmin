@@ -14,6 +14,7 @@ async fn start_oauth_server(window: Window) -> Result<u16, String> {
 pub fn run() {
   tauri::Builder::default()
     .plugin(tauri_plugin_oauth::init())
+    .plugin(tauri_plugin_http::init())
     .invoke_handler(tauri::generate_handler![start_oauth_server])
     .setup(|app| {
       println!("🚀 AI Sysadmin Agent");

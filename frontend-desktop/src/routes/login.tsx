@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { setAuthToken } from '../lib/api';
+import { fetch } from '@tauri-apps/plugin-http';
 
 export default function Login() {
     const navigate = useNavigate();

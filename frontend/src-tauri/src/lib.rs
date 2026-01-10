@@ -17,7 +17,10 @@ pub fn run() {
     .invoke_handler(tauri::generate_handler![start_oauth_server])
     .setup(|app| {
       println!("🚀 AI Sysadmin Agent");
-      println!("   OAuth server ready");
+      
+      // Open DevTools for debugging
+      let window = app.get_webview_window("main").unwrap();
+      window.open_devtools();
       
       Ok(())
     })

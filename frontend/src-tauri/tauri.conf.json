@@ -4,14 +4,15 @@
   "version": "0.9.4",
   "identifier": "com.aisysadmin.agent",
   "build": {
+    "frontendDist": "../out",
     "devUrl": "http://localhost:3000",
-    "beforeDevCommand": "npm run dev"
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run export"
   },
   "app": {
     "windows": [
       {
         "title": "AI Sysadmin Agent",
-        "url": "https://testing.sentrait.com.uy",
         "width": 1400,
         "height": 900,
         "minWidth": 1024,
@@ -25,11 +26,6 @@
       "csp": null
     },
     "withGlobalTauri": false
-  },
-  "plugins": {
-    "shell": {
-      "open": true
-    }
   },
   "bundle": {
     "active": true,

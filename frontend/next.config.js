@@ -4,13 +4,16 @@ const withNextIntl = require('next-intl/plugin')(
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    // Use standalone for better compatibility with dynamic routes
-    output: 'standalone',
+    // Static export for Tauri desktop app
+    output: 'export',
 
-    // Optimize images
+    // Disable image optimization for static export
     images: {
-        unoptimized: false,
+        unoptimized: true,
     },
+
+    // Trailing slash for static hosting
+    trailingSlash: true,
 };
 
 module.exports = withNextIntl(nextConfig);

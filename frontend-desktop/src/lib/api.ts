@@ -78,3 +78,21 @@ export const removeAuthToken = () => {
 export const isAuthenticated = () => {
     return !!getAuthToken();
 };
+
+export interface Server {
+    id: number;
+    hostname: string;
+    ip_address: string;
+    description: string;
+    os_info: string;
+    group_id?: number;
+}
+
+export const fetchServers = () => api.get<Server[]>('/servers/');
+
+export const fetchServer = (id: string) => api.get<Server>(`/servers/${id}`);
+
+export const executeCommand = async (serverId: string, command: string) => {
+    const response = await api.post<{ output: string; exit_code: number }>(`/servers/${serverId}/execute`, { command });
+    return response.output;
+};

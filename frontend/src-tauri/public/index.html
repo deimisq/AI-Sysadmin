@@ -16,8 +16,9 @@
         html {
             width: 100%;
             height: 100%;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0a;
+            color: white;
         }
 
         .container {
@@ -25,100 +26,99 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: white;
-            border-radius: 20px;
-            padding: 60px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            border-radius: 12px;
+            padding: 48px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
             text-align: center;
-            max-width: 500px;
+            max-width: 420px;
+            width: 90%;
         }
 
         .logo {
-            width: 80px;
-            height: 80px;
-            margin: 0 auto 30px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100());
-            border-radius: 20px;
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 24px;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 40px;
+            font-size: 32px;
         }
 
         h1 {
-            color: #2d3748;
-            margin-bottom: 10px;
-            font-size: 28px;
+            color: #ffffff;
+            margin-bottom: 8px;
+            font-size: 24px;
+            font-weight: 600;
         }
 
         p {
-            color: #718096;
-            margin-bottom: 30px;
-            line-height: 1.6;
+            color: #888;
+            margin-bottom: 32px;
+            line-height: 1.5;
+            font-size: 14px;
         }
 
         .button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
             color: white;
             border: none;
-            padding: 16px 40px;
-            border-radius: 10px;
-            font-size: 16px;
+            padding: 14px 32px;
+            border-radius: 8px;
+            font-size: 15px;
             font-weight: 600;
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            transition: all 0.2s;
             width: 100%;
         }
 
-        .button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        .button:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
         }
 
-        .button:active {
+        .button:active:not(:disabled) {
             transform: translateY(0);
         }
 
         .button:disabled {
-            opacity: 0.6;
+            opacity: 0.5;
             cursor: not-allowed;
         }
 
         .status {
             margin-top: 20px;
             padding: 12px;
-            border-radius: 8px;
-            font-size: 14px;
+            border-radius: 6px;
+            font-size: 13px;
             display: none;
         }
 
         .status.info {
             display: block;
-            background: #e0e7ff;
-            color: #3730a3;
+            background: #1e3a5f;
+            color: #60a5fa;
+            border: 1px solid #2563eb;
         }
 
         .status.success {
             display: block;
-            background: #d1fae5;
-            color: #065f46;
-        }
-
-        .status.error {
-            display: block;
-            background: #fee2e2;
-            color: #991b1b;
+            background: #1e3a1e;
+            color: #4ade80;
+            border: 1px solid #22c55e;
         }
 
         .spinner {
             display: inline-block;
-            width: 16px;
-            height: 16px;
-            border: 2px solid #cbd5e0;
-            border-top-color: #667eea;
+            width: 14px;
+            height: 14px;
+            border: 2px solid #3b82f6;
+            border-top-color: transparent;
             border-radius: 50%;
-            animation: spin 0.8s linear infinite;
+            animation: spin 0.6s linear infinite;
             margin-right: 8px;
             vertical-align: middle;
         }
@@ -137,10 +137,17 @@
             top: 0;
             left: 0;
             display: none;
+            background: #0a0a0a;
         }
 
         #app-frame.active {
             display: block;
+        }
+
+        .help-text {
+            margin-top: 16px;
+            font-size: 12px;
+            color: #666;
         }
     </style>
 </head>
@@ -148,142 +155,130 @@
 <body>
     <div class="container" id="login-screen">
         <div class="logo">🔐</div>
-        <h1>Bienvenido a AI Sysadmin Agent</h1>
-        <p>Para comenzar, necesitas iniciar sesión</p>
-        <button class="button" id="login-btn" onclick="startLogin()">Iniciar Sesión</button>
+        <h1>AI Sysadmin Agent</h1>
+        <p>Inicia sesión para acceder a la aplicación</p>
+        <button class="button" id="login-btn" onclick="openLogin()">Abrir Inicio de Sesión</button>
         <div class="status info" id="status-info" style="display:none;">
             <span class="spinner"></span>
-            <span id="status-text">Iniciando servidor OAuth...</span>
+            <span id="status-text"></span>
         </div>
         <div class="status success" id="status-success" style="display:none;">
-            ✅ Sesión detectada! Cargando...
+            ✓ Sesión iniciada correctamente
         </div>
-        <div class="status error" id="status-error" style="display:none;">
-            <span id="error-text"></span>
-        </div>
+        <p class="help-text">Se abrirá tu navegador para iniciar sesión</p>
     </div>
 
     <iframe id="app-frame" src="https://testing.sentrait.com.uy"></iframe>
 
     <script type="module">
-        const { invoke } = window.__TAURI__.core;
-        const { listen } = window.__TAURI__.event;
         const { open } = window.__TAURI__.shell;
 
         const LOGIN_URL = 'https://testing.sentrait.com.uy/login';
         const API_BASE = 'https://testing.sentrait.com.uy/api/v1';
 
-        let oauthPort = null;
-        let pollInterval = null;
+        let checkInterval = null;
 
         const loginBtn = document.getElementById('login-btn');
         const statusInfo = document.getElementById('status-info');
         const statusText = document.getElementById('status-text');
         const statusSuccess = document.getElementById('status-success');
-        const statusError = document.getElementById('status-error');
-        const errorText = document.getElementById('error-text');
         const loginScreen = document.getElementById('login-screen');
         const appFrame = document.getElementById('app-frame');
 
-        console.log('🚀 Desktop app initialized');
+        console.log('🚀 Desktop app ready');
 
-        // Check for existing session on startup
+        // Check for session on startup
         checkSession();
 
-        async function startLogin() {
+        async function openLogin() {
             try {
                 loginBtn.disabled = true;
-                showStatus('info', 'Iniciando servidor OAuth...');
+                showStatus('Abriendo navegador...');
 
-                // Start OAuth server
-                oauthPort = await invoke('start_oauth_server');
-                console.log(`✅ OAuth server started on port ${oauthPort}`);
+                // Open browser
+                await open(LOGIN_URL);
 
-                // Build redirect URI
-                const redirectUri = encodeURIComponent(`http://localhost:${oauthPort}`);
-
-                // Open browser with login URL
-                showStatus('info', 'Abriendo navegador...');
-                await open(`${LOGIN_URL}?desktop=true&redirect_uri=${redirectUri}`);
-
-                // Start polling for session
-                showStatus('info', 'Esperando inicio de sesión...');
-                startSessionPolling();
-
-                // Listen for OAuth redirect
-                await listen('oauth_redirect', (event) => {
-                    console.log('📨 OAuth redirect received:', event.payload);
-                    // Give backend a moment to set cookies
-                    setTimeout(() => checkSession(), 1000);
-                });
+                // Start checking for session
+                showStatus('Esperando inicio de sesión...');
+                startChecking();
 
             } catch (error) {
-                console.error('❌ Error:', error);
-                showStatus('error', `Error:  ${error}`);
+                console.error('Error:', error);
+                alert('No se pudo abrir el navegador. Abre manualmente: ' + LOGIN_URL);
                 loginBtn.disabled = false;
             }
         }
 
-        function startSessionPolling() {
-            // Poll every 2 seconds
-            pollInterval = setInterval(() => {
+        function startChecking() {
+            if (checkInterval) return;
+
+            checkInterval = setInterval(() => {
                 checkSession();
             }, 2000);
         }
 
-        function stopSessionPolling() {
-            if (pollInterval) {
-                clearInterval(pollInterface);
-                pollInterval = null;
+        function stopChecking() {
+            if (checkInterval) {
+                clearInterval(checkInterval);
+                checkInterval = null;
             }
         }
 
         async function checkSession() {
             try {
                 const response = await fetch(`${API_BASE}/auth/me`, {
-                    credentials: 'include'
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
                 });
 
                 if (response.ok) {
                     const user = await response.json();
-                    console.log('✅ Session valid:', user.email);
-                    onSessionValid(user);
+                    console.log('✓ Session active:', user.email);
+                    onSessionActive();
+                } else {
+                    console.log('Waiting for session...');
                 }
             } catch (error) {
-                console.log('⏳ Waiting for session...');
+                console.log('Checking...');
             }
         }
 
-        function onSessionValid(user) {
-            stopSessionPolling();
-            showStatus('success', '');
+        function onSessionActive() {
+            stopChecking();
+            hideStatus();
+
+            // Show success briefly
+            statusSuccess.style.display = 'block';
 
             setTimeout(() => {
                 loginScreen.style.display = 'none';
                 appFrame.classList.add('active');
-                console.log('✅ App loaded');
-            }, 1500);
+                console.log('✓ App loaded');
+            }, 1000);
         }
 
-        function showStatus(type, message) {
-            // Hide all
+        function showStatus(message) {
+            statusInfo.style.display = 'block';
+            statusSuccess.style.display = 'none';
+            statusText.textContent = message;
+        }
+
+        function hideStatus() {
+            statusInfo.style.display = 'none';
+        }
+
+        // Expose for debugging
+        window.resetApp = () => {
+            loginScreen.style.display = 'block';
+            appFrame.classList.remove('active');
             statusInfo.style.display = 'none';
             statusSuccess.style.display = 'none';
-            statusError.style.display = 'none';
-
-            // Show relevant
-            if (type === 'info') {
-                statusText.textContent = message;
-                statusInfo.style.display = 'block';
-            } else if (type === 'success') {
-                statusSuccess.style.display = 'block';
-            } else if (type === 'error') {
-                errorText.textContent = message;
-                statusError.style.display = 'block';
-            }
-        }
-
-        console.log('📝 Ready');
+            loginBtn.disabled = false;
+            stopChecking();
+        };
     </script>
 </body>
 

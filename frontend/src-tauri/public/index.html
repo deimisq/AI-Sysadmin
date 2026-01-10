@@ -171,8 +171,6 @@
     <iframe id="app-frame" src="https://testing.sentrait.com.uy"></iframe>
 
     <script type="module">
-        const { open } = window.__TAURI__.shell;
-
         const LOGIN_URL = 'https://testing.sentrait.com.uy/login';
         const API_BASE = 'https://testing.sentrait.com.uy/api/v1';
 
@@ -186,6 +184,7 @@
         const appFrame = document.getElementById('app-frame');
 
         console.log('🚀 Desktop app ready');
+        console.log('Tauri:', window.__TAURI__);
 
         // Check for session on startup
         checkSession();
@@ -195,8 +194,17 @@
                 loginBtn.disabled = true;
                 showStatus('Abriendo navegador...');
 
-                // Open browser
-                await open(LOGIN_URL);
+                console.log('Opening browser...');
+
+                // Use Tauri shell API directly
+                if (window.__TAURI__ && window.__TAURI__.shell && window.__TAURI__.shell.open) {
+                    await window.__TAURI__.shell.open(LOGIN_URL);
+                    console.log('Browser opened via Tauri');
+                } else {
+                    // Fallback
+                    window.open(LOGIN_URL, '_blank');
+                    console.log('Browser opened via window.open');
+                }
 
                 // Start checking for session
                 showStatus('Esperando inicio de sesión...');
@@ -204,8 +212,16 @@
 
             } catch (error) {
                 console.error('Error:', error);
-                alert('No se pudo abrir el navegador. Abre manualmente: ' + LOGIN_URL);
-                loginBtn.disabled = false;
+                showStatus('Error al abrir navegador');
+
+                setTimeout(() => {
+                    if (confirm('No se pudo abrir automáticamente. ¿Abrir manualmente?')) {
+                        window.open(LOGIN_URL, '_blank');
+                        startChecking();
+                    } else {
+                        loginBtn.disabled = false;
+                    }
+                }, 500);
             }
         }
 

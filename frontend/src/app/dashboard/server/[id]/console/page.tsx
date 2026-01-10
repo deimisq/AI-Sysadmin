@@ -11,6 +11,14 @@ import { Folder, File, Cpu, HardDrive, Activity, Send, Sparkles, Play, ArrowUp, 
 import { executeCommand, fetchServerStats, fetchServerFiles, fetchServer } from "@/lib/api";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 
+// For static export - this will be handled client-side
+export const dynamicParams = true;
+
+// Generate empty params for initial build, actual data loaded client-side
+export async function generateStaticParams() {
+    return [];
+}
+
 export default function ServerConsolePage() {
     const params = useParams();
     const router = useRouter();

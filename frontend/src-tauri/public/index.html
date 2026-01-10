@@ -1,216 +1,261 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Sysadmin Agent</title>
     <style>
-        body,
-        html {
+        * {
             margin: 0;
             padding: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
+            box-sizing: border-box;
         }
-
-        iframe {
+        
+        body, html {
             width: 100%;
             height: 100%;
-            border: none;
-        }
-
-        #loader {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #0a0a0a;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             display: flex;
             align-items: center;
             justify-content: center;
-            flex-direction: column;
-            color: white;
-            font-family: system-ui, -apple-system, sans-serif;
-            z-index: 9999;
         }
-
-        .spinner {
-            width: 50px;
-            height: 50px;
-            border: 4px solid #333;
-            border-top-color: #3b82f6;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        #loader p {
-            margin-top: 20px;
-            font-size: 14px;
-            color: #888;
-        }
-
-        #error {
-            display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: #1a1a1a;
-            padding: 40px;
-            border-radius: 10px;
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 60px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             text-align: center;
-            color: white;
             max-width: 500px;
-            z-index: 10000;
         }
-
-        #error h2 {
-            color: #ef4444;
+        
+        .logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+        }
+        
+        h1 {
+            color: #2d3748;
             margin-bottom: 10px;
+            font-size: 28px;
         }
-
-        #error button {
-            margin-top: 20px;
-            padding: 10px 20px;
-            background: #3b82f6;
+        
+        p {
+            color: #718096;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        
+        .button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
-            border-radius: 5px;
+            padding: 16px 40px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
             cursor: pointer;
-            font-size: 14px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
         }
-
-        #error button:hover {
-            background: #2563eb;
+        
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+        
+        .button:active {
+            transform: translateY(0);
+        }
+        
+        .status {
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            display: none;
+        }
+        
+        .status.checking {
+            display: block;
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .status.success {
+            display: block;
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #cbd5e0;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        #app-frame {
+            width: 100%;
+            height: 100%;
+            border: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            display: none;
+        }
+        
+        #app-frame.active {
+            display: block;
         }
     </style>
 </head>
-
 <body>
-    <div id="loader">
-        <div class="spinner"></div>
-        <p>Cargando AI Sysadmin Agent...</p>
+    <div class="container" id="login-screen">
+        <div class="logo">🔐</div>
+        <h1>Bienvenido a AI Sysadmin Agent</h1>
+        <p>Para comenzar, necesitas iniciar sesión con tu cuenta</p>
+        <button class="button" onclick="openBrowserLogin()">Iniciar Sesión en Navegador</button>
+        <div class="status checking" id="status-checking">
+            <span class="spinner"></span>
+            Verificando sesión...
+        </div>
+        <div class="status success" id="status-success">
+            ✅ Sesión detectada. Cargando aplicación...
+        </div>
     </div>
-
-    <div id="error">
-        <h2>Error al Cargar</h2>
-        <p id="error-message"></p>
-        <button onclick="location.reload()">Reintentar</button>
-    </div>
-
-    <iframe id="app-frame" src="https://testing.sentrait.com.uy"
-        allow="clipboard-read; clipboard-write; fullscreen; geolocation"></iframe>
-
+    
+    <iframe id="app-frame" src="https://testing.sentrait.com.uy"></iframe>
+    
     <script>
+        const LOGIN_URL = 'https://testing.sentrait.com.uy/login';
+        const API_URL = 'https://testing.sentrait.com.uy/api/v1';
+        const CHECK_INTERVAL = 2000; // Check every 2 seconds
+        
+        let checkingInterval = null;
+        let sessionToken = localStorage.getItem('session_token');
+        
         console.log('🚀 Desktop App Initialized');
-        console.log('Target URL:', 'https://testing.sentrait.com.uy');
-
-        const iframe = document.getElementById('app-frame');
-        const loader = document.getElementById('loader');
-        const errorDiv = document.getElementById('error');
-        const errorMessage = document.getElementById('error-message');
-
-        let loadTimeout;
-        let iframeLoaded = false;
-
-        // Track iframe load
-        iframe.addEventListener('load', function () {
-            console.log('✅ Iframe loaded');
-            iframeLoaded = true;
-            clearTimeout(loadTimeout);
-
-            setTimeout(() => {
-                loader.style.display = 'none';
-            }, 500);
-
-            // Try to inject API proxy script into iframe
+        
+        // Check if already logged in
+        if (sessionToken) {
+            checkSession();
+        }
+        
+        function openBrowserLogin() {
+            console.log('🌐 Opening browser for login...');
+            
+            // Open system browser
+            if (window.__TAURI__) {
+                window.__TAURI__.shell.open(LOGIN_URL);
+            } else {
+                window.open(LOGIN_URL, '_blank');
+            }
+            
+            // Show checking status
+            document.getElementById('status-checking').style.display = 'block';
+            
+            // Start checking for session
+            startSessionCheck();
+        }
+        
+        function startSessionCheck() {
+            if (checkingInterval) return;
+            
+            console.log('⏱️ Started session polling...');
+            
+            checkingInterval = setInterval(() => {
+                checkSession();
+            }, CHECK_INTERVAL);
+        }
+        
+        function stopSessionCheck() {
+            if (checkingInterval) {
+                clearInterval(checkingInterval);
+                checkingInterval = null;
+                console.log('⏹️ Stopped session polling');
+            }
+        }
+        
+        async function checkSession() {
             try {
-                injectApiProxy();
-            } catch (e) {
-                console.warn('Could not inject proxy (CORS):', e.message);
-                // This is expected for cross-origin iframes
-            }
-        });
-
-        // Track iframe errors
-        iframe.addEventListener('error', function (e) {
-            console.error('❌ Iframe error:', e);
-            showError('No se pudo cargar la aplicación. Verifica tu conexión a internet.');
-        });
-
-        // Timeout handler
-        loadTimeout = setTimeout(() => {
-            if (!iframeLoaded) {
-                console.warn('⚠️ Load timeout');
-                showError('La aplicación está tardando demasiado en cargar. Verifica tu conexión.');
-            }
-        }, 15000);
-
-        function showError(message) {
-            loader.style.display = 'none';
-            errorMessage.textContent = message;
-            errorDiv.style.display = 'block';
-        }
-
-        function injectApiProxy() {
-            const iframeWindow = iframe.contentWindow;
-            const iframeDocument = iframeWindow.document;
-
-            // Only works if same-origin or CORS allows
-            const script = iframeDocument.createElement('script');
-            script.textContent = `
-                console.log('🔧 API Proxy injected');
-                
-                // Store original fetch
-                const originalFetch = window.fetch;
-                
-                // Override fetch to fix relative URLs
-                window.fetch = function(url, options) {
-                    let fixedUrl = url;
-                    
-                    // If URL is relative and starts with /api/v1
-                    if (typeof url === 'string' && url.startsWith('/api/v1')) {
-                        fixedUrl = 'https://testing.sentrait.com.uy' + url;
-                        console.log('🔀 Proxied:', url, '→', fixedUrl);
+                // Try to get user info from API
+                const response = await fetch(`${API_URL}/auth/me`, {
+                    method: 'GET',
+                    credentials: 'include', // Important: include cookies
+                    headers: {
+                        'Accept': 'application/json'
                     }
-                    
-                    return originalFetch(fixedUrl, options);
-                };
+                });
                 
-                console.log('✅ Fetch proxy active');
-            `;
-            iframeDocument.head.appendChild(script);
+                if (response.ok) {
+                    const user = await response.json();
+                    console.log('✅ Session valid:', user.email);
+                    onSessionDetected(user);
+                } else {
+                    console.log('⏳ No active session yet...');
+                }
+            } catch (error) {
+                console.log('⚠️ Session check failed:', error.message);
+            }
         }
-
-        // Connection monitoring
-        window.addEventListener('offline', () => {
-            console.warn('📡 No connection');
-            showError('Sin conexión a internet');
-        });
-
-        window.addEventListener('online', () => {
-            console.log('📡 Connection restored');
-            if (errorDiv.style.display === 'block') {
-                location.reload();
+        
+        function onSessionDetected(user) {
+            console.log('🎉 Session detected! Loading app...');
+            
+            stopSessionCheck();
+            
+            // Show success message
+            document.getElementById('status-checking').style.display = 'none';
+            document.getElementById('status-success').style.display = 'block';
+            
+            // Wait a moment then load app
+            setTimeout(() => {
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('app-frame').classList.add('active');
+                console.log('✅ App loaded');
+            }, 1500);
+        }
+        
+        // Listen for messages from the browser (if opened in popup)
+        window.addEventListener('message', (event) => {
+            if (event.data && event.data.type === 'login_success') {
+                console.log('📨 Received login success message');
+                checkSession();
             }
         });
-
-        // Log errors
-        window.addEventListener('error', function (e) {
-            console.error('Window error:', e.error);
-        });
-
-        console.log('📝 App ready');
+        
+        // Expose function for debugging
+        window.checkSession = checkSession;
+        window.resetApp = () => {
+            document.getElementById('login-screen').classList.remove('hidden');
+            document.getElementById('app-frame').classList.remove('active');
+            stopSessionCheck();
+        };
+        
+        console.log('📝 Desktop app ready');
+        console.log('💡 Debug: Call checkSession() or resetApp() in console');
     </script>
 </body>
-
 </html>

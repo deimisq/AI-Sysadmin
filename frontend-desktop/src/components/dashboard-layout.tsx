@@ -47,6 +47,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     ];
 
     const handleNavClick = (href: string) => {
+        console.log('Navigation clicked:', href);
         navigate(href);
         setMobileMenuOpen(false);
     };

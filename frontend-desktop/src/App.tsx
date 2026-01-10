@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './routes/login';
 import Dashboard from './routes/dashboard';
 import ServerConsole from './routes/console';
@@ -13,7 +13,7 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
 export default function App() {
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      <BrowserRouter>
+      <HashRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route
@@ -34,7 +34,7 @@ export default function App() {
           />
         </Routes>
         <Toaster position="top-right" />
-      </BrowserRouter>
+      </HashRouter>
     </ThemeProvider>
   );
 }

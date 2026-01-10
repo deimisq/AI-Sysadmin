@@ -34,7 +34,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     };
 
     const navItems = [
-        { label: "Dashboard", icon: LayoutDashboard, href: "/", exact: true },
+        { label: "Agente IA Sysadmin", icon: LayoutDashboard, href: "/", exact: true },
+        { label: "Informes Programados", icon: Calendar, href: "/scheduled-reports" },
+        { label: "Documentación", icon: Book, href: "/documentation" },
+        { label: "Perfil", icon: User, href: "/profile" },
+        { label: "Admin", icon: Shield, href: "/admin" },
     ];
 
     const handleNavClick = (href: string) => {
@@ -70,13 +74,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     })}
                 </nav>
 
-                <div className="h-[1px] bg-border my-4" />
-
-                <div className="px-2 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    Settings
+                <div className="mt-8 px-2 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    SETTINGS
                 </div>
                 <div className="flex items-center gap-2 px-2 mb-4">
                     <ThemeSwitcher />
+                    <Button variant="outline" size="icon" title="Language">
+                        <span className="text-xs">ES</span>
+                    </Button>
                 </div>
             </ScrollArea>
 
@@ -93,7 +98,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     onClick={handleLogout}
                 >
                     <LogOut className="mr-2 h-4 w-4" />
-                    Logout
+                    Cerrar Sesión
                 </Button>
             </div>
         </>

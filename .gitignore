@@ -60,6 +60,11 @@ frontend/out/
 frontend/src-tauri/target/
 frontend/src-tauri/Cargo.lock
 
+# ----- Vite Desktop Frontend -----
+frontend-desktop/node_modules/
+frontend-desktop/dist/
+!frontend-desktop/src/lib/
+
 
 # ----- Generated Files -----
 backend/reports/

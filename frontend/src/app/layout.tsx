@@ -22,11 +22,13 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="en" suppressHydrationWarning>
-            <body className={inter.className}>
+            <body className={`${inter.className} flex flex-col h-full`}>
                 <ThemeProvider>
                     <I18nProvider>
                         <AuthProvider>
-                            {children}
+                            <div className="flex-1 flex flex-col overflow-hidden">
+                                {children}
+                            </div>
                             <FeedbackButton />
                             <VersionNotification />
                         </AuthProvider>

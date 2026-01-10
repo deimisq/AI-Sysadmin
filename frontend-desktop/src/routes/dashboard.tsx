@@ -7,7 +7,7 @@ export default function Dashboard() {
     const [user, setUser] = useState<any>(null);
 
     useEffect(() => {
-        api.get('/auth/me')
+        api.get<any>('/auth/me')
             .then(setUser)
             .catch(() => {
                 removeAuthToken();

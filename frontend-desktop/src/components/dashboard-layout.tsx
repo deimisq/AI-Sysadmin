@@ -11,7 +11,8 @@ import {
     Shield
 } from "lucide-react";
 
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
+// Removed Resizable imports
+// import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
@@ -132,21 +133,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
             {/* Desktop Layout */}
             <div className="hidden md:flex h-full">
-                <ResizablePanelGroup direction="horizontal">
-                    <ResizablePanel defaultSize={20} minSize={15} maxSize={25} className="flex flex-col border-r bg-muted/10">
-                        <div className="flex flex-col h-full p-4">
-                            <SidebarContent />
-                        </div>
-                    </ResizablePanel>
+                <aside className="w-64 flex flex-col border-r bg-muted/10 shrink-0">
+                    <div className="flex flex-col h-full p-4">
+                        <SidebarContent />
+                    </div>
+                </aside>
 
-                    <ResizableHandle withHandle />
-
-                    <ResizablePanel defaultSize={80}>
-                        <main className="h-full w-full overflow-hidden bg-background">
-                            {children}
-                        </main>
-                    </ResizablePanel>
-                </ResizablePanelGroup>
+                <main className="flex-1 overflow-hidden bg-background">
+                    {children}
+                </main>
             </div>
 
             {/* Mobile Content */}

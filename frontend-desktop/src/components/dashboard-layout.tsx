@@ -4,7 +4,11 @@ import {
     LayoutDashboard,
     LogOut,
     Activity,
-    Menu
+    Menu,
+    Calendar,
+    Book,
+    User,
+    Shield
 } from "lucide-react";
 
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";

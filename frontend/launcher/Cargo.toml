@@ -1,0 +1,13 @@
+[package]
+name = "ai-sysadmin-launcher"
+version = "0.9.4"
+edition = "2021"
+
+[[bin]]
+name = "AI-Sysadmin-Agent"
+path = "main.rs"
+
+[profile.release]
+opt-level = "z"
+lto = true
+strip = true

@@ -1,0 +1,11 @@
+{
+    "name": "ai-agent-root",
+    "private": true,
+    "scripts": {
+        "tauri": "cd frontend && npm run tauri",
+        "tauri:build": "cd frontend && npm run tauri build",
+        "tauri-build": "cd frontend && npm run tauri build",
+        "desktop:dev": "cd frontend-desktop && npm run dev",
+        "desktop:build": "cd frontend-desktop && npm run build"
+    }
+}

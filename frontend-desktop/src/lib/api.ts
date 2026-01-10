@@ -101,3 +101,7 @@ export const executeCommand = async (serverId: string, command: string) => {
     const response = await api.post<{ output: string; exit_code: number }>(`/servers/${serverId}/execute`, { command });
     return response.output;
 };
+
+export const fetchGroups = () => api.get<any[]>('/groups/');
+export const fetchCurrentUser = () => api.get<any>('/auth/me');
+export const register = (data: any) => api.post<{ access_token: string }>('/auth/register', data);

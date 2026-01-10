@@ -4,6 +4,7 @@ import Dashboard from './routes/dashboard';
 import ServerConsole from './routes/console';
 import { isAuthenticated } from './lib/api';
 import { Toaster } from 'sonner';
+import { ThemeProvider } from '@/components/theme-provider';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   return isAuthenticated() ? <>{children}</> : <Navigate to="/login" />;
@@ -11,27 +12,29 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route
-          path="/"
-          element={
-            <PrivateRoute>
-              <Dashboard />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/server/:id/console"
-          element={
-            <PrivateRoute>
-              <ServerConsole />
-            </PrivateRoute>
-          }
-        />
-      </Routes>
-      <Toaster position="top-right" />
-    </BrowserRouter>
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route
+            path="/"
+            element={
+              <PrivateRoute>
+                <Dashboard />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/server/:id/console"
+            element={
+              <PrivateRoute>
+                <ServerConsole />
+              </PrivateRoute>
+            }
+          />
+        </Routes>
+        <Toaster position="top-right" />
+      </BrowserRouter>
+    </ThemeProvider>
   );
 }

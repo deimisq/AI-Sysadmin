@@ -1,107 +1,152 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { setAuthToken } from '../lib/api';
+import { setAuthToken, register } from '../lib/api';
 import { fetch } from '@tauri-apps/plugin-http';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Shield } from "lucide-react";
+import { ThemeSwitcher } from "@/components/theme-switcher";
+import { toast } from "sonner";
 
 export default function Login() {
     const navigate = useNavigate();
+    const [isLogin, setIsLogin] = useState(true);
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
 
-    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    const [formData, setFormData] = useState({
+        username: "",
+        email: "",
+        password: "",
+        full_name: "",
+    });
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-        setError(null);
-
-        const formData = new FormData(e.currentTarget);
-        const email = formData.get('email');
-        const password = formData.get('password');
 
         try {
-            const formBody = new URLSearchParams();
-            formBody.append('username', email as string);
-            formBody.append('password', password as string);
+            if (isLogin) {
+                const formBody = new URLSearchParams();
+                formBody.append('username', formData.username);
+                formBody.append('password', formData.password);
 
-            const response = await fetch('https://testing.sentrait.com.uy/api/v1/auth/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: formBody.toString()
-            });
+                const response = await fetch('https://testing.sentrait.com.uy/api/v1/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: formBody.toString()
+                });
 
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.detail || `Server error: ${response.status}`);
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.detail || `Server error: ${response.status}`);
+                }
+
+                const data = await response.json() as { access_token: string };
+                setAuthToken(data.access_token);
+                toast.success("Welcome back!");
+                navigate('/');
+            } else {
+                // Register
+                await register({
+                    username: formData.username,
+                    email: formData.email,
+                    password: formData.password,
+                    full_name: formData.full_name || null,
+                    preferredLanguage: 'es'
+                });
+
+                toast.success("Registration successful! Please sign in.");
+                setIsLogin(true);
+                setFormData(prev => ({ ...prev, password: "" }));
             }
-
-            const data = await response.json();
-            setAuthToken(data.access_token);
-            navigate('/');
         } catch (err: any) {
             console.error(err);
-            setError(typeof err === 'string' ? err : (err.message || 'Login failed'));
+            toast.error(typeof err === 'string' ? err : (err.message || 'Authentication failed'));
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-background p-4 animate-fade-in">
-            <div className="w-full max-w-md space-y-8">
-                <div className="text-center">
-                    <h1 className="text-4xl font-bold tracking-tight">Sysadmin AI</h1>
-                    <p className="mt-2 text-muted-foreground">Sign in to your account</p>
-                </div>
-
-                <div className="bg-card p-8 rounded-lg border shadow-lg">
-                    <form onSubmit={handleSubmit} className="space-y-6">
-                        {error && (
-                            <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-500 rounded text-sm text-center">
-                                {error}
-                            </div>
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4 relative">
+            <div className="absolute top-4 right-4 flex gap-2">
+                <ThemeSwitcher />
+            </div>
+            <Card className="w-full max-w-md animate-in fade-in zoom-in duration-300">
+                <CardHeader className="space-y-1">
+                    <div className="flex items-center justify-center mb-4">
+                        <div className="p-3 bg-primary/10 rounded-lg">
+                            <Shield className="h-10 w-10 text-primary" />
+                        </div>
+                    </div>
+                    <CardTitle className="text-2xl font-bold text-center">AI Sysadmin Agent</CardTitle>
+                    <CardDescription className="text-center">
+                        {isLogin ? "Sign in to your account" : "Create a new account"}
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                        {!isLogin && (
+                            <>
+                                <div className="space-y-2">
+                                    <Input
+                                        placeholder="Full Name (Optional)"
+                                        value={formData.full_name}
+                                        onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Input
+                                        placeholder="Email"
+                                        type="email"
+                                        value={formData.email}
+                                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                        required
+                                    />
+                                </div>
+                            </>
                         )}
-
-                        <div>
-                            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                                Username
-                            </label>
-                            <input
-                                type="text"
-                                name="email"
+                        <div className="space-y-2">
+                            <Input
+                                placeholder="Username"
+                                value={formData.username}
+                                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                                 required
-                                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 mt-2"
-                                placeholder="username"
                             />
                         </div>
-
-                        <div>
-                            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                                Password
-                            </label>
-                            <input
+                        <div className="space-y-2">
+                            <Input
                                 type="password"
-                                name="password"
+                                placeholder="Password"
+                                value={formData.password}
+                                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                                 required
-                                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 mt-2"
-                                placeholder="••••••••"
                             />
                         </div>
-
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 w-full"
-                        >
+                        <Button type="submit" className="w-full" disabled={loading}>
                             {loading ? (
                                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                            ) : (
-                                'Sign In'
-                            )}
-                        </button>
+                            ) : (isLogin ? "Sign In" : "Sign Up")}
+                        </Button>
                     </form>
-                </div>
-            </div>
+
+                    <div className="mt-4 text-center text-sm">
+                        <button
+                            type="button"
+                            className="text-primary hover:underline"
+                            onClick={() => {
+                                setIsLogin(!isLogin);
+                                setFormData({ username: "", email: "", password: "", full_name: "" });
+                            }}
+                        >
+                            {isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
+                        </button>
+                    </div>
+                </CardContent>
+            </Card>
         </div>
     );
 }

@@ -4,6 +4,7 @@
   "version": "0.9.4",
   "identifier": "com.aisysadmin.agent",
   "build": {
+    "frontendDist": "public",
     "devUrl": "http://localhost:3000",
     "beforeDevCommand": "npm run dev"
   },
@@ -11,15 +12,13 @@
     "windows": [
       {
         "title": "AI Sysadmin Agent",
-        "url": "https://testing.sentrait.com.uy",
         "width": 1400,
         "height": 900,
         "minWidth": 1024,
         "minHeight": 768,
         "resizable": true,
         "fullscreen": false,
-        "center": true,
-        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        "center": true
       }
     ],
     "security": {

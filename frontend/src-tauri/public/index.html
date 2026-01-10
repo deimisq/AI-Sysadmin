@@ -57,6 +57,41 @@
             font-size: 14px;
             color: #888;
         }
+
+        #error {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #1a1a1a;
+            padding: 40px;
+            border-radius: 10px;
+            text-align: center;
+            color: white;
+            max-width: 500px;
+            z-index: 10000;
+        }
+
+        #error h2 {
+            color: #ef4444;
+            margin-bottom: 10px;
+        }
+
+        #error button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        #error button:hover {
+            background: #2563eb;
+        }
     </style>
 </head>
 
@@ -66,9 +101,14 @@
         <p>Cargando AI Sysadmin Agent...</p>
     </div>
 
+    <div id="error">
+        <h2>Error al Cargar</h2>
+        <p id="error-message"></p>
+        <button onclick="location.reload()">Reintentar</button>
+    </div>
+
     <iframe id="app-frame" src="https://testing.sentrait.com.uy"
-        allow="clipboard-read; clipboard-write; fullscreen; geolocation; microphone; camera"
-        onload="document.getElementById('loader').style.display='none';"></iframe>
+        allow="clipboard-read; clipboard-write; fullscreen; geolocation"></iframe>
 
     <script>
         console.log('🚀 Desktop App Initialized');
@@ -76,105 +116,100 @@
 
         const iframe = document.getElementById('app-frame');
         const loader = document.getElementById('loader');
+        const errorDiv = document.getElementById('error');
+        const errorMessage = document.getElementById('error-message');
+
+        let loadTimeout;
+        let iframeLoaded = false;
 
         // Track iframe load
         iframe.addEventListener('load', function () {
-            console.log('✅ Iframe loaded successfully');
-            loader.style.display = 'none';
+            console.log('✅ Iframe loaded');
+            iframeLoaded = true;
+            clearTimeout(loadTimeout);
+
+            setTimeout(() => {
+                loader.style.display = 'none';
+            }, 500);
+
+            // Try to inject API proxy script into iframe
+            try {
+                injectApiProxy();
+            } catch (e) {
+                console.warn('Could not inject proxy (CORS):', e.message);
+                // This is expected for cross-origin iframes
+            }
         });
 
         // Track iframe errors
         iframe.addEventListener('error', function (e) {
-            console.error('❌ Iframe failed to load:', e);
-            loader.innerHTML = `
-                <div style="text-align: center; max-width: 500px;">
-                    <h2 style="color: #ef4444;">Error de Carga</h2>
-                    <p>No se pudo cargar la aplicación</p>
-                    <p style="font-size: 12px; color: #666;">
-                        URL: https://testing.sentrait.com.uy
-                    </p>
-                    <p style="font-size: 12px; color: #666;">
-                        Verifica tu conexión o que el servidor esté disponible
-                    </p>
-                    <button onclick="location.reload()" style="
-                        margin-top: 20px;
-                        padding: 10px 20px;
-                        background: #3b82f6;
-                        color: white;
-                        border: none;
-                        border-radius: 5px;
-                        cursor: pointer;
-                    ">Reintentar</button>
-                </div>
-            `;
+            console.error('❌ Iframe error:', e);
+            showError('No se pudo cargar la aplicación. Verifica tu conexión a internet.');
         });
 
-        // Hide loader after max 10 seconds
-        setTimeout(() => {
-            if (loader.style.display !== 'none') {
-                console.warn('⚠️ Loader timeout - forcing hide');
-                loader.style.display = 'none';
-
-                // Check if iframe actually loaded
-                try {
-                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-                    if (!iframeDoc || iframeDoc.body.innerHTML === '') {
-                        console.error('❌ Iframe appears empty');
-                        loader.innerHTML = `
-                            <div style="text-align: center; max-width: 500px;">
-                                <h2 style="color: #f59e0b;">Carga Lenta</h2>
-                                <p>La aplicación está tardando más de lo esperado</p>
-                                <p style="font-size: 12px; color: #666;">
-                                    Esto podría deberse a:
-                                </p>
-                                <ul style="text-align: left; font-size: 12px; color: #888;">
-                                    <li>Conexión lenta a internet</li>
-                                    <li>El servidor está ocupado</li>
-                                    <li>Problemas de CORS o X-Frame-Options</li>
-                                </ul>
-                                <button onclick="location.reload()" style="
-                                    margin-top: 20px;
-                                    padding: 10px 20px;
-                                    background: #3b82f6;
-                                    color: white;
-                                    border: none;
-                                    border-radius: 5px;
-                                    cursor: pointer;
-                                ">Reintentar</button>
-                            </div>
-                        `;
-                        loader.style.display = 'flex';
-                    }
-                } catch (e) {
-                    console.log('ℹ️ Cannot access iframe content (normal for cross-origin)');
-                }
+        // Timeout handler
+        loadTimeout = setTimeout(() => {
+            if (!iframeLoaded) {
+                console.warn('⚠️ Load timeout');
+                showError('La aplicación está tardando demasiado en cargar. Verifica tu conexión.');
             }
-        }, 10000);
+        }, 15000);
 
-        // Detect if offline
-        window.addEventListener('offline', () => {
-            console.warn('📡 Connection lost');
-            loader.innerHTML = `
-                <div style="text-align: center;">
-                    <h2>Sin Conexión</h2>
-                    <p>No se puede conectar a testing.sentrait.com.uy</p>
-                    <p>Verifica tu conexión a internet</p>
-                </div>
+        function showError(message) {
+            loader.style.display = 'none';
+            errorMessage.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        function injectApiProxy() {
+            const iframeWindow = iframe.contentWindow;
+            const iframeDocument = iframeWindow.document;
+
+            // Only works if same-origin or CORS allows
+            const script = iframeDocument.createElement('script');
+            script.textContent = `
+                console.log('🔧 API Proxy injected');
+                
+                // Store original fetch
+                const originalFetch = window.fetch;
+                
+                // Override fetch to fix relative URLs
+                window.fetch = function(url, options) {
+                    let fixedUrl = url;
+                    
+                    // If URL is relative and starts with /api/v1
+                    if (typeof url === 'string' && url.startsWith('/api/v1')) {
+                        fixedUrl = 'https://testing.sentrait.com.uy' + url;
+                        console.log('🔀 Proxied:', url, '→', fixedUrl);
+                    }
+                    
+                    return originalFetch(fixedUrl, options);
+                };
+                
+                console.log('✅ Fetch proxy active');
             `;
-            loader.style.display = 'flex';
+            iframeDocument.head.appendChild(script);
+        }
+
+        // Connection monitoring
+        window.addEventListener('offline', () => {
+            console.warn('📡 No connection');
+            showError('Sin conexión a internet');
         });
 
         window.addEventListener('online', () => {
             console.log('📡 Connection restored');
-            location.reload();
+            if (errorDiv.style.display === 'block') {
+                location.reload();
+            }
         });
 
-        // Log any console errors
+        // Log errors
         window.addEventListener('error', function (e) {
             console.error('Window error:', e.error);
         });
 
-        console.log('📝 Debugging enabled - check console for details');
+        console.log('📝 App ready');
     </script>
 </body>
 

@@ -4,7 +4,7 @@
   "version": "0.9.4",
   "identifier": "com.aisysadmin.agent",
   "build": {
-    "frontendDist": "../frontend-desktop/dist",
+    "frontendDist": "../../frontend-desktop/dist",
     "devUrl": "http://localhost:5173",
     "beforeDevCommand": "cd ../frontend-desktop && npm run dev",
     "beforeBuildCommand": "cd ../frontend-desktop && npm install && npm run build"

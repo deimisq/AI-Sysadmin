@@ -27,19 +27,20 @@ export default function Login() {
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                 },
-                body: formBody
+                body: formBody.toString()
             });
 
             if (!response.ok) {
-                throw new Error('Login failed');
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.detail || `Server error: ${response.status}`);
             }
 
             const data = await response.json();
             setAuthToken(data.access_token);
             navigate('/');
-        } catch (err) {
-            setError('Invalid email or password');
+        } catch (err: any) {
             console.error(err);
+            setError(typeof err === 'string' ? err : (err.message || 'Login failed'));
         } finally {
             setLoading(false);
         }
@@ -63,14 +64,14 @@ export default function Login() {
 
                         <div>
                             <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                                Email
+                                Username
                             </label>
                             <input
                                 type="text"
                                 name="email"
                                 required
                                 className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 mt-2"
-                                placeholder="admin@example.com"
+                                placeholder="username"
                             />
                         </div>
 

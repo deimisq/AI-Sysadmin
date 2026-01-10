@@ -18,12 +18,13 @@
             height: 100%;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
 
         .container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
             background: white;
             border-radius: 20px;
             padding: 60px;
@@ -36,7 +37,7 @@
             width: 80px;
             height: 80px;
             margin: 0 auto 30px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100());
             border-radius: 20px;
             display: flex;
             align-items: center;
@@ -67,6 +68,7 @@
             cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s;
             box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            width: 100%;
         }
 
         .button:hover {
@@ -78,6 +80,11 @@
             transform: translateY(0);
         }
 
+        .button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
         .status {
             margin-top: 20px;
             padding: 12px;
@@ -86,16 +93,22 @@
             display: none;
         }
 
-        .status.checking {
+        .status.info {
             display: block;
-            background: #fef3c7;
-            color: #92400e;
+            background: #e0e7ff;
+            color: #3730a3;
         }
 
         .status.success {
             display: block;
             background: #d1fae5;
             color: #065f46;
+        }
+
+        .status.error {
+            display: block;
+            background: #fee2e2;
+            color: #991b1b;
         }
 
         .spinner {
@@ -114,10 +127,6 @@
             to {
                 transform: rotate(360deg);
             }
-        }
-
-        .hidden {
-            display: none !important;
         }
 
         #app-frame {
@@ -140,111 +149,115 @@
     <div class="container" id="login-screen">
         <div class="logo">🔐</div>
         <h1>Bienvenido a AI Sysadmin Agent</h1>
-        <p>Para comenzar, necesitas iniciar sesión con tu cuenta</p>
-        <button class="button" onclick="openBrowserLogin()">Iniciar Sesión en Navegador</button>
-        <div class="status checking" id="status-checking">
+        <p>Para comenzar, necesitas iniciar sesión</p>
+        <button class="button" id="login-btn" onclick="startLogin()">Iniciar Sesión</button>
+        <div class="status info" id="status-info" style="display:none;">
             <span class="spinner"></span>
-            Verificando sesión...
+            <span id="status-text">Iniciando servidor OAuth...</span>
         </div>
-        <div class="status success" id="status-success">
-            ✅ Sesión detectada. Cargando aplicación...
+        <div class="status success" id="status-success" style="display:none;">
+            ✅ Sesión detectada! Cargando...
+        </div>
+        <div class="status error" id="status-error" style="display:none;">
+            <span id="error-text"></span>
         </div>
     </div>
 
     <iframe id="app-frame" src="https://testing.sentrait.com.uy"></iframe>
 
-    <script>
+    <script type="module">
+        const { invoke } = window.__TAURI__.core;
+        const { listen } = window.__TAURI__.event;
+        const { open } = window.__TAURI__.shell;
+
         const LOGIN_URL = 'https://testing.sentrait.com.uy/login';
-        const API_URL = 'https://testing.sentrait.com.uy/api/v1';
-        const CHECK_INTERVAL = 2000; // Check every 2 seconds
+        const API_BASE = 'https://testing.sentrait.com.uy/api/v1';
 
-        let checkingInterval = null;
-        let sessionToken = localStorage.getItem('session_token');
+        let oauthPort = null;
+        let pollInterval = null;
 
-        const loginScreen = document.getElementById('login-screen');
-        const statusChecking = document.getElementById('status-checking');
+        const loginBtn = document.getElementById('login-btn');
+        const statusInfo = document.getElementById('status-info');
+        const statusText = document.getElementById('status-text');
         const statusSuccess = document.getElementById('status-success');
+        const statusError = document.getElementById('status-error');
+        const errorText = document.getElementById('error-text');
+        const loginScreen = document.getElementById('login-screen');
         const appFrame = document.getElementById('app-frame');
 
-        console.log('🚀 Desktop App Initialized');
+        console.log('🚀 Desktop app initialized');
 
-        // Check if already logged in
-        if (sessionToken) {
-            checkSession();
-        }
+        // Check for existing session on startup
+        checkSession();
 
-        function openBrowserLogin() {
-            console.log('🌐 Opening browser for login...');
+        async function startLogin() {
+            try {
+                loginBtn.disabled = true;
+                showStatus('info', 'Iniciando servidor OAuth...');
 
-            // Open system browser
-            if (window.__TAURI__) {
-                window.__TAURI__.shell.open(LOGIN_URL).catch(err => {
-                    console.error('Failed to open browser:', err);
-                    alert('No se pudo abrir el navegador. Por favor abre manualmente: ' + LOGIN_URL);
+                // Start OAuth server
+                oauthPort = await invoke('start_oauth_server');
+                console.log(`✅ OAuth server started on port ${oauthPort}`);
+
+                // Build redirect URI
+                const redirectUri = encodeURIComponent(`http://localhost:${oauthPort}`);
+
+                // Open browser with login URL
+                showStatus('info', 'Abriendo navegador...');
+                await open(`${LOGIN_URL}?desktop=true&redirect_uri=${redirectUri}`);
+
+                // Start polling for session
+                showStatus('info', 'Esperando inicio de sesión...');
+                startSessionPolling();
+
+                // Listen for OAuth redirect
+                await listen('oauth_redirect', (event) => {
+                    console.log('📨 OAuth redirect received:', event.payload);
+                    // Give backend a moment to set cookies
+                    setTimeout(() => checkSession(), 1000);
                 });
-            } else {
-                window.open(LOGIN_URL, '_blank');
+
+            } catch (error) {
+                console.error('❌ Error:', error);
+                showStatus('error', `Error:  ${error}`);
+                loginBtn.disabled = false;
             }
-
-            // Show checking status, hide success
-            statusChecking.style.display = 'block';
-            statusSuccess.style.display = 'none';
-
-            // Start checking for session
-            startSessionCheck();
         }
 
-        function startSessionCheck() {
-            if (checkingInterval) return;
-
-            console.log('⏱️ Started session polling...');
-
-            checkingInterval = setInterval(() => {
+        function startSessionPolling() {
+            // Poll every 2 seconds
+            pollInterval = setInterval(() => {
                 checkSession();
-            }, CHECK_INTERVAL);
+            }, 2000);
         }
 
-        function stopSessionCheck() {
-            if (checkingInterval) {
-                clearInterval(checkingInterval);
-                checkingInterval = null;
-                console.log('⏹️ Stopped session polling');
+        function stopSessionPolling() {
+            if (pollInterval) {
+                clearInterval(pollInterface);
+                pollInterval = null;
             }
         }
 
         async function checkSession() {
             try {
-                // Try to get user info from API
-                const response = await fetch(`${API_URL}/auth/me`, {
-                    method: 'GET',
-                    credentials: 'include', // Important: include cookies
-                    headers: {
-                        'Accept': 'application/json'
-                    }
+                const response = await fetch(`${API_BASE}/auth/me`, {
+                    credentials: 'include'
                 });
 
                 if (response.ok) {
                     const user = await response.json();
                     console.log('✅ Session valid:', user.email);
-                    onSessionDetected(user);
-                } else {
-                    console.log('⏳ No active session yet (status:', response.status + ')');
+                    onSessionValid(user);
                 }
             } catch (error) {
-                console.log('⚠️ Session check failed:', error.message);
+                console.log('⏳ Waiting for session...');
             }
         }
 
-        function onSessionDetected(user) {
-            console.log('🎉 Session detected! Loading app...');
+        function onSessionValid(user) {
+            stopSessionPolling();
+            showStatus('success', '');
 
-            stopSessionCheck();
-
-            // Hide checking, show success
-            statusChecking.style.display = 'none';
-            statusSuccess.style.display = 'block';
-
-            // Wait a moment then load app
             setTimeout(() => {
                 loginScreen.style.display = 'none';
                 appFrame.classList.add('active');
@@ -252,26 +265,25 @@
             }, 1500);
         }
 
-        // Listen for messages from the browser (if opened in popup)
-        window.addEventListener('message', (event) => {
-            if (event.data && event.data.type === 'login_success') {
-                console.log('📨 Received login success message');
-                checkSession();
-            }
-        });
-
-        // Expose functions for debugging
-        window.checkSession = checkSession;
-        window.resetApp = () => {
-            loginScreen.style.display = 'flex';
-            appFrame.classList.remove('active');
-            statusChecking.style.display = 'none';
+        function showStatus(type, message) {
+            // Hide all
+            statusInfo.style.display = 'none';
             statusSuccess.style.display = 'none';
-            stopSessionCheck();
-        };
+            statusError.style.display = 'none';
 
-        console.log('📝 Desktop app ready');
-        console.log('💡 Debug: Call checkSession() or resetApp() in console');
+            // Show relevant
+            if (type === 'info') {
+                statusText.textContent = message;
+                statusInfo.style.display = 'block';
+            } else if (type === 'success') {
+                statusSuccess.style.display = 'block';
+            } else if (type === 'error') {
+                errorText.textContent = message;
+                statusError.style.display = 'block';
+            }
+        }
+
+        console.log('📝 Ready');
     </script>
 </body>
 

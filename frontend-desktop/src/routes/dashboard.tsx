@@ -29,7 +29,17 @@ export default function Dashboard() {
             setServers(serverData);
         } catch (err: any) {
             console.error('Error loading servers:', err);
-            setError(err.message || 'Error cargando servidores');
+            const errorMsg = err.message || 'Error cargando servidores';
+
+            // If authentication error, redirect to login
+            if (errorMsg.includes('credentials') || errorMsg.includes('401') || errorMsg.includes('Unauthorized')) {
+                console.log('Authentication error detected, redirecting to login...');
+                localStorage.removeItem('token');
+                navigate('/login');
+                return;
+            }
+
+            setError(errorMsg);
         } finally {
             setLoading(false);
         }

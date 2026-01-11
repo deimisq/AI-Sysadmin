@@ -30,8 +30,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     useEffect(() => {
         fetchCurrentUser()
             .then(setCurrentUser)
-            .catch((err) => console.error("Failed to fetch user", err));
-    }, []);
+            .catch((err) => {
+                console.error("Failed to fetch user", err);
+                // If credentials error, redirect to login
+                const errorMsg = err?.message || String(err);
+                if (errorMsg.includes('credentials') || errorMsg.includes('401') || errorMsg.includes('Unauthorized')) {
+                    console.log('Auth error in layout, redirecting to login...');
+                    localStorage.removeItem('token');
+                    navigate('/login');
+                }
+            });
+    }, [navigate]);
 
     const handleLogout = () => {
         removeAuthToken();

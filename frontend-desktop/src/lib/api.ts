@@ -97,11 +97,21 @@ export const fetchServers = () => api.get<Server[]>('/servers/');
 
 export const fetchServer = (id: string) => api.get<Server>(`/servers/${id}`);
 
+export const createServer = (data: Partial<Server>) => api.post<Server>('/servers/', data);
+
+export const updateServer = (id: number, data: Partial<Server>) => api.put<Server>(`/servers/${id}`, data);
+
+export const deleteServer = (id: number) => api.delete(`/servers/${id}`);
+
 export const executeCommand = async (serverId: string, command: string) => {
     const response = await api.post<{ output: string; exit_code: number }>(`/servers/${serverId}/execute`, { command });
     return response.output;
 };
 
 export const fetchGroups = () => api.get<any[]>('/groups/');
+export const createGroup = (data: { name: string; description?: string }) => api.post<any>('/groups/', data);
+export const updateGroup = (id: number, data: { name: string; description?: string }) => api.put<any>(`/groups/${id}`, data);
+export const deleteGroup = (id: number) => api.delete(`/groups/${id}`);
+
 export const fetchCurrentUser = () => api.get<any>('/auth/me');
 export const register = (data: any) => api.post<{ access_token: string }>('/auth/register', data);

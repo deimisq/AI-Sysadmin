@@ -40,27 +40,45 @@ export function CSVImport({ onImportComplete, onCancel }: CSVImportProps) {
     const downloadTemplate = async () => {
         try {
             const token = localStorage.getItem("token");
+            console.log('Downloading CSV template from:', `${API_URL}/servers/csv-template`);
+
             const response = await fetch(`${API_URL}/servers/csv-template`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
             });
 
-            if (!response.ok) throw new Error("Failed to download template");
+            console.log('Response status:', response.status);
+            console.log('Response headers:', response.headers);
 
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Error response:', errorText);
+                throw new Error(`Failed to download template: ${response.status} ${response.statusText}`);
+            }
+
+            // Get the blob
             const blob = await response.blob();
+            console.log('Blob size:', blob.size, 'type:', blob.type);
+
+            // Create download
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement("a");
             a.href = url;
             a.download = "servers_template.csv";
             document.body.appendChild(a);
             a.click();
-            document.body.removeChild(a);
-            window.URL.revokeObjectURL(url);
-            toast.success("Plantilla descargada");
-        } catch (error) {
+
+            // Cleanup
+            setTimeout(() => {
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+            }, 100);
+
+            toast.success("Plantilla descargada exitosamente");
+        } catch (error: any) {
             console.error("Error downloading template:", error);
-            toast.error("Error al descargar plantilla");
+            toast.error(error.message || "Error al descargar plantilla");
         }
     };
 

@@ -54,6 +54,8 @@ import {
     ChevronDown
 } from 'lucide-react';
 import DashboardLayout from '../components/dashboard-layout';
+import { CSVImport } from '../components/csv-import';
+import { GroupManager } from '../components/group-manager';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -75,6 +77,7 @@ export default function Dashboard() {
 
     // Dialog State
     const [addServerOpen, setAddServerOpen] = useState(false);
+    const [addServerMode, setAddServerMode] = useState<'manual' | 'csv'>('manual');
     const [editingServer, setEditingServer] = useState<Server | null>(null);
     const [deletingServer, setDeletingServer] = useState<Server | null>(null);
     const [manageGroupsOpen, setManageGroupsOpen] = useState(false);
@@ -510,7 +513,7 @@ export default function Dashboard() {
                         <Button
                             variant="outline"
                             className="flex-1 gap-2"
-                            onClick={() => toast.info('Importación CSV próximamente')}
+                            onClick={() => setAddServerMode('csv')}
                             type="button"
                         >
                             <Plus className="h-4 w-4" />
@@ -692,20 +695,20 @@ export default function Dashboard() {
                 </AlertDialogContent>
             </AlertDialog>
 
-            {/* Manage Groups Dialog (Placeholder) */}
+            {/* Manage Groups Dialog */}
             <Dialog open={manageGroupsOpen} onOpenChange={setManageGroupsOpen}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Gestionar Grupos</DialogTitle>
-                        <DialogDescription>Funcionalidad en desarrollo</DialogDescription>
-                    </DialogHeader>
-                    <div className="py-8 text-center text-muted-foreground">
-                        <Settings className="h-12 w-12 mx-auto mb-4 opacity-20" />
-                        <p>La gestión de grupos estará disponible próximamente</p>
-                    </div>
-                    <DialogFooter>
-                        <Button onClick={() => setManageGroupsOpen(false)}>Cerrar</Button>
-                    </DialogFooter>
+                <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden p-0">
+                    <GroupManager onClose={() => { setManageGroupsOpen(false); loadData(); }} />
+                </DialogContent>
+            </Dialog>
+
+            {/* CSV Import Dialog */}
+            <Dialog open={addServerOpen && addServerMode === 'csv'} onOpenChange={(open) => { if (!open) { setAddServerOpen(false); setAddServerMode('manual'); } }}>
+                <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden p-0">
+                    <CSVImport
+                        onImportComplete={() => { loadData(); setAddServerOpen(false); setAddServerMode('manual'); }}
+                        onCancel={() => { setAddServerOpen(false); setAddServerMode('manual'); }}
+                    />
                 </DialogContent>
             </Dialog>
         </DashboardLayout>

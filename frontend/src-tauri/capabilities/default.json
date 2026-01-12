@@ -7,9 +7,6 @@
   ],
   "permissions": [
     "core:default",
-    "dialog:allow-save",
-    "fs:allow-write-text-file",
-    "shell:allow-execute",
     {
       "identifier": "http:default",
       "allow": [

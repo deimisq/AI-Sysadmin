@@ -490,92 +490,185 @@ export default function Dashboard() {
 
             {/* Add Server Dialog */}
             <Dialog open={addServerOpen} onOpenChange={setAddServerOpen}>
-                <DialogContent>
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
-                        <DialogTitle>Agregar Servidor</DialogTitle>
-                        <DialogDescription>Ingresa los datos del nuevo servidor</DialogDescription>
+                        <DialogTitle className="text-2xl">Agregar Nuevo Servidor</DialogTitle>
+                        <DialogDescription>
+                            Agrega servidores manualmente o importa varios desde un archivo CSV
+                        </DialogDescription>
                     </DialogHeader>
+
+                    <div className="flex gap-2 border-b pb-4">
+                        <Button
+                            variant="outline"
+                            className="flex-1 gap-2"
+                            type="button"
+                        >
+                            <ServerIcon className="h-4 w-4" />
+                            Agregar Manualmente
+                        </Button>
+                        <Button
+                            variant="outline"
+                            className="flex-1 gap-2"
+                            onClick={() => toast.info('Importación CSV próximamente')}
+                            type="button"
+                        >
+                            <Plus className="h-4 w-4" />
+                            Importar desde CSV
+                        </Button>
+                    </div>
+
                     <div className="space-y-4">
-                        <div>
-                            <Label>Nombre *</Label>
-                            <Input
-                                value={serverForm.hostname}
-                                onChange={(e) => setServerForm({ ...serverForm, hostname: e.target.value })}
-                                placeholder="servidor-web-01"
-                            />
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <Label>Nombre *</Label>
+                                <Input
+                                    value={serverForm.hostname}
+                                    onChange={(e) => setServerForm({ ...serverForm, hostname: e.target.value })}
+                                    placeholder="ej., servidor-web-01"
+                                />
+                            </div>
+                            <div>
+                                <Label>Dirección IP *</Label>
+                                <Input
+                                    value={serverForm.ip_address}
+                                    onChange={(e) => setServerForm({ ...serverForm, ip_address: e.target.value })}
+                                    placeholder="ej., 192.168.1.100"
+                                />
+                            </div>
                         </div>
-                        <div>
-                            <Label>Dirección IP *</Label>
-                            <Input
-                                value={serverForm.ip_address}
-                                onChange={(e) => setServerForm({ ...serverForm, ip_address: e.target.value })}
-                                placeholder="192.168.1.100"
-                            />
-                        </div>
+
                         <div>
                             <Label>Sistema Operativo</Label>
                             <Input
                                 value={serverForm.os_info}
                                 onChange={(e) => setServerForm({ ...serverForm, os_info: e.target.value })}
-                                placeholder="Ubuntu 22.04"
+                                placeholder="ej., Ubuntu 22.04"
                             />
                         </div>
+
                         <div>
-                            <Label>Descripción</Label>
+                            <Label>Grupo</Label>
+                            <select
+                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                value={serverForm.group_id || ''}
+                                onChange={(e) => setServerForm({ ...serverForm, group_id: e.target.value ? Number(e.target.value) : null })}
+                            >
+                                <option value="">Selecciona un grupo</option>
+                                {groups.map(g => (
+                                    <option key={g.id} value={g.id}>{g.name}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <Label>Usuario SSH</Label>
+                                <Input placeholder="root" />
+                            </div>
+                            <div>
+                                <Label>Contraseña SSH (Opcional)</Label>
+                                <Input type="password" placeholder="••••••••" />
+                            </div>
+                        </div>
+
+                        <div>
+                            <Label>Ruta a la clave privada (/home/user/.ssh/id_rsa) O pega el contenido de la clave aquí</Label>
+                            <Textarea
+                                className="min-h-[100px] font-mono text-xs"
+                                placeholder="-----BEGIN OPENSSH PRIVATE KEY-----&#10;..."
+                            />
+                            <p className="text-xs text-muted-foreground mt-1">
+                                Proporciona contraseña SSH o ruta de clave privada (no ambas)
+                            </p>
+                        </div>
+
+                        <div>
+                            <Label>Descripción opcional</Label>
                             <Textarea
                                 value={serverForm.description}
                                 onChange={(e) => setServerForm({ ...serverForm, description: e.target.value })}
-                                placeholder="Servidor web principal"
+                                placeholder="Información adicional sobre el servidor"
                             />
                         </div>
                     </div>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setAddServerOpen(false)}>Cancelar</Button>
-                        <Button onClick={handleAddServer}>Agregar</Button>
+
+                    <DialogFooter className="gap-2 sm:gap-0">
+                        <Button variant="outline" onClick={() => { setAddServerOpen(false); resetForm(); }}>
+                            Cancelar
+                        </Button>
+                        <Button onClick={handleAddServer} className="gap-2">
+                            <Plus className="h-4 w-4" />
+                            Agregar Servidor
+                        </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
 
             {/* Edit Server Dialog */}
             <Dialog open={!!editingServer} onOpenChange={(open) => !open && setEditingServer(null)}>
-                <DialogContent>
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
-                        <DialogTitle>Editar Servidor</DialogTitle>
+                        <DialogTitle className="text-2xl">Editar Servidor</DialogTitle>
                         <DialogDescription>Modifica los datos del servidor</DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4">
-                        <div>
-                            <Label>Nombre *</Label>
-                            <Input
-                                value={serverForm.hostname}
-                                onChange={(e) => setServerForm({ ...serverForm, hostname: e.target.value })}
-                            />
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <Label>Nombre *</Label>
+                                <Input
+                                    value={serverForm.hostname}
+                                    onChange={(e) => setServerForm({ ...serverForm, hostname: e.target.value })}
+                                    placeholder="ej., servidor-web-01"
+                                />
+                            </div>
+                            <div>
+                                <Label>Dirección IP *</Label>
+                                <Input
+                                    value={serverForm.ip_address}
+                                    onChange={(e) => setServerForm({ ...serverForm, ip_address: e.target.value })}
+                                    placeholder="ej., 192.168.1.100"
+                                />
+                            </div>
                         </div>
-                        <div>
-                            <Label>Dirección IP *</Label>
-                            <Input
-                                value={serverForm.ip_address}
-                                onChange={(e) => setServerForm({ ...serverForm, ip_address: e.target.value })}
-                            />
-                        </div>
+
                         <div>
                             <Label>Sistema Operativo</Label>
                             <Input
                                 value={serverForm.os_info}
                                 onChange={(e) => setServerForm({ ...serverForm, os_info: e.target.value })}
+                                placeholder="ej., Ubuntu 22.04"
                             />
                         </div>
+
                         <div>
-                            <Label>Descripción</Label>
+                            <Label>Grupo</Label>
+                            <select
+                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                value={serverForm.group_id || ''}
+                                onChange={(e) => setServerForm({ ...serverForm, group_id: e.target.value ? Number(e.target.value) : null })}
+                            >
+                                <option value="">Selecciona un grupo</option>
+                                {groups.map(g => (
+                                    <option key={g.id} value={g.id}>{g.name}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div>
+                            <Label>Descripción opcional</Label>
                             <Textarea
                                 value={serverForm.description}
                                 onChange={(e) => setServerForm({ ...serverForm, description: e.target.value })}
+                                placeholder="Información adicional sobre el servidor"
                             />
                         </div>
                     </div>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setEditingServer(null)}>Cancelar</Button>
-                        <Button onClick={handleEditServer}>Guardar</Button>
+                    <DialogFooter className="gap-2 sm:gap-0">
+                        <Button variant="outline" onClick={() => { setEditingServer(null); resetForm(); }}>
+                            Cancelar
+                        </Button>
+                        <Button onClick={handleEditServer}>Guardar Cambios</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

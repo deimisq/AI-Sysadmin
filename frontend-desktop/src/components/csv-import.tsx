@@ -49,7 +49,6 @@ export function CSVImport({ onImportComplete, onCancel }: CSVImportProps) {
             });
 
             console.log('Response status:', response.status);
-            console.log('Response headers:', response.headers);
 
             if (!response.ok) {
                 const errorText = await response.text();
@@ -57,25 +56,47 @@ export function CSVImport({ onImportComplete, onCancel }: CSVImportProps) {
                 throw new Error(`Failed to download template: ${response.status} ${response.statusText}`);
             }
 
-            // Get the blob
-            const blob = await response.blob();
-            console.log('Blob size:', blob.size, 'type:', blob.type);
+            // Get the CSV content
+            const csvContent = await response.text();
+            console.log('CSV content received, length:', csvContent.length);
 
-            // Create download
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = "servers_template.csv";
-            document.body.appendChild(a);
-            a.click();
+            // Use Tauri dialog to save file
+            const { save } = await import('@tauri-apps/plugin-dialog');
+            const { writeTextFile } = await import('@tauri-apps/plugin-fs');
 
-            // Cleanup
-            setTimeout(() => {
-                document.body.removeChild(a);
-                window.URL.revokeObjectURL(url);
-            }, 100);
+            const filePath = await save({
+                filters: [{
+                    name: 'CSV',
+                    extensions: ['csv']
+                }],
+                defaultPath: 'servers_template.csv',
+                title: 'Guardar plantilla CSV'
+            });
 
-            toast.success("Plantilla descargada exitosamente");
+            if (filePath) {
+                // Write the file
+                await writeTextFile(filePath, csvContent);
+                toast.success(`Plantilla guardada en: ${filePath}`);
+
+                // Optional: Open the folder containing the file
+                const { Command } = await import('@tauri-apps/plugin-shell');
+                const folder = filePath.substring(0, filePath.lastIndexOf('\\') || filePath.lastIndexOf('/'));
+
+                try {
+                    // Windows
+                    if (filePath.includes('\\')) {
+                        await Command.create('explorer', [folder]).execute();
+                    }
+                    // Linux/Mac
+                    else {
+                        await Command.create('xdg-open', [folder]).execute();
+                    }
+                } catch (e) {
+                    console.log('Could not open folder:', e);
+                }
+            } else {
+                toast.info('Descarga cancelada');
+            }
         } catch (error: any) {
             console.error("Error downloading template:", error);
             toast.error(error.message || "Error al descargar plantilla");

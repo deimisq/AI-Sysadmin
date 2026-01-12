@@ -326,7 +326,9 @@ async def execute_command(request: schemas.CommandRequest, db: Session = Depends
 
 # CSV Template Download
 @router.get("/servers/csv-template")
-async def download_csv_template():
+async def download_csv_template(
+    current_user: models.User = Depends(dependencies.get_current_active_user)
+):
     """
     Download a CSV template for bulk server import.
     """

@@ -152,6 +152,64 @@ def create_server(
     db.refresh(db_server)
     return db_server
 
+
+# CSV Template Download - MUST be before /servers/{server_id}
+@router.get("/servers/csv-template")
+async def download_csv_template(
+    current_user: models.User = Depends(dependencies.get_current_active_user)
+):
+    """
+    Download a CSV template for bulk server import.
+    """
+    output = io.StringIO()
+    writer = csv.writer(output)
+    
+    # Header row with all fields
+    headers = [
+        "hostname",
+        "ip_address", 
+        "ssh_username",
+        "ssh_password",
+        "ssh_key_path",
+        "description",
+        "os_info",
+        "group_name"  # Will create group if doesn't exist
+    ]
+    writer.writerow(headers)
+    
+    # Example rows
+    writer.writerow([
+        "webserver-01",
+        "192.168.1.10",
+        "admin",
+        "mypassword123",
+        "",
+        "Production web server",
+        "Ubuntu 22.04",
+        "Production Servers"
+    ])
+    writer.writerow([
+        "dbserver-01",
+        "192.168.1.20",
+        "root",
+        "",
+        "/home/user/.ssh/id_rsa",
+        "Database server",
+        "Debian 12",
+        "Database Servers"
+    ])
+    
+    output.seek(0)
+    
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv",
+        headers={
+            "Content-Disposition": "attachment; filename=servers_template.csv"
+        }
+    )
+
+
 @router.get("/servers/{server_id}", response_model=schemas.Server)
 def get_server(
     server_id: int,
@@ -323,62 +381,6 @@ async def execute_command(request: schemas.CommandRequest, db: Session = Depends
         auth_method=auth_method
     )
 
-
-# CSV Template Download
-@router.get("/servers/csv-template")
-async def download_csv_template(
-    current_user: models.User = Depends(dependencies.get_current_active_user)
-):
-    """
-    Download a CSV template for bulk server import.
-    """
-    output = io.StringIO()
-    writer = csv.writer(output)
-    
-    # Header row with all fields
-    headers = [
-        "hostname",
-        "ip_address", 
-        "ssh_username",
-        "ssh_password",
-        "ssh_key_path",
-        "description",
-        "os_info",
-        "group_name"  # Will create group if doesn't exist
-    ]
-    writer.writerow(headers)
-    
-    # Example rows
-    writer.writerow([
-        "webserver-01",
-        "192.168.1.10",
-        "admin",
-        "mypassword123",
-        "",
-        "Production web server",
-        "Ubuntu 22.04",
-        "Production Servers"
-    ])
-    writer.writerow([
-        "dbserver-01",
-        "192.168.1.20",
-        "root",
-        "",
-        "/home/user/.ssh/id_rsa",
-        "Database server",
-        "Debian 12",
-        "Database Servers"
-    ])
-    
-    output.seek(0)
-    
-    return StreamingResponse(
-        iter([output.getvalue()]),
-        media_type="text/csv",
-        headers={
-            "Content-Disposition": "attachment; filename=servers_template.csv"
-        }
-    )
 
 
 # CSV Import

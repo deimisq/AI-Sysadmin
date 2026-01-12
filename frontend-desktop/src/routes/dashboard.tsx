@@ -126,7 +126,11 @@ export default function Dashboard() {
 
     const handleAddServer = async () => {
         try {
-            await createServer(serverForm);
+            const payload = {
+                ...serverForm,
+                group_id: serverForm.group_id ?? undefined
+            };
+            await createServer(payload);
             toast.success('Servidor agregado exitosamente');
             loadData();
             setAddServerOpen(false);
@@ -139,7 +143,11 @@ export default function Dashboard() {
     const handleEditServer = async () => {
         if (!editingServer) return;
         try {
-            await updateServer(editingServer.id, serverForm);
+            const payload = {
+                ...serverForm,
+                group_id: serverForm.group_id ?? undefined
+            };
+            await updateServer(editingServer.id, payload);
             toast.success('Servidor actualizado');
             loadData();
             setEditingServer(null);

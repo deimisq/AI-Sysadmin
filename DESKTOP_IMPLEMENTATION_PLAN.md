@@ -36,13 +36,15 @@
 - [x] Layout con DashboardLayout
 **Status: COMPLETO**
 
-### ❌ Scheduled Reports (`/scheduled-reports`)
+### ✅ Scheduled Reports (`/scheduled-reports`)
 
-- [ ] Vista de reportes programados
-- [ ] Crear/editar/eliminar reportes
-- [ ] Configuración de frecuencia
-- [ ] Vista de historial
-**Status: 0% - NO INICIADO**
+- [x] Vista de reportes programados
+- [x] Crear/editar/eliminar reportes
+- [x] Configuración de frecuencia  
+- [x] Vista de historial
+- [x] Ejecutar manualmente
+- [x] Descargar PDFs
+**Status: COMPLETO**
 
 ### ❌ Documentation (`/documentation`)
 

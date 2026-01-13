@@ -14,20 +14,20 @@
 - [x] Navegación post-login
 **Status: COMPLETO**
 
-### 🔧 Dashboard (`/`)
+### ✅ Dashboard (`/`)
 
 - [x] Layout con sidebar
 - [x] Lista de servidores con grupos
 - [x] Búsqueda y filtros
 - [x] Vista Grid/List toggle
 - [x] Ordenamiento
-- [x] Agregar servidor (modal mejorado)
-- [x] Editar servidor
+- [x] Agregar servidor (modal mejorado con SSH)
+- [x] Editar servidor (con SSH credentials)
 - [x] Eliminar servidor
-- [ ] **CSV Import** - Falta integrar
-- [ ] **Group Manager completo** - Solo placeholder
+- [x] **CSV Import** - COMPLETADO
+- [x] **Group Manager completo** - COMPLETADO
 - [ ] **Diagnóstico servidor** - Solo placeholder
-**Status: 90% - Falta CSV y Group Manager**
+**Status: 95% - Falta solo Diagnóstico**
 
 ### ✅ Console (`/server/:id/console`)
 
@@ -170,7 +170,7 @@
 
 ### FASE 2: Páginas Secundarias (MEDIA PRIORIDAD)
 
-4. **Scheduled Reports**
+1. **Scheduled Reports**
    - Crear route `/scheduled-reports`
    - Lista de reportes con tabla
    - Modal crear/editar reporte
@@ -184,7 +184,7 @@
 
 ### FASE 3: Documentation (BAJA PRIORIDAD)
 
-6. **Documentation Viewer**
+1. **Documentation Viewer**
    - Crear route `/documentation`
    - Navegación por secciones
    - Renderizado markdown
@@ -192,7 +192,7 @@
 
 ### FASE 4: Admin Panel (ALTA COMPLEJIDAD)
 
-7. **Admin Dashboard**
+1. **Admin Dashboard**
    - Crear route `/admin`
    - Tabs para cada sección
    - User Management
@@ -205,7 +205,7 @@
 
 ### FASE 5: Features Avanzadas
 
-8. **AI Chat Assistant**
+1. **AI Chat Assistant**
    - Integrar `agent-chat.tsx`
    - Integrar `conversational-chat.tsx`
    - Conexión con backend AI

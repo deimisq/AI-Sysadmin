@@ -53,13 +53,13 @@
 - [ ] Buscar en docs
 **Status: 0% - NO INICIADO**
 
-### ❌ Profile (`/profile`)
+### ✅ Profile (`/profile`)
 
-- [ ] Información del usuario
-- [ ] Cambiar contraseña
-- [ ] Preferencias
-- [ ] Notificaciones
-**Status: 0% - NO INICIADO**
+- [x] Información del usuario
+- [x] Cambiar contraseña
+- [x] Preferencias
+- [x] Editar perfil
+**Status: COMPLETO**
 
 ### ❌ Admin (`/admin`)
 

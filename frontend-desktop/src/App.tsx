@@ -4,6 +4,7 @@ import Dashboard from './routes/dashboard';
 import ServerConsole from './routes/console';
 import { ScheduledReports } from './routes/scheduled-reports';
 import { Profile } from './routes/profile';
+import { Admin } from './routes/admin';
 import { isAuthenticated } from './lib/api';
 import { Toaster } from 'sonner';
 import { ThemeProvider } from '@/components/theme-provider';
@@ -47,6 +48,14 @@ export default function App() {
             element={
               <PrivateRoute>
                 <Profile />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              <PrivateRoute>
+                <Admin />
               </PrivateRoute>
             }
           />

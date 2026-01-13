@@ -3,6 +3,7 @@ import Login from './routes/login';
 import Dashboard from './routes/dashboard';
 import ServerConsole from './routes/console';
 import { ScheduledReports } from './routes/scheduled-reports';
+import { Profile } from './routes/profile';
 import { isAuthenticated } from './lib/api';
 import { Toaster } from 'sonner';
 import { ThemeProvider } from '@/components/theme-provider';
@@ -38,6 +39,14 @@ export default function App() {
             element={
               <PrivateRoute>
                 <ScheduledReports />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <PrivateRoute>
+                <Profile />
               </PrivateRoute>
             }
           />

@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { DashboardLayout } from "@/components/dashboard-layout";
+import DashboardLayout from "@/components/dashboard-layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Users, Server, Shield, Settings, Activity, Bell, Code, Mail } from "lucide-react";
 
@@ -27,8 +26,8 @@ function TabButton({ icon: Icon, label, active, onClick }: TabButtonProps) {
         <button
             onClick={onClick}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${active
-                    ? "bg-primary text-primary-foreground"
-                    : "hover:bg-muted text-muted-foreground"
+                ? "bg-primary text-primary-foreground"
+                : "hover:bg-muted text-muted-foreground"
                 }`}
         >
             <Icon className="h-4 w-4" />

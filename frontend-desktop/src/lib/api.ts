@@ -91,6 +91,9 @@ export interface Server {
     description: string;
     os_info: string;
     group_id?: number;
+    ssh_username?: string;
+    ssh_password?: string;
+    ssh_key_path?: string;
 }
 
 export const fetchServers = () => api.get<Server[]>('/servers/');

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Users, Edit2, Trash2, Plus, Loader2 } from "lucide-react";
+import { Users, Trash2, Plus, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { fetch } from '@tauri-apps/plugin-http';
 
@@ -21,7 +21,6 @@ interface User {
 export function UserManagement() {
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
-    const [editingUser, setEditingUser] = useState<any>(null);
     const [creatingUser, setCreatingUser] = useState(false);
     const [newUser, setNewUser] = useState({
         email: "",
@@ -250,13 +249,6 @@ export function UserManagement() {
                                 )}
                             </div>
                             <div className="flex gap-2">
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => setEditingUser(user)}
-                                >
-                                    <Edit2 className="h-4 w-4" />
-                                </Button>
                                 <Button
                                     variant="destructive"
                                     size="sm"

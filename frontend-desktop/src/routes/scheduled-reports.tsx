@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Calendar, Clock, Mail, Server, FolderOpen, Play, Trash2, Edit, Plus, Download, History, CheckCircle, XCircle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { DashboardLayout } from "@/components/dashboard-layout";
+import DashboardLayout from "@/components/dashboard-layout";
 import { fetch } from '@tauri-apps/plugin-http';
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -62,7 +62,6 @@ export function ScheduledReports() {
     const [showHistory, setShowHistory] = useState<number | null>(null);
     const [reports, setReports] = useState<Report[]>([]);
     const [runningId, setRunningId] = useState<number | null>(null);
-    const [message, setMessage] = useState("");
 
     const [form, setForm] = useState({
         name: "",
@@ -309,12 +308,6 @@ export function ScheduledReports() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                    {message && (
-                        <div className={`p-3 rounded-lg text-sm ${message.startsWith("✅") ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200" : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"}`}>
-                            {message}
-                        </div>
-                    )}
-
                     {/* Add Button */}
                     {!showForm && !showHistory && (
                         <Button onClick={() => { resetForm(); setShowForm(true); setEditingId(null); }}>

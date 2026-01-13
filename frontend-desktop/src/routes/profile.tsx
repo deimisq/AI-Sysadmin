@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { User, Lock, Settings, Save, Loader2, Mail, Shield } from "lucide-react";
 import { toast } from "sonner";
-import { DashboardLayout } from "@/components/dashboard-layout";
+import DashboardLayout from "@/components/dashboard-layout";
 import { fetch } from '@tauri-apps/plugin-http';
 
 const API_URL = import.meta.env.VITE_API_URL;

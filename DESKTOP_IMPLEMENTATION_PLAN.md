@@ -61,17 +61,17 @@
 - [x] Editar perfil
 **Status: COMPLETO**
 
-### ❌ Admin (`/admin`)
+### 🔧 Admin (`/admin`)
 
-- [ ] Panel de administración
-- [ ] Gestión de usuarios
-- [ ] Configuración del sistema
+- [x] Panel de administración con tabs
+- [x] Gestión de usuarios (crear/eliminar/list)
+- [x] Información del sistema
 - [ ] Logs de auditoría
 - [ ] Preferencias de notificación
 - [ ] Parámetros del frontend
 - [ ] Configuración de seguridad
 - [ ] Configuración de comunicaciones
-**Status: 0% - NO INICIADO**
+**Status: 40% - Esqueleto completo, User Management funcional**
 
 ## 2. COMPONENTES REUTILIZABLES
 

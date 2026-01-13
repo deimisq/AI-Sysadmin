@@ -45,16 +45,25 @@ export function UserManagement() {
 
     const loadUsers = async () => {
         try {
+            console.log('Loading users from:', `${API_URL}/admin/users`);
             const res = await fetch(`${API_URL}/admin/users`, {
                 headers: getAuthHeaders()
             });
 
+            console.log('Users response status:', res.status);
+
             if (res.ok) {
-                setUsers(await res.json());
+                const data = await res.json();
+                console.log('Loaded users:', data);
+                setUsers(data);
+            } else {
+                const errorText = await res.text();
+                console.error('Failed to load users. Status:', res.status, 'Error:', errorText);
+                toast.error(`Error al cargar usuarios (${res.status})`);
             }
         } catch (error) {
             console.error("Failed to load users:", error);
-            toast.error("Error al cargar usuarios");
+            toast.error("Error al cargar usuarios: " + (error as Error).message);
         } finally {
             setLoading(false);
         }

@@ -88,7 +88,10 @@ export default function Dashboard() {
         ip_address: '',
         description: '',
         os_info: '',
-        group_id: null as number | null
+        group_id: null as number | null,
+        ssh_username: '',
+        ssh_password: '',
+        ssh_key_path: ''
     });
 
     useEffect(() => {
@@ -179,7 +182,10 @@ export default function Dashboard() {
             ip_address: server.ip_address,
             description: server.description || '',
             os_info: server.os_info || '',
-            group_id: server.group_id || null
+            group_id: server.group_id || null,
+            ssh_username: server.ssh_username || '',
+            ssh_password: '',  // Never pre-fill password for security
+            ssh_key_path: ''   // Never pre-fill private key for security
         });
     };
 
@@ -189,7 +195,10 @@ export default function Dashboard() {
             ip_address: '',
             description: '',
             os_info: '',
-            group_id: null
+            group_id: null,
+            ssh_username: '',
+            ssh_password: '',
+            ssh_key_path: ''
         });
     };
 
@@ -567,11 +576,20 @@ export default function Dashboard() {
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <Label>Usuario SSH</Label>
-                                <Input placeholder="root" />
+                                <Input
+                                    value={serverForm.ssh_username}
+                                    onChange={(e) => setServerForm({ ...serverForm, ssh_username: e.target.value })}
+                                    placeholder="root"
+                                />
                             </div>
                             <div>
                                 <Label>Contraseña SSH (Opcional)</Label>
-                                <Input type="password" placeholder="••••••••" />
+                                <Input
+                                    type="password"
+                                    value={serverForm.ssh_password}
+                                    onChange={(e) => setServerForm({ ...serverForm, ssh_password: e.target.value })}
+                                    placeholder="••••••••"
+                                />
                             </div>
                         </div>
 
@@ -579,6 +597,8 @@ export default function Dashboard() {
                             <Label>Ruta a la clave privada (/home/user/.ssh/id_rsa) O pega el contenido de la clave aquí</Label>
                             <Textarea
                                 className="min-h-[100px] font-mono text-xs"
+                                value={serverForm.ssh_key_path}
+                                onChange={(e) => setServerForm({ ...serverForm, ssh_key_path: e.target.value })}
                                 placeholder="-----BEGIN OPENSSH PRIVATE KEY-----&#10;..."
                             />
                             <p className="text-xs text-muted-foreground mt-1">
@@ -656,6 +676,39 @@ export default function Dashboard() {
                                     <option key={g.id} value={g.id}>{g.name}</option>
                                 ))}
                             </select>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <Label>Usuario SSH</Label>
+                                <Input
+                                    value={serverForm.ssh_username}
+                                    onChange={(e) => setServerForm({ ...serverForm, ssh_username: e.target.value })}
+                                    placeholder="ubuntu"
+                                />
+                            </div>
+                            <div>
+                                <Label>Contraseña SSH (dejar en blanco para mantener)</Label>
+                                <Input
+                                    type="password"
+                                    value={serverForm.ssh_password}
+                                    onChange={(e) => setServerForm({ ...serverForm, ssh_password: e.target.value })}
+                                    placeholder="••••••••"
+                                />
+                            </div>
+                        </div>
+
+                        <div>
+                            <Label>Ruta de Clave Privada SSH (dejar en blanco para mantener)</Label>
+                            <Textarea
+                                className="min-h-[100px] font-mono text-xs"
+                                value={serverForm.ssh_key_path}
+                                onChange={(e) => setServerForm({ ...serverForm, ssh_key_path: e.target.value })}
+                                placeholder="-----BEGIN OPENSSH PRIVATE KEY-----&#10;..."
+                            />
+                            <p className="text-xs text-muted-foreground mt-1">
+                                Proporciona contraseña SSH o ruta de clave privada (no ambas)
+                            </p>
                         </div>
 
                         <div>

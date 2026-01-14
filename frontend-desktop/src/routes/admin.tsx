@@ -4,6 +4,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { UserManagement } from "@/components/admin/user-management";
 import { SecuritySettings } from "@/components/admin/security-settings";
 import { NotificationPreferences } from "@/components/admin/notification-preferences";
+import { CommunicationSettings } from "@/components/admin/communication-settings";
+import { FrontendParameters } from "@/components/admin/frontend-parameters";
+import { BackendParameters } from "@/components/admin/backend-parameters";
 import { Activity, Construction } from "lucide-react";
 
 export function Admin() {
@@ -32,11 +35,11 @@ export function Admin() {
 
                 {activeTab === "notifications" && <NotificationPreferences />}
 
-                {activeTab === "communication" && <PlaceholderSection title="Comunicaciones" />}
+                {activeTab === "communication" && <CommunicationSettings />}
 
-                {activeTab === "frontend" && <PlaceholderSection title="Parámetros Frontend" />}
+                {activeTab === "frontend" && <FrontendParameters />}
 
-                {activeTab === "backend" && <PlaceholderSection title="Parámetros Backend" />}
+                {activeTab === "backend" && <BackendParameters />}
 
                 {activeTab === "advanced" && <PlaceholderSection title="Configuración Avanzada" />}
             </div>

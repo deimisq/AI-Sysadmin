@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { FileText, Search, Loader2, Filter, Download, RefreshCw } from "lucide-react";
+import { FileText, Search, Loader2, Download, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { fetch } from '@tauri-apps/plugin-http';
 
@@ -48,7 +48,9 @@ export function AuditLogs() {
 
             if (res.ok) {
                 const data = await res.json();
-                setLogs(data);
+                // Ensure data is an array, handle both direct array and wrapped response
+                const logsArray = Array.isArray(data) ? data : (data.logs || data.data || []);
+                setLogs(logsArray);
             } else {
                 // Show mock data if endpoint doesn't exist
                 setLogs([
@@ -120,7 +122,7 @@ export function AuditLogs() {
         }
     };
 
-    const filteredLogs = logs.filter(log => {
+    const filteredLogs = Array.isArray(logs) ? logs.filter(log => {
         const matchesSearch = search === "" ||
             log.user_email.toLowerCase().includes(search.toLowerCase()) ||
             log.user_name.toLowerCase().includes(search.toLowerCase()) ||
@@ -131,7 +133,7 @@ export function AuditLogs() {
         const matchesFilter = actionFilter === "all" || log.action === actionFilter;
 
         return matchesSearch && matchesFilter;
-    });
+    }) : [];
 
     const getActionBadgeColor = (action: string) => {
         const colors: Record<string, string> = {

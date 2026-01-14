@@ -7,6 +7,7 @@ import { NotificationPreferences } from "@/components/admin/notification-prefere
 import { CommunicationSettings } from "@/components/admin/communication-settings";
 import { FrontendParameters } from "@/components/admin/frontend-parameters";
 import { BackendParameters } from "@/components/admin/backend-parameters";
+import { AuditLogs } from "@/components/admin/audit-logs";
 import { Activity, Construction } from "lucide-react";
 
 export function Admin() {
@@ -30,6 +31,8 @@ export function Admin() {
                 {activeTab === "users" && <UserManagement />}
 
                 {activeTab === "system" && <SystemInfo />}
+
+                {activeTab === "audit-logs" && <AuditLogs />}
 
                 {activeTab === "security" && <SecuritySettings />}
 

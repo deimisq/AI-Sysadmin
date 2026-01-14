@@ -1,6 +1,6 @@
 import DashboardLayout from "@/components/dashboard-layout";
 import { Card, CardContent } from "@/components/ui/card";
-import { Users, Server, Shield, Settings, Activity, Bell, Code, Mail } from "lucide-react";
+import { Users, Server, Shield, Settings, Activity, Bell, Code, Mail, FileText } from "lucide-react";
 
 interface AdminLayoutProps {
     children: React.ReactNode;
@@ -39,6 +39,7 @@ function TabButton({ icon: Icon, label, active, onClick }: TabButtonProps) {
 const tabs = [
     { id: "users", label: "Usuarios", icon: Users },
     { id: "system", label: "Sistema", icon: Activity },
+    { id: "audit-logs", label: "Logs", icon: FileText },
     { id: "security", label: "Seguridad", icon: Shield },
     { id: "notifications", label: "Notificaciones", icon: Bell },
     { id: "communication", label: "Comunicaciones", icon: Mail },

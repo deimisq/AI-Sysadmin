@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Users, Trash2, Plus, Loader2, FolderOpen, Mail, Edit2 } from "lucide-react";
 import { toast } from "sonner";
 import { fetch } from '@tauri-apps/plugin-http';
@@ -22,6 +24,15 @@ export function UserManagement() {
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
     const [creatingUser, setCreatingUser] = useState(false);
+    const [editingUser, setEditingUser] = useState<User | null>(null);
+    const [editForm, setEditForm] = useState({
+        email: "",
+        username: "",
+        full_name: "",
+        role: "user",
+        is_active: true,
+        newPassword: ""
+    });
     const [newUser, setNewUser] = useState({
         email: "",
         username: "",
@@ -120,8 +131,51 @@ export function UserManagement() {
     };
 
     const handleEditUser = (user: User) => {
-        toast.info("Edición de usuarios próximamente disponible");
-        // TODO: Implement edit functionality
+        setEditingUser(user);
+        setEditForm({
+            email: user.email,
+            username: user.username,
+            full_name: user.full_name || "",
+            role: user.role,
+            is_active: user.is_active,
+            newPassword: ""
+        });
+    };
+
+    const handleSaveEdit = async () => {
+        if (!editingUser) return;
+
+        try {
+            const updatePayload: any = {
+                email: editForm.email,
+                username: editForm.username,
+                full_name: editForm.full_name,
+                role: editForm.role,
+                is_active: editForm.is_active,
+            };
+
+            // Only include password if it was changed
+            if (editForm.newPassword && editForm.newPassword.trim()) {
+                updatePayload.password = editForm.newPassword;
+            }
+
+            const res = await fetch(`${API_URL}/admin/users/${editingUser.id}`, {
+                method: "PUT",
+                headers: getAuthHeaders(),
+                body: JSON.stringify(updatePayload)
+            });
+
+            if (res.ok) {
+                toast.success("Usuario actualizado correctamente");
+                setEditingUser(null);
+                loadUsers();
+            } else {
+                const error = await res.json();
+                toast.error(`Error: ${error.detail || "No se pudo actualizar"}`);
+            }
+        } catch (error: any) {
+            toast.error(`Error: ${error.message}`);
+        }
     };
 
     const handleManageGroups = (user: User) => {
@@ -245,86 +299,162 @@ export function UserManagement() {
 
     // Users List
     return (
-        <Card>
-            <CardHeader>
-                <div className="flex items-center justify-between">
-                    <div>
-                        <CardTitle className="flex items-center gap-2">
-                            <Users className="h-5 w-5" />
-                            Gestión de Usuarios
-                        </CardTitle>
-                        <CardDescription>Administra los usuarios del sistema y sus permisos</CardDescription>
+        <>
+            <Card>
+                <CardHeader>
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <CardTitle className="flex items-center gap-2">
+                                <Users className="h-5 w-5" />
+                                Gestión de Usuarios
+                            </CardTitle>
+                            <CardDescription>Administra los usuarios del sistema y sus permisos</CardDescription>
+                        </div>
+                        <Button onClick={() => setCreatingUser(true)}>
+                            <Plus className="mr-2 h-4 w-4" />
+                            Crear Usuario
+                        </Button>
                     </div>
-                    <Button onClick={() => setCreatingUser(true)}>
-                        <Plus className="mr-2 h-4 w-4" />
-                        Crear Usuario
-                    </Button>
-                </div>
-            </CardHeader>
-            <CardContent className="max-h-[calc(100vh-300px)] overflow-y-auto">
-                <div className="space-y-2">
-                    {users.map((user) => (
-                        <div
-                            key={user.id}
-                            className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50"
-                        >
-                            <div className="flex-1">
-                                <div className="flex items-center gap-2">
-                                    <h3 className="font-medium">{user.username}</h3>
-                                    <span className={`px-2 py-1 rounded text-xs font-medium ${getRoleBadgeColor(user.role)}`}>
-                                        {user.role}
-                                    </span>
-                                    {!user.is_active && (
-                                        <span className="px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800">
-                                            Inactivo
+                </CardHeader>
+                <CardContent className="max-h-[calc(100vh-300px)] overflow-y-auto">
+                    <div className="space-y-2">
+                        {users.map((user) => (
+                            <div
+                                key={user.id}
+                                className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50"
+                            >
+                                <div className="flex-1">
+                                    <div className="flex items-center gap-2">
+                                        <h3 className="font-medium">{user.username}</h3>
+                                        <span className={`px-2 py-1 rounded text-xs font-medium ${getRoleBadgeColor(user.role)}`}>
+                                            {user.role}
                                         </span>
+                                        {!user.is_active && (
+                                            <span className="px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800">
+                                                Inactivo
+                                            </span>
+                                        )}
+                                    </div>
+                                    <p className="text-sm text-muted-foreground">{user.email}</p>
+                                    {user.full_name && (
+                                        <p className="text-sm text-muted-foreground">{user.full_name}</p>
                                     )}
                                 </div>
-                                <p className="text-sm text-muted-foreground">{user.email}</p>
-                                {user.full_name && (
-                                    <p className="text-sm text-muted-foreground">{user.full_name}</p>
-                                )}
-                            </div>
-                            <div className="flex gap-2">
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => handleManageGroups(user)}
-                                    title="Gestionar grupos"
-                                >
-                                    <FolderOpen className="h-4 w-4" />
-                                </Button>
-                                {user.is_active && (
+                                <div className="flex gap-2">
                                     <Button
                                         variant="outline"
                                         size="sm"
-                                        onClick={() => handleSendNotification(user)}
-                                        title="Enviar notificación de aprobación"
+                                        onClick={() => handleManageGroups(user)}
+                                        title="Gestionar grupos"
                                     >
-                                        <Mail className="h-4 w-4" />
+                                        <FolderOpen className="h-4 w-4" />
                                     </Button>
-                                )}
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => handleEditUser(user)}
-                                    title="Editar usuario"
+                                    {user.is_active && (
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => handleSendNotification(user)}
+                                            title="Enviar notificación de aprobación"
+                                        >
+                                            <Mail className="h-4 w-4" />
+                                        </Button>
+                                    )}
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => handleEditUser(user)}
+                                        title="Editar usuario"
+                                    >
+                                        <Edit2 className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                        variant="destructive"
+                                        size="sm"
+                                        onClick={() => handleDeleteUser(user.id)}
+                                        title="Eliminar usuario"
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* Edit User Modal */}
+            <Dialog open={!!editingUser} onOpenChange={(open) => !open && setEditingUser(null)}>
+                <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                        <DialogTitle>Editar Usuario: {editingUser?.username}</DialogTitle>
+                        <DialogDescription>Modifica la información del usuario</DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                        <div className="grid gap-4 md:grid-cols-2">
+                            <div>
+                                <Label>Email *</Label>
+                                <Input
+                                    type="email"
+                                    value={editForm.email}
+                                    onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                                />
+                            </div>
+                            <div>
+                                <Label>Usuario *</Label>
+                                <Input
+                                    value={editForm.username}
+                                    onChange={(e) => setEditForm({ ...editForm, username: e.target.value })}
+                                />
+                            </div>
+                            <div>
+                                <Label>Nombre Completo</Label>
+                                <Input
+                                    value={editForm.full_name}
+                                    onChange={(e) => setEditForm({ ...editForm, full_name: e.target.value })}
+                                />
+                            </div>
+                            <div>
+                                <Label>Rol</Label>
+                                <select
+                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                    value={editForm.role}
+                                    onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
                                 >
-                                    <Edit2 className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                    variant="destructive"
-                                    size="sm"
-                                    onClick={() => handleDeleteUser(user.id)}
-                                    title="Eliminar usuario"
-                                >
-                                    <Trash2 className="h-4 w-4" />
-                                </Button>
+                                    <option value="user">Usuario</option>
+                                    <option value="group_admin">Admin de Grupo</option>
+                                    <option value="admin">Administrador</option>
+                                    <option value="superadmin">Superadministrador</option>
+                                </select>
+                            </div>
+                            <div className="md:col-span-2">
+                                <Label>Nueva Contraseña (opcional)</Label>
+                                <Input
+                                    type="password"
+                                    placeholder="Dejar vacío para no cambiar"
+                                    value={editForm.newPassword}
+                                    onChange={(e) => setEditForm({ ...editForm, newPassword: e.target.value })}
+                                />
+                                <p className="text-xs text-muted-foreground mt-1">
+                                    Solo completar si desea cambiar la contraseña del usuario
+                                </p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <input
+                                    type="checkbox"
+                                    checked={editForm.is_active}
+                                    onChange={(e) => setEditForm({ ...editForm, is_active: e.target.checked })}
+                                    className="h-4 w-4"
+                                />
+                                <Label>Activo</Label>
                             </div>
                         </div>
-                    ))}
-                </div>
-            </CardContent>
-        </Card>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setEditingUser(null)}>Cancelar</Button>
+                        <Button onClick={handleSaveEdit}>Guardar Cambios</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        </>
     );
 }

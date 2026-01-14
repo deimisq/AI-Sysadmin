@@ -56,6 +56,7 @@ import {
 import DashboardLayout from '../components/dashboard-layout';
 import { CSVImport } from '../components/csv-import';
 import { GroupManager } from '../components/group-manager';
+import { ServerDiagnostic } from '../components/server-diagnostic';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -80,6 +81,7 @@ export default function Dashboard() {
     const [addServerMode, setAddServerMode] = useState<'manual' | 'csv'>('manual');
     const [editingServer, setEditingServer] = useState<Server | null>(null);
     const [deletingServer, setDeletingServer] = useState<Server | null>(null);
+    const [diagnosticServer, setDiagnosticServer] = useState<Server | null>(null);
     const [manageGroupsOpen, setManageGroupsOpen] = useState(false);
 
     // Form State
@@ -276,7 +278,7 @@ export default function Dashboard() {
                     size="icon"
                     className="h-9 w-9 shrink-0"
                     title="Diagnóstico"
-                    onClick={() => toast.info('Diagnóstico en desarrollo')}
+                    onClick={() => setDiagnosticServer(server)}
                     type="button"
                 >
                     <Zap className="h-4 w-4" />
@@ -764,6 +766,12 @@ export default function Dashboard() {
                     />
                 </DialogContent>
             </Dialog>
+
+            {/* Server Diagnostic Dialog */}
+            <ServerDiagnostic
+                server={diagnosticServer}
+                onClose={() => setDiagnosticServer(null)}
+            />
         </DashboardLayout>
     );
 }

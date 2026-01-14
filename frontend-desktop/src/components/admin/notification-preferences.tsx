@@ -68,7 +68,7 @@ export function NotificationPreferences() {
 
     const loadConfig = async () => {
         try {
-            const res = await fetch(`${API_URL}/admin/config/notifications`, {
+            const res = await fetch(`${API_URL}/config/notifications`, {
                 headers: getAuthHeaders()
             });
 
@@ -86,7 +86,7 @@ export function NotificationPreferences() {
     const handleSave = async () => {
         setSaving(true);
         try {
-            const res = await fetch(`${API_URL}/admin/config/notifications`, {
+            const res = await fetch(`${API_URL}/config/notifications`, {
                 method: "PUT",
                 headers: getAuthHeaders(),
                 body: JSON.stringify(config)

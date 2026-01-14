@@ -65,7 +65,7 @@ export function AdvancedSettings() {
 
     const loadConfig = async () => {
         try {
-            const res = await fetch(`${API_URL}/admin/config/advanced`, {
+            const res = await fetch(`${API_URL}/config/advanced`, {
                 headers: getAuthHeaders()
             });
 
@@ -83,7 +83,7 @@ export function AdvancedSettings() {
     const handleSave = async () => {
         setSaving(true);
         try {
-            const res = await fetch(`${API_URL}/admin/config/advanced`, {
+            const res = await fetch(`${API_URL}/config/advanced`, {
                 method: "PUT",
                 headers: getAuthHeaders(),
                 body: JSON.stringify(config)

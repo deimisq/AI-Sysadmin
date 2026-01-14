@@ -51,7 +51,7 @@ export function FrontendParameters() {
 
     const loadConfig = async () => {
         try {
-            const res = await fetch(`${API_URL}/admin/config/frontend`, {
+            const res = await fetch(`${API_URL}/config/frontend`, {
                 headers: getAuthHeaders()
             });
 
@@ -69,7 +69,7 @@ export function FrontendParameters() {
     const handleSave = async () => {
         setSaving(true);
         try {
-            const res = await fetch(`${API_URL}/admin/config/frontend`, {
+            const res = await fetch(`${API_URL}/config/frontend`, {
                 method: "PUT",
                 headers: getAuthHeaders(),
                 body: JSON.stringify(config)

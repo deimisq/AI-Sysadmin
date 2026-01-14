@@ -46,7 +46,7 @@ export function CommunicationSettings() {
 
     const loadConfig = async () => {
         try {
-            const res = await fetch(`${API_URL}/admin/config/communication`, {
+            const res = await fetch(`${API_URL}/config/communication`, {
                 headers: getAuthHeaders()
             });
 
@@ -64,7 +64,7 @@ export function CommunicationSettings() {
     const handleSave = async () => {
         setSaving(true);
         try {
-            const res = await fetch(`${API_URL}/admin/config/communication`, {
+            const res = await fetch(`${API_URL}/config/communication`, {
                 method: "PUT",
                 headers: getAuthHeaders(),
                 body: JSON.stringify(config)

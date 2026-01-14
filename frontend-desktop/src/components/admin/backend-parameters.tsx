@@ -58,7 +58,7 @@ export function BackendParameters() {
 
     const loadConfig = async () => {
         try {
-            const res = await fetch(`${API_URL}/admin/config/backend`, {
+            const res = await fetch(`${API_URL}/config/backend`, {
                 headers: getAuthHeaders()
             });
 
@@ -76,7 +76,7 @@ export function BackendParameters() {
     const handleSave = async () => {
         setSaving(true);
         try {
-            const res = await fetch(`${API_URL}/admin/config/backend`, {
+            const res = await fetch(`${API_URL}/config/backend`, {
                 method: "PUT",
                 headers: getAuthHeaders(),
                 body: JSON.stringify(config)

@@ -48,7 +48,7 @@ export function SecuritySettings() {
 
     const loadConfig = async () => {
         try {
-            const res = await fetch(`${API_URL}/admin/config/security`, {
+            const res = await fetch(`${API_URL}/config/security`, {
                 headers: getAuthHeaders()
             });
 
@@ -67,7 +67,7 @@ export function SecuritySettings() {
     const handleSave = async () => {
         setSaving(true);
         try {
-            const res = await fetch(`${API_URL}/admin/config/security`, {
+            const res = await fetch(`${API_URL}/config/security`, {
                 method: "PUT",
                 headers: getAuthHeaders(),
                 body: JSON.stringify(config)

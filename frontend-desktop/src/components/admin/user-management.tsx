@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Users, Trash2, Plus, Loader2 } from "lucide-react";
+import { Users, Trash2, Plus, Loader2, FolderOpen, Mail, Edit2 } from "lucide-react";
 import { toast } from "sonner";
 import { fetch } from '@tauri-apps/plugin-http';
 
@@ -113,6 +113,34 @@ export function UserManagement() {
             if (res.ok) {
                 toast.success("Usuario eliminado");
                 loadUsers();
+            }
+        } catch (error: any) {
+            toast.error(`Error: ${error.message}`);
+        }
+    };
+
+    const handleEditUser = (user: User) => {
+        toast.info("Edición de usuarios próximamente disponible");
+        // TODO: Implement edit functionality
+    };
+
+    const handleManageGroups = (user: User) => {
+        toast.info("Gestión de grupos próximamente disponible");
+        // TODO: Implement group management
+    };
+
+    const handleSendNotification = async (user: User) => {
+        try {
+            const res = await fetch(`${API_URL}/admin/users/${user.id}/send-approval-notification`, {
+                method: "POST",
+                headers: getAuthHeaders()
+            });
+
+            if (res.ok) {
+                const result = await res.json();
+                toast.success(result.message || "Notificación enviada correctamente");
+            } else {
+                toast.error("Error al enviar notificación");
             }
         } catch (error: any) {
             toast.error(`Error: ${error.message}`);
@@ -259,9 +287,36 @@ export function UserManagement() {
                             </div>
                             <div className="flex gap-2">
                                 <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleManageGroups(user)}
+                                    title="Gestionar grupos"
+                                >
+                                    <FolderOpen className="h-4 w-4" />
+                                </Button>
+                                {user.is_active && (
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => handleSendNotification(user)}
+                                        title="Enviar notificación de aprobación"
+                                    >
+                                        <Mail className="h-4 w-4" />
+                                    </Button>
+                                )}
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleEditUser(user)}
+                                    title="Editar usuario"
+                                >
+                                    <Edit2 className="h-4 w-4" />
+                                </Button>
+                                <Button
                                     variant="destructive"
                                     size="sm"
                                     onClick={() => handleDeleteUser(user.id)}
+                                    title="Eliminar usuario"
                                 >
                                     <Trash2 className="h-4 w-4" />
                                 </Button>

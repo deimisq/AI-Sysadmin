@@ -491,7 +491,7 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                     </Button>
                 </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="max-h-[calc(100vh-400px)] overflow-y-auto">
                 <div className="space-y-2">
                     {users.map((user) => (
                         <div

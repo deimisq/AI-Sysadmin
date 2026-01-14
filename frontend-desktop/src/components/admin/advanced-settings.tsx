@@ -163,7 +163,7 @@ export function AdvancedSettings() {
                         Configuraciones del sistema y opciones avanzadas
                     </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-6">
+                <CardContent className="space-y-6 max-h-[calc(100vh-300px)] overflow-y-auto">
                     {/* Maintenance Mode */}
                     <div className="p-4 border rounded-lg space-y-4 bg-yellow-50 dark:bg-yellow-950/20 border-yellow-200 dark:border-yellow-800">
                         <div className="flex items-center gap-2">

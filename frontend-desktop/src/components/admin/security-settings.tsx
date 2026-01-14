@@ -106,7 +106,7 @@ export function SecuritySettings() {
                     Gestiona la seguridad y políticas de acceso del sistema
                 </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-6 max-h-[calc(100vh-300px)] overflow-y-auto">
                 {/* Session Settings */}
                 <div className="space-y-4">
                     <h3 className="text-lg font-medium">Sesiones</h3>

@@ -133,7 +133,7 @@ export function CommunicationSettings() {
                     Integración con servicios de comunicación externos
                 </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-6 max-h-[calc(100vh-300px)] overflow-y-auto">
                 {/* Microsoft Teams */}
                 <div className="p-4 border rounded-lg space-y-4">
                     <div className="flex items-center gap-2">

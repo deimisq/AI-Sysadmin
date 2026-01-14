@@ -109,7 +109,7 @@ export function FrontendParameters() {
                     Personaliza la apariencia y comportamiento de la interfaz
                 </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-6 max-h-[calc(100vh-300px)] overflow-y-auto">
                 {/* Branding */}
                 <div className="space-y-4">
                     <h3 className="text-lg font-medium flex items-center gap-2">

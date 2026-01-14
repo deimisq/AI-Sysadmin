@@ -116,7 +116,7 @@ export function BackendParameters() {
                     Configuración del servidor y servicios backend
                 </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-6 max-h-[calc(100vh-300px)] overflow-y-auto">
                 {/* API Configuration */}
                 <div className="space-y-4">
                     <h3 className="text-lg font-medium flex items-center gap-2">

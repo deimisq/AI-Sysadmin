@@ -125,7 +125,7 @@ export function NotificationPreferences() {
                     Configura cómo y cuándo recibir notificaciones del sistema
                 </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-6 max-h-[calc(100vh-300px)] overflow-y-auto">
                 {/* Notification Channels */}
                 <div className="space-y-4">
                     <h3 className="text-lg font-medium">Canales de Notificación</h3>

@@ -33,6 +33,9 @@ export function UserManagement() {
         is_active: true,
         newPassword: ""
     });
+    const [managingGroupsUser, setManagingGroupsUser] = useState<User | null>(null);
+    const [allGroups, setAllGroups] = useState<any[]>([]);
+    const [userGroups, setUserGroups] = useState<any[]>([]);
     const [newUser, setNewUser] = useState({
         email: "",
         username: "",
@@ -71,6 +74,14 @@ export function UserManagement() {
                 const errorText = await res.text();
                 console.error('Failed to load users. Status:', res.status, 'Error:', errorText);
                 toast.error(`Error al cargar usuarios (${res.status})`);
+            }
+
+            // Also load groups
+            const groupsRes = await fetch(`${API_URL}/groups/`, {
+                headers: getAuthHeaders()
+            });
+            if (groupsRes.ok) {
+                setAllGroups(await groupsRes.json());
             }
         } catch (error) {
             console.error("Failed to load users:", error);
@@ -178,9 +189,65 @@ export function UserManagement() {
         }
     };
 
-    const handleManageGroups = (user: User) => {
-        toast.info("Gestión de grupos próximamente disponible");
-        // TODO: Implement group management
+    const handleManageGroups = async (user: User) => {
+        setManagingGroupsUser(user);
+
+        // Load user's current groups
+        try {
+            const res = await fetch(`${API_URL}/admin/users/${user.id}/groups`, {
+                headers: getAuthHeaders()
+            });
+            if (res.ok) {
+                setUserGroups(await res.json());
+            } else {
+                setUserGroups([]);
+            }
+        } catch (error) {
+            console.error("Failed to load user groups:", error);
+            setUserGroups([]);
+        }
+    };
+
+    const handleGrantGroupAccess = async (groupId: number) => {
+        if (!managingGroupsUser) return;
+
+        try {
+            const res = await fetch(`${API_URL}/admin/users/${managingGroupsUser.id}/groups/${groupId}`, {
+                method: "POST",
+                headers: getAuthHeaders()
+            });
+
+            if (res.ok) {
+                toast.success("Acceso al grupo otorgado");
+                // Reload user groups
+                handleManageGroups(managingGroupsUser);
+            } else {
+                toast.error("Error al otorgar acceso");
+            }
+        } catch (error: any) {
+            toast.error(`Error: ${error.message}`);
+        }
+    };
+
+    const handleRevokeGroupAccess = async (groupId: number) => {
+        if (!managingGroupsUser) return;
+
+        try {
+            const res = await fetch(`${API_URL}/admin/users/${managingGroupsUser.id}/groups/${groupId}`, {
+                method: "DELETE",
+                headers: getAuthHeaders()
+            });
+
+            if (res.ok) {
+                toast.success("Acceso al grupo revocado");
+                // Reload user groups
+                handleManageGroups(managingGroupsUser);
+            } else {
+                toast.error("Error al revocar acceso");
+            }
+        } catch (error: any) {
+            toast.error(`Error: ${error.message}`);
+        }
     };
 
     const handleSendNotification = async (user: User) => {
@@ -452,6 +519,57 @@ export function UserManagement() {
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setEditingUser(null)}>Cancelar</Button>
                         <Button onClick={handleSaveEdit}>Guardar Cambios</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Manage Groups Modal */}
+            <Dialog open={!!managingGroupsUser} onOpenChange={(open) => !open && setManagingGroupsUser(null)}>
+                <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                        <DialogTitle>Gestionar Grupos: {managingGroupsUser?.username}</DialogTitle>
+                        <DialogDescription>Asigna o revoca acceso a grupos de servidores</DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                        <div className="grid gap-2">
+                            {allGroups.length === 0 ? (
+                                <p className="text-sm text-muted-foreground">No hay grupos disponibles</p>
+                            ) : (
+                                allGroups.map((group) => {
+                                    const hasAccess = userGroups.some(ug => ug.id === group.id);
+                                    return (
+                                        <div key={group.id} className="flex items-center justify-between p-3 border rounded-lg">
+                                            <div className="flex items-center gap-2">
+                                                <FolderOpen className="h-4 w-4 text-muted-foreground" />
+                                                <div>
+                                                    <p className="font-medium">{group.name}</p>
+                                                    <p className="text-xs text-muted-foreground">{group.description || 'Sin descripción'}</p>
+                                                </div>
+                                            </div>
+                                            {hasAccess ? (
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => handleRevokeGroupAccess(group.id)}
+                                                >
+                                                    Revocar Acceso
+                                                </Button>
+                                            ) : (
+                                                <Button
+                                                    size="sm"
+                                                    onClick={() => handleGrantGroupAccess(group.id)}
+                                                >
+                                                    Otorgar Acceso
+                                                </Button>
+                                            )}
+                                        </div>
+                                    );
+                                })
+                            )}
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button onClick={() => setManagingGroupsUser(null)}>Cerrar</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

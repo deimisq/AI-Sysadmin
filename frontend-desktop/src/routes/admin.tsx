@@ -3,6 +3,7 @@ import { AdminLayout, AdminTabs } from "@/components/admin-layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { UserManagement } from "@/components/admin/user-management";
 import { SecuritySettings } from "@/components/admin/security-settings";
+import { NotificationPreferences } from "@/components/admin/notification-preferences";
 import { Activity, Construction } from "lucide-react";
 
 export function Admin() {
@@ -29,7 +30,7 @@ export function Admin() {
 
                 {activeTab === "security" && <SecuritySettings />}
 
-                {activeTab === "notifications" && <PlaceholderSection title="Notificaciones" />}
+                {activeTab === "notifications" && <NotificationPreferences />}
 
                 {activeTab === "communication" && <PlaceholderSection title="Comunicaciones" />}
 

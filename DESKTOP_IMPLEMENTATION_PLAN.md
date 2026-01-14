@@ -64,14 +64,18 @@
 ### 🔧 Admin (`/admin`)
 
 - [x] Panel de administración con tabs
-- [x] Gestión de usuarios (crear/eliminar/list)
+- [x] Gestión de usuarios (crear/eliminar/listar)
+- [x] Botones Groups, Mail, Edit (UI completa)
+- [x] Envío de notificaciones (funcional)
 - [x] Información del sistema
+- [ ] Edición de usuarios (modal edit)
+- [ ] Gestión de grupos por usuario (modal groups)
 - [ ] Logs de auditoría
 - [ ] Preferencias de notificación
 - [ ] Parámetros del frontend
 - [ ] Configuración de seguridad
 - [ ] Configuración de comunicaciones
-**Status: 40% - Esqueleto completo, User Management funcional**
+**Status: 50% - User Management con UI completa, faltan modals Edit/Groups**
 
 ## 2. COMPONENTES REUTILIZABLES
 
@@ -277,11 +281,15 @@ frontend/src/components/admin/* → frontend-desktop/src/components/admin/*
 ## 8. PRÓXIMOS PASOS INMEDIATOS
 
 1. ✅ Completar audit (este documento)
-2. Implementar CSV Import
-3. Implementar Group Manager completo
-4. Crear página Scheduled Reports
-5. Crear página Profile
-6. Crear esqueleto Admin panel
+2. ✅ Implementar CSV Import
+3. ✅ Implementar Group Manager completo
+4. ✅ Crear página Scheduled Reports
+5. ✅ Crear página Profile
+6. ✅ Crear esqueleto Admin panel
+7. ✅ Agregar botones Groups/Mail/Edit a User Management
+8. ⏳ Implementar modal Edit User
+9. ⏳ Implementar modal Manage Groups
+10. ⏳ Agregar otras secciones de Admin (Audit Logs, Security, etc.)
 
 ## ESTIMACIÓN DE TIEMPO
 

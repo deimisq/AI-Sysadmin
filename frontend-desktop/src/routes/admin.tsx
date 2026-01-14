@@ -8,7 +8,8 @@ import { CommunicationSettings } from "@/components/admin/communication-settings
 import { FrontendParameters } from "@/components/admin/frontend-parameters";
 import { BackendParameters } from "@/components/admin/backend-parameters";
 import { AuditLogs } from "@/components/admin/audit-logs";
-import { Activity, Construction } from "lucide-react";
+import { AdvancedSettings } from "@/components/admin/advanced-settings";
+import { Activity } from "lucide-react";
 
 export function Admin() {
     const [activeTab, setActiveTab] = useState("users");
@@ -44,7 +45,7 @@ export function Admin() {
 
                 {activeTab === "backend" && <BackendParameters />}
 
-                {activeTab === "advanced" && <PlaceholderSection title="Configuración Avanzada" />}
+                {activeTab === "advanced" && <AdvancedSettings />}
             </div>
         </AdminLayout>
     );
@@ -86,35 +87,6 @@ function SystemInfo() {
                     <h3 className="font-medium mb-2">Estado del Sistema</h3>
                     <p className="text-sm text-muted-foreground">
                         ✅ Todos los servicios están funcionando correctamente
-                    </p>
-                </div>
-            </CardContent>
-        </Card>
-    );
-}
-
-interface PlaceholderSectionProps {
-    title: string;
-}
-
-function PlaceholderSection({ title }: PlaceholderSectionProps) {
-    return (
-        <Card>
-            <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                    <Construction className="h-5 w-5" />
-                    {title}
-                </CardTitle>
-                <CardDescription>
-                    Esta sección estará disponible próximamente
-                </CardDescription>
-            </CardHeader>
-            <CardContent>
-                <div className="flex flex-col items-center justify-center py-12 text-center">
-                    <Construction className="h-16 w-16 text-muted-foreground mb-4" />
-                    <h3 className="text-lg font-medium mb-2">En Desarrollo</h3>
-                    <p className="text-sm text-muted-foreground max-w-md">
-                        Esta funcionalidad se está desarrollando actualmente y estará disponible en una próxima actualización.
                     </p>
                 </div>
             </CardContent>

@@ -2,11 +2,18 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from typing import List
+from pydantic import BaseModel
 import database, models, schemas, dependencies
 from services.ssh_service import ssh_service
+from services.ai_service import ai_service
+from services.diagnostic_service import diagnostic_service
+from services.ansible_service import ansible_service
 from utils.encryption import encrypt_data, decrypt_data
 import csv
 import io
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -660,3 +667,100 @@ async def get_server_diagnostic(
             "error": str(e),
             "last_check": datetime.now().isoformat()
         }
+
+
+class ChatDiagnoseRequest(BaseModel):
+    description: str
+    locale: str = "es"
+
+class ChatExecuteRequest(BaseModel):
+    command: str
+
+@router.post("/servers/{server_id}/diagnose")
+async def diagnose_server_problem_chat(
+    server_id: int, 
+    request: ChatDiagnoseRequest, 
+    db: Session = Depends(dependencies.get_db)
+):
+    server = db.query(models.Server).filter(models.Server.id == server_id).first()
+    if not server:
+        raise HTTPException(status_code=404, detail="Server not found")
+
+    try:
+        # Gather diagnostics first
+        logger.info(f"Gathering diagnostics for server {server.hostname} for AI Chat")
+        
+        ssh_password = decrypt_data(server.ssh_password) if server.ssh_password else None
+        ssh_key = decrypt_data(server.ssh_key_path) if server.ssh_key_path else None
+        
+        diagnostics = {}
+        if ssh_password or ssh_key:
+            try:
+                diagnostics = diagnostic_service.gather_system_info(server, ssh_password, ssh_key)
+            except Exception as diag_error:
+                logger.error(f"Diagnostic gathering failed: {diag_error}")
+                diagnostics = {"error": str(diag_error), "checks": {}}
+        
+        # Build context
+        has_embedded_results = "Exit" in request.description or "Output" in request.description
+        
+        diagnostic_summary = f"""
+Server: {server.hostname} ({server.ip_address})
+OS: {server.os_info}
+
+DIAGNOSTIC RESULTS:
+"""
+        if diagnostics.get("checks"):
+            for check_name, result in diagnostics.get("checks", {}).items():
+                if result.get("success"):
+                    diagnostic_summary += f"\n{check_name.upper()}:\n{result['output']}\n"
+        
+        server_info = f"Hostname: {server.hostname}, OS: {server.os_info}, IP: {server.ip_address}"
+        full_context = f"{server_info}\n\n{diagnostic_summary}\n\nUSER QUERY:\n{request.description}"
+        
+        response_data = ai_service.analyze_problem(db, request.description, full_context, request.locale)
+        
+        return {
+            "analysis": response_data,
+            "diagnostics": diagnostics if not has_embedded_results else None
+        }
+        
+    except Exception as e:
+        logger.error(f"Chat diagnosis failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/servers/{server_id}/execute")
+async def execute_server_command_chat(
+    server_id: int,
+    request: ChatExecuteRequest,
+    db: Session = Depends(dependencies.get_db),
+    current_user: models.User = Depends(dependencies.get_current_user)
+):
+    server = db.query(models.Server).filter(models.Server.id == server_id).first()
+    if not server:
+        raise HTTPException(status_code=404, detail="Server not found")
+
+    # Decrypt credentials
+    ssh_password = decrypt_data(server.ssh_password) if server.ssh_password else None
+    ssh_key = decrypt_data(server.ssh_key_path) if server.ssh_key_path else None
+    
+    try:
+        stdout, stderr, exit_code = await ssh_service.execute_command(
+            hostname=server.ip_address,
+            username=server.ssh_username,
+            command=request.command,
+            private_key=ssh_key,
+            password=ssh_password,
+            port=server.ssh_port or 22
+        )
+        
+        return {
+            "stdout": stdout,
+            "stderr": stderr,
+            "exit_code": exit_code
+        }
+        
+    except Exception as e:
+        logger.error(f"Command execution failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

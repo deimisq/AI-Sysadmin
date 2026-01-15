@@ -549,8 +549,15 @@ async def get_server_diagnostic(
     if not server:
         raise HTTPException(status_code=404, detail="Server not found")
     
-    # Decrypt SSH password if exists
+    # Decrypt SSH credentials before using them
+    ssh_key_path = None
     password = None
+    
+    # Decrypt SSH key path if available
+    if server.ssh_key_path:
+        ssh_key_path = decrypt_data(server.ssh_key_path)
+    
+    # Decrypt SSH password if exists
     if server.ssh_password:
         password = decrypt_data(server.ssh_password)
     
@@ -560,7 +567,7 @@ async def get_server_diagnostic(
             hostname=server.ip_address,
             username=server.ssh_username,
             command="uptime -p",
-            private_key=server.ssh_key_path,
+            private_key=ssh_key_path,
             password=password,
             port=server.ssh_port or 22
         )
@@ -573,7 +580,7 @@ async def get_server_diagnostic(
             hostname=server.ip_address,
             username=server.ssh_username,
             command="top -bn1 | grep 'Cpu(s)' | awk '{print $2}' | sed 's/%us.*//' | sed 's/us.*//'",
-            private_key=server.ssh_key_path,
+            private_key=ssh_key_path,
             password=password,
             port=server.ssh_port or 22
         )
@@ -584,7 +591,7 @@ async def get_server_diagnostic(
             hostname=server.ip_address,
             username=server.ssh_username,
             command="free | grep Mem | awk '{printf \"%.0f\", ($3/$2) * 100}'",
-            private_key=server.ssh_key_path,
+            private_key=ssh_key_path,
             password=password,
             port=server.ssh_port or 22
         )
@@ -595,7 +602,7 @@ async def get_server_diagnostic(
             hostname=server.ip_address,
             username=server.ssh_username,
             command="df -h / | tail -1 | awk '{print $5}' | sed 's/%//'",
-            private_key=server.ssh_key_path,
+            private_key=ssh_key_path,
             password=password,
             port=server.ssh_port or 22
         )
@@ -619,7 +626,7 @@ async def get_server_diagnostic(
                     hostname=server.ip_address,
                     username=server.ssh_username,
                     command=f"systemctl is-active {cmd} 2>/dev/null || echo 'inactive'",
-                    private_key=server.ssh_key_path,
+                    private_key=ssh_key_path,
                     password=password,
                     port=server.ssh_port or 22
                 )

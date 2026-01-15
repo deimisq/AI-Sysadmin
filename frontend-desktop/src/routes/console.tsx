@@ -6,23 +6,42 @@ import { Button } from '../components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import DashboardLayout from '../components/dashboard-layout';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1";
+
 export default function ServerConsole() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const [server, setServer] = useState<Server | null>(null);
+    const [wsUrl, setWsUrl] = useState<string | undefined>(undefined);
 
     useEffect(() => {
         if (!id) return;
+
+        // Fetch server details
         fetchServer(id).then(setServer).catch(console.error);
+
+        // Build WebSocket URL for real terminal session
+        const token = localStorage.getItem('token');
+        if (token) {
+            const wsBase = API_BASE_URL.replace(/^http/, 'ws');
+            const url = `${wsBase}/ws/ssh/${id}?token=${token}`;
+            setWsUrl(url);
+        }
     }, [id]);
 
+    // Legacy handler kept as fallback, but WS mode takes precedence in TerminalComponent
     const handleCommand = async (cmd: string) => {
         if (!id) return '';
         return executeCommand(id, cmd);
     };
 
     if (!server) return (
-        <div className="h-full flex items-center justify-center">Loading server info...</div>
+        <div className="h-full flex items-center justify-center text-muted-foreground">
+            <div className="flex flex-col items-center gap-2">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                <p>Establishing secure connection...</p>
+            </div>
+        </div>
     );
 
     return (
@@ -35,7 +54,9 @@ export default function ServerConsole() {
                     <div>
                         <h1 className="font-bold text-lg flex items-center gap-2">
                             {server.hostname}
-                            <span className="text-xs px-2 py-0.5 rounded-full bg-green-500/10 text-green-500 border border-green-500/20">Online</span>
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-green-500/10 text-green-500 border border-green-500/20">
+                                Live Session
+                            </span>
                         </h1>
                         <p className="text-xs text-muted-foreground font-mono">{server.ip_address}</p>
                     </div>
@@ -45,6 +66,7 @@ export default function ServerConsole() {
                         <TerminalComponent
                             hostname={server.hostname}
                             onCommand={handleCommand}
+                            websocketUrl={wsUrl}
                         />
                     </div>
                 </div>

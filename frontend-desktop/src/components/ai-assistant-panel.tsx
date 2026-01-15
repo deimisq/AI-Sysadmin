@@ -36,7 +36,6 @@ export function AiAssistantPanel() {
         fetchServers().then(data => {
             setServers(data);
             if (data.length > 0) {
-                // If route has ID, select it, otherwise select first or none
                 if (routeServerId) {
                     setSelectedServerId(routeServerId);
                 } else {
@@ -90,16 +89,6 @@ export function AiAssistantPanel() {
         return await res.json();
     };
 
-    const executeCommand = async (serverId: string, command: string) => {
-        const res = await fetch(`${API_BASE_URL}/servers/${serverId}/execute`, {
-            method: "POST",
-            headers: getAuthHeaders(),
-            body: JSON.stringify({ command })
-        });
-        if (!res.ok) throw new Error("Failed to execute command");
-        return await res.json();
-    };
-
     const handleSendMessage = async () => {
         if (!input.trim() || !selectedServerId) return;
 
@@ -111,7 +100,7 @@ export function AiAssistantPanel() {
         const userMessage: Message = { role: "user", content: input };
         setMessages(prev => [...prev, userMessage]);
         setInput("");
-        const currentImage = selectedImage; // Keep ref for cleanup logic if needed
+        const currentImage = selectedImage;
         setSelectedImage(null);
         setImageFile(null);
         if (fileInputRef.current) fileInputRef.current.value = '';
@@ -146,43 +135,22 @@ export function AiAssistantPanel() {
 
     const handleExecuteCommand = async (messageIndex: number, command: string) => {
         if (!selectedServerId) return;
-        setLoading(true);
-        try {
-            const res = await executeCommand(selectedServerId, command);
 
-            // Update message with result
-            setMessages(prev => prev.map((msg, idx) => {
-                if (idx === messageIndex) {
-                    return { ...msg, executionResult: res };
-                }
-                return msg;
-            }));
+        // Dispatch event to TerminalComponent
+        window.dispatchEvent(new CustomEvent('run-terminal-command', { detail: command }));
 
-            // Auto-analyze result
-            const resultSummary = `Output de ejecución:\nExit Code: ${res.exit_code}\n\`\`\`\n${res.stdout || res.stderr || 'Sin output'}\n\`\`\nAnaliza esto.`;
-
-            setMessages(prev => [...prev, { role: "user", content: "Resultados enviados para análisis..." }]);
-
-            const analysisRes = await diagnoseProblem(selectedServerId, resultSummary, "es");
-            const analysisText = typeof analysisRes.analysis === 'string'
-                ? analysisRes.analysis
-                : analysisRes.analysis.analysis || JSON.stringify(analysisRes.analysis);
-
-            const newCommand = typeof analysisRes.analysis === 'object' && analysisRes.analysis.proposed_command
-                ? analysisRes.analysis.proposed_command
-                : null;
-
-            setMessages(prev => [...prev, {
-                role: "assistant",
-                content: analysisText,
-                proposedCommand: newCommand
-            }]);
-
-        } catch (error) {
-            setMessages(prev => [...prev, { role: "assistant", content: "❌ Error ejecutando comando." }]);
-        } finally {
-            setLoading(false);
-        }
+        // Update UI to show execution started
+        setMessages(prev => prev.map((msg, idx) => {
+            if (idx === messageIndex) {
+                return {
+                    ...msg,
+                    executionResult: {
+                        output: "🚀 Comando enviado a la terminal interactiva.\nRevisa la consola central."
+                    }
+                };
+            }
+            return msg;
+        }));
     };
 
     const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -219,8 +187,8 @@ export function AiAssistantPanel() {
                 {messages.map((msg, idx) => (
                     <div key={idx} className={`flex flex-col gap-1 ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
                         <div className={`p-3 rounded-lg max-w-[90%] ${msg.role === 'user' ? 'bg-primary text-primary-foreground' :
-                            msg.role === 'system' ? 'bg-muted text-muted-foreground text-xs' :
-                                'bg-secondary text-secondary-foreground shadow-sm'
+                                msg.role === 'system' ? 'bg-muted text-muted-foreground text-xs' :
+                                    'bg-secondary text-secondary-foreground shadow-sm'
                             }`}>
                             <div className="prose prose-sm dark:prose-invert break-words">
                                 <ReactMarkdown>
@@ -249,7 +217,7 @@ export function AiAssistantPanel() {
                                     onClick={() => handleExecuteCommand(idx, msg.proposedCommand!)}
                                     disabled={loading}
                                 >
-                                    <Play className="h-3 w-3" /> Ejecutar Comando
+                                    <Play className="h-3 w-3" /> Ejecutar en Consola
                                 </Button>
                             </div>
                         )}

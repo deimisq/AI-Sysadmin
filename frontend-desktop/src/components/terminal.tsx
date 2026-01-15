@@ -48,11 +48,34 @@ export default function TerminalComponent({ onCommand, externalCommand, hostname
         term.write(getPrompt());
     }, [onCommand, getPrompt]);
 
-    // Initialize Terminal
+    // Event Listener for Remote Commands (from AI Panel)
+    useEffect(() => {
+        const handleRemoteCommand = (e: CustomEvent) => {
+            const cmd = e.detail;
+            if (!cmd) return;
+
+            // WebSocket Mode
+            if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+                socketRef.current.send(cmd + '\r');
+                // Focus terminal
+                xtermRef.current?.focus();
+            }
+            // Legacy Mode
+            else if (onCommand && xtermRef.current) {
+                const term = xtermRef.current;
+                term.write(`${cmd}\r\n`);
+                handleCommand(term, cmd);
+            }
+        };
+
+        window.addEventListener('run-terminal-command', handleRemoteCommand as EventListener);
+        return () => window.removeEventListener('run-terminal-command', handleRemoteCommand as EventListener);
+    }, [onCommand, handleCommand]);
+
     useEffect(() => {
         if (!terminalRef.current || xtermRef.current) return;
 
-        // Initialize xterm
+        // ... existing init code ...
         const term = new Terminal({
             cursorBlink: true,
             fontSize: 14,
@@ -74,7 +97,7 @@ export default function TerminalComponent({ onCommand, externalCommand, hostname
         term.loadAddon(webLinksAddon);
 
         term.open(terminalRef.current);
-        // Delay fit to ensure DOM is ready and preventing 'dimensions' undefined error
+
         setTimeout(() => {
             try {
                 fitAddon.fit();
@@ -101,11 +124,12 @@ export default function TerminalComponent({ onCommand, externalCommand, hostname
                 term.writeln('\x1b[1;32mConnected via Secure Shell (WebSocket)\x1b[0m');
                 term.writeln('');
                 fitAddon.fit();
-                // Send initial resize if possible (needs protocol support)
             };
 
             socket.onmessage = (event) => {
                 term.write(event.data);
+                // Broadcast output for AI Agent
+                window.dispatchEvent(new CustomEvent('terminal-output-stream', { detail: event.data }));
             };
 
             socket.onclose = () => {

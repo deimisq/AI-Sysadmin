@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from typing import List
 import database, models, schemas, dependencies
 from services.ssh_service import ssh_service
-from utils.encryption import encrypt_data
+from utils.encryption import encrypt_data, decrypt_data
 import csv
 import io
 
@@ -542,7 +542,6 @@ async def get_server_diagnostic(
     current_user: models.User = Depends(dependencies.get_current_user)
 ):
     """Get real-time diagnostic information from a server via SSH"""
-    import re
     from datetime import datetime
     
     # Get server from database
@@ -550,43 +549,81 @@ async def get_server_diagnostic(
     if not server:
         raise HTTPException(status_code=404, detail="Server not found")
     
+    # Decrypt SSH password if exists
+    password = None
+    if server.ssh_password:
+        password = decrypt_data(server.ssh_password)
+    
     try:
-        # Connect to server via SSH
-        ssh = ssh_service.connect_server(server)
-        
         # Get uptime
-        stdin, stdout, stderr = ssh.exec_command("uptime -p")
-        uptime_raw = stdout.read().decode().strip()
-        uptime = uptime_raw.replace("up ", "").replace(",", "")
+        stdout, stderr, exit_code = await ssh_service.execute_command(
+            hostname=server.ip_address,
+            username=server.ssh_username,
+            command="uptime -p",
+            private_key=server.ssh_private_key,
+            password=password,
+            port=server.ssh_port or 22
+        )
+        if exit_code != 0:
+            raise Exception(f"Uptime command failed: {stderr}")
+        uptime = stdout.strip().replace("up ", "").replace(",", "")
         
         # Get CPU usage
-        stdin, stdout, stderr = ssh.exec_command("top -bn1 | grep 'Cpu(s)' | awk '{print $2}'")
-        cpu_raw = stdout.read().decode().strip()
-        cpu_usage = int(float(cpu_raw.replace("%us", "").replace("us,", ""))) if cpu_raw else 0
+        stdout, stderr, exit_code = await ssh_service.execute_command(
+            hostname=server.ip_address,
+            username=server.ssh_username,
+            command="top -bn1 | grep 'Cpu(s)' | awk '{print $2}' | sed 's/%us.*//' | sed 's/us.*//'",
+            private_key=server.ssh_private_key,
+            password=password,
+            port=server.ssh_port or 22
+        )
+        cpu_usage = int(float(stdout.strip())) if stdout.strip() and exit_code == 0 else 0
         
         # Get Memory usage
-        stdin, stdout, stderr = ssh.exec_command("free | grep Mem | awk '{printf \"%.0f\", ($3/$2) * 100}'")
-        memory_usage = int(stdout.read().decode().strip() or "0")
+        stdout, stderr, exit_code = await ssh_service.execute_command(
+            hostname=server.ip_address,
+            username=server.ssh_username,
+            command="free | grep Mem | awk '{printf \"%.0f\", ($3/$2) * 100}'",
+            private_key=server.ssh_private_key,
+            password=password,
+            port=server.ssh_port or 22
+        )
+        memory_usage = int(stdout.strip()) if stdout.strip() and exit_code == 0 else 0
         
         # Get Disk usage
-        stdin, stdout, stderr = ssh.exec_command("df -h / | tail -1 | awk '{print $5}'")
-        disk_raw = stdout.read().decode().strip()
-        disk_usage = int(disk_raw.replace("%", "")) if disk_raw else 0
+        stdout, stderr, exit_code = await ssh_service.execute_command(
+            hostname=server.ip_address,
+            username=server.ssh_username,
+            command="df -h / | tail -1 | awk '{print $5}' | sed 's/%//'",
+            private_key=server.ssh_private_key,
+            password=password,
+            port=server.ssh_port or 22
+        )
+        disk_usage = int(stdout.strip()) if stdout.strip() and exit_code == 0 else 0
         
         # Get service statuses (common services)
         services = []
         common_services = [
             ("SSH", "sshd"),
-            ("HTTP", "apache2 nginx"),
-            ("Database", "mysql mysqld postgresql mariadb")
+            ("HTTP", ["apache2", "nginx", "httpd"]),
+            ("Database", ["mysql", "mysqld", "postgresql", "mariadb"])
         ]
         
         for service_name, service_commands in common_services:
             is_running = False
-            for cmd in service_commands.split():
-                stdin, stdout, stderr = ssh.exec_command(f"systemctl is-active {cmd} 2>/dev/null || echo 'inactive'")
-                status = stdout.read().decode().strip()
-                if status == "active":
+            if isinstance(service_commands, str):
+                service_commands = [service_commands]
+            
+            for cmd in service_commands:
+                stdout, stderr, exit_code = await ssh_service.execute_command(
+                    hostname=server.ip_address,
+                    username=server.ssh_username,
+                    command=f"systemctl is-active {cmd} 2>/dev/null || echo 'inactive'",
+                    private_key=server.ssh_private_key,
+                    password=password,
+                    port=server.ssh_port or 22
+                )
+                if stdout.strip() == "active":
                     is_running = True
                     break
             
@@ -594,8 +631,6 @@ async def get_server_diagnostic(
                 "name": service_name,
                 "status": "running" if is_running else "stopped"
             })
-        
-        ssh.close()
         
         return {
             "status": "online",
@@ -608,7 +643,7 @@ async def get_server_diagnostic(
         }
         
     except Exception as e:
-        # If SSH fails, return basic status
+        # If SSH fails, return error status
         return {
             "status": "error",
             "error": str(e),

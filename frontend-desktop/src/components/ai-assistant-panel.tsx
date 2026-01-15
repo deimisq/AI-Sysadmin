@@ -80,10 +80,18 @@ export function AiAssistantPanel() {
     };
 
     const diagnoseProblem = async (serverId: string, description: string, locale: string = "es") => {
+        // Filter history: exclude system messages and keep only user/assistant exchange
+        const history = messages
+            .filter(m => m.role === "user" || m.role === "assistant")
+            .map(m => ({
+                role: m.role,
+                content: m.content
+            }));
+
         const res = await fetch(`${API_BASE_URL}/servers/${serverId}/diagnose`, {
             method: "POST",
             headers: getAuthHeaders(),
-            body: JSON.stringify({ description, locale })
+            body: JSON.stringify({ description, locale, history })
         });
         if (!res.ok) throw new Error("Failed to diagnose");
         return await res.json();
@@ -187,8 +195,8 @@ export function AiAssistantPanel() {
                 {messages.map((msg, idx) => (
                     <div key={idx} className={`flex flex-col gap-1 ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
                         <div className={`p-3 rounded-lg max-w-[90%] ${msg.role === 'user' ? 'bg-primary text-primary-foreground' :
-                                msg.role === 'system' ? 'bg-muted text-muted-foreground text-xs' :
-                                    'bg-secondary text-secondary-foreground shadow-sm'
+                            msg.role === 'system' ? 'bg-muted text-muted-foreground text-xs' :
+                                'bg-secondary text-secondary-foreground shadow-sm'
                             }`}>
                             <div className="prose prose-sm dark:prose-invert break-words">
                                 <ReactMarkdown>

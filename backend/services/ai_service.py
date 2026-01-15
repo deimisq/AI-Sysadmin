@@ -4,7 +4,7 @@ from langchain_aws import ChatBedrock, BedrockEmbeddings
 from langchain_anthropic import ChatAnthropic
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
-from langchain_core.messages import SystemMessage, HumanMessage
+from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from settings import settings
@@ -261,7 +261,7 @@ class AIService:
         except Exception as e:
             logger.error(f"Failed to reload AI config: {e}")
 
-    def analyze_problem(self, db: Session, problem_description: str, server_info: str, language: str = "en") -> dict:
+    def analyze_problem(self, db: Session, problem_description: str, server_info: str, language: str = "en", history: list = None) -> dict:
         """
         Analyzes a problem using RAG and proposes a solution.
         Now with improved conversational analysis and problem verification.
@@ -321,10 +321,13 @@ CRITICAL INSTRUCTIONS:
    - Do NOT fixate on a single service or application. Give a broad picture first.
    - Only drill down into specifics if the user explicitly asks about a particular service.
 
-2. **CONTEXT AWARENESS**:
-   - If the user asks a GENERAL question (e.g., "check server status", "how is the server doing"), provide the HOLISTIC analysis above.
-   - If the user asks about a SPECIFIC issue (e.g., "Zabbix isn't working", "database error"), then focus on that specific problem.
-   - Don't assume context from previous conversations - treat each request independently.
+2. **CONTEXT & CONVERSATION HISTORY**:
+   - You are in a PERSISTENT CHAT SESSION with a sysadmin.
+   - **FIRST MESSAGE**: Provide the full HOLISTIC status summary as defined above.
+   - **FOLLOW-UP MESSAGES**: 
+     * **DO NOT** repeat the full status summary unless the status has critically changed or the user asks for it.
+     * Answer the specific question or analyze the specific command output provided.
+     * Be concise. Don't re-introduce yourself or the server specs every time. Only say "Resumen del sistema" if requested or vastly different.
 
 3. **ANALYZE DATA INTELLIGENTLY (FILTER NOISE)**:
    - You will receive diagnostic data (CPU, memory, processes).
@@ -441,10 +444,20 @@ Remember: You are a helpful senior sysadmin. When asked for general status, give
                         "image_url": {"url": image_data}
                     })
                 
-                messages = [
-                    SystemMessage(content=system_message),
-                    HumanMessage(content=user_content)
-                ]
+                messages = [SystemMessage(content=system_message)]
+
+                # Append Chat History if available
+                if history:
+                    # Limit history to prevent context window overflow (last 10 messages)
+                    for msg in history[-10:]:
+                        role = msg.get('role')
+                        content = msg.get('content')
+                        if role == 'user':
+                            messages.append(HumanMessage(content=str(content)))
+                        elif role == 'assistant':
+                            messages.append(AIMessage(content=str(content)))
+
+                messages.append(HumanMessage(content=user_content))
                 
                 response_msg = self.llm.invoke(messages)
                 

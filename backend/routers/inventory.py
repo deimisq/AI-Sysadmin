@@ -669,9 +669,14 @@ async def get_server_diagnostic(
         }
 
 
+class ChatMessage(BaseModel):
+    role: str
+    content: str
+
 class ChatDiagnoseRequest(BaseModel):
     description: str
     locale: str = "es"
+    history: list[ChatMessage] = []
 
 class ChatExecuteRequest(BaseModel):
     command: str
@@ -718,7 +723,13 @@ DIAGNOSTIC RESULTS:
         server_info = f"Hostname: {server.hostname}, OS: {server.os_info}, IP: {server.ip_address}"
         full_context = f"{server_info}\n\n{diagnostic_summary}\n\nUSER QUERY:\n{request.description}"
         
-        response_data = ai_service.analyze_problem(db, request.description, full_context, request.locale)
+        response_data = ai_service.analyze_problem(
+            db, 
+            request.description, 
+            full_context, 
+            request.locale,
+            history=[m.dict() for m in request.history]
+        )
         
         return {
             "analysis": response_data,

@@ -31,6 +31,10 @@ export function AiAssistantPanel() {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
+    // Refs for capturing output
+    const outputBufferRef = useRef<string>("");
+    const isCapturingRef = useRef(false);
+
     // Initial Load
     useEffect(() => {
         fetchServers().then(data => {
@@ -66,6 +70,17 @@ export function AiAssistantPanel() {
         }
     }, [selectedServerId, servers]);
 
+    // Terminal Output Listener
+    useEffect(() => {
+        const handleTerminalData = (e: CustomEvent) => {
+            if (isCapturingRef.current) {
+                outputBufferRef.current += e.detail;
+            }
+        };
+        window.addEventListener('terminal-output-stream', handleTerminalData as EventListener);
+        return () => window.removeEventListener('terminal-output-stream', handleTerminalData as EventListener);
+    }, []);
+
     // Scroll to bottom
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -80,7 +95,7 @@ export function AiAssistantPanel() {
     };
 
     const diagnoseProblem = async (serverId: string, description: string, locale: string = "es") => {
-        // Filter history: exclude system messages and keep only user/assistant exchange
+        // Filter history
         const history = messages
             .filter(m => m.role === "user" || m.role === "assistant")
             .map(m => ({
@@ -97,26 +112,11 @@ export function AiAssistantPanel() {
         return await res.json();
     };
 
-    const handleSendMessage = async () => {
-        if (!input.trim() || !selectedServerId) return;
-
-        let messageContent = input;
-        if (selectedImage) {
-            messageContent += `\n\n[Image attached: ${imageFile?.name}]\nBase64: ${selectedImage}`;
-        }
-
-        const userMessage: Message = { role: "user", content: input };
-        setMessages(prev => [...prev, userMessage]);
-        setInput("");
-        const currentImage = selectedImage;
-        setSelectedImage(null);
-        setImageFile(null);
-        if (fileInputRef.current) fileInputRef.current.value = '';
-
+    // Helper to process AI response
+    const processAndAddAiResponse = async (userPrompt: string) => {
         setLoading(true);
-
         try {
-            const res = await diagnoseProblem(selectedServerId, messageContent, "es");
+            const res = await diagnoseProblem(selectedServerId, userPrompt, "es");
             const analysisText = typeof res.analysis === 'string'
                 ? res.analysis
                 : res.analysis.analysis || JSON.stringify(res.analysis);
@@ -141,24 +141,72 @@ export function AiAssistantPanel() {
         }
     };
 
+    const handleSendMessage = async () => {
+        if (!input.trim() || !selectedServerId) return;
+
+        let messageContent = input;
+        if (selectedImage) {
+            messageContent += `\n\n[Image attached: ${imageFile?.name}]\nBase64: ${selectedImage}`;
+        }
+
+        const userMessage: Message = { role: "user", content: input };
+        setMessages(prev => [...prev, userMessage]);
+        setInput("");
+
+        // Reset Inputs
+        setSelectedImage(null);
+        setImageFile(null);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+
+        await processAndAddAiResponse(messageContent);
+    };
+
     const handleExecuteCommand = async (messageIndex: number, command: string) => {
         if (!selectedServerId) return;
 
-        // Dispatch event to TerminalComponent
+        // 1. Start Capture
+        isCapturingRef.current = true;
+        outputBufferRef.current = "";
+
+        // 2. Dispatch event to TerminalComponent
         window.dispatchEvent(new CustomEvent('run-terminal-command', { detail: command }));
 
-        // Update UI to show execution started
+        // 3. Update UI to show execution started
         setMessages(prev => prev.map((msg, idx) => {
             if (idx === messageIndex) {
                 return {
                     ...msg,
                     executionResult: {
-                        output: "🚀 Comando enviado a la terminal interactiva.\nRevisa la consola central."
+                        output: "🚀 Comando enviado. Capturando resultado (4s)..."
                     }
                 };
             }
             return msg;
         }));
+
+        // 4. Wait for output (4 seconds buffer) then auto-analyze
+        setTimeout(async () => {
+            isCapturingRef.current = false;
+            let capturedOutput = outputBufferRef.current;
+
+            // Basic cleanup of ANSI codes (colors)
+            // eslint-disable-next-line no-control-regex
+            capturedOutput = capturedOutput.replace(/\x1B\[[0-?]*[ -/]*[@-~]/g, '');
+
+            if (capturedOutput.trim().length > 0) {
+                // Add a system/user message indicating we captured output
+                setMessages(prev => [...prev, {
+                    role: "user",
+                    content: `👀 *Resultado capturado automáticamente:*\n\`\`\`\n${capturedOutput.substring(0, 8000)}\n\`\`\``
+                }]);
+
+                // Send to AI
+                const promptWithOutput = `He ejecutado el comando: ${command}.\n\nEste es el resultado obtenido de la terminal:\n\`\`\`\n${capturedOutput}\n\`\`\`\n\nAnaliza este resultado brevemente y dime qué significa o cuál es el siguiente paso.`;
+                await processAndAddAiResponse(promptWithOutput);
+            } else {
+                setMessages(prev => [...prev, { role: "system", content: "⚠️ No se detectó output del comando (o tardó demasiado)." }]);
+            }
+        }, 4000);
     };
 
     const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -195,8 +243,8 @@ export function AiAssistantPanel() {
                 {messages.map((msg, idx) => (
                     <div key={idx} className={`flex flex-col gap-1 ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
                         <div className={`p-3 rounded-lg max-w-[90%] ${msg.role === 'user' ? 'bg-primary text-primary-foreground' :
-                            msg.role === 'system' ? 'bg-muted text-muted-foreground text-xs' :
-                                'bg-secondary text-secondary-foreground shadow-sm'
+                                msg.role === 'system' ? 'bg-muted text-muted-foreground text-xs' :
+                                    'bg-secondary text-secondary-foreground shadow-sm'
                             }`}>
                             <div className="prose prose-sm dark:prose-invert break-words">
                                 <ReactMarkdown>
@@ -225,7 +273,7 @@ export function AiAssistantPanel() {
                                     onClick={() => handleExecuteCommand(idx, msg.proposedCommand!)}
                                     disabled={loading}
                                 >
-                                    <Play className="h-3 w-3" /> Ejecutar en Consola
+                                    <Play className="h-3 w-3" /> Ejecutar y Analizar
                                 </Button>
                             </div>
                         )}

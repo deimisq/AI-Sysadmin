@@ -758,6 +758,7 @@ async def execute_server_command_chat(
         return {
             "stdout": stdout,
             "stderr": stderr,
+            "output": stdout + (stderr if stderr else ""),
             "exit_code": exit_code
         }
         

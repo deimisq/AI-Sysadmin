@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Loader2, Send, X, Image as ImageIcon, Server as ServerIcon, Terminal } from "lucide-react";
+import { Loader2, Send, X, Image as ImageIcon, Server as ServerIcon, Play } from "lucide-react";
 import ReactMarkdown from 'react-markdown';
 import { fetchServers, type Server } from "@/lib/api";
 import { useParams } from "react-router-dom";
@@ -219,12 +219,14 @@ export function AiAssistantPanel() {
                 {messages.map((msg, idx) => (
                     <div key={idx} className={`flex flex-col gap-1 ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
                         <div className={`p-3 rounded-lg max-w-[90%] ${msg.role === 'user' ? 'bg-primary text-primary-foreground' :
-                                msg.role === 'system' ? 'bg-muted text-muted-foreground text-xs' :
-                                    'bg-secondary text-secondary-foreground shadow-sm'
+                            msg.role === 'system' ? 'bg-muted text-muted-foreground text-xs' :
+                                'bg-secondary text-secondary-foreground shadow-sm'
                             }`}>
-                            <ReactMarkdown className="prose prose-sm dark:prose-invert break-words">
-                                {msg.content}
-                            </ReactMarkdown>
+                            <div className="prose prose-sm dark:prose-invert break-words">
+                                <ReactMarkdown>
+                                    {msg.content}
+                                </ReactMarkdown>
+                            </div>
 
                             {/* Execution Result */}
                             {msg.executionResult && (

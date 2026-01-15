@@ -608,36 +608,40 @@ async def get_server_diagnostic(
         )
         disk_usage = int(stdout.strip()) if stdout.strip() and exit_code == 0 else 0
         
-        # Get service statuses (common services)
-        services = []
-        common_services = [
-            ("SSH", "sshd"),
-            ("HTTP", ["apache2", "nginx", "httpd"]),
-            ("Database", ["mysql", "mysqld", "postgresql", "mariadb"])
-        ]
+        # Get detailed storage info (partitions)
+        partitions = []
+        stdout, stderr, exit_code = await ssh_service.execute_command(
+            hostname=server.ip_address,
+            username=server.ssh_username,
+            command="df -h --output=source,size,used,avail,pcent,target 2>/dev/null || df -h | awk '{print $1 \" \" $2 \" \" $3 \" \" $4 \" \" $5 \" \" $6}'",
+            private_key=ssh_key_path,
+            password=password,
+            port=server.ssh_port or 22
+        )
         
-        for service_name, service_commands in common_services:
-            is_running = False
-            if isinstance(service_commands, str):
-                service_commands = [service_commands]
+        if stdout and exit_code == 0:
+            lines = stdout.strip().split('\n')
+            # Skip header if present
+            if lines and ("Filesystem" in lines[0] or "S.ficheros" in lines[0]):
+                lines = lines[1:]
             
-            for cmd in service_commands:
-                stdout, stderr, exit_code = await ssh_service.execute_command(
-                    hostname=server.ip_address,
-                    username=server.ssh_username,
-                    command=f"systemctl is-active {cmd} 2>/dev/null || echo 'inactive'",
-                    private_key=ssh_key_path,
-                    password=password,
-                    port=server.ssh_port or 22
-                )
-                if stdout.strip() == "active":
-                    is_running = True
-                    break
-            
-            services.append({
-                "name": service_name,
-                "status": "running" if is_running else "stopped"
-            })
+            for line in lines:
+                parts = line.split()
+                if len(parts) >= 6:
+                    # Filter out tmpfs, devtmpfs, loop, etc to keep it clean if desired
+                    # But usually showing filtered /dev/ is better or physical disks
+                    fs = parts[0]
+                    if not fs.startswith('/dev/'): 
+                        continue
+                        
+                    partitions.append({
+                        "filesystem": parts[0],
+                        "size": parts[1],
+                        "used": parts[2],
+                        "available": parts[3],
+                        "use_percentage": parts[4],
+                        "mount": parts[5]
+                    })
         
         return {
             "status": "online",
@@ -645,7 +649,7 @@ async def get_server_diagnostic(
             "cpu_usage": cpu_usage,
             "memory_usage": memory_usage,
             "disk_usage": disk_usage,
-            "services": services,
+            "partitions": partitions,
             "last_check": datetime.now().isoformat()
         }
         

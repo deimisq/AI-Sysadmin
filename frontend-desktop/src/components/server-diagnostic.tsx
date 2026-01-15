@@ -21,7 +21,14 @@ interface DiagnosticData {
     cpu_usage?: number;
     memory_usage?: number;
     disk_usage?: number;
-    services?: Array<{ name: string; status: string }>;
+    partitions?: Array<{
+        filesystem: string;
+        size: string;
+        used: string;
+        available: string;
+        use_percentage: string;
+        mount: string;
+    }>;
     last_check?: string;
     error?: string;
 }
@@ -40,6 +47,15 @@ export function ServerDiagnostic({ server, onClose }: ServerDiagnosticProps) {
             loadDiagnostic();
         }
     }, [server]);
+
+    // Helper to format date
+    const formatDate = (dateStr?: string) => {
+        if (!dateStr) return "";
+        return new Date(dateStr).toLocaleString('es-ES', {
+            dateStyle: 'long',
+            timeStyle: 'medium'
+        });
+    };
 
     const getAuthHeaders = () => {
         const token = localStorage.getItem("token");
@@ -69,12 +85,12 @@ export function ServerDiagnostic({ server, onClose }: ServerDiagnosticProps) {
                     cpu_usage: 23,
                     memory_usage: 67,
                     disk_usage: 45,
-                    services: [
-                        { name: "SSH", status: "running" },
-                        { name: "HTTP", status: "running" },
-                        { name: "Database", status: "running" }
+                    partitions: [
+                        { filesystem: "/dev/sda1", size: "100G", used: "45G", available: "50G", use_percentage: "45%", mount: "/" },
+                        { filesystem: "/dev/sdb1", size: "200G", used: "120G", available: "70G", use_percentage: "60%", mount: "/data" },
+                        { filesystem: "tmpfs", size: "3.9G", used: "0", available: "3.9G", use_percentage: "0%", mount: "/dev/shm" }
                     ],
-                    last_check: new Date().toLocaleString()
+                    last_check: new Date().toISOString()
                 });
             }
         } catch (error) {
@@ -83,7 +99,7 @@ export function ServerDiagnostic({ server, onClose }: ServerDiagnosticProps) {
             // Show basic info even on error
             setDiagnostic({
                 status: "unknown",
-                last_check: new Date().toLocaleString()
+                last_check: new Date().toISOString()
             });
         } finally {
             setLoading(false);
@@ -203,7 +219,7 @@ export function ServerDiagnostic({ server, onClose }: ServerDiagnosticProps) {
                                         <div className="p-4 border rounded-lg">
                                             <div className="flex items-center gap-2 mb-2">
                                                 <HardDrive className="h-4 w-4 text-muted-foreground" />
-                                                <h3 className="text-sm font-medium">Disco</h3>
+                                                <h3 className="text-sm font-medium">Disco (Raíz)</h3>
                                             </div>
                                             <p className="text-2xl font-bold">{diagnostic.disk_usage}%</p>
                                             <div className="mt-2 h-2 bg-muted rounded-full overflow-hidden">
@@ -216,28 +232,51 @@ export function ServerDiagnostic({ server, onClose }: ServerDiagnosticProps) {
                                     )}
                                 </div>
 
-                                {diagnostic.services && diagnostic.services.length > 0 && (
+                                {diagnostic.partitions && diagnostic.partitions.length > 0 && (
                                     <div className="p-4 border rounded-lg">
-                                        <h3 className="font-medium mb-3">Servicios</h3>
-                                        <div className="space-y-2">
-                                            {diagnostic.services.map((service, idx) => (
-                                                <div key={idx} className="flex items-center justify-between">
-                                                    <span className="text-sm">{service.name}</span>
-                                                    <span className={`text-xs px-2 py-1 rounded ${service.status === 'running'
-                                                        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                                                        : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                                                        }`}>
-                                                        {service.status}
-                                                    </span>
-                                                </div>
-                                            ))}
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <HardDrive className="h-4 w-4 text-muted-foreground" />
+                                            <h3 className="font-medium">Detalle de Almacenamiento</h3>
+                                        </div>
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full text-sm text-left">
+                                                <thead className="text-xs text-muted-foreground uppercase bg-muted/50">
+                                                    <tr>
+                                                        <th className="px-3 py-2 rounded-l">Filesystem</th>
+                                                        <th className="px-3 py-2">Size</th>
+                                                        <th className="px-3 py-2">Used</th>
+                                                        <th className="px-3 py-2">Avail</th>
+                                                        <th className="px-3 py-2">Use%</th>
+                                                        <th className="px-3 py-2 rounded-r">Mount</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {diagnostic.partitions.map((part, idx) => (
+                                                        <tr key={idx} className="border-b last:border-0 hover:bg-muted/30">
+                                                            <td className="px-3 py-2 font-mono text-xs">{part.filesystem}</td>
+                                                            <td className="px-3 py-2">{part.size}</td>
+                                                            <td className="px-3 py-2">{part.used}</td>
+                                                            <td className="px-3 py-2">{part.available}</td>
+                                                            <td className="px-3 py-2">
+                                                                <span className={`px-1.5 py-0.5 rounded text-xs ${parseInt(part.use_percentage) > 85 ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' :
+                                                                        parseInt(part.use_percentage) > 60 ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
+                                                                            'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                                                    }`}>
+                                                                    {part.use_percentage}
+                                                                </span>
+                                                            </td>
+                                                            <td className="px-3 py-2">{part.mount}</td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
                                         </div>
                                     </div>
                                 )}
 
                                 {diagnostic.last_check && (
                                     <p className="text-xs text-muted-foreground text-center">
-                                        Última verificación: {diagnostic.last_check}
+                                        Última verificación: {formatDate(diagnostic.last_check)}
                                     </p>
                                 )}
                             </>

@@ -253,13 +253,13 @@ export default function Dashboard() {
     };
 
     const ServerCard = ({ server }: { server: Server }) => (
-        <Card className="hover:shadow-md transition-shadow group flex flex-col border-border/60 bg-card/50">
+        <Card className="hover:shadow-md transition-shadow group flex flex-col border-border/60 bg-card/50 overflow-hidden">
             <CardHeader className="pb-2 pt-4 px-4">
                 <CardTitle className="flex items-center justify-between text-base font-medium">
                     <span className="truncate" title={server.hostname}>{server.hostname}</span>
                 </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-1 pb-4 px-4 flex-1">
+            <CardContent className="space-y-1 pb-3 px-4 flex-1">
                 <div className="text-xl font-mono text-primary truncate mb-1">{server.ip_address}</div>
                 <div className="flex gap-2 text-xs text-muted-foreground">
                     <span className="truncate">{server.os_info || 'Ubuntu 22.04'}</span>
@@ -271,50 +271,50 @@ export default function Dashboard() {
                     )}
                 </div>
             </CardContent>
-            <CardFooter className="px-4 pb-4 pt-0 gap-2">
-                <Button className="flex-1 h-9" onClick={() => openConsole(server.id)} type="button">
-                    <Terminal className="mr-2 h-4 w-4" />
+            <CardFooter className="px-4 pb-4 pt-0 gap-1 flex-wrap">
+                <Button className="flex-1 min-w-[90px] h-8 text-xs" onClick={() => openConsole(server.id)} type="button">
+                    <Terminal className="mr-1 h-3 w-3" />
                     Consola
                 </Button>
                 <Button
                     variant="outline"
                     size="icon"
-                    className="h-9 w-9 shrink-0"
+                    className="h-8 w-8 shrink-0"
                     title="Chat IA"
                     onClick={() => setChatServer(server)}
                     type="button"
                 >
-                    <MessageSquare className="h-4 w-4" />
+                    <MessageSquare className="h-3.5 w-3.5" />
                 </Button>
                 <Button
                     variant="outline"
                     size="icon"
-                    className="h-9 w-9 shrink-0"
+                    className="h-8 w-8 shrink-0"
                     title="Diagnóstico"
                     onClick={() => setDiagnosticServer(server)}
                     type="button"
                 >
-                    <Zap className="h-4 w-4" />
+                    <Zap className="h-3.5 w-3.5" />
                 </Button>
                 <Button
                     variant="outline"
                     size="icon"
-                    className="h-9 w-9 shrink-0"
+                    className="h-8 w-8 shrink-0"
                     title="Editar"
                     onClick={() => openEditDialog(server)}
                     type="button"
                 >
-                    <Pencil className="h-4 w-4" />
+                    <Pencil className="h-3.5 w-3.5" />
                 </Button>
                 <Button
                     variant="outline"
                     size="icon"
-                    className="h-9 w-9 shrink-0 hover:bg-destructive/10 hover:text-destructive"
+                    className="h-8 w-8 shrink-0 hover:bg-destructive/10 hover:text-destructive"
                     title="Eliminar"
                     onClick={() => setDeletingServer(server)}
                     type="button"
                 >
-                    <Trash2 className="h-4 w-4" />
+                    <Trash2 className="h-3.5 w-3.5" />
                 </Button>
             </CardFooter>
         </Card>
@@ -363,7 +363,7 @@ export default function Dashboard() {
 
                 {isExpanded && (
                     <div className={viewMode === 'grid'
-                        ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+                        ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
                         : "space-y-2"
                     }>
                         {serversByGroup[id]?.map(server =>

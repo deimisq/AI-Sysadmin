@@ -1,61 +1,28 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Bell, Save, Loader2, Mail, MessageSquare } from "lucide-react";
-import { toast } from "sonner";
+import { Bell, Save, Mail, Shield, Server, Activity } from "lucide-react";
 import { fetch } from '@tauri-apps/plugin-http';
 
-const API_URL = import.meta.env.VITE_API_URL;
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1";
 
-interface NotificationConfig {
-    email_notifications: boolean;
-    slack_notifications: boolean;
-    discord_notifications: boolean;
-    telegram_notifications: boolean;
-    notify_on_server_down: boolean;
-    notify_on_task_complete: boolean;
-    notify_on_error: boolean;
-    notify_on_user_action: boolean;
-    email_from: string;
-    email_from_name: string;
-    smtp_host: string;
-    smtp_port: number;
-    smtp_username: string;
-    smtp_use_tls: boolean;
-    slack_webhook_url: string;
-    discord_webhook_url: string;
-    telegram_bot_token: string;
-    telegram_chat_id: string;
+interface NotificationPreferencesProps {
+    currentUser?: any;
 }
 
-export function NotificationPreferences() {
-    const [config, setConfig] = useState<NotificationConfig>({
-        email_notifications: true,
-        slack_notifications: false,
-        discord_notifications: false,
-        telegram_notifications: false,
-        notify_on_server_down: true,
-        notify_on_task_complete: true,
-        notify_on_error: true,
-        notify_on_user_action: false,
-        email_from: "",
-        email_from_name: "AI Sysadmin",
-        smtp_host: "",
-        smtp_port: 587,
-        smtp_username: "",
-        smtp_use_tls: true,
-        slack_webhook_url: "",
-        discord_webhook_url: "",
-        telegram_bot_token: "",
-        telegram_chat_id: ""
+export function NotificationPreferences({ currentUser }: NotificationPreferencesProps) {
+    const [preferences, setPreferences] = useState({
+        notify_new_users: true,
+        notify_security_alerts: true,
+        notify_new_servers: false,
+        notify_system_events: true,
+        notify_version_updates: true
     });
-    const [loading, setLoading] = useState(true);
-    const [saving, setSaving] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [message, setMessage] = useState("");
 
     useEffect(() => {
-        loadConfig();
+        loadPreferences();
     }, []);
 
     const getAuthHeaders = () => {
@@ -66,285 +33,212 @@ export function NotificationPreferences() {
         };
     };
 
-    const loadConfig = async () => {
+    const loadPreferences = async () => {
         try {
-            const res = await fetch(`${API_URL}/config/notifications`, {
+            const response = await fetch(`${API_BASE_URL}/auth/me`, {
                 headers: getAuthHeaders()
             });
 
-            if (res.ok) {
-                const data = await res.json();
-                setConfig({ ...config, ...data });
-            }
-        } catch (error) {
-            console.error("Failed to load notification config:", error);
+            if (!response.ok) throw new Error("Error al cargar configuración");
+
+            const data = await response.json();
+            setPreferences({
+                notify_new_users: data.notify_new_users ?? true,
+                notify_security_alerts: data.notify_security_alerts ?? true,
+                notify_new_servers: data.notify_new_servers ?? false,
+                notify_system_events: data.notify_system_events ?? true,
+                notify_version_updates: data.notify_version_updates ?? true
+            });
+        } catch (error: any) {
+            setMessage("❌ Error al cargar preferencias: " + error.message);
+        }
+    };
+
+    const handleSave = async () => {
+        setLoading(true);
+        setMessage("");
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/auth/me/preferences`, {
+                method: "PUT",
+                headers: getAuthHeaders(),
+                body: JSON.stringify(preferences)
+            });
+
+            if (!response.ok) throw new Error("Failed to save preferences");
+
+            setMessage("✅ Preferencias actualizadas correctamente");
+            setTimeout(() => setMessage(""), 3000);
+        } catch (error: any) {
+            setMessage("❌ Error al guardar: " + error.message);
         } finally {
             setLoading(false);
         }
     };
 
-    const handleSave = async () => {
-        setSaving(true);
-        try {
-            const res = await fetch(`${API_URL}/config/notifications`, {
-                method: "PUT",
-                headers: getAuthHeaders(),
-                body: JSON.stringify(config)
-            });
-
-            if (res.ok) {
-                toast.success("Preferencias de notificaciones actualizadas");
-            } else {
-                toast.error("Error al guardar preferencias");
-            }
-        } catch (error: any) {
-            toast.error(`Error: ${error.message}`);
-        } finally {
-            setSaving(false);
-        }
-    };
-
-    if (loading) {
-        return (
-            <Card>
-                <CardContent className="p-8 flex justify-center">
-                    <Loader2 className="h-8 w-8 animate-spin" />
-                </CardContent>
-            </Card>
-        );
+    // Only show to admins and superadmins
+    if (currentUser && !["admin", "superadmin"].includes(currentUser.role)) {
+        return null;
     }
 
     return (
         <Card>
             <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                    <Bell className="h-5 w-5" />
-                    Preferencias de Notificaciones
-                </CardTitle>
+                <div className="flex items-center gap-2">
+                    <Bell className="h-5 w-5 text-blue-600" />
+                    <CardTitle>Preferencias de Notificación</CardTitle>
+                </div>
                 <CardDescription>
-                    Configura cómo y cuándo recibir notificaciones del sistema
+                    Gestiona qué eventos activan una notificación (alertas, nuevos usuarios, etc.)
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6 max-h-[calc(100vh-300px)] overflow-y-auto">
-                {/* Notification Channels */}
+                {message && (
+                    <div className={`p-3 rounded-lg ${message.startsWith("✅")
+                        ? "bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-200"
+                        : "bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200"
+                        }`}>
+                        {message}
+                    </div>
+                )}
+
                 <div className="space-y-4">
-                    <h3 className="text-lg font-medium">Canales de Notificación</h3>
-                    <div className="space-y-2">
-                        <div className="flex items-center gap-2">
+                    {/* New Users */}
+                    <div className="flex items-start gap-4 p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                        <div className="mt-1">
                             <input
                                 type="checkbox"
-                                checked={config.email_notifications}
-                                onChange={(e) => setConfig({ ...config, email_notifications: e.target.checked })}
-                                className="h-4 w-4"
+                                id="notify_new_users"
+                                checked={preferences.notify_new_users}
+                                onChange={(e) => setPreferences({ ...preferences, notify_new_users: e.target.checked })}
+                                className="h-4 w-4 rounded border-gray-300"
                             />
-                            <Label className="flex items-center gap-2">
-                                <Mail className="h-4 w-4" />
-                                Notificaciones por Email
-                            </Label>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <input
-                                type="checkbox"
-                                checked={config.slack_notifications}
-                                onChange={(e) => setConfig({ ...config, slack_notifications: e.target.checked })}
-                                className="h-4 w-4"
-                            />
-                            <Label className="flex items-center gap-2">
-                                <MessageSquare className="h-4 w-4" />
-                                Notificaciones por Slack
-                            </Label>
+                        <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                                <Mail className="h-4 w-4 text-blue-600" />
+                                <label htmlFor="notify_new_users" className="font-medium cursor-pointer">
+                                    Nuevos Usuarios
+                                </label>
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                                Recibir notificación cuando un nuevo usuario se registra.
+                            </p>
                         </div>
-                        <div className="flex items-center gap-2">
+                    </div>
+
+                    {/* Security Alerts */}
+                    <div className="flex items-start gap-4 p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                        <div className="mt-1">
                             <input
                                 type="checkbox"
-                                checked={config.discord_notifications}
-                                onChange={(e) => setConfig({ ...config, discord_notifications: e.target.checked })}
-                                className="h-4 w-4"
+                                id="notify_security_alerts"
+                                checked={preferences.notify_security_alerts}
+                                onChange={(e) => setPreferences({ ...preferences, notify_security_alerts: e.target.checked })}
+                                className="h-4 w-4 rounded border-gray-300"
                             />
-                            <Label>Notificaciones por Discord</Label>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                                <Shield className="h-4 w-4 text-red-600" />
+                                <label htmlFor="notify_security_alerts" className="font-medium cursor-pointer">
+                                    Alertas de Seguridad
+                                </label>
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                                Notificaciones críticas sobre intentos fallidos de login o cambios de configuración sensibles.
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* New Servers */}
+                    <div className="flex items-start gap-4 p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                        <div className="mt-1">
                             <input
                                 type="checkbox"
-                                checked={config.telegram_notifications}
-                                onChange={(e) => setConfig({ ...config, telegram_notifications: e.target.checked })}
-                                className="h-4 w-4"
+                                id="notify_new_servers"
+                                checked={preferences.notify_new_servers}
+                                onChange={(e) => setPreferences({ ...preferences, notify_new_servers: e.target.checked })}
+                                className="h-4 w-4 rounded border-gray-300"
                             />
-                            <Label>Notificaciones por Telegram</Label>
+                        </div>
+                        <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                                <Server className="h-4 w-4 text-green-600" />
+                                <label htmlFor="notify_new_servers" className="font-medium cursor-pointer">
+                                    Nuevos Servidores
+                                </label>
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                                Aviso cuando un nuevo agente/servidor es detectado o registrado manualmente.
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* System Events */}
+                    <div className="flex items-start gap-4 p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                        <div className="mt-1">
+                            <input
+                                type="checkbox"
+                                id="notify_system_events"
+                                checked={preferences.notify_system_events}
+                                onChange={(e) => setPreferences({ ...preferences, notify_system_events: e.target.checked })}
+                                className="h-4 w-4 rounded border-gray-300"
+                            />
+                        </div>
+                        <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                                <Activity className="h-4 w-4 text-purple-600" />
+                                <label htmlFor="notify_system_events" className="font-medium cursor-pointer">
+                                    Eventos de Sistema
+                                </label>
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                                Alertas sobre estado de servicios, backups y mantenimiento.
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Version Updates */}
+                    <div className="flex items-start gap-4 p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                        <div className="mt-1">
+                            <input
+                                type="checkbox"
+                                id="notify_version_updates"
+                                checked={preferences.notify_version_updates}
+                                onChange={(e) => setPreferences({ ...preferences, notify_version_updates: e.target.checked })}
+                                className="h-4 w-4 rounded border-gray-300"
+                            />
+                        </div>
+                        <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                                <Bell className="h-4 w-4 text-orange-600" />
+                                <label htmlFor="notify_version_updates" className="font-medium cursor-pointer">
+                                    Actualizaciones
+                                </label>
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                                Recibir avisos sobre nuevas versiones del software.
+                            </p>
                         </div>
                     </div>
                 </div>
 
-                {/* Event Types */}
-                <div className="space-y-4">
-                    <h3 className="text-lg font-medium">Eventos a Notificar</h3>
-                    <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                            <input
-                                type="checkbox"
-                                checked={config.notify_on_server_down}
-                                onChange={(e) => setConfig({ ...config, notify_on_server_down: e.target.checked })}
-                                className="h-4 w-4"
-                            />
-                            <Label>Servidor caído/inaccesible</Label>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <input
-                                type="checkbox"
-                                checked={config.notify_on_task_complete}
-                                onChange={(e) => setConfig({ ...config, notify_on_task_complete: e.target.checked })}
-                                className="h-4 w-4"
-                            />
-                            <Label>Tareas completadas</Label>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <input
-                                type="checkbox"
-                                checked={config.notify_on_error}
-                                onChange={(e) => setConfig({ ...config, notify_on_error: e.target.checked })}
-                                className="h-4 w-4"
-                            />
-                            <Label>Errores del sistema</Label>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <input
-                                type="checkbox"
-                                checked={config.notify_on_user_action}
-                                onChange={(e) => setConfig({ ...config, notify_on_user_action: e.target.checked })}
-                                className="h-4 w-4"
-                            />
-                            <Label>Acciones de usuarios</Label>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Email Configuration */}
-                {config.email_notifications && (
-                    <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
-                        <h3 className="text-lg font-medium">Configuración de Email</h3>
-                        <div className="grid gap-4 md:grid-cols-2">
-                            <div>
-                                <Label>Email From</Label>
-                                <Input
-                                    type="email"
-                                    value={config.email_from}
-                                    onChange={(e) => setConfig({ ...config, email_from: e.target.value })}
-                                    placeholder="noreply@example.com"
-                                />
-                            </div>
-                            <div>
-                                <Label>Nombre From</Label>
-                                <Input
-                                    value={config.email_from_name}
-                                    onChange={(e) => setConfig({ ...config, email_from_name: e.target.value })}
-                                />
-                            </div>
-                            <div>
-                                <Label>SMTP Host</Label>
-                                <Input
-                                    value={config.smtp_host}
-                                    onChange={(e) => setConfig({ ...config, smtp_host: e.target.value })}
-                                    placeholder="smtp.gmail.com"
-                                />
-                            </div>
-                            <div>
-                                <Label>SMTP Port</Label>
-                                <Input
-                                    type="number"
-                                    value={config.smtp_port}
-                                    onChange={(e) => setConfig({ ...config, smtp_port: parseInt(e.target.value) })}
-                                />
-                            </div>
-                            <div>
-                                <Label>SMTP Username</Label>
-                                <Input
-                                    value={config.smtp_username}
-                                    onChange={(e) => setConfig({ ...config, smtp_username: e.target.value })}
-                                />
-                            </div>
-                            <div className="flex items-center gap-2 pt-6">
-                                <input
-                                    type="checkbox"
-                                    checked={config.smtp_use_tls}
-                                    onChange={(e) => setConfig({ ...config, smtp_use_tls: e.target.checked })}
-                                    className="h-4 w-4"
-                                />
-                                <Label>Usar TLS</Label>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* Slack Configuration */}
-                {config.slack_notifications && (
-                    <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
-                        <h3 className="text-lg font-medium">Configuración de Slack</h3>
-                        <div>
-                            <Label>Webhook URL</Label>
-                            <Input
-                                value={config.slack_webhook_url}
-                                onChange={(e) => setConfig({ ...config, slack_webhook_url: e.target.value })}
-                                placeholder="https://hooks.slack.com/services/..."
-                            />
-                        </div>
-                    </div>
-                )}
-
-                {/* Discord Configuration */}
-                {config.discord_notifications && (
-                    <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
-                        <h3 className="text-lg font-medium">Configuración de Discord</h3>
-                        <div>
-                            <Label>Webhook URL</Label>
-                            <Input
-                                value={config.discord_webhook_url}
-                                onChange={(e) => setConfig({ ...config, discord_webhook_url: e.target.value })}
-                                placeholder="https://discord.com/api/webhooks/..."
-                            />
-                        </div>
-                    </div>
-                )}
-
-                {/* Telegram Configuration */}
-                {config.telegram_notifications && (
-                    <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
-                        <h3 className="text-lg font-medium">Configuración de Telegram</h3>
-                        <div className="grid gap-4 md:grid-cols-2">
-                            <div>
-                                <Label>Bot Token</Label>
-                                <Input
-                                    value={config.telegram_bot_token}
-                                    onChange={(e) => setConfig({ ...config, telegram_bot_token: e.target.value })}
-                                    placeholder="123456:ABC-DEF..."
-                                />
-                            </div>
-                            <div>
-                                <Label>Chat ID</Label>
-                                <Input
-                                    value={config.telegram_chat_id}
-                                    onChange={(e) => setConfig({ ...config, telegram_chat_id: e.target.value })}
-                                    placeholder="-100123456789"
-                                />
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* Save Button */}
-                <div className="flex justify-end pt-4 border-t">
-                    <Button onClick={handleSave} disabled={saving}>
-                        {saving ? (
-                            <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                Guardando...
-                            </>
-                        ) : (
-                            <>
-                                <Save className="mr-2 h-4 w-4" />
-                                Guardar Preferencias
-                            </>
-                        )}
+                <div className="flex justify-end gap-2 pt-4 border-t">
+                    <Button
+                        onClick={handleSave}
+                        disabled={loading}
+                        className="bg-blue-600 hover:bg-blue-700"
+                    >
+                        <Save className="mr-2 h-4 w-4" />
+                        {loading ? "Guardando..." : "Guardar Preferencias"}
                     </Button>
+                </div>
+
+                <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                    <p className="text-sm text-blue-800 dark:text-blue-200">
+                        <strong>ℹ️ Nota:</strong> Estas preferencias son personales para tu usuario.
+                    </p>
                 </div>
             </CardContent>
         </Card>

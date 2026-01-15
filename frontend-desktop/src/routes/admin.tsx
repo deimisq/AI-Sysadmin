@@ -1,18 +1,48 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AdminLayout, AdminTabs } from "@/components/admin-layout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { UserManagement } from "@/components/admin/user-management";
+import { ServerManagement } from "@/components/admin/server-management";
+import { AIParameters } from "@/components/admin/ai-parameters";
+import { SystemStats } from "@/components/admin/system-stats";
+import { ScheduledReports } from "@/components/admin/scheduled-reports";
 import { SecuritySettings } from "@/components/admin/security-settings";
 import { NotificationPreferences } from "@/components/admin/notification-preferences";
 import { CommunicationSettings } from "@/components/admin/communication-settings";
 import { FrontendParameters } from "@/components/admin/frontend-parameters";
 import { BackendParameters } from "@/components/admin/backend-parameters";
 import { AuditLogs } from "@/components/admin/audit-logs";
-import { AdvancedSettings } from "@/components/admin/advanced-settings";
-import { Activity } from "lucide-react";
+import { fetch } from '@tauri-apps/plugin-http';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1";
 
 export function Admin() {
     const [activeTab, setActiveTab] = useState("users");
+    const [stats, setStats] = useState<any>(null);
+    // Mock current user for now, in real app this comes from context or auth hook
+    const currentUser = { role: "superadmin", id: 1 };
+
+    useEffect(() => {
+        if (activeTab === "stats") {
+            loadStats();
+        }
+    }, [activeTab]);
+
+    const loadStats = async () => {
+        try {
+            const token = localStorage.getItem("token");
+            const response = await fetch(`${API_BASE_URL}/admin/stats`, {
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setStats(data);
+            }
+        } catch (error) {
+            console.error("Failed to load stats", error);
+        }
+    };
 
     return (
         <AdminLayout>
@@ -29,67 +59,28 @@ export function Admin() {
                 <AdminTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
                 {/* Tab Content */}
-                {activeTab === "users" && <UserManagement />}
+                {activeTab === "users" && <UserManagement currentUser={currentUser} />}
 
-                {activeTab === "system" && <SystemInfo />}
+                {activeTab === "servers" && <ServerManagement currentUser={currentUser} />}
+
+                {activeTab === "ai" && <AIParameters />}
+
+                {activeTab === "stats" && stats && <SystemStats stats={stats} />}
+
+                {activeTab === "scheduled" && <ScheduledReports />}
 
                 {activeTab === "audit-logs" && <AuditLogs />}
 
                 {activeTab === "security" && <SecuritySettings />}
 
-                {activeTab === "notifications" && <NotificationPreferences />}
+                {activeTab === "notifications" && <NotificationPreferences currentUser={currentUser} />}
 
                 {activeTab === "communication" && <CommunicationSettings />}
 
                 {activeTab === "frontend" && <FrontendParameters />}
 
                 {activeTab === "backend" && <BackendParameters />}
-
-                {activeTab === "advanced" && <AdvancedSettings />}
             </div>
         </AdminLayout>
-    );
-}
-
-function SystemInfo() {
-    return (
-        <Card>
-            <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                    <Activity className="h-5 w-5" />
-                    Información del Sistema
-                </CardTitle>
-                <CardDescription>
-                    Estado y estadísticas del sistema
-                </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                    <div className="p-4 border rounded-lg">
-                        <p className="text-sm text-muted-foreground">Versión</p>
-                        <p className="text-2xl font-bold">v1.0.0</p>
-                    </div>
-                    <div className="p-4 border rounded-lg">
-                        <p className="text-sm text-muted-foreground">Entorno</p>
-                        <p className="text-2xl font-bold">Production</p>
-                    </div>
-                    <div className="p-4 border rounded-lg">
-                        <p className="text-sm text-muted-foreground">Base de Datos</p>
-                        <p className="text-2xl font-bold text-green-600">✓ Conectada</p>
-                    </div>
-                    <div className="p-4 border rounded-lg">
-                        <p className="text-sm text-muted-foreground">API</p>
-                        <p className="text-2xl font-bold text-green-600">✓ Online</p>
-                    </div>
-                </div>
-
-                <div className="p-4 border rounded-lg bg-muted/50">
-                    <h3 className="font-medium mb-2">Estado del Sistema</h3>
-                    <p className="text-sm text-muted-foreground">
-                        ✅ Todos los servicios están funcionando correctamente
-                    </p>
-                </div>
-            </CardContent>
-        </Card>
     );
 }

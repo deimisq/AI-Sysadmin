@@ -38,14 +38,16 @@ function TabButton({ icon: Icon, label, active, onClick }: TabButtonProps) {
 
 const tabs = [
     { id: "users", label: "Usuarios", icon: Users },
-    { id: "system", label: "Sistema", icon: Activity },
-    { id: "audit-logs", label: "Logs", icon: FileText },
+    { id: "servers", label: "Servidores", icon: Server },
+    { id: "ai", label: "Parámetros IA", icon: Settings },
+    { id: "stats", label: "Estadísticas", icon: Activity },
+    { id: "scheduled", label: "Reportes", icon: FileText },
+    { id: "audit-logs", label: "Auditoría", icon: Shield },
     { id: "security", label: "Seguridad", icon: Shield },
     { id: "notifications", label: "Notificaciones", icon: Bell },
     { id: "communication", label: "Comunicaciones", icon: Mail },
     { id: "frontend", label: "Frontend", icon: Code },
     { id: "backend", label: "Backend", icon: Server },
-    { id: "advanced", label: "Avanzado", icon: Settings },
 ];
 
 interface AdminTabsProps {

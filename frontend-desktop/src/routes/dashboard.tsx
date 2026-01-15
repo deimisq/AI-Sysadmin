@@ -51,12 +51,14 @@ import {
     Zap,
     Pencil,
     Trash2,
-    ChevronDown
+    ChevronDown,
+    MessageSquare
 } from 'lucide-react';
 import DashboardLayout from '../components/dashboard-layout';
 import { CSVImport } from '../components/csv-import';
 import { GroupManager } from '../components/group-manager';
 import { ServerDiagnostic } from '../components/server-diagnostic';
+import { ConversationalChat } from '../components/conversational-chat';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -82,6 +84,7 @@ export default function Dashboard() {
     const [editingServer, setEditingServer] = useState<Server | null>(null);
     const [deletingServer, setDeletingServer] = useState<Server | null>(null);
     const [diagnosticServer, setDiagnosticServer] = useState<Server | null>(null);
+    const [chatServer, setChatServer] = useState<Server | null>(null);
     const [manageGroupsOpen, setManageGroupsOpen] = useState(false);
 
     // Form State
@@ -272,6 +275,16 @@ export default function Dashboard() {
                 <Button className="flex-1 h-9" onClick={() => openConsole(server.id)} type="button">
                     <Terminal className="mr-2 h-4 w-4" />
                     Consola
+                </Button>
+                <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-9 w-9 shrink-0"
+                    title="Chat IA"
+                    onClick={() => setChatServer(server)}
+                    type="button"
+                >
+                    <MessageSquare className="h-4 w-4" />
                 </Button>
                 <Button
                     variant="outline"
@@ -772,6 +785,14 @@ export default function Dashboard() {
                 server={diagnosticServer}
                 onClose={() => setDiagnosticServer(null)}
             />
+
+            {/* Conversational Chat with AI */}
+            {chatServer && (
+                <ConversationalChat
+                    server={chatServer}
+                    onClose={() => setChatServer(null)}
+                />
+            )}
         </DashboardLayout>
     );
 }

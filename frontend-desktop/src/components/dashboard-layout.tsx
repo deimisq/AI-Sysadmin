@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { ThemeSwitcher } from "@/components/theme-switcher";
+import { VersionNotification } from "@/components/version-notification";
 import { fetchCurrentUser, removeAuthToken } from "@/lib/api";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -158,6 +159,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <div className="md:hidden h-[calc(100vh-65px)] overflow-auto bg-background">
                 {children}
             </div>
+
+            {/* Version Update Notification (shown globally) */}
+            <VersionNotification />
         </div>
     );
 }

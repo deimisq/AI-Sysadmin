@@ -5,6 +5,7 @@ import ServerConsole from './routes/console';
 import { ScheduledReports } from './routes/scheduled-reports';
 import { Profile } from './routes/profile';
 import { Admin } from './routes/admin';
+import { Documentation } from './routes/documentation';
 import { isAuthenticated } from './lib/api';
 import { Toaster } from 'sonner';
 import { ThemeProvider } from '@/components/theme-provider';
@@ -56,6 +57,14 @@ export default function App() {
             element={
               <PrivateRoute>
                 <Admin />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/documentation"
+            element={
+              <PrivateRoute>
+                <Documentation />
               </PrivateRoute>
             }
           />

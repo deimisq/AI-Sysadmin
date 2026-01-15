@@ -2,41 +2,23 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Users, Trash2, Plus, Loader2, FolderOpen, Mail, Edit2 } from "lucide-react";
+import { Users, Edit2, Trash2, Shield, FolderOpen, Plus, X, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { fetch } from '@tauri-apps/plugin-http';
 
-const API_URL = import.meta.env.VITE_API_URL;
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1";
 
-interface User {
-    id: number;
-    username: string;
-    email: string;
-    full_name: string;
-    role: string;
-    is_active: boolean;
-    created_at: string;
+interface UserManagementProps {
+    currentUser?: any;
 }
 
-export function UserManagement() {
-    const [users, setUsers] = useState<User[]>([]);
+export function UserManagement({ currentUser }: UserManagementProps) {
+    const [users, setUsers] = useState<any[]>([]);
+    const [groups, setGroups] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [editingUser, setEditingUser] = useState<any>(null);
     const [creatingUser, setCreatingUser] = useState(false);
-    const [editingUser, setEditingUser] = useState<User | null>(null);
-    const [editForm, setEditForm] = useState({
-        email: "",
-        username: "",
-        full_name: "",
-        role: "user",
-        is_active: true,
-        newPassword: ""
-    });
-    const [managingGroupsUser, setManagingGroupsUser] = useState<User | null>(null);
-    const [allGroups, setAllGroups] = useState<any[]>([]);
-    const [userGroups, setUserGroups] = useState<any[]>([]);
-    const [newUser, setNewUser] = useState({
+    const [newUser, setNewUser] = useState<any>({
         email: "",
         username: "",
         password: "",
@@ -44,9 +26,11 @@ export function UserManagement() {
         role: "user",
         is_active: true
     });
+    const [managingPermissions, setManagingPermissions] = useState<any>(null);
+    const [userGroups, setUserGroups] = useState<any[]>([]);
 
     useEffect(() => {
-        loadUsers();
+        loadData();
     }, []);
 
     const getAuthHeaders = () => {
@@ -57,37 +41,60 @@ export function UserManagement() {
         };
     };
 
-    const loadUsers = async () => {
+    const loadData = async () => {
         try {
-            console.log('Loading users from:', `${API_URL}/admin/users`);
-            const res = await fetch(`${API_URL}/admin/users`, {
-                headers: getAuthHeaders()
-            });
+            const [usersRes, groupsRes] = await Promise.all([
+                fetch(`${API_BASE_URL}/admin/users`, { headers: getAuthHeaders() }),
+                fetch(`${API_BASE_URL}/groups/`, { headers: getAuthHeaders() })
+            ]);
 
-            console.log('Users response status:', res.status);
-
-            if (res.ok) {
-                const data = await res.json();
-                console.log('Loaded users:', data);
-                setUsers(data);
-            } else {
-                const errorText = await res.text();
-                console.error('Failed to load users. Status:', res.status, 'Error:', errorText);
-                toast.error(`Error al cargar usuarios (${res.status})`);
-            }
-
-            // Also load groups
-            const groupsRes = await fetch(`${API_URL}/groups/`, {
-                headers: getAuthHeaders()
-            });
-            if (groupsRes.ok) {
-                setAllGroups(await groupsRes.json());
-            }
+            if (usersRes.ok) setUsers(await usersRes.json());
+            if (groupsRes.ok) setGroups(await groupsRes.json());
         } catch (error) {
-            console.error("Failed to load users:", error);
-            toast.error("Error al cargar usuarios: " + (error as Error).message);
+            console.error("Failed to load data", error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleEditUser = (user: any) => {
+        setEditingUser({ ...user });
+    };
+
+    const handleSaveUser = async () => {
+        if (!editingUser) return;
+
+        try {
+            const updatePayload: any = {
+                email: editingUser.email,
+                username: editingUser.username,
+                full_name: editingUser.full_name,
+                role: editingUser.role,
+                is_active: editingUser.is_active,
+            };
+
+            // Only include password if it was changed
+            if (editingUser.newPassword && editingUser.newPassword.trim()) {
+                updatePayload.password = editingUser.newPassword;
+            }
+
+            const res = await fetch(`${API_BASE_URL}/admin/users/${editingUser.id}`, {
+                method: "PUT",
+                headers: getAuthHeaders(),
+                body: JSON.stringify(updatePayload)
+            });
+
+            if (!res.ok) {
+                const error = (await res.json()) as any;
+                throw new Error(error.detail || "Error updating user");
+            }
+
+            await loadData();
+            setEditingUser(null);
+            toast.success("Usuario actualizado correctamente");
+        } catch (error: any) {
+            console.error(error);
+            toast.error(error.message || "Error al actualizar usuario");
         }
     };
 
@@ -98,194 +105,146 @@ export function UserManagement() {
         }
 
         try {
-            const res = await fetch(`${API_URL}/admin/users`, {
+            const res = await fetch(`${API_BASE_URL}/admin/users`, {
                 method: "POST",
                 headers: getAuthHeaders(),
                 body: JSON.stringify(newUser)
             });
 
-            if (res.ok) {
-                toast.success("Usuario creado correctamente");
-                setCreatingUser(false);
-                setNewUser({
-                    email: "",
-                    username: "",
-                    password: "",
-                    full_name: "",
-                    role: "user",
-                    is_active: true
-                });
-                loadUsers();
-            } else {
-                const error = await res.json();
-                toast.error(`Error: ${error.detail || "No se pudo crear el usuario"}`);
+            if (!res.ok) {
+                const error = (await res.json()) as any;
+                throw new Error(error.detail || "Error creating user");
             }
+
+            await loadData();
+            setCreatingUser(false);
+            setNewUser({
+                email: "",
+                username: "",
+                password: "",
+                full_name: "",
+                role: "user",
+                is_active: true
+            });
+            toast.success("Usuario creado exitosamente");
         } catch (error: any) {
-            toast.error(`Error: ${error.message}`);
+            console.error(error);
+            toast.error(error.message || "Error al crear usuario");
         }
     };
 
     const handleDeleteUser = async (userId: number) => {
+        const confirmed = window.confirm("¿Estás seguro de eliminar este usuario? Esta acción no se puede deshacer.");
+        if (!confirmed) return;
+
         try {
-            const res = await fetch(`${API_URL}/admin/users/${userId}`, {
+            const res = await fetch(`${API_BASE_URL}/admin/users/${userId}`, {
                 method: "DELETE",
                 headers: getAuthHeaders()
             });
 
-            if (res.ok) {
-                toast.success("Usuario eliminado");
-                loadUsers();
-            }
+            if (!res.ok) throw new Error("Error deleting user");
+
+            await loadData();
+            toast.success("Usuario eliminado");
         } catch (error: any) {
-            toast.error(`Error: ${error.message}`);
+            console.error(error);
+            toast.error("Error al eliminar usuario");
         }
     };
 
-    const handleEditUser = (user: User) => {
-        setEditingUser(user);
-        setEditForm({
-            email: user.email,
-            username: user.username,
-            full_name: user.full_name || "",
-            role: user.role,
-            is_active: user.is_active,
-            newPassword: ""
+    const fetchUserGroups = async (userId: number) => {
+        const res = await fetch(`${API_BASE_URL}/admin/users/${userId}/groups`, {
+            headers: getAuthHeaders()
         });
+        if (res.ok) return await res.json();
+        return [];
     };
 
-    const handleSaveEdit = async () => {
-        if (!editingUser) return;
-
+    const handleManagePermissions = async (user: any) => {
+        setManagingPermissions(user);
         try {
-            const updatePayload: any = {
-                email: editForm.email,
-                username: editForm.username,
-                full_name: editForm.full_name,
-                role: editForm.role,
-                is_active: editForm.is_active,
-            };
-
-            // Only include password if it was changed
-            if (editForm.newPassword && editForm.newPassword.trim()) {
-                updatePayload.password = editForm.newPassword;
-            }
-
-            const res = await fetch(`${API_URL}/admin/users/${editingUser.id}`, {
-                method: "PUT",
-                headers: getAuthHeaders(),
-                body: JSON.stringify(updatePayload)
-            });
-
-            if (res.ok) {
-                toast.success("Usuario actualizado correctamente");
-                setEditingUser(null);
-                loadUsers();
-            } else {
-                const error = await res.json();
-                toast.error(`Error: ${error.detail || "No se pudo actualizar"}`);
-            }
-        } catch (error: any) {
-            toast.error(`Error: ${error.message}`);
-        }
-    };
-
-    const handleManageGroups = async (user: User) => {
-        setManagingGroupsUser(user);
-
-        // Load user's current groups
-        try {
-            const res = await fetch(`${API_URL}/admin/users/${user.id}/groups`, {
-                headers: getAuthHeaders()
-            });
-            if (res.ok) {
-                setUserGroups(await res.json());
-            } else {
-                setUserGroups([]);
-            }
+            const groupsData = await fetchUserGroups(user.id);
+            setUserGroups(groupsData);
         } catch (error) {
-            console.error("Failed to load user groups:", error);
-            setUserGroups([]);
+            console.error("Failed to load user groups", error);
         }
     };
 
-    const handleGrantGroupAccess = async (groupId: number) => {
-        if (!managingGroupsUser) return;
+    const handleGrantAccess = async (groupId: number, role: string = "user") => {
+        if (!managingPermissions) return;
 
         try {
-            const res = await fetch(`${API_URL}/admin/users/${managingGroupsUser.id}/groups/${groupId}`, {
+            const res = await fetch(`${API_BASE_URL}/admin/users/${managingPermissions.id}/groups/${groupId}/grant?role=${role}`, {
                 method: "POST",
                 headers: getAuthHeaders()
             });
 
-            if (res.ok) {
-                toast.success("Acceso al grupo otorgado");
-                // Reload user groups
-                handleManageGroups(managingGroupsUser);
-            } else {
-                toast.error("Error al otorgar acceso");
-            }
+            if (!res.ok) throw new Error("Error granting access");
+
+            const groupsData = await fetchUserGroups(managingPermissions.id);
+            setUserGroups(groupsData);
+            toast.success("Acceso concedido");
         } catch (error: any) {
-            toast.error(`Error: ${error.message}`);
+            console.error(error);
+            toast.error("Error al conceder acceso");
         }
     };
 
-    const handleRevokeGroupAccess = async (groupId: number) => {
-        if (!managingGroupsUser) return;
+    const handleRevokeAccess = async (groupId: number) => {
+        if (!managingPermissions) return;
 
         try {
-            const res = await fetch(`${API_URL}/admin/users/${managingGroupsUser.id}/groups/${groupId}`, {
+            const res = await fetch(`${API_BASE_URL}/admin/users/${managingPermissions.id}/groups/${groupId}/revoke`, {
                 method: "DELETE",
                 headers: getAuthHeaders()
             });
 
-            if (res.ok) {
-                toast.success("Acceso al grupo revocado");
-                // Reload user groups
-                handleManageGroups(managingGroupsUser);
-            } else {
-                toast.error("Error al revocar acceso");
-            }
+            if (!res.ok) throw new Error("Error revoking access");
+
+            const groupsData = await fetchUserGroups(managingPermissions.id);
+            setUserGroups(groupsData);
+            toast.success("Acceso revocado");
         } catch (error: any) {
-            toast.error(`Error: ${error.message}`);
+            console.error(error);
+            toast.error("Error al revocar acceso");
         }
     };
 
-    const handleSendNotification = async (user: User) => {
+    const handleSendApprovalNotification = async (user: any) => {
+        const confirmed = window.confirm(`¿Enviar notificación de aprobación a ${user.email}?`);
+        if (!confirmed) return;
+
         try {
-            const res = await fetch(`${API_URL}/admin/users/${user.id}/send-approval-notification`, {
+            const res = await fetch(`${API_BASE_URL}/admin/users/${user.id}/send-approval-notification`, {
                 method: "POST",
                 headers: getAuthHeaders()
             });
 
-            if (res.ok) {
-                const result = await res.json();
-                toast.success(result.message || "Notificación enviada correctamente");
-            } else {
-                toast.error("Error al enviar notificación");
+            if (!res.ok) {
+                const error = (await res.json()) as any;
+                throw new Error(error.detail || "Failed to send notification");
             }
+
+            const result = await res.json();
+            toast.success(result.message || "Notificación enviada");
         } catch (error: any) {
-            toast.error(`Error: ${error.message}`);
+            console.error(error);
+            toast.error(error.message || "Error enviando notificación");
         }
     };
 
     const getRoleBadgeColor = (role: string) => {
-        const colors: Record<string, string> = {
-            superadmin: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
-            admin: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
-            group_admin: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
-            user: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200"
-        };
-        return colors[role] || colors.user;
+        switch (role) {
+            case "superadmin": return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
+            case "admin": return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200";
+            case "group_admin": return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
+            default: return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200";
+        }
     };
 
     if (loading) {
-        return (
-            <Card>
-                <CardContent className="p-8 flex justify-center">
-                    <Loader2 className="h-8 w-8 animate-spin" />
-                </CardContent>
-            </Card>
-        );
+        return <div>Cargando usuarios...</div>;
     }
 
     // Create User Form
@@ -293,8 +252,8 @@ export function UserManagement() {
         return (
             <Card>
                 <CardHeader>
-                    <CardTitle>Crear Nuevo Usuario</CardTitle>
-                    <CardDescription>Agrega un nuevo usuario al sistema</CardDescription>
+                    <CardTitle>Crear Usuario</CardTitle>
+                    <CardDescription>Añadir un nuevo usuario al sistema</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="grid gap-4 md:grid-cols-2">
@@ -312,7 +271,7 @@ export function UserManagement() {
                             <Input
                                 value={newUser.username}
                                 onChange={(e) => setNewUser({ ...newUser, username: e.target.value })}
-                                placeholder="usuario"
+                                placeholder="username"
                             />
                         </div>
                         <div>
@@ -342,7 +301,9 @@ export function UserManagement() {
                                 <option value="user">Usuario</option>
                                 <option value="group_admin">Admin de Grupo</option>
                                 <option value="admin">Administrador</option>
-                                <option value="superadmin">Superadministrador</option>
+                                {currentUser?.role === "superadmin" && (
+                                    <option value="superadmin">Superadmin</option>
+                                )}
                             </select>
                         </div>
                         <div className="flex items-center gap-2">
@@ -356,7 +317,7 @@ export function UserManagement() {
                         </div>
                     </div>
                     <div className="flex gap-2">
-                        <Button onClick={handleCreateUser}>Crear Usuario</Button>
+                        <Button onClick={handleCreateUser}>Crear</Button>
                         <Button variant="outline" onClick={() => setCreatingUser(false)}>Cancelar</Button>
                     </div>
                 </CardContent>
@@ -364,215 +325,256 @@ export function UserManagement() {
         );
     }
 
-    // Users List
-    return (
-        <>
+    // Edit User Modal
+    if (editingUser) {
+        return (
             <Card>
                 <CardHeader>
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <CardTitle className="flex items-center gap-2">
-                                <Users className="h-5 w-5" />
-                                Gestión de Usuarios
-                            </CardTitle>
-                            <CardDescription>Administra los usuarios del sistema y sus permisos</CardDescription>
-                        </div>
-                        <Button onClick={() => setCreatingUser(true)}>
-                            <Plus className="mr-2 h-4 w-4" />
-                            Crear Usuario
-                        </Button>
-                    </div>
+                    <CardTitle>Editar Usuario: {editingUser.username}</CardTitle>
+                    <CardDescription>Actualizar información y rol del usuario</CardDescription>
                 </CardHeader>
-                <CardContent className="max-h-[calc(100vh-300px)] overflow-y-auto">
-                    <div className="space-y-2">
-                        {users.map((user) => (
-                            <div
-                                key={user.id}
-                                className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50"
+                <CardContent className="space-y-4">
+                    <div className="grid gap-4 md:grid-cols-2">
+                        <div>
+                            <label className="text-sm font-medium">Email</label>
+                            <Input
+                                value={editingUser.email}
+                                onChange={(e) => setEditingUser({ ...editingUser, email: e.target.value })}
+                            />
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium">Usuario</label>
+                            <Input
+                                value={editingUser.username}
+                                onChange={(e) => setEditingUser({ ...editingUser, username: e.target.value })}
+                            />
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium">Nombre Completo</label>
+                            <Input
+                                value={editingUser.full_name || ""}
+                                onChange={(e) => setEditingUser({ ...editingUser, full_name: e.target.value })}
+                            />
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium">Nueva Contraseña (opcional)</label>
+                            <Input
+                                type="password"
+                                placeholder="Dejar vacío para no cambiar"
+                                value={editingUser.newPassword || ""}
+                                onChange={(e) => setEditingUser({ ...editingUser, newPassword: e.target.value })}
+                            />
+                            <p className="text-xs text-muted-foreground mt-1">
+                                Solo completar si desea cambiar la contraseña del usuario
+                            </p>
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium">Rol</label>
+                            <select
+                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                value={editingUser.role}
+                                onChange={(e) => setEditingUser({ ...editingUser, role: e.target.value })}
                             >
-                                <div className="flex-1">
-                                    <div className="flex items-center gap-2">
-                                        <h3 className="font-medium">{user.username}</h3>
-                                        <span className={`px-2 py-1 rounded text-xs font-medium ${getRoleBadgeColor(user.role)}`}>
-                                            {user.role}
-                                        </span>
-                                        {!user.is_active && (
-                                            <span className="px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800">
-                                                Inactivo
-                                            </span>
-                                        )}
+                                <option value="user">Usuario</option>
+                                <option value="group_admin">Admin de Grupo</option>
+                                <option value="admin">Administrador</option>
+                                {currentUser?.role === "superadmin" && (
+                                    <option value="superadmin">Superadmin</option>
+                                )}
+                            </select>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <input
+                                type="checkbox"
+                                checked={editingUser.is_active}
+                                onChange={(e) => setEditingUser({ ...editingUser, is_active: e.target.checked })}
+                                className="h-4 w-4"
+                            />
+                            <label className="text-sm font-medium">Activo</label>
+                        </div>
+                    </div>
+                    <div className="flex gap-2">
+                        <Button onClick={handleSaveUser}>Guardar</Button>
+                        <Button variant="outline" onClick={() => setEditingUser(null)}>Cancelar</Button>
+                    </div>
+                </CardContent>
+            </Card>
+        );
+    }
+
+    // Manage Permissions Modal
+    if (managingPermissions) {
+        const userGroupIds = userGroups.map(g => g.id);
+        const availableGroups = groups.filter(g => !userGroupIds.includes(g.id));
+
+        return (
+            <Card>
+                <CardHeader>
+                    <CardTitle>Gestionar Permisos: {managingPermissions.username}</CardTitle>
+                    <CardDescription>Asignar acceso a grupos de servidores</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4 max-h-[calc(100vh-300px)] overflow-y-auto">
+                    <div>
+                        <h3 className="font-medium mb-2">Grupos Actuales</h3>
+                        {userGroups.length > 0 ? (
+                            <div className="space-y-2">
+                                {userGroups.map((group: any) => (
+                                    <div key={group.id} className="flex items-center justify-between p-3 border rounded">
+                                        <div className="flex items-center gap-3 flex-1">
+                                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: group.color || "#888" }} />
+                                            <div className="flex-1">
+                                                <span className="font-medium">{group.name}</span>
+                                                <div className="flex items-center gap-2 mt-1">
+                                                    <span className="text-xs text-muted-foreground">Rol:</span>
+                                                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${group.role === 'group_admin'
+                                                        ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
+                                                        : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                                                        }`}>
+                                                        {group.role === 'group_admin' ? "Admin de Grupo" : "Usuario"}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <Button
+                                            variant="destructive"
+                                            size="sm"
+                                            onClick={() => handleRevokeAccess(group.id)}
+                                        >
+                                            <X className="h-4 w-4" />
+                                        </Button>
                                     </div>
-                                    <p className="text-sm text-muted-foreground">{user.email}</p>
-                                    {user.full_name && (
-                                        <p className="text-sm text-muted-foreground">{user.full_name}</p>
+                                ))}
+                            </div>
+                        ) : (
+                            <p className="text-sm text-muted-foreground">No tiene grupos asignados.</p>
+                        )}
+                    </div>
+
+                    <div>
+                        <h3 className="font-medium mb-2">Grupos Disponibles</h3>
+                        {availableGroups.length > 0 ? (
+                            <div className="space-y-2">
+                                {availableGroups.map((group) => (
+                                    <div key={group.id} className="flex items-center justify-between p-3 border rounded">
+                                        <div className="flex items-center gap-2 flex-1">
+                                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: group.color || "#888" }} />
+                                            <span>{group.name}</span>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => handleGrantAccess(group.id, "user")}
+                                            >
+                                                <Plus className="h-4 w-4 mr-1" />
+                                                Usuario
+                                            </Button>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => handleGrantAccess(group.id, "group_admin")}
+                                                className="border-purple-500 text-purple-700 hover:bg-purple-50"
+                                            >
+                                                <Shield className="h-4 w-4 mr-1" />
+                                                Admin
+                                            </Button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <p className="text-sm text-muted-foreground">Todos los grupos están asignados.</p>
+                        )}
+                    </div>
+
+                    <Button variant="outline" onClick={() => setManagingPermissions(null)}>Cerrar</Button>
+                </CardContent>
+            </Card>
+        );
+    }
+
+    // Users List
+    return (
+        <Card>
+            <CardHeader>
+                <div className="flex items-center justify-between">
+                    <div>
+                        <CardTitle className="flex items-center gap-2">
+                            <Users className="h-5 w-5" />
+                            Gestión de Usuarios
+                        </CardTitle>
+                        <CardDescription>Administra usuarios y sus permisos</CardDescription>
+                    </div>
+                    <Button onClick={() => setCreatingUser(true)}>
+                        <Plus className="mr-2 h-4 w-4" />
+                        Nuevo Usuario
+                    </Button>
+                </div>
+            </CardHeader>
+            <CardContent className="max-h-[calc(100vh-300px)] overflow-y-auto">
+                <div className="space-y-2">
+                    {users.map((user) => (
+                        <div
+                            key={user.id}
+                            className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50"
+                        >
+                            <div className="flex-1">
+                                <div className="flex items-center gap-2">
+                                    <h3 className="font-medium">{user.username}</h3>
+                                    <span className={`px-2 py-1 rounded text-xs font-medium ${getRoleBadgeColor(user.role)}`}>
+                                        {user.role}
+                                    </span>
+                                    {!user.is_active && (
+                                        <span className="px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800">
+                                            Inactivo
+                                        </span>
                                     )}
                                 </div>
-                                <div className="flex gap-2">
+                                <p className="text-sm text-muted-foreground">{user.email}</p>
+                                {user.full_name && (
+                                    <p className="text-sm text-muted-foreground">{user.full_name}</p>
+                                )}
+                            </div>
+                            <div className="flex gap-2">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleManagePermissions(user)}
+                                >
+                                    <FolderOpen className="h-4 w-4 mr-1" />
+                                    Grupos
+                                </Button>
+                                {user.is_active && (
                                     <Button
                                         variant="outline"
                                         size="sm"
-                                        onClick={() => handleManageGroups(user)}
-                                        title="Gestionar grupos"
+                                        onClick={() => handleSendApprovalNotification(user)}
+                                        title="Enviar email de aprobación de cuenta"
                                     >
-                                        <FolderOpen className="h-4 w-4" />
+                                        <Mail className="h-4 w-4" />
                                     </Button>
-                                    {user.is_active && (
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => handleSendNotification(user)}
-                                            title="Enviar notificación de aprobación"
-                                        >
-                                            <Mail className="h-4 w-4" />
-                                        </Button>
-                                    )}
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => handleEditUser(user)}
-                                        title="Editar usuario"
-                                    >
-                                        <Edit2 className="h-4 w-4" />
-                                    </Button>
+                                )}
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleEditUser(user)}
+                                >
+                                    <Edit2 className="h-4 w-4" />
+                                </Button>
+                                {currentUser?.role === "superadmin" && user.id !== currentUser?.id && (
                                     <Button
                                         variant="destructive"
                                         size="sm"
                                         onClick={() => handleDeleteUser(user.id)}
-                                        title="Eliminar usuario"
                                     >
                                         <Trash2 className="h-4 w-4" />
                                     </Button>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </CardContent>
-            </Card>
-
-            {/* Edit User Modal */}
-            <Dialog open={!!editingUser} onOpenChange={(open) => !open && setEditingUser(null)}>
-                <DialogContent className="max-w-2xl">
-                    <DialogHeader>
-                        <DialogTitle>Editar Usuario: {editingUser?.username}</DialogTitle>
-                        <DialogDescription>Modifica la información del usuario</DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                        <div className="grid gap-4 md:grid-cols-2">
-                            <div>
-                                <Label>Email *</Label>
-                                <Input
-                                    type="email"
-                                    value={editForm.email}
-                                    onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
-                                />
-                            </div>
-                            <div>
-                                <Label>Usuario *</Label>
-                                <Input
-                                    value={editForm.username}
-                                    onChange={(e) => setEditForm({ ...editForm, username: e.target.value })}
-                                />
-                            </div>
-                            <div>
-                                <Label>Nombre Completo</Label>
-                                <Input
-                                    value={editForm.full_name}
-                                    onChange={(e) => setEditForm({ ...editForm, full_name: e.target.value })}
-                                />
-                            </div>
-                            <div>
-                                <Label>Rol</Label>
-                                <select
-                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                                    value={editForm.role}
-                                    onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
-                                >
-                                    <option value="user">Usuario</option>
-                                    <option value="group_admin">Admin de Grupo</option>
-                                    <option value="admin">Administrador</option>
-                                    <option value="superadmin">Superadministrador</option>
-                                </select>
-                            </div>
-                            <div className="md:col-span-2">
-                                <Label>Nueva Contraseña (opcional)</Label>
-                                <Input
-                                    type="password"
-                                    placeholder="Dejar vacío para no cambiar"
-                                    value={editForm.newPassword}
-                                    onChange={(e) => setEditForm({ ...editForm, newPassword: e.target.value })}
-                                />
-                                <p className="text-xs text-muted-foreground mt-1">
-                                    Solo completar si desea cambiar la contraseña del usuario
-                                </p>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <input
-                                    type="checkbox"
-                                    checked={editForm.is_active}
-                                    onChange={(e) => setEditForm({ ...editForm, is_active: e.target.checked })}
-                                    className="h-4 w-4"
-                                />
-                                <Label>Activo</Label>
+                                )}
                             </div>
                         </div>
-                    </div>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setEditingUser(null)}>Cancelar</Button>
-                        <Button onClick={handleSaveEdit}>Guardar Cambios</Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-
-            {/* Manage Groups Modal */}
-            <Dialog open={!!managingGroupsUser} onOpenChange={(open) => !open && setManagingGroupsUser(null)}>
-                <DialogContent className="max-w-2xl">
-                    <DialogHeader>
-                        <DialogTitle>Gestionar Grupos: {managingGroupsUser?.username}</DialogTitle>
-                        <DialogDescription>Asigna o revoca acceso a grupos de servidores</DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                        <div className="grid gap-2">
-                            {allGroups.length === 0 ? (
-                                <p className="text-sm text-muted-foreground">No hay grupos disponibles</p>
-                            ) : (
-                                allGroups.map((group) => {
-                                    const hasAccess = userGroups.some(ug => ug.id === group.id);
-                                    return (
-                                        <div key={group.id} className="flex items-center justify-between p-3 border rounded-lg">
-                                            <div className="flex items-center gap-2">
-                                                <FolderOpen className="h-4 w-4 text-muted-foreground" />
-                                                <div>
-                                                    <p className="font-medium">{group.name}</p>
-                                                    <p className="text-xs text-muted-foreground">{group.description || 'Sin descripción'}</p>
-                                                </div>
-                                            </div>
-                                            {hasAccess ? (
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    onClick={() => handleRevokeGroupAccess(group.id)}
-                                                >
-                                                    Revocar Acceso
-                                                </Button>
-                                            ) : (
-                                                <Button
-                                                    size="sm"
-                                                    onClick={() => handleGrantGroupAccess(group.id)}
-                                                >
-                                                    Otorgar Acceso
-                                                </Button>
-                                            )}
-                                        </div>
-                                    );
-                                })
-                            )}
-                        </div>
-                    </div>
-                    <DialogFooter>
-                        <Button onClick={() => setManagingGroupsUser(null)}>Cerrar</Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-        </>
+                    ))}
+                </div>
+            </CardContent>
+        </Card>
     );
 }

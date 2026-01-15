@@ -39,7 +39,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         if (location.pathname.includes('/console')) {
             setRightOpen(true);
         } else {
-            // Otherwise close it (optional, but requested "only appears when accessing Console")
+            // Otherwise close it
             setRightOpen(false);
         }
     }, [location.pathname]);
@@ -184,33 +184,28 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <VersionNotification />
             </main>
 
-            {/* Right Sidebar (AI Agent) */}
-            <aside
-                className={`hidden md:flex flex-col border-l bg-muted/10 transition-all duration-300 relative shrink-0 ${rightOpen ? 'w-96' : 'w-0'}`}
-                style={{ overflow: 'visible' }}
-            >
-                <div className={`h-full w-96 overflow-hidden transition-opacity duration-300 bg-background ${rightOpen ? 'opacity-100' : 'opacity-0'}`}>
-                    {rightOpen && <AiAssistantPanel />}
-                </div>
-
-                {/* Toggle Button Right */}
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    className="absolute -left-4 top-6 h-8 w-8 rounded-full border bg-background shadow-md z-50 hover:bg-muted"
-                    onClick={() => setRightOpen(!rightOpen)}
-                    title={rightOpen ? "Ocultar Agente" : "Mostrar Agente IA"}
+            {/* Right Sidebar (AI Agent) - Only visible on Console routes */}
+            {location.pathname.includes('/console') && (
+                <aside
+                    className={`hidden md:flex flex-col border-l bg-muted/10 transition-all duration-300 relative shrink-0 ${rightOpen ? 'w-96' : 'w-0'}`}
+                    style={{ overflow: 'visible' }}
                 >
-                    {rightOpen ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-                </Button>
-
-                {/* Fallback Icon when closed (Optional, but user said 'opcion de ocultar', implying complete hide) */}
-                {!rightOpen && (
-                    <div className="absolute top-20 -left-10 hidden">
-                        {/* Could put a floating icon here if desired */}
+                    <div className={`h-full w-96 overflow-hidden transition-opacity duration-300 bg-background ${rightOpen ? 'opacity-100' : 'opacity-0'}`}>
+                        {rightOpen && <AiAssistantPanel />}
                     </div>
-                )}
-            </aside>
+
+                    {/* Toggle Button Right */}
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute -left-4 top-6 h-8 w-8 rounded-full border bg-background shadow-md z-50 hover:bg-muted"
+                        onClick={() => setRightOpen(!rightOpen)}
+                        title={rightOpen ? "Ocultar Agente" : "Mostrar Agente IA"}
+                    >
+                        {rightOpen ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+                    </Button>
+                </aside>
+            )}
 
         </div>
     );

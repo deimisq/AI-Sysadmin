@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Loader2, Play, Send, X, Image as ImageIcon } from "lucide-react";
 import ReactMarkdown from 'react-markdown';
 import { fetch } from '@tauri-apps/plugin-http';
@@ -176,141 +176,143 @@ export function ConversationalChat({ server, onClose }: ConversationalChatProps)
     };
 
     return (
-        <Card className="w-full max-w-4xl mx-auto mt-4 border-2 border-primary h-[80vh] flex flex-col">
-            <CardHeader className="flex flex-row items-center justify-between border-b">
-                <CardTitle className="flex items-center gap-2">
-                    <span className="text-2xl">💬</span>
-                    <span>Chat IA: {server.hostname}</span>
-                </CardTitle>
-                <Button variant="ghost" size="sm" onClick={onClose}>
-                    <X className="h-4 w-4" />
-                </Button>
-            </CardHeader>
+        <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
+            <DialogContent className="max-w-4xl h-[80vh] flex flex-col p-0 gap-0">
+                <DialogHeader className="px-6 py-4 border-b">
+                    <DialogTitle className="flex items-center gap-2">
+                        <span className="text-2xl">💬</span>
+                        <span>Chat IA: {server.hostname}</span>
+                    </DialogTitle>
+                    <DialogDescription>
+                        Asistente virtual para diagnóstico y resolución de problemas.
+                    </DialogDescription>
+                </DialogHeader>
 
-            <CardContent className="flex-1 overflow-y-auto p-6 space-y-4">
-                {messages.map((message, idx) => (
-                    <div
-                        key={idx}
-                        className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
-                    >
+                <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                    {messages.map((message, idx) => (
                         <div
-                            className={`max-w-[80%] rounded-lg p-4 ${message.role === "user"
-                                ? "bg-primary text-primary-foreground"
-                                : message.role === "system"
-                                    ? "bg-muted/50 border border-muted-foreground/20"
-                                    : "bg-muted"
-                                }`}
+                            key={idx}
+                            className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
                         >
-                            <div className="prose prose-sm dark:prose-invert max-w-none">
-                                <ReactMarkdown>{message.content}</ReactMarkdown>
-                            </div>
-
-                            {message.proposedCommand && !message.executionResult && (
-                                <div className="mt-4 border border-yellow-500 bg-yellow-500/10 p-3 rounded">
-                                    <p className="text-xs font-bold text-yellow-600 mb-2">📝 Comando Propuesto</p>
-                                    <code className="block bg-black text-white p-2 rounded text-xs mb-3 overflow-x-auto">
-                                        {message.proposedCommand}
-                                    </code>
-                                    <Button
-                                        onClick={() => handleExecuteCommand(idx, message.proposedCommand!)}
-                                        disabled={loading}
-                                        size="sm"
-                                        className="w-full"
-                                    >
-                                        <Play className="mr-2 h-3 w-3" /> Ejecutar Comando
-                                    </Button>
-                                </div>
-                            )}
-
-                            {message.executionResult && (
-                                <div className={`mt-4 border p-3 rounded ${message.executionResult.exit_code === 0
-                                    ? 'border-green-500 bg-green-500/10'
-                                    : 'border-red-500 bg-red-500/10'
-                                    }`}>
-                                    <p className="text-xs font-bold mb-2">
-                                        {message.executionResult.exit_code === 0 ? '✅' : '❌'}
-                                        {' '}Resultado de Ejecución (Código: {message.executionResult.exit_code})
-                                    </p>
-                                    <pre className="text-xs bg-black text-white p-2 rounded overflow-x-auto">
-                                        {message.executionResult.stdout || message.executionResult.stderr}
-                                    </pre>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                ))}
-
-                {loading && (
-                    <div className="flex justify-start">
-                        <div className="bg-muted rounded-lg p-4 flex items-center gap-2">
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            <span className="text-sm text-muted-foreground">Analizando...</span>
-                        </div>
-                    </div>
-                )}
-            </CardContent>
-
-            <div className="border-t p-4">
-                <div className="space-y-2">
-                    {selectedImage && (
-                        <div className="relative inline-block">
-                            <img
-                                src={selectedImage}
-                                alt="Preview"
-                                className="max-w-xs max-h-32 rounded border"
-                            />
-                            <Button
-                                size="sm"
-                                variant="destructive"
-                                className="absolute top-1 right-1"
-                                onClick={removeImage}
+                            <div
+                                className={`max-w-[80%] rounded-lg p-4 ${message.role === "user"
+                                    ? "bg-primary text-primary-foreground"
+                                    : message.role === "system"
+                                        ? "bg-muted/50 border border-muted-foreground/20"
+                                        : "bg-muted"
+                                    }`}
                             >
-                                <X className="h-4 w-4" />
-                            </Button>
-                            <p className="text-xs text-muted-foreground mt-1">{imageFile?.name}</p>
+                                <div className="prose prose-sm dark:prose-invert max-w-none">
+                                    <ReactMarkdown>{message.content}</ReactMarkdown>
+                                </div>
+
+                                {message.proposedCommand && !message.executionResult && (
+                                    <div className="mt-4 border border-yellow-500 bg-yellow-500/10 p-3 rounded">
+                                        <p className="text-xs font-bold text-yellow-600 mb-2">📝 Comando Propuesto</p>
+                                        <code className="block bg-black text-white p-2 rounded text-xs mb-3 overflow-x-auto">
+                                            {message.proposedCommand}
+                                        </code>
+                                        <Button
+                                            onClick={() => handleExecuteCommand(idx, message.proposedCommand!)}
+                                            disabled={loading}
+                                            size="sm"
+                                            className="w-full"
+                                        >
+                                            <Play className="mr-2 h-3 w-3" /> Ejecutar Comando
+                                        </Button>
+                                    </div>
+                                )}
+
+                                {message.executionResult && (
+                                    <div className={`mt-4 border p-3 rounded ${message.executionResult.exit_code === 0
+                                        ? 'border-green-500 bg-green-500/10'
+                                        : 'border-red-500 bg-red-500/10'
+                                        }`}>
+                                        <p className="text-xs font-bold mb-2">
+                                            {message.executionResult.exit_code === 0 ? '✅' : '❌'}
+                                            {' '}Resultado de Ejecución (Código: {message.executionResult.exit_code})
+                                        </p>
+                                        <pre className="text-xs bg-black text-white p-2 rounded overflow-x-auto">
+                                            {message.executionResult.stdout || message.executionResult.stderr}
+                                        </pre>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    ))}
+
+                    {loading && (
+                        <div className="flex justify-start">
+                            <div className="bg-muted rounded-lg p-4 flex items-center gap-2">
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                <span className="text-sm text-muted-foreground">Analizando...</span>
+                            </div>
                         </div>
                     )}
-
-                    <textarea
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        placeholder="Describe el problema que tienes con este servidor...\n\nTip: Presiona Shift+Enter para nueva línea, Enter para enviar"
-                        onKeyDown={(e) => {
-                            if (e.key === 'Enter' && !e.shiftKey) {
-                                e.preventDefault();
-                                handleSendMessage();
-                            }
-                        }}
-                        disabled={loading}
-                        className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-y"
-                    />
-
-                    <div className="flex gap-2">
-                        <input
-                            ref={fileInputRef}
-                            type="file"
-                            accept="image/*"
-                            onChange={handleImageSelect}
-                            className="hidden"
-                        />
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => fileInputRef.current?.click()}
-                            disabled={loading}
-                        >
-                            <ImageIcon className="h-4 w-4 mr-2" />
-                            Adjuntar Imagen
-                        </Button>
-                        <Button onClick={handleSendMessage} disabled={loading || !input.trim()} className="flex-1">
-                            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                        </Button>
-                    </div>
                 </div>
-                <p className="text-xs text-muted-foreground mt-2">
-                    💡 Tip: Puedes adjuntar screenshots de errores para un mejor diagnóstico
-                </p>
-            </div>
-        </Card>
+
+                <div className="border-t p-4">
+                    <div className="space-y-2">
+                        {selectedImage && (
+                            <div className="relative inline-block">
+                                <img
+                                    src={selectedImage}
+                                    alt="Preview"
+                                    className="max-w-xs max-h-32 rounded border"
+                                />
+                                <Button
+                                    size="sm"
+                                    variant="destructive"
+                                    className="absolute top-1 right-1"
+                                    onClick={removeImage}
+                                >
+                                    <X className="h-4 w-4" />
+                                </Button>
+                                <p className="text-xs text-muted-foreground mt-1">{imageFile?.name}</p>
+                            </div>
+                        )}
+
+                        <textarea
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            placeholder="Describe el problema que tienes con este servidor...\n\nTip: Presiona Shift+Enter para nueva línea, Enter para enviar"
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' && !e.shiftKey) {
+                                    e.preventDefault();
+                                    handleSendMessage();
+                                }
+                            }}
+                            disabled={loading}
+                            className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-y"
+                        />
+
+                        <div className="flex gap-2">
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept="image/*"
+                                onChange={handleImageSelect}
+                                className="hidden"
+                            />
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => fileInputRef.current?.click()}
+                                disabled={loading}
+                            >
+                                <ImageIcon className="h-4 w-4 mr-2" />
+                                Adjuntar Imagen
+                            </Button>
+                            <Button onClick={handleSendMessage} disabled={loading || !input.trim()} className="flex-1">
+                                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                            </Button>
+                        </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                        💡 Tip: Puedes adjuntar screenshots de errores para un mejor diagnóstico
+                    </p>
+                </div>
+            </DialogContent>
+        </Dialog>
     );
 }

@@ -275,7 +275,7 @@ export function ConversationalChat({ server, onClose }: ConversationalChatProps)
                         <textarea
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
-                            placeholder="Describe el problema que tienes con este servidor...\n\nTip: Presiona Shift+Enter para nueva línea, Enter para enviar"
+                            placeholder="Describe el problema que tienes con este servidor... (Tip: Shift+Enter para nueva línea, Enter para enviar)"
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter' && !e.shiftKey) {
                                     e.preventDefault();

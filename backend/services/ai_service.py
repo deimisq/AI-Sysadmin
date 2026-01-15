@@ -4,6 +4,7 @@ from langchain_aws import ChatBedrock, BedrockEmbeddings
 from langchain_anthropic import ChatAnthropic
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
+from langchain_core.messages import SystemMessage, HumanMessage
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from settings import settings
@@ -260,17 +261,33 @@ class AIService:
         except Exception as e:
             logger.error(f"Failed to reload AI config: {e}")
 
-    def analyze_problem(self, db: Session, problem_description: str, server_info: str, language: str = "en") -> str:
+    def analyze_problem(self, db: Session, problem_description: str, server_info: str, language: str = "en") -> dict:
         """
         Analyzes a problem using RAG and proposes a solution.
         Now with improved conversational analysis and problem verification.
-        Supports multiple languages.
+        Supports multimodal input (images).
         """
         # Reload config to ensure we are using the latest settings
         self._reload_config(db)
 
+        # Check for embedded image
+        image_data = None
+        clean_description = problem_description
+        
+        # Regex to find image attachment
+        img_match = re.search(r'\[Image attached: .*?\]\nBase64: (data:image\/[a-zA-Z]+;base64,[^\s]+)', problem_description)
+        if not img_match:
+             # Try without data URI prefix if it's raw base64
+             img_match = re.search(r'\[Image attached: .*?\]\nBase64: ([^\s]+)', problem_description)
+
+        if img_match:
+            b64_string = img_match.group(1)
+            image_data = b64_string
+            # Remove the long base64 string from description to avoid token waste in text part
+            clean_description = problem_description.replace(img_match.group(0), "[Image Attached]")
+
         # 1. Retrieve relevant context
-        similar_cases = self.search_knowledge_base(db, problem_description)
+        similar_cases = self.search_knowledge_base(db, clean_description)
         
         context_str = ""
         for case in similar_cases:
@@ -352,27 +369,11 @@ CRITICAL INSTRUCTIONS:
 
 Remember: You are a helpful senior sysadmin. When asked for general status, give a COMPLETE picture. Only focus on specifics when explicitly asked.""" + language_instruction
 
-        prompt = ChatPromptTemplate.from_messages([
-            ("system", system_message),
-            ("user", """Problem Reported by User:
-{problem}
-
-Server Diagnostic Data:
-{server_info}
-
-Relevant Past Cases:
-{context}
-
-Please analyze the situation, PRIORITIZING the user's reported problem.""")
-        ])
-
-        # 3. Invoke LLM
         # 3. Invoke LLM
         try:
             if self.mock_mode:
                 # Enhanced Rule-Based "Mock" Mode for Demo purposes
-                # This allows the agent to be useful even without an external LLM API key
-                lower_prob = problem_description.lower()
+                lower_prob = clean_description.lower()
                 
                 # Default response
                 analysis_text = "Based on the diagnostic data, the system load appears stable. However, to address your specific request, we should run a targeted command."
@@ -381,7 +382,7 @@ Please analyze the situation, PRIORITIZING the user's reported problem.""")
                 
                 # Rule-based logic
                 if any(x in lower_prob for x in ["port", "puerto", "listen", "escucha", "network", "red"]):
-                    analysis_text = "To analyze network connectivity and open ports, we need to inspect the socket statistics. The diagnostic summary shows basic metrics, but `netstat` or `ss` will reveal which services are listening."
+                    analysis_text = "To analyze network connectivity and open ports, we need to inspect the socket statistics. `netstat` or `ss` will reveal which services are listening."
                     rec_text = "Check open ports and listening services."
                     cmd = "sudo netstat -tulpn || sudo ss -tulpn"
                     
@@ -420,14 +421,38 @@ Please analyze the situation, PRIORITIZING the user's reported problem.""")
                     f"**⚙️ Command:**\n"
                     f"```bash\n{cmd}\n```"
                 )
-            else:
-                chain = prompt | self.llm | StrOutputParser()
                 
-                response = chain.invoke({
-                    "server_info": server_info,
-                    "problem": problem_description,
-                    "context": context_str
-                })
+                return {
+                    "analysis": response,
+                    "proposed_command": self._extract_command(response)
+                }
+            else:
+                user_text = f"Problem Reported by User:\n{clean_description}\n\nServer Diagnostic Data:\n{server_info}\n\nRelevant Past Cases:\n{context_str}\n\nPlease analyze the situation, PRIORITIZING the user's reported problem."
+                
+                user_content = [{"type": "text", "text": user_text}]
+                
+                if image_data:
+                    # Append image part
+                    if not image_data.startswith("data:"):
+                        image_data = f"data:image/jpeg;base64,{image_data}"
+                        
+                    user_content.append({
+                        "type": "image_url", 
+                        "image_url": {"url": image_data}
+                    })
+                
+                messages = [
+                    SystemMessage(content=system_message),
+                    HumanMessage(content=user_content)
+                ]
+                
+                response_msg = self.llm.invoke(messages)
+                
+                return {
+                    "analysis": response_msg.content,
+                    "proposed_command": self._extract_command(response_msg.content)
+                }
+
         except Exception as e:
             logger.error(f"LLM Invocation Failed: {e}")
             error_msg = str(e).lower()
@@ -441,13 +466,5 @@ Please analyze the situation, PRIORITIZING the user's reported problem.""")
                 "analysis": f"❌ **Error del Sistema**: Ocurrió un error al consultar al proveedor de IA: {str(e)[:200]}...",
                 "proposed_command": None
             }
-        
-        # Extract the command from the response
-        extracted_command = self._extract_command(response)
-        
-        return {
-            "analysis": response,
-            "proposed_command": extracted_command
-        }
 
 ai_service = AIService()

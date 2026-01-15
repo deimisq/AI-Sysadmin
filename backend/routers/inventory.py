@@ -533,3 +533,84 @@ async def import_servers_from_csv(
         "message": f"Import completed. {len(results['success'])} servers added, {len(results['errors'])} errors.",
         "details": results
     }
+
+
+@router.get("/servers/{server_id}/diagnostic")
+async def get_server_diagnostic(
+    server_id: int,
+    db: Session = Depends(dependencies.get_db),
+    current_user: models.User = Depends(dependencies.get_current_user)
+):
+    """Get real-time diagnostic information from a server via SSH"""
+    import re
+    from datetime import datetime
+    
+    # Get server from database
+    server = db.query(models.Server).filter(models.Server.id == server_id).first()
+    if not server:
+        raise HTTPException(status_code=404, detail="Server not found")
+    
+    try:
+        # Connect to server via SSH
+        ssh = ssh_service.connect_server(server)
+        
+        # Get uptime
+        stdin, stdout, stderr = ssh.exec_command("uptime -p")
+        uptime_raw = stdout.read().decode().strip()
+        uptime = uptime_raw.replace("up ", "").replace(",", "")
+        
+        # Get CPU usage
+        stdin, stdout, stderr = ssh.exec_command("top -bn1 | grep 'Cpu(s)' | awk '{print $2}'")
+        cpu_raw = stdout.read().decode().strip()
+        cpu_usage = int(float(cpu_raw.replace("%us", "").replace("us,", ""))) if cpu_raw else 0
+        
+        # Get Memory usage
+        stdin, stdout, stderr = ssh.exec_command("free | grep Mem | awk '{printf \"%.0f\", ($3/$2) * 100}'")
+        memory_usage = int(stdout.read().decode().strip() or "0")
+        
+        # Get Disk usage
+        stdin, stdout, stderr = ssh.exec_command("df -h / | tail -1 | awk '{print $5}'")
+        disk_raw = stdout.read().decode().strip()
+        disk_usage = int(disk_raw.replace("%", "")) if disk_raw else 0
+        
+        # Get service statuses (common services)
+        services = []
+        common_services = [
+            ("SSH", "sshd"),
+            ("HTTP", "apache2 nginx"),
+            ("Database", "mysql mysqld postgresql mariadb")
+        ]
+        
+        for service_name, service_commands in common_services:
+            is_running = False
+            for cmd in service_commands.split():
+                stdin, stdout, stderr = ssh.exec_command(f"systemctl is-active {cmd} 2>/dev/null || echo 'inactive'")
+                status = stdout.read().decode().strip()
+                if status == "active":
+                    is_running = True
+                    break
+            
+            services.append({
+                "name": service_name,
+                "status": "running" if is_running else "stopped"
+            })
+        
+        ssh.close()
+        
+        return {
+            "status": "online",
+            "uptime": uptime,
+            "cpu_usage": cpu_usage,
+            "memory_usage": memory_usage,
+            "disk_usage": disk_usage,
+            "services": services,
+            "last_check": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        # If SSH fails, return basic status
+        return {
+            "status": "error",
+            "error": str(e),
+            "last_check": datetime.now().isoformat()
+        }

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Server, Activity, HardDrive, Cpu, MemoryStick, Clock, Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -23,6 +23,7 @@ interface DiagnosticData {
     disk_usage?: number;
     services?: Array<{ name: string; status: string }>;
     last_check?: string;
+    error?: string;
 }
 
 interface ServerDiagnosticProps {
@@ -99,6 +100,9 @@ export function ServerDiagnostic({ server, onClose }: ServerDiagnosticProps) {
                         <Activity className="h-5 w-5" />
                         Diagnóstico: {server.hostname}
                     </DialogTitle>
+                    <DialogDescription>
+                        Información en tiempo real del servidor
+                    </DialogDescription>
                 </DialogHeader>
 
                 {loading ? (
@@ -107,6 +111,19 @@ export function ServerDiagnostic({ server, onClose }: ServerDiagnosticProps) {
                     </div>
                 ) : (
                     <div className="space-y-6">
+                        {/* Error State */}
+                        {diagnostic?.status === "error" && (
+                            <div className="p-4 border border-red-500/50 rounded-lg bg-red-500/10">
+                                <h3 className="font-medium text-red-600 dark:text-red-400 mb-2">Error al conectar con el servidor</h3>
+                                <p className="text-sm text-muted-foreground">
+                                    {diagnostic.error || "No se pudo establecer conexión SSH"}
+                                </p>
+                                <p className="text-xs text-muted-foreground mt-2">
+                                    Verifica que el servidor esté encendido y que las credenciales SSH sean correctas.
+                                </p>
+                            </div>
+                        )}
+
                         {/* Server Info */}
                         <div className="grid gap-4">
                             <div className="flex items-center justify-between p-4 border rounded-lg">
@@ -118,8 +135,8 @@ export function ServerDiagnostic({ server, onClose }: ServerDiagnosticProps) {
                                     </div>
                                 </div>
                                 <div className={`px-3 py-1 rounded-full text-xs font-medium ${diagnostic?.status === 'online'
-                                        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                                        : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
+                                    ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                    : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
                                     }`}>
                                     {diagnostic?.status?.toUpperCase() || 'UNKNOWN'}
                                 </div>
@@ -207,8 +224,8 @@ export function ServerDiagnostic({ server, onClose }: ServerDiagnosticProps) {
                                                 <div key={idx} className="flex items-center justify-between">
                                                     <span className="text-sm">{service.name}</span>
                                                     <span className={`text-xs px-2 py-1 rounded ${service.status === 'running'
-                                                            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                                                            : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                                                        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                                        : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
                                                         }`}>
                                                         {service.status}
                                                     </span>

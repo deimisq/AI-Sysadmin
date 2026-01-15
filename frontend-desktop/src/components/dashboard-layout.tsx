@@ -30,8 +30,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     // Sidebar States
-    const [leftOpen, setLeftOpen] = useState(false); // Default hidden as requested
-    const [rightOpen, setRightOpen] = useState(true); // Default visible as requested
+    const [leftOpen, setLeftOpen] = useState(true); // Default visible
+    const [rightOpen, setRightOpen] = useState(false); // Default hidden
+
+    // Auto-toggle AI Panel based on route
+    useEffect(() => {
+        // If user is in a console view, open the AI panel automatically
+        if (location.pathname.includes('/console')) {
+            setRightOpen(true);
+        } else {
+            // Otherwise close it (optional, but requested "only appears when accessing Console")
+            setRightOpen(false);
+        }
+    }, [location.pathname]);
 
     useEffect(() => {
         fetchCurrentUser()

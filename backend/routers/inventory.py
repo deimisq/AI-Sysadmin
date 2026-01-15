@@ -560,7 +560,7 @@ async def get_server_diagnostic(
             hostname=server.ip_address,
             username=server.ssh_username,
             command="uptime -p",
-            private_key=server.ssh_private_key,
+            private_key=server.ssh_key_path,
             password=password,
             port=server.ssh_port or 22
         )
@@ -573,7 +573,7 @@ async def get_server_diagnostic(
             hostname=server.ip_address,
             username=server.ssh_username,
             command="top -bn1 | grep 'Cpu(s)' | awk '{print $2}' | sed 's/%us.*//' | sed 's/us.*//'",
-            private_key=server.ssh_private_key,
+            private_key=server.ssh_key_path,
             password=password,
             port=server.ssh_port or 22
         )
@@ -584,7 +584,7 @@ async def get_server_diagnostic(
             hostname=server.ip_address,
             username=server.ssh_username,
             command="free | grep Mem | awk '{printf \"%.0f\", ($3/$2) * 100}'",
-            private_key=server.ssh_private_key,
+            private_key=server.ssh_key_path,
             password=password,
             port=server.ssh_port or 22
         )
@@ -595,7 +595,7 @@ async def get_server_diagnostic(
             hostname=server.ip_address,
             username=server.ssh_username,
             command="df -h / | tail -1 | awk '{print $5}' | sed 's/%//'",
-            private_key=server.ssh_private_key,
+            private_key=server.ssh_key_path,
             password=password,
             port=server.ssh_port or 22
         )
@@ -619,7 +619,7 @@ async def get_server_diagnostic(
                     hostname=server.ip_address,
                     username=server.ssh_username,
                     command=f"systemctl is-active {cmd} 2>/dev/null || echo 'inactive'",
-                    private_key=server.ssh_private_key,
+                    private_key=server.ssh_key_path,
                     password=password,
                     port=server.ssh_port or 22
                 )

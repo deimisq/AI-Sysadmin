@@ -10,6 +10,9 @@ use anyhow::{Result, Context};
 use uuid::Uuid;
 use serde::{Serialize, Deserialize};
 
+mod pty_session;
+use pty_session::PTYSession;
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SSHCredentials {
     pub host: String,
@@ -30,12 +33,14 @@ pub struct SSHSessionInfo {
 
 pub struct SSHManager {
     sessions: Arc<Mutex<HashMap<String, Session>>>,
+    pty_sessions: Arc<Mutex<HashMap<String, PTYSession>>>,
 }
 
 impl SSHManager {
     pub fn new() -> Self {
         Self {
             sessions: Arc::new(Mutex::new(HashMap::new())),
+            pty_sessions: Arc::new(Mutex::new(HashMap::new())),
         }
     }
 
@@ -120,6 +125,59 @@ impl SSHManager {
                 is_active: true,
             }
         }).collect()
+    }
+
+    /// Create a PTY (interactive terminal) session
+    pub fn create_pty(&self, session_id: &str, rows: u32, cols: u32) -> Result<String> {
+        let sessions = self.sessions.lock().unwrap();
+        let session = sessions.get(session_id)
+            .context("Session not found")?;
+
+        let pty_id = format!("{}-pty", session_id);
+        let pty_session = PTYSession::new(session, pty_id.clone(), rows, cols)?;
+
+        let mut pty_sessions = self.pty_sessions.lock().unwrap();
+        pty_sessions.insert(pty_id.clone(), pty_session);
+
+        Ok(pty_id)
+    }
+
+    /// Read output from PTY session
+    pub fn pty_read(&self, pty_id: &str) -> Result<Vec<u8>> {
+        let pty_sessions = self.pty_sessions.lock().unwrap();
+        let pty = pty_sessions.get(pty_id)
+            .context("PTY session not found")?;
+        
+        pty.read_output()
+    }
+
+    /// Write input to PTY session
+    pub fn pty_write(&self, pty_id: &str, data: &[u8]) -> Result<()> {
+        let pty_sessions = self.pty_sessions.lock().unwrap();
+        let pty = pty_sessions.get(pty_id)
+            .context("PTY session not found")?;
+        
+        pty.write_input(data)
+    }
+
+    /// Resize PTY terminal
+    pub fn pty_resize(&self, pty_id: &str, rows: u32, cols: u32) -> Result<()> {
+        let pty_sessions = self.pty_sessions.lock().unwrap();
+        let pty = pty_sessions.get(pty_id)
+            .context("PTY session not found")?;
+        
+        pty.resize(rows, cols)
+    }
+
+    /// Close PTY session
+    pub fn pty_close(&self, pty_id: &str) -> Result<()> {
+        let mut pty_sessions = self.pty_sessions.lock().unwrap();
+        
+        if let Some(pty) = pty_sessions.remove(pty_id) {
+            pty.close()?;
+        }
+
+        Ok(())
     }
 }
 

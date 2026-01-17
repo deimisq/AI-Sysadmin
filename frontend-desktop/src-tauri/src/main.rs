@@ -86,6 +86,71 @@ async fn test_ssh_manual() -> Result<String, String> {
         .map(|_| "SSH test completed successfully! Check console for details.".to_string())
 }
 
+/// Create PTY session for interactive terminal
+#[tauri::command]
+async fn pty_create(
+    state: State<'_, AppState>,
+    session_id: String,
+    rows: u32,
+    cols: u32,
+) -> Result<String, String> {
+    let manager = state.ssh_manager.lock().unwrap();
+    
+    manager.create_pty(&session_id, rows, cols)
+        .map_err(|e| format!("PTY creation failed: {}", e))
+}
+
+/// Read output from PTY
+#[tauri::command]
+async fn pty_read(
+    state: State<'_, AppState>,
+    pty_id: String,
+) -> Result<Vec<u8>, String> {
+    let manager = state.ssh_manager.lock().unwrap();
+    
+    manager.pty_read(&pty_id)
+        .map_err(|e| format!("PTY read failed: {}", e))
+}
+
+/// Write input to PTY
+#[tauri::command]
+async fn pty_write(
+    state: State<'_, AppState>,
+    pty_id: String,
+    data: Vec<u8>,
+) -> Result<(), String> {
+    let manager = state.ssh_manager.lock().unwrap();
+    
+    manager.pty_write(&pty_id, &data)
+        .map_err(|e| format!("PTY write failed: {}", e))
+}
+
+/// Resize PTY terminal
+#[tauri::command]
+async fn pty_resize(
+    state: State<'_, AppState>,
+    pty_id: String,
+    rows: u32,
+    cols: u32,
+) -> Result<(), String> {
+    let manager = state.ssh_manager.lock().unwrap();
+    
+    manager.pty_resize(&pty_id, rows, cols)
+        .map_err(|e| format!("PTY resize failed: {}", e))
+}
+
+/// Close PTY session
+#[tauri::command]
+async fn pty_close(
+    state: State<'_, AppState>,
+    pty_id: String,
+) -> Result<(), String> {
+    let manager = state.ssh_manager.lock().unwrap();
+    
+    manager.pty_close(&pty_id)
+        .map_err(|e| format!("PTY close failed: {}", e))
+}
+
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_http::init())
@@ -99,6 +164,11 @@ fn main() {
             ssh_execute,
             ssh_disconnect,
             ssh_list_sessions,
+            pty_create,
+            pty_read,
+            pty_write,
+            pty_resize,
+            pty_close,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

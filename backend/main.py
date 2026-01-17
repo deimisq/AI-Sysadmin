@@ -10,13 +10,31 @@ import asyncio
 from datetime import datetime
 
 
-from database import engine
+from database import engine, SessionLocal
 import models
+from services.audit_service import AuditService
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Ensure tables exist
     models.Base.metadata.create_all(bind=engine)
+    
+    # Audit Startup Event
+    try:
+        db = SessionLocal()
+        # Log system startup to verify audit system is working
+        AuditService.log_action(
+            db=db,
+            user_id=None, 
+            action="system_startup",
+            resource_type="system",
+            details={"event": "backend_started"},
+            ip_address="internal"
+        )
+        db.close()
+        print("✅ System startup audit log created.")
+    except Exception as e:
+        print(f"⚠️ Failed to create startup audit log: {e}")
     
     # Startup: start background version check
     version_check_task = asyncio.create_task(start_version_check_loop())

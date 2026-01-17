@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
+import { InteractiveTerminal } from '../terminal/InteractiveTerminal';
 
 interface SSHTestProps { }
 
@@ -8,6 +9,7 @@ export function SSHTest({ }: SSHTestProps) {
     const [output, setOutput] = useState<string>('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [mode, setMode] = useState<'command' | 'interactive'>('command');
 
     // Test connection credentials
     const [host, setHost] = useState('testing.sentrait.com.uy');
@@ -36,6 +38,9 @@ export function SSHTest({ }: SSHTestProps) {
             console.log('SSH connection successful! Session:', newSessionId);
             setSessionId(newSessionId);
             setOutput(`✅ Connected! Session ID: ${newSessionId}\n`);
+
+            // Switch to interactive mode automatically if preferred
+            setMode('interactive');
         } catch (err) {
             console.error('SSH connection error:', err);
             setError(`Connection failed: ${err}`);
@@ -80,6 +85,7 @@ export function SSHTest({ }: SSHTestProps) {
             await invoke('ssh_disconnect', { sessionId });
             setOutput((prev) => `${prev}Disconnected.\n`);
             setSessionId(null);
+            setMode('command');
         } catch (err) {
             setError(`Disconnect failed: ${err}`);
         } finally {
@@ -97,17 +103,34 @@ export function SSHTest({ }: SSHTestProps) {
     };
 
     return (
-        <div className="p-6 max-w-4xl mx-auto">
-            <h1 className="text-3xl font-bold mb-6">🚀 Phase 1 PoC: Rust SSH Client</h1>
+        <div className="p-6 max-w-6xl mx-auto">
+            <h1 className="text-3xl font-bold mb-6">🚀 Phase 1.2: Interactive Terminal</h1>
 
             {/* Test Rust backend */}
-            <div className="mb-6 p-4 bg-blue-50 rounded-lg">
+            <div className="mb-6 p-4 bg-blue-50 rounded-lg flex justify-between items-center">
                 <button
                     onClick={testGreet}
                     className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
                 >
                     Test Rust Backend
                 </button>
+
+                {sessionId && (
+                    <div className="flex bg-gray-200 rounded p-1">
+                        <button
+                            onClick={() => setMode('command')}
+                            className={`px-4 py-2 rounded ${mode === 'command' ? 'bg-white shadow text-blue-600' : 'text-gray-600'}`}
+                        >
+                            Command Mode
+                        </button>
+                        <button
+                            onClick={() => setMode('interactive')}
+                            className={`px-4 py-2 rounded ${mode === 'interactive' ? 'bg-white shadow text-blue-600' : 'text-gray-600'}`}
+                        >
+                            Interactive Mode
+                        </button>
+                    </div>
+                )}
             </div>
 
             {/* Connection Form */}
@@ -207,76 +230,94 @@ export function SSHTest({ }: SSHTestProps) {
                 )}
             </div>
 
-            {/* Quick Commands */}
-            <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-                <h2 className="text-xl font-semibold mb-4">Quick Commands</h2>
-
-                <div className="flex flex-wrap gap-2">
-                    <button
-                        onClick={() => handleExecute('whoami')}
-                        disabled={!sessionId || loading}
-                        className="px-3 py-1 bg-purple-500 text-white rounded text-sm hover:bg-purple-600 disabled:opacity-50"
-                    >
-                        whoami
-                    </button>
-                    <button
-                        onClick={() => handleExecute('pwd')}
-                        disabled={!sessionId || loading}
-                        className="px-3 py-1 bg-purple-500 text-white rounded text-sm hover:bg-purple-600 disabled:opacity-50"
-                    >
-                        pwd
-                    </button>
-                    <button
-                        onClick={() => handleExecute('ls -la')}
-                        disabled={!sessionId || loading}
-                        className="px-3 py-1 bg-purple-500 text-white rounded text-sm hover:bg-purple-600 disabled:opacity-50"
-                    >
-                        ls -la
-                    </button>
-                    <button
-                        onClick={() => handleExecute('df -h')}
-                        disabled={!sessionId || loading}
-                        className="px-3 py-1 bg-purple-500 text-white rounded text-sm hover:bg-purple-600 disabled:opacity-50"
-                    >
-                        df -h
-                    </button>
-                    <button
-                        onClick={() => handleExecute('free -m')}
-                        disabled={!sessionId || loading}
-                        className="px-3 py-1 bg-purple-500 text-white rounded text-sm hover:bg-purple-600 disabled:opacity-50"
-                    >
-                        free -m
-                    </button>
-                </div>
-            </div>
-
-            {/* Output Terminal */}
-            <div className="p-4 bg-black text-green-400 rounded-lg font-mono text-sm">
-                <h2 className="text-xl font-semibold mb-2 text-white">Terminal Output</h2>
-
-                <pre className="whitespace-pre-wrap min-h-[300px]">
-                    {output || 'Waiting for commands...'}
-                </pre>
-            </div>
-
-            {/* Error Display */}
+            {/* ERROR DISPLAY */}
             {error && (
-                <div className="mt-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+                <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
                     ❌ {error}
                 </div>
             )}
 
+            {/* INTERACTIVE MODE */}
+            {sessionId && mode === 'interactive' && (
+                <div className="mb-6 h-[600px] border-2 border-gray-300 rounded overflow-hidden">
+                    <InteractiveTerminal sessionId={sessionId} />
+                </div>
+            )}
+
+            {/* COMMAND MODE */}
+            {mode === 'command' && (
+                <>
+                    {/* Quick Commands */}
+                    <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                        <h2 className="text-xl font-semibold mb-4">Quick Commands</h2>
+
+                        <div className="flex flex-wrap gap-2">
+                            <button
+                                onClick={() => handleExecute('whoami')}
+                                disabled={!sessionId || loading}
+                                className="px-3 py-1 bg-purple-500 text-white rounded text-sm hover:bg-purple-600 disabled:opacity-50"
+                            >
+                                whoami
+                            </button>
+                            <button
+                                onClick={() => handleExecute('pwd')}
+                                disabled={!sessionId || loading}
+                                className="px-3 py-1 bg-purple-500 text-white rounded text-sm hover:bg-purple-600 disabled:opacity-50"
+                            >
+                                pwd
+                            </button>
+                            <button
+                                onClick={() => handleExecute('ls -la')}
+                                disabled={!sessionId || loading}
+                                className="px-3 py-1 bg-purple-500 text-white rounded text-sm hover:bg-purple-600 disabled:opacity-50"
+                            >
+                                ls -la
+                            </button>
+                            <button
+                                onClick={() => handleExecute('df -h')}
+                                disabled={!sessionId || loading}
+                                className="px-3 py-1 bg-purple-500 text-white rounded text-sm hover:bg-purple-600 disabled:opacity-50"
+                            >
+                                df -h
+                            </button>
+                            <button
+                                onClick={() => handleExecute('free -m')}
+                                disabled={!sessionId || loading}
+                                className="px-3 py-1 bg-purple-500 text-white rounded text-sm hover:bg-purple-600 disabled:opacity-50"
+                            >
+                                free -m
+                            </button>
+                            <button
+                                onClick={() => handleExecute('htop')}
+                                disabled={!sessionId || loading}
+                                className="px-3 py-1 bg-gray-500 text-white rounded text-sm hover:bg-gray-600 disabled:opacity-50"
+                            >
+                                htop (will fail in command mode)
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Output Terminal */}
+                    <div className="p-4 bg-black text-green-400 rounded-lg font-mono text-sm">
+                        <h2 className="text-xl font-semibold mb-2 text-white">Command Output</h2>
+
+                        <pre className="whitespace-pre-wrap min-h-[300px] font-mono">
+                            {output || 'Waiting for commands...'}
+                        </pre>
+                    </div>
+                </>
+            )}
+
             {/* Status Footer */}
             <div className="mt-6 p-4 bg-gray-100 rounded text-sm">
-                <h3 className="font-semibold mb-2">PoC Status:</h3>
+                <h3 className="font-semibold mb-2">Phase 1.2 Status:</h3>
                 <ul className="list-disc list-inside space-y-1">
-                    <li className="text-green-600">✅ Rust backend initialized (ssh2 crate)</li>
-                    <li className="text-green-600">✅ Tauri commands exposed to React</li>
-                    <li className={sessionId ? "text-green-600" : "text-gray-400"}>
-                        {sessionId ? "✅" : "⏳"} SSH connection {sessionId ? "active" : "pending"}
+                    <li className="text-green-600">✅ Rust backend initialized</li>
+                    <li className="text-green-600">✅ Single-shot commands working</li>
+                    <li className={mode === 'interactive' ? "text-green-600 font-bold" : "text-gray-500"}>
+                        {mode === 'interactive' ? "🚀 Interactive Terminal Active (xterm.js + PTY)" : "⏸️ Command Mode Active"}
                     </li>
-                    <li className="text-yellow-600">⏳ Multi-tab terminal (Phase 1.2)</li>
-                    <li className="text-yellow-600">⏳ Credential vault (Phase 1.3)</li>
+                    <li className="text-yellow-600">⏳ Multi-tab management (Next Step)</li>
                 </ul>
             </div>
         </div>

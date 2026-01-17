@@ -2,6 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod ssh_manager;
+mod ssh_test;
 
 use ssh_manager::{SSHManager, SSHCredentials, SSHSessionInfo};
 use std::sync::Mutex;
@@ -76,6 +77,15 @@ async fn greet(name: String) -> String {
     format!("Hello from Rust, {}! SSH module ready.", name)
 }
 
+/// Manual SSH test (runs against localhost:2222)
+#[tauri::command]
+async fn test_ssh_manual() -> Result<String, String> {
+    use ssh_test::manual_test_ssh;
+    
+    manual_test_ssh()
+        .map(|_| "SSH test completed successfully! Check console for details.".to_string())
+}
+
 fn main() {
     tauri::Builder::default()
         .manage(AppState {
@@ -83,6 +93,7 @@ fn main() {
         })
         .invoke_handler(tauri::generate_handler![
             greet,
+            test_ssh_manual,
             ssh_connect,
             ssh_execute,
             ssh_disconnect,

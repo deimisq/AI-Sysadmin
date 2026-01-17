@@ -3,6 +3,7 @@
 
 use ssh2::Session;
 use std::collections::HashMap;
+use std::io::Read;
 use std::net::TcpStream;
 use std::sync::{Arc, Mutex};
 use anyhow::{Result, Context};

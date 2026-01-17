@@ -10,6 +10,7 @@ from dependencies import get_db, get_current_active_user, get_current_superuser
 from models import RoleType
 from utils.permissions import has_permission, can_access_group, get_user_accessible_groups
 from utils.auth import get_password_hash
+from services.audit_service import audit_service
 import io
 import csv
 
@@ -66,6 +67,18 @@ def create_user(
     db.commit()
     db.refresh(new_user)
     
+    db.refresh(new_user)
+    
+    # Audit Log
+    audit_service.log_action(
+        db=db,
+        user_id=current_user.id,
+        action="create_user",
+        resource_type="user",
+        resource_id=new_user.id,
+        details={"username": new_user.username, "email": new_user.email, "role": new_user.role}
+    )
+
     return new_user
 
 @router.get("/users/{user_id}", response_model=schemas.User)
@@ -135,6 +148,17 @@ def update_user(
             import logging
             logging.error(f"Failed to send approval notification: {e}")
     
+    # Audit Log
+    safe_update = {k: v for k, v in update_data.items() if k not in ['password', 'hashed_password']}
+    audit_service.log_action(
+        db=db,
+        user_id=current_user.id,
+        action="update_user",
+        resource_type="user",
+        resource_id=user.id,
+        details=safe_update
+    )
+
     return user
 
 @router.delete("/users/{user_id}")
@@ -153,6 +177,17 @@ def delete_user(
     
     db.delete(user)
     db.commit()
+    
+    # Audit Log
+    audit_service.log_action(
+        db=db,
+        user_id=current_user.id,
+        action="delete_user",
+        resource_type="user",
+        resource_id=user_id,
+        details={"username": user.username}
+    )
+
     return {"message": "User deleted successfully"}
 
 @router.post("/users/{user_id}/send-approval-notification")
@@ -239,6 +274,16 @@ def grant_group_access(
     db.add(permission)
     db.commit()
     
+    # Audit Log
+    audit_service.log_action(
+        db=db,
+        user_id=current_user.id,
+        action="grant_permission",
+        resource_type="group_permission",
+        resource_id=group_id,
+        details={"target_user_id": user_id, "role": role}
+    )
+
     return {"message": f"Access granted with role {role} successfully"}
 
 @router.delete("/users/{user_id}/groups/{group_id}/revoke")
@@ -264,6 +309,16 @@ def revoke_group_access(
     db.delete(permission)
     db.commit()
     
+    # Audit Log
+    audit_service.log_action(
+        db=db,
+        user_id=current_user.id,
+        action="revoke_permission",
+        resource_type="group_permission",
+        resource_id=group_id,
+        details={"target_user_id": user_id}
+    )
+
     return {"message": "Access revoked successfully"}
 
 @router.get("/users/{user_id}/groups")

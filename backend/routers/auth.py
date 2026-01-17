@@ -6,7 +6,9 @@ import models
 import schemas
 from dependencies import get_db, get_current_active_user
 from utils.auth import verify_password, get_password_hash, create_access_token
+from services.audit_service import audit_service
 from settings import settings
+from fastapi import Request
 
 router = APIRouter()
 
@@ -50,6 +52,16 @@ def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(db_user)
     
+    # Audit Log
+    audit_service.log_action(
+        db=db,
+        user_id=db_user.id,
+        action="register",
+        resource_type="user",
+        resource_id=db_user.id,
+        details={"email": user.email, "username": user.username}
+    )
+
     # Notify superadmins if user needs approval
     if not is_active:
         # Create in-app notifications
@@ -77,6 +89,7 @@ def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
 
 @router.post("/login", response_model=schemas.Token)
 def login(
+    request: Request,
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db)
 ):
@@ -93,6 +106,15 @@ def login(
     
     if not user.is_active:
         raise HTTPException(status_code=400, detail="Inactive user")
+    
+    # Audit Log
+    audit_service.log_action(
+        db=db,
+        user_id=user.id,
+        action="login",
+        resource_type="auth",
+        ip_address=request.client.host if request.client else None
+    )
     
     # Create access token
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)

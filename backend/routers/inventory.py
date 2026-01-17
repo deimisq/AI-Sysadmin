@@ -8,6 +8,7 @@ from services.ssh_service import ssh_service
 from services.ai_service import ai_service
 from services.diagnostic_service import diagnostic_service
 from services.ansible_service import ansible_service
+from services.audit_service import audit_service
 from utils.encryption import encrypt_data, decrypt_data
 import csv
 import io
@@ -157,6 +158,17 @@ def create_server(
     db.add(db_server)
     db.commit()
     db.refresh(db_server)
+    
+    # Audit Log
+    audit_service.log_action(
+        db=db,
+        user_id=current_user.id,
+        action="create_server",
+        resource_type="server",
+        resource_id=db_server.id,
+        details={"hostname": db_server.hostname, "ip": db_server.ip_address}
+    )
+
     return db_server
 
 
@@ -299,8 +311,20 @@ def delete_server(
             detail="You can only delete servers you created or be an admin"
         )
     
+    server_info = {"hostname": server.hostname, "ip": server.ip_address}
     db.delete(server)
     db.commit()
+    
+    # Audit Log
+    audit_service.log_action(
+        db=db,
+        user_id=current_user.id,
+        action="delete_server",
+        resource_type="server",
+        resource_id=server_id,
+        details=server_info
+    )
+
     return {"message": "Server deleted successfully"}
 
 @router.put("/servers/{server_id}", response_model=schemas.Server)
@@ -341,6 +365,18 @@ def update_server(
         
     db.commit()
     db.refresh(db_server)
+    
+    # Audit Log
+    safe_details = {k: v for k, v in update_data.items() if k not in ['ssh_password', 'ssh_key_path']}
+    audit_service.log_action(
+        db=db,
+        user_id=current_user.id,
+        action="update_server",
+        resource_type="server",
+        resource_id=db_server.id,
+        details=safe_details
+    )
+
     return db_server
 
 @router.post("/execute/", response_model=schemas.CommandResponse)
@@ -763,9 +799,19 @@ async def execute_server_command_chat(
             command=request.command,
             private_key=ssh_key,
             password=ssh_password,
-            port=server.ssh_port or 22
+            port=server.ssh_port
         )
         
+        # Audit Log
+        audit_service.log_action(
+            db=db,
+            user_id=current_user.id,
+            action="execute_command",
+            resource_type="server",
+            resource_id=server.id,
+            details={"command": request.command, "exit_code": exit_code}
+        )
+
         return {
             "stdout": stdout,
             "stderr": stderr,

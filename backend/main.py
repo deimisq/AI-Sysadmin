@@ -10,8 +10,13 @@ import asyncio
 from datetime import datetime
 
 
+from database import engine
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Ensure tables exist
+    models.Base.metadata.create_all(bind=engine)
+    
     # Startup: start background version check
     version_check_task = asyncio.create_task(start_version_check_loop())
     

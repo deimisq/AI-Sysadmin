@@ -329,16 +329,50 @@ export default function Dashboard() {
                 </div>
                 <div className="font-mono text-sm text-primary">{server.ip_address}</div>
                 <div className="text-sm text-muted-foreground truncate">{server.description || '-'}</div>
-                <div className="flex gap-2 justify-end">
-                    <Button size="sm" onClick={() => openConsole(server.id)}>
+                <div className="flex gap-2 justify-end items-center">
+                    <Button size="sm" className="h-8 text-xs" onClick={() => openConsole(server.id)} type="button">
                         <Terminal className="mr-1 h-3 w-3" />
                         Consola
                     </Button>
-                    <Button variant="outline" size="sm" onClick={() => openEditDialog(server)}>
-                        <Pencil className="h-3 w-3" />
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8 shrink-0"
+                        title="Chat IA"
+                        onClick={() => setChatServer(server)}
+                        type="button"
+                    >
+                        <MessageSquare className="h-3.5 w-3.5" />
                     </Button>
-                    <Button variant="outline" size="sm" onClick={() => setDeletingServer(server)}>
-                        <Trash2 className="h-3 w-3" />
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8 shrink-0"
+                        title="Diagnóstico"
+                        onClick={() => setDiagnosticServer(server)}
+                        type="button"
+                    >
+                        <Zap className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8 shrink-0"
+                        title="Editar"
+                        onClick={() => openEditDialog(server)}
+                        type="button"
+                    >
+                        <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8 shrink-0 hover:bg-destructive/10 hover:text-destructive"
+                        title="Eliminar"
+                        onClick={() => setDeletingServer(server)}
+                        type="button"
+                    >
+                        <Trash2 className="h-3.5 w-3.5" />
                     </Button>
                 </div>
             </div>

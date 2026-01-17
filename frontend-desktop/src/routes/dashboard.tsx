@@ -423,6 +423,14 @@ export default function Dashboard() {
                         </div>
                         <div className="flex gap-3">
                             <Button
+                                variant="secondary"
+                                className="gap-2"
+                                onClick={() => navigate('/ssh-test')}
+                                type="button"
+                            >
+                                🧪 Test SSH (Phase 1)
+                            </Button>
+                            <Button
                                 variant="outline"
                                 className="gap-2"
                                 onClick={() => setManageGroupsOpen(true)}

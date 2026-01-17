@@ -50,6 +50,14 @@
 - [x] Windows testing guide complete
 - [x] **VALIDATED: Instructions accurate**
 
+### Phase 1.2: Interactive Terminal (In Progress)
+
+- [x] Backend: PTY System & Tauri Commands
+- [x] Frontend: InteractiveTerminal.tsx & xterm.js
+- [x] Frontend: Interactive Mode toggle
+- [x] Fix: Backend compilation & module structure
+- [ ] **Validation: User to confirm htop/vim**
+
 ---
 
 ## 🔄 In Progress

@@ -88,6 +88,7 @@ async fn test_ssh_manual() -> Result<String, String> {
 
 fn main() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_http::init())
         .manage(AppState {
             ssh_manager: Mutex::new(SSHManager::new()),
         })

@@ -11,6 +11,7 @@ from datetime import datetime
 
 
 from database import engine
+import models
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

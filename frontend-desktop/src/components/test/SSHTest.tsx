@@ -10,28 +10,36 @@ export function SSHTest({ }: SSHTestProps) {
     const [error, setError] = useState<string | null>(null);
 
     // Test connection credentials
-    const [host, setHost] = useState('localhost');
+    const [host, setHost] = useState('testing.sentrait.com.uy');
     const [port, setPort] = useState(22);
     const [username, setUsername] = useState('ubuntu');
     const [password, setPassword] = useState('');
+    const [privateKeyPath, setPrivateKeyPath] = useState('');
+    const [authMethod, setAuthMethod] = useState<'password' | 'key'>('key');
 
     const handleConnect = async () => {
         setLoading(true);
         setError(null);
+        setOutput('Connecting...\n');
 
         try {
+            console.log('Attempting SSH connection to:', { host, port, username, authMethod });
+
             const newSessionId = await invoke<string>('ssh_connect', {
                 host,
                 port,
                 username,
-                password: password || null,
-                privateKeyPath: null,
+                password: authMethod === 'password' && password ? password : null,
+                privateKeyPath: authMethod === 'key' && privateKeyPath ? privateKeyPath : null,
             });
 
+            console.log('SSH connection successful! Session:', newSessionId);
             setSessionId(newSessionId);
             setOutput(`✅ Connected! Session ID: ${newSessionId}\n`);
         } catch (err) {
+            console.error('SSH connection error:', err);
             setError(`Connection failed: ${err}`);
+            setOutput((prev) => `${prev}❌ Error: ${err}\n`);
         } finally {
             setLoading(false);
         }
@@ -47,13 +55,16 @@ export function SSHTest({ }: SSHTestProps) {
         setError(null);
 
         try {
+            console.log('Executing command:', command);
             const result = await invoke<string>('ssh_execute', {
                 sessionId,
                 command,
             });
 
+            console.log('Command result:', result);
             setOutput((prev) => `${prev}$ ${command}\n${result}\n`);
         } catch (err) {
+            console.error('Command execution error:', err);
             setError(`Execution failed: ${err}`);
         } finally {
             setLoading(false);
@@ -103,6 +114,32 @@ export function SSHTest({ }: SSHTestProps) {
             <div className="mb-6 p-4 bg-gray-50 rounded-lg">
                 <h2 className="text-xl font-semibold mb-4">SSH Connection</h2>
 
+                <div className="mb-4">
+                    <label className="block text-sm font-medium mb-2">Authentication Method</label>
+                    <div className="flex gap-4">
+                        <label className="flex items-center">
+                            <input
+                                type="radio"
+                                name="auth"
+                                checked={authMethod === 'password'}
+                                onChange={() => setAuthMethod('password')}
+                                className="mr-2"
+                            />
+                            Password
+                        </label>
+                        <label className="flex items-center">
+                            <input
+                                type="radio"
+                                name="auth"
+                                checked={authMethod === 'key'}
+                                onChange={() => setAuthMethod('key')}
+                                className="mr-2"
+                            />
+                            SSH Key
+                        </label>
+                    </div>
+                </div>
+
                 <div className="grid grid-cols-2 gap-4 mb-4">
                     <input
                         type="text"
@@ -123,15 +160,26 @@ export function SSHTest({ }: SSHTestProps) {
                         placeholder="Username"
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
-                        className="px-3 py-2 border rounded"
+                        className="px-3 py-2 border rounded col-span-2"
                     />
-                    <input
-                        type="password"
-                        placeholder="Password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="px-3 py-2 border rounded"
-                    />
+
+                    {authMethod === 'password' ? (
+                        <input
+                            type="password"
+                            placeholder="Password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            className="px-3 py-2 border rounded col-span-2"
+                        />
+                    ) : (
+                        <input
+                            type="text"
+                            placeholder="SSH Key Path (e.g., C:\Users\YourName\.ssh\id_rsa)"
+                            value={privateKeyPath}
+                            onChange={(e) => setPrivateKeyPath(e.target.value)}
+                            className="px-3 py-2 border rounded col-span-2"
+                        />
+                    )}
                 </div>
 
                 <div className="flex gap-2">

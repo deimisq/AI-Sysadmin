@@ -3,6 +3,7 @@
 
 mod ssh_manager;
 mod ssh_test;
+mod pty_session;
 
 use ssh_manager::{SSHManager, SSHCredentials, SSHSessionInfo};
 use std::sync::Mutex;

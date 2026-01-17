@@ -10,8 +10,8 @@ use anyhow::{Result, Context};
 use uuid::Uuid;
 use serde::{Serialize, Deserialize};
 
-mod pty_session;
-use pty_session::PTYSession;
+// mod pty_session; // Declared in main.rs
+use crate::pty_session::PTYSession;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SSHCredentials {
@@ -105,7 +105,7 @@ impl SSHManager {
     pub fn disconnect(&self, session_id: &str) -> Result<()> {
         let mut sessions = self.sessions.lock().unwrap();
         
-        if let Some(mut session) = sessions.remove(session_id) {
+        if let Some(session) = sessions.remove(session_id) {
             let _ = session.disconnect(None, "Client disconnected", None);
         }
 

@@ -7,12 +7,15 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 
 
+import { type Server } from '../lib/api';
+
 interface TerminalComponentProps {
     onCommand?: (command: string) => Promise<string>;
     externalCommand?: string;
     hostname?: string;
     websocketUrl?: string;
     externalOutput?: string;
+    serverData?: Server | null;
 }
 
 export default function TerminalComponent(props: TerminalComponentProps) {
@@ -32,19 +35,34 @@ export default function TerminalComponent(props: TerminalComponentProps) {
     const [connecting, setConnecting] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    // Check environment
+    // Initial check
     useEffect(() => {
         // Robust check for Tauri environment
         const isTauri =
             (typeof window !== 'undefined' && '__TAURI__' in window) ||
             (typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window);
 
-        console.log("[Terminal] Environment detection:", { isTauri, windowKeys: Object.keys(window).filter(k => k.includes('TAURI')) });
+        console.log("[Terminal] Environment detection:", { isTauri });
 
         if (isTauri) {
             setIsDesktop(true);
         }
     }, []);
+
+    // Pre-fill form from server data
+    useEffect(() => {
+        if (props.serverData) {
+            console.log("Pre-filling connection form with:", props.serverData);
+            setForm(prev => ({
+                ...prev,
+                host: props.serverData?.ip_address || props.hostname || '',
+                username: props.serverData?.ssh_username || 'ubuntu',
+                // Note: ssh_key_path from DB is server-side, not client-side, so we don't autofill it
+                // unless we want to assume a convention.
+            }));
+        }
+    }, [props.serverData, props.hostname]);
+
 
     const handleChange = (field: string, value: any) => {
         setForm(prev => ({ ...prev, [field]: value }));
@@ -130,6 +148,11 @@ export default function TerminalComponent(props: TerminalComponentProps) {
                     <p className="text-sm text-gray-400">
                         Estás en la App de Escritorio. Conecta directamente a tu servidor local.
                     </p>
+                    {props.serverData && (
+                        <p className="text-xs text-yellow-500 bg-yellow-900/10 p-1 rounded border border-yellow-900/30">
+                            ℹ️ Datos pre-cargados. Por seguridad, la contraseña no se sincroniza.
+                        </p>
+                    )}
                 </div>
 
                 {error && (

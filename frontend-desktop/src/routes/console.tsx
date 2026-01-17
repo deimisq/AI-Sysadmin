@@ -64,6 +64,7 @@ export default function ServerConsole() {
                 <div className="flex-1 overflow-hidden bg-[#1e1e1e] relative">
                     <div className="absolute inset-0 p-2">
                         <TerminalComponent
+                            serverData={server}
                             hostname={server.hostname}
                             onCommand={handleCommand}
                             websocketUrl={wsUrl}

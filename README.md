@@ -3,43 +3,41 @@
 **Intelligent Server Management & Automation Platform**
 
 [![License](https://img.shields.io/badge/license-Proprietary-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-0.9.4--beta-orange.svg)](VERSION.json)
-[![Docker](https://img.shields.io/badge/docker-ready-blue.svg)](docker-compose.prod.yml)
-[![Status](https://img.shields.io/badge/status-beta-yellow.svg)](ROADMAP.md)
+[![Version](https://img.shields.io/badge/version-1.0.0--RC-green.svg)](VERSION.json)
+[![Docker](https://img.shields.io/badge/docker-ready-blue.svg)](docker-compose.yml)
+[![Status](https://img.shields.io/badge/status-stable-green.svg)](ROADMAP.md)
 
-> ⚠️ **VERSIÓN BETA** - Esta es una versión en desarrollo activo. La API puede cambiar antes de la versión 1.0.0 estable. Ver [ROADMAP](ROADMAP.md) para el plan hacia 1.0.0.
+> 🚀 **v1.0.0 Release Candidate** - Complete Feature Parity achieved between Desktop and Web.
 
 ## 🌟 Overview
 
-AI Sysadmin Agent es una plataforma de gestión inteligente de servidores, diagnósticos y automatización impulsada por tecnología de IA avanzada.
+AI Sysadmin Agent is an advanced platform for intelligent server management, diagnostics, and automation powered by AI.
 
-### 🖥️ Disponible en Dos Versiones
+### 🖥️ Deployment Modes
 
-- **☁️ SaaS / Web Application**: Despliega en tu servidor con Docker (este repositorio)
-- **💻 Desktop Application**: Aplicación de escritorio nativa para Windows
-  - Frontend empaquetado con Tauri
-  - Se conecta a tu backend SaaS
-  - Experiencia de app nativa (ventanas, notificaciones)
-  - Build simple y rápido (~15-20 MB)
-  - 📚 **[Guía de Build Desktop](BUILD_DESKTOP_SIMPLE.md)** - Todo lo que necesitas
+- **☁️ SaaS / Cloud (Docker)**: Deploy continuously using Docker. Ideal for teams.
+- **💻 Desktop Application**: Native Windows/Linux/Mac app (Tauri).
+  - Connects to your Cloud Backend or runs locally.
+  - Native experience with system notifications.
+  - **[Build Guide](BUILD_DESKTOP_SIMPLE.md)**
 
-### Key Features
+### ✨ Key Features (v1.0)
 
-- 🤖 **AI-Powered Diagnostics**: Detección y resolución inteligente de problemas
-- 🔐 **Secure Architecture**: Seguridad empresarial con control de acceso basado en roles
-- 📊 **Multi-Server Management**: Control centralizado de toda tu infraestructura
-- 🌐 **Multi-Language Support**: Interfaces en inglés y español
-- 🎨 **Modern UI**: Interfaz hermosa y responsive con modo oscuro
+- 🛡️ **Full Audit Logging**: Traceability of all critical actions (Login, Create, Delete, Execute).
+- 🤖 **AI-Powered Diagnostics**: Detect and resolve issues using Gemini, Bedrock, or OpenAI.
+- 🔐 **Enterprise Security**: Role-Based Access Control (RBAC) and encrypted storage.
+- 📊 **Multi-Server Management**: Centralized command center.
+- 🌐 **Multi-Language**: Native English and Spanish support.
+- 🎨 **Modern UI**: Dark/Light mode, responsive design.
 
-## 📦 What's Included
+## 📦 Repository Structure
 
-This repository contains the **production-ready distribution** of AI Sysadmin Agent:
+This repository contains the **complete source code**:
 
-- ✅ Compiled backend binary (no source code)
-- ✅ Optimized frontend build
-- ✅ Docker deployment configuration
-- ✅ License activation system
-- ✅ Complete deployment documentation
+- `backend/`: **FastAPI (Python)** application. Handles logic, DB, and AI.
+- `frontend/`: **Next.js** Web Application.
+- `frontend-desktop/`: **Tauri/React** Desktop Application code.
+- `docs/`: Deployment and Developer guides.
 
 ## 🚀 Quick Start
 

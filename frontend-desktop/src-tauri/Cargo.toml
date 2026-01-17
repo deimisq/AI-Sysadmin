@@ -1,0 +1,53 @@
+[package]
+name = "ai-sysadmin-desktop"
+version = "2.0.0"
+description = "AI Sysadmin Agent Desktop Application"
+authors = ["AI Sysadmin Team"]
+edition = "2021"
+
+[lib]
+name = "ai_sysadmin_lib"
+crate-type = ["staticlib", "cdylib", "lib"]
+
+[[bin]]
+name = "ai-sysadmin-desktop"
+path = "src/main.rs"
+
+[build-dependencies]
+tauri-build = { version = "2.0", features = [] }
+
+[dependencies]
+# Tauri core
+tauri = { version = "2.0", features = ["protocol-asset"] }
+tauri-plugin-shell = "2.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# SSH functionality - using ssh2 (mature and battle-tested)
+ssh2 = "0.9"
+tokio = { version = "1.35", features = ["full"] }
+
+# Credential encryption
+argon2 = "0.5"
+chacha20poly1305 = "0.10"
+rand = "0.8"
+
+# Local database
+rusqlite = { version = "0.30", features = ["bundled"] }
+
+# Utilities
+uuid = { version = "1.6", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+anyhow = "1.0"
+thiserror = "1.0"
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]
+
+[profile.release]
+panic = "abort"
+codegen-units = 1
+lto = true
+opt-level = "z"
+strip = true

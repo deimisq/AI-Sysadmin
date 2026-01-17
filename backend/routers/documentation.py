@@ -240,8 +240,14 @@ def delete_article(
 
 # ==================== IMAGE UPLOAD ====================
 
+from desktop_config import get_desktop_data_dir, DESKTOP_MODE
+
 # Directory for article images
-UPLOAD_DIR = Path("/app/uploads/documentation")
+if DESKTOP_MODE:
+    UPLOAD_DIR = get_desktop_data_dir() / "uploads" / "documentation"
+else:
+    UPLOAD_DIR = Path("/app/uploads/documentation")
+
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 @router.post("/upload-image")

@@ -12,6 +12,10 @@ import os
 import sys
 from pathlib import Path
 from typing import Optional
+from dotenv import load_dotenv
+
+# Load .env file explictly so DESKTOP_MODE is detected
+load_dotenv()
 
 # Detect if running in desktop mode
 # This can be set via environment variable or by checking if we're bundled with PyInstaller

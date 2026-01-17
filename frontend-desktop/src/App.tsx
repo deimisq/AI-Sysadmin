@@ -6,6 +6,7 @@ import { ScheduledReports } from './routes/scheduled-reports';
 import { Profile } from './routes/profile';
 import { Admin } from './routes/admin';
 import { Documentation } from './routes/documentation';
+import { SSHTestRoute } from './routes/ssh-test';
 import { isAuthenticated } from './lib/api';
 import { Toaster } from 'sonner';
 import { ThemeProvider } from '@/components/theme-provider';
@@ -65,6 +66,14 @@ export default function App() {
             element={
               <PrivateRoute>
                 <Documentation />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/ssh-test"
+            element={
+              <PrivateRoute>
+                <SSHTestRoute />
               </PrivateRoute>
             }
           />

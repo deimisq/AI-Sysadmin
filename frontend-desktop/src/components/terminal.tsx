@@ -34,8 +34,14 @@ export default function TerminalComponent(props: TerminalComponentProps) {
 
     // Check environment
     useEffect(() => {
-        // Simple check if we are in Tauri
-        if (typeof window !== 'undefined' && '__TAURI__' in window) {
+        // Robust check for Tauri environment
+        const isTauri =
+            (typeof window !== 'undefined' && '__TAURI__' in window) ||
+            (typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window);
+
+        console.log("[Terminal] Environment detection:", { isTauri, windowKeys: Object.keys(window).filter(k => k.includes('TAURI')) });
+
+        if (isTauri) {
             setIsDesktop(true);
         }
     }, []);

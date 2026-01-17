@@ -7,7 +7,7 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 
 
-import { type Server, fetchServerSecrets } from '../lib/api';
+import { type Server } from '../lib/api';
 
 interface TerminalComponentProps {
     onCommand?: (command: string) => Promise<string>;
@@ -48,55 +48,6 @@ export default function TerminalComponent(props: TerminalComponentProps) {
             setIsDesktop(true);
         }
     }, []);
-
-    // ONE-CLICK CONNECT: Fetch secrets and connect automatically
-    useEffect(() => {
-        if (isDesktop && props.serverData && !sessionId && !connecting) {
-            const connectWithSecrets = async () => {
-                setConnecting(true);
-                setError(null);
-                try {
-                    console.log("🔐 Fetching secrets for Zero-Friction connection...");
-                    const secrets = await fetchServerSecrets(props.serverData!.id);
-
-                    console.log("🚀 Connecting via SSH...");
-                    const sid = await invoke<string>('ssh_connect', {
-                        host: secrets.ip_address,
-                        port: 22, // TODO: Add port to DB model if needed
-                        username: secrets.ssh_username || '',
-                        password: secrets.ssh_password || null,
-                        privateKeyPath: secrets.ssh_key_path || null
-                    });
-
-                    setSessionId(sid);
-
-                    // Pre-fill form just in case disconnected later
-                    setForm(prev => ({
-                        ...prev,
-                        host: secrets.ip_address,
-                        username: secrets.ssh_username || '',
-                        password: secrets.ssh_password || '',
-                        keyPath: secrets.ssh_key_path || '',
-                        authMethod: secrets.ssh_key_path ? 'key' : 'password'
-                    }));
-
-                } catch (e: any) {
-                    console.error("Auto-connect failed:", e);
-                    // Fallback to manual form, but pre-fill what we know
-                    setForm(prev => ({
-                        ...prev,
-                        host: props.serverData?.ip_address || '',
-                        username: props.serverData?.ssh_username || ''
-                    }));
-                    setError("No se pudieron obtener credenciales automáticas. Ingresalas manualmente.");
-                } finally {
-                    setConnecting(false);
-                }
-            };
-
-            connectWithSecrets();
-        }
-    }, [isDesktop, props.serverData, sessionId, connecting]);
 
 
     // Pre-fill form from server data

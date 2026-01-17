@@ -139,12 +139,7 @@ class Server(ServerBase):
     class Config:
         from_attributes = True
 
-class ServerSecrets(BaseModel):
-    hostname: str
-    ip_address: str
-    ssh_username: str
-    ssh_password: Optional[str] = None
-    ssh_key_path: Optional[str] = None
+
 
 # Diagnostic Schemas
 class DiagnosticRequest(BaseModel):

@@ -100,11 +100,7 @@ export const fetchServers = () => api.get<Server[]>('/servers/');
 
 export const fetchServer = (id: string) => api.get<Server>(`/servers/${id}`);
 
-export interface ServerSecrets extends Server {
-    ssh_password?: string;
-    ssh_key_path?: string;
-}
-export const fetchServerSecrets = (id: number) => api.get<ServerSecrets>(`/servers/${id}/secrets`);
+
 
 export const createServer = (data: Partial<Server>) => api.post<Server>('/servers/', data);
 

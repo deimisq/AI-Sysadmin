@@ -379,46 +379,7 @@ def update_server(
 
     return db_server
 
-@router.get("/servers/{server_id}/secrets", response_model=schemas.ServerSecrets)
-def get_server_secrets(
-    server_id: int,
-    current_user: models.User = Depends(dependencies.get_current_active_user),
-    db: Session = Depends(dependencies.get_db)
-):
-    """Retrieve decrypted credentials for direct connection (Desktop App)"""
-    db_server = db.query(models.Server).filter(models.Server.id == server_id).first()
-    if not db_server:
-        raise HTTPException(status_code=404, detail="Server not found")
-    
-    # Check permissions
-    is_admin = current_user.role in [models.RoleType.SUPERADMIN.value, models.RoleType.ADMIN.value]
-    is_owner = db_server.created_by == current_user.id
-    
-    if not (is_admin or is_owner):
-        raise HTTPException(status_code=403, detail="Not authorized to access server secrets")
 
-    # Audit Log
-    audit_service.log_action(
-        db=db,
-        user_id=current_user.id,
-        action="reveal_server_secrets",
-        resource_type="server",
-        resource_id=server_id,
-        details={"hostname": db_server.hostname, "ip": db_server.ip_address}
-    )
-
-    # Decrypt sensitive data
-    from utils.encryption import decrypt_data
-    decrypted_password = decrypt_data(db_server.ssh_password) if db_server.ssh_password else None
-    decrypted_key_path = decrypt_data(db_server.ssh_key_path) if db_server.ssh_key_path else None
-
-    return schemas.ServerSecrets(
-        hostname=db_server.hostname,
-        ip_address=db_server.ip_address,
-        ssh_username=db_server.ssh_username,
-        ssh_password=decrypted_password,
-        ssh_key_path=decrypted_key_path
-    )
 
 @router.post("/execute/", response_model=schemas.CommandResponse)
 async def execute_command(request: schemas.CommandRequest, db: Session = Depends(dependencies.get_db)):

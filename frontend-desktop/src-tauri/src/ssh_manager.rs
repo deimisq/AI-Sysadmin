@@ -230,6 +230,7 @@ impl SSHManager {
             let session_id_clone = session_id.to_string();
             // Spawn background task to handle I/O loop
             tokio::spawn(async move {
+                let mut channel = channel;
                 println!("DEBUG: Starting I/O Loop for session {}", session_id_clone);
                 loop {
                     tokio::select! {
@@ -294,8 +295,13 @@ impl SSHManager {
 
     pub async fn pty_write(&self, session_id: &str, data: &[u8]) -> Result<()> {
         println!("DEBUG: pty_write called for session {} with {} bytes: {:?}", session_id, data.len(), String::from_utf8_lossy(data));
-        let senders = self.write_senders.lock().unwrap();
-        if let Some(sender) = senders.get(session_id) {
+        
+        let sender = {
+            let senders = self.write_senders.lock().unwrap();
+            senders.get(session_id).cloned()
+        };
+
+        if let Some(sender) = sender {
             sender.send(data.to_vec()).await
                 .map_err(|_| anyhow::anyhow!("Channel closed"))?;
             Ok(())

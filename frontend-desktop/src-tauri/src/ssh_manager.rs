@@ -35,7 +35,11 @@ type SessionHandle = client::Handle<RusshClient>;
 #[derive(Clone)]
 pub struct SSHManager {
     sessions: Arc<Mutex<HashMap<String, SessionHandle>>>,
-    channels: Arc<Mutex<HashMap<String, russh::Channel<client::Msg>>>>,
+    // Channels for communicating with the background I/O task
+    // Map: SessionID -> Sender (for writing to PTY)
+    write_senders: Arc<Mutex<HashMap<String, tokio::sync::mpsc::Sender<Vec<u8>>>>>,
+    // Map: SessionID -> Receiver (for reading from PTY - protected by Mutex because Receiver is not Sync)
+    read_receivers: Arc<Mutex<HashMap<String, Arc<Mutex<tokio::sync::mpsc::Receiver<Vec<u8>>>>>>>,
     pty_sessions: Arc<Mutex<HashMap<String, PTYSession>>>,
 }
 
@@ -58,7 +62,8 @@ impl SSHManager {
     pub fn new() -> Self {
         Self {
             sessions: Arc::new(Mutex::new(HashMap::new())),
-            channels: Arc::new(Mutex::new(HashMap::new())),
+            write_senders: Arc::new(Mutex::new(HashMap::new())),
+            read_receivers: Arc::new(Mutex::new(HashMap::new())),
             pty_sessions: Arc::new(Mutex::new(HashMap::new())),
         }
     }
@@ -153,9 +158,6 @@ impl SSHManager {
     // PTY methods
     pub async fn create_pty(&self, session_id: &str, rows: u32, cols: u32) -> Result<()> {
         let mut sessions = self.sessions.lock().await;
-        // Clone session handle to release lock early if possible, 
-        // but session access usually needs exclusive mutability or internal locking.
-        // Russh Client session handles are cloneable and share internal state.
         
         if let Some(session) = sessions.get_mut(session_id) {
             // Open a channel
@@ -175,9 +177,56 @@ impl SSHManager {
             channel.request_shell(true).await
                 .context("Failed to start shell")?;
 
-            // Store channel for I/O
-            let mut channels = self.channels.lock().await;
-            channels.insert(session_id.to_string(), channel);
+            // Create channels for two-way communication
+            // Frontend -> SSH (Write)
+            let (write_tx, mut write_rx) = tokio::sync::mpsc::channel::<Vec<u8>>(32);
+            // SSH -> Frontend (Read)
+            let (read_tx, read_rx) = tokio::sync::mpsc::channel::<Vec<u8>>(32);
+
+            // Spawn background task to handle I/O loop
+            tokio::spawn(async move {
+                loop {
+                    tokio::select! {
+                        // Data from frontend to write to SSH
+                        Some(data) = write_rx.recv() => {
+                            if let Err(e) = channel.data(&data).await {
+                                eprintln!("Error writing to SSH channel: {:?}", e);
+                                break;
+                            }
+                        }
+                        // Data from SSH to send to frontend
+                        msg = channel.wait() => {
+                            match msg {
+                                Some(Ok(russh::client::Msg::Data { data })) => {
+                                    if read_tx.send(data.to_vec()).await.is_err() {
+                                        break;
+                                    }
+                                }
+                                Some(Ok(russh::client::Msg::ExtendedData { data, .. })) => {
+                                    if read_tx.send(data.to_vec()).await.is_err() {
+                                        break;
+                                    }
+                                }
+                                Some(Ok(russh::client::Msg::ExitStatus { .. })) | 
+                                Some(Ok(russh::client::Msg::Close)) | 
+                                None => {
+                                    // Channel closed
+                                    break;
+                                }
+                                Some(Err(e)) => {
+                                    eprintln!("SSH Channel Error: {:?}", e);
+                                    break;
+                                }
+                                _ => {} // Ignore other messages
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Store channels
+            self.write_senders.lock().await.insert(session_id.to_string(), write_tx);
+            self.read_receivers.lock().await.insert(session_id.to_string(), Arc::new(Mutex::new(read_rx)));
             
             Ok(())
         } else {
@@ -185,10 +234,29 @@ impl SSHManager {
         }
     }
 
-    pub async fn pty_read(&self, _session_id: &str) -> Result<Vec<u8>> {
-        // Placeholder to prevent locking issues until async read loop is architected
-        tokio::time::sleep(std::time::Duration::from_millis(100)).await;
-        Ok(vec![])
+    pub async fn pty_read(&self, session_id: &str) -> Result<Vec<u8>> {
+        // Get the specific receiver (Arc<Mutex<Receiver>>)
+        let receiver_arc = {
+            let receivers = self.read_receivers.lock().await;
+            receivers.get(session_id).cloned()
+        }; // receivers map lock dropped here
+
+        if let Some(receiver) = receiver_arc {
+            let mut rx = receiver.lock().await; // Lock only this session's receiver
+            
+            // Wait for data (or return None if closed)
+            // We can add a timeout here if we want to return empty to send heartbeat to frontend,
+            // but typical 'await' is fine if frontend loop handles it.
+            // Using a small timeout to keep the UI loop responsive/checking connectivity might be good.
+            
+             match tokio::time::timeout(std::time::Duration::from_millis(5000), rx.recv()).await {
+                Ok(Some(data)) => Ok(data),
+                Ok(None) => anyhow::bail!("Channel closed"), // Stream ended
+                Err(_) => Ok(vec![]), // Timeout - just return empty to keep polling
+             }
+        } else {
+            anyhow::bail!("Channel not found")
+        }
     }
 
     pub async fn pty_write(&self, session_id: &str, data: &[u8]) -> Result<()> {

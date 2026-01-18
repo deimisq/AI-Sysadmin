@@ -32,14 +32,15 @@ pub struct SSHSessionInfo {
 
 type SessionHandle = client::Handle<RusshClient>;
 
+use tauri::{AppHandle, Emitter}; // Add tauri imports
+
 #[derive(Clone)]
 pub struct SSHManager {
     sessions: Arc<Mutex<HashMap<String, SessionHandle>>>,
     // Channels for communicating with the background I/O task
     // Map: SessionID -> Sender (for writing to PTY)
     write_senders: Arc<Mutex<HashMap<String, tokio::sync::mpsc::Sender<Vec<u8>>>>>,
-    // Map: SessionID -> Receiver (for reading from PTY - protected by Mutex because Receiver is not Sync)
-    read_receivers: Arc<Mutex<HashMap<String, Arc<Mutex<tokio::sync::mpsc::Receiver<Vec<u8>>>>>>>,
+    // Reads are now handled via Tauri Events, no need for read_receivers map
     pty_sessions: Arc<Mutex<HashMap<String, PTYSession>>>,
 }
 
@@ -63,7 +64,6 @@ impl SSHManager {
         Self {
             sessions: Arc::new(Mutex::new(HashMap::new())),
             write_senders: Arc::new(Mutex::new(HashMap::new())),
-            read_receivers: Arc::new(Mutex::new(HashMap::new())),
             pty_sessions: Arc::new(Mutex::new(HashMap::new())),
         }
     }
@@ -156,7 +156,7 @@ impl SSHManager {
     }
 
     // PTY methods
-    pub async fn create_pty(&self, session_id: &str, rows: u32, cols: u32) -> Result<()> {
+    pub async fn create_pty(&self, app_handle: AppHandle, session_id: &str, rows: u32, cols: u32) -> Result<()> {
         let mut sessions = self.sessions.lock().await;
         
         if let Some(session) = sessions.get_mut(session_id) {
@@ -180,37 +180,30 @@ impl SSHManager {
             // Create channels for two-way communication
             // Frontend -> SSH (Write)
             let (write_tx, mut write_rx) = tokio::sync::mpsc::channel::<Vec<u8>>(32);
-            // SSH -> Frontend (Read)
-            let (read_tx, read_rx) = tokio::sync::mpsc::channel::<Vec<u8>>(32);
+            // SSH -> Frontend (Read) is now done via Events!
 
+            let session_id_clone = session_id.to_string();
             // Spawn background task to handle I/O loop
             tokio::spawn(async move {
                 loop {
                     tokio::select! {
                         // Data from frontend to write to SSH
                         Some(data) = write_rx.recv() => {
-                            println!("DEBUG: I/O Loop received {} bytes to write: {:?}", data.len(), String::from_utf8_lossy(&data));
                             // russh data() takes &[u8] (which implements AsyncRead)
                             if let Err(e) = channel.data(&data[..]).await {
                                 eprintln!("Error writing to SSH channel: {:?}", e);
                                 break;
-                            } else {
-                                println!("DEBUG: Scuceesfully wrote data to SSH channel");
                             }
                         }
                         // Data from SSH to send to frontend
                         msg = channel.wait() => {
                             match msg {
                                 Some(russh::ChannelMsg::Data { data }) => {
-                                    println!("DEBUG: Received {} bytes from SSH", data.len());
-                                    if read_tx.send(data.to_vec()).await.is_err() {
-                                        break;
-                                    }
+                                    // Emit event to frontend
+                                    let _ = app_handle.emit(&format!("pty-data:{}", session_id_clone), data.to_vec());
                                 }
                                 Some(russh::ChannelMsg::ExtendedData { data, .. }) => {
-                                    if read_tx.send(data.to_vec()).await.is_err() {
-                                        break;
-                                    }
+                                     let _ = app_handle.emit(&format!("pty-data:{}", session_id_clone), data.to_vec());
                                 }
                                 Some(russh::ChannelMsg::Close) | 
                                 Some(russh::ChannelMsg::Eof) |
@@ -229,7 +222,6 @@ impl SSHManager {
 
             // Store channels
             self.write_senders.lock().await.insert(session_id.to_string(), write_tx);
-            self.read_receivers.lock().await.insert(session_id.to_string(), Arc::new(Mutex::new(read_rx)));
             
             Ok(())
         } else {
@@ -237,25 +229,7 @@ impl SSHManager {
         }
     }
 
-    pub async fn pty_read(&self, session_id: &str) -> Result<Vec<u8>> {
-        // Get the specific receiver (Arc<Mutex<Receiver>>)
-        let receiver_arc = {
-            let receivers = self.read_receivers.lock().await;
-            receivers.get(session_id).cloned()
-        }; // receivers map lock dropped here
-
-        if let Some(receiver) = receiver_arc {
-            let mut rx = receiver.lock().await; // Lock only this session's receiver
-            
-             match tokio::time::timeout(std::time::Duration::from_millis(5000), rx.recv()).await {
-                Ok(Some(data)) => Ok(data),
-                Ok(None) => anyhow::bail!("Channel closed"), // Stream ended
-                Err(_) => Ok(vec![]), // Timeout - just return empty to keep polling
-             }
-        } else {
-            anyhow::bail!("Channel not found")
-        }
-    }
+    // pty_read removed - replaced by Tauri Events
 
     pub async fn pty_write(&self, session_id: &str, data: &[u8]) -> Result<()> {
         println!("DEBUG: pty_write called for session {} with {} bytes: {:?}", session_id, data.len(), String::from_utf8_lossy(data));

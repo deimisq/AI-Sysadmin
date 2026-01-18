@@ -92,6 +92,7 @@ async fn test_ssh_manual() -> Result<String, String> {
 /// Create PTY session for interactive terminal
 #[tauri::command]
 async fn pty_create(
+    app: AppHandle, // Injected
     state: State<'_, AppState>,
     session_id: String,
     rows: u32,
@@ -100,22 +101,12 @@ async fn pty_create(
     // Release lock and clone manager
     let manager = state.ssh_manager.lock().unwrap().clone();
     
-    manager.create_pty(&session_id, rows, cols).await
+    manager.create_pty(app, &session_id, rows, cols).await
         .map(|_| session_id)
         .map_err(|e| format!("PTY creation failed: {}", e))
 }
 
-/// Read output from PTY
-#[tauri::command]
-async fn pty_read(
-    state: State<'_, AppState>,
-    pty_id: String,
-) -> Result<Vec<u8>, String> { // Now returning Vec<u8> directly
-    let manager = state.ssh_manager.lock().unwrap().clone();
-    
-    manager.pty_read(&pty_id).await
-        .map_err(|e| format!("PTY read failed: {}", e))
-}
+// pty_read removed - replaced by events
 
 /// Write input to PTY
 #[tauri::command]
@@ -170,7 +161,6 @@ fn main() {
             ssh_disconnect,
             ssh_list_sessions,
             pty_create,
-            pty_read,
             pty_write,
             pty_resize,
             pty_close,

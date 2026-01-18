@@ -20,8 +20,9 @@ tauri-plugin-http = "2.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 
-# SSH functionality - using ssh2 (mature and battle-tested)
-ssh2 = "0.9.4"  # Latest stable with modern cipher support
+# SSH functionality - using russh (modern, pure Rust, supports all algorithms)
+russh = "0.45"
+russh-keys = "0.45"
 tokio = { version = "1.35", features = ["full"] }
 
 # Credential encryption

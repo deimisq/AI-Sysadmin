@@ -5,11 +5,29 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/),
 y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 
+## [2.0.0-desktop] - 2026-01-18
+
+### 🖥️ Native Desktop App Release
+
+#### Agregado
+
+- **Native SSH Client (Async/Rust)**: Fully rewritten SSH backend in Rust using `russh` for high-performance, asynchronous, non-blocking connections.
+- **Event-Driven Terminal**: Replaced polling-based terminal with real-time Tauri Event system (`pty-data`) for zero-latency typing and output.
+- **Interactive AI Agent**: The desktop agent can now execute commands locally/remotely on servers directly from the chat interface.
+- **Desktop Dashboard**: Integrated full web dashboard into a native Tauri windows application.
+
+#### Corregido
+
+- **SSH Logic Blocks**: Fixed freezing issues in SSH connection by hybridizing Sync/Async Rust Mutexes.
+- **Terminal Race Conditions**: Resolved issue where initial server MOTD was lost due to frontend loading speed.
+- **Type Safety**: Full TypeScript strict compliance in frontend components.
+
 ## [0.9.4-beta] - 2025-12-20
 
 ### 🎊 Mejoras de UX y Multi-idioma
 
 #### Agregado
+
 - **Toast Notifications Modernas**: Reemplazo completo de alertas bloqueantes del navegador con notificaciones toast elegantes y no-bloqueantes
   - Sistema de notificaciones usando biblioteca `sonner`
   - Toasts verdes para éxitos, rojos para errores
@@ -26,15 +44,18 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
   - Preservación del idioma en actualizaciones de usuario
 
 #### Corregido
+
 - **Error 403 en eliminación de usuarios**: Corregida dependencia `get_current_superuser` para verificar campo `role` en lugar del boolean deprecado `is_superuser`
 - **Error 500 en panel de admin**: Campo `preferred_language` ahora es opcional en schema de usuario para compatibilidad con usuarios existentes
 - **Compilación de frontend en Docker**: Mejorado proceso de build para incluir dependencias de toast correctamente
 
 #### Cambiado
+
 - **Experiencia de usuario mejorada**: Eliminadas todas las alertas bloqueantes del navegador para mejor fluidez
 - **Internacionalización de comunicaciones**: Sistema completamente multi-idioma incluye emails automáticos
 
 ### Componentes Actualizados con Toast Notifications
+
 - `user-management.tsx` (13 reemplazos)
 - `server-management.tsx` (8 reemplazos)
 - `login/page.tsx` (2 reemplazos)
@@ -48,6 +69,7 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 - `admin/page.tsx` (1 reemplazo)
 
 ### Infraestructura
+
 - Nueva dependencia frontend: `sonner@^2.0.7` para toast notifications
 - Schema de BD actualizado: columna `preferred_language` en tabla `users`
 - Componente global `Toaster` integrado en layout raíz del frontend
@@ -57,6 +79,7 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 ### 🚀 Mejoras Principales
 
 #### Agregado
+
 - **Informes de Salud Programados**: Nueva funcionalidad para programar chequeos de salud automáticos de servidores con generación de reportes PDF y envío por email.
   - Soporte para programación diaria, semanal, mensual o expresiones cron personalizadas
   - Selección de servidor individual o grupo de servidores
@@ -67,15 +90,18 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 - **Demo en Línea**: Los usuarios pueden probar el sistema en testing.sentrait.com.uy sin necesidad de despliegue
 
 #### Corregido
+
 - **Formato de reportes PDF**: El análisis de IA en reportes ahora usa un formato de informe formal sin preguntas interactivas
 - **Carga de servidores/grupos**: Corregidos endpoints de API con slashes finales requeridos
 - **Conectividad de Docker**: Mejorado manejo de resolución DNS entre contenedores nginx y backend
 
 #### Cambiado
+
 - Servicio de IA con token dinámico: El sistema ahora detecta cambios de token y recarga la configuración automáticamente
 - Reportes PDF con estructura profesional: Resumen Ejecutivo, Análisis Detallado, Alertas y Conclusión
 
 ### Infraestructura
+
 - Nuevas dependencias: `apscheduler` para tareas programadas, `reportlab` para generación de PDF
 - Nuevas tablas de base de datos: `scheduled_health_checks`, `health_check_reports`
 - Directorio `/app/reports` para almacenamiento de PDFs generados
@@ -85,17 +111,20 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 ### 🚀 Mejoras Principales
 
 #### Agregado
+
 - **Interfaz Modular Redimensionable**: Nuevo layout tipo IDE con paneles ajustables (Sidebar, Consola, AI Copilot) para máxima eficiencia de espacio.
 - **Bucle de Retroalimentación de IA**: La IA ahora puede ejecutar comandos y leer automáticamente su salida para continuar el diagnóstico sin intervención del usuario.
 - **Sidebar Global Redimensionable**: Navegación mejorada con un panel lateral ajustable que optimiza el área de trabajo en todo el sistema.
 - **Terminal Interactiva Mejorada**: Soporte optimizado para comandos interactivos y redimensionamiento dinámico de la terminal.
 
 #### Corregido
+
 - **Error de compilación de frontend**: Corregida referencia a función `handleFileClick` faltante y componente `Separator`.
 - **Sincronización de Sesión SSH**: Mejorada la estabilidad de las conexiones WebSocket en la consola.
 - **Layout en Dashboard**: Eliminada redundancia de elementos de navegación global tras la implementación del nuevo Sidebar.
 
 #### Cambiado
+
 - Estructura de navegación global: Movidos controles de perfil, administración y cerrado de sesión al Sidebar redimensionable.
 - Visualización de comandos en chat: Los comandos sugeridos y ejecutados ahora se muestran con mejor contraste y feedback de estado.
 
@@ -104,6 +133,7 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 ### 🚀 Mejoras Principales
 
 #### Agregado
+
 - **Soporte para Anthropic API directa**: Configuración simplificada para Claude 3.5 Sonnet usando solo API Key (sin necesidad de AWS)
 - **Bedrock con API Key única**: Simplificado el uso de AWS Bedrock para aceptar solo Bearer Token en lugar de Access Key + Secret
 - **Textarea multilínea en chat de IA**: Soporte para Shift+Enter (nueva línea) y Enter (enviar mensaje)
@@ -111,6 +141,7 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 - **Recarga dinámica de configuración de IA**: Los cambios en la configuración de IA se aplican inmediatamente sin reiniciar
 
 #### Corregido
+
 - **Error 422 al actualizar servidores**: Corregida conversión de `group_id` vacío que causaba validación fallida
 - **Error 500 al ejecutar comandos**: Corregido schema `CommandExecutionResponse` para coincidir con el uso real
 - **SSH faltante en contenedor**: Instalado `openssh-client` en Docker para permitir conexiones Ansible
@@ -119,15 +150,18 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 - **Validación restrictiva de claves SSH**: Removida validación que impedía guardar claves privadas raw en campo `ssh_key_path`
 
 #### Cambiado
+
 - Frontend: Campo de texto de chat convertido a `textarea` con placeholder mejorado
 - Frontend: Interfaz de configuración de IA reorganizada para claridad (Bedrock API Key en lugar de Access + Secret)
 - Backend: Servicio de IA ahora soporta configuración dinámica desde base de datos
 - Backend: Mejorado manejo de errores de autenticación LLM (401) con mensajes amigables
 
 ### Seguridad
+
 - Claves SSH privadas ahora se pueden guardar de forma segura como contenido raw o como ruta de archivo
 
 ### Infraestructura
+
 - Instalación de `openssh-client` en imagen Docker del backend
 - Agregada librería `langchain-anthropic` para soporte de API directa
 
@@ -136,6 +170,7 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 ### 🎉 Primera Release Beta Pública
 
 #### Agregado
+
 - Sistema completo de autenticación con JWT
 - Soporte para Microsoft OAuth (configurable)
 - Panel de administración con gestión de usuarios
@@ -152,6 +187,7 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 - Configuración dinámica vía base de datos
 
 #### Seguridad
+
 - Compilación de código Python a bytecode en distribución
 - Eliminación de código fuente en imágenes Docker
 - Headers de seguridad en Nginx
@@ -160,6 +196,7 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 - SSL/TLS 1.2+ únicamente
 
 #### Infraestructura
+
 - Docker Compose para despliegue
 - PostgreSQL con extensión pgvector
 - Migraciones de BD con Alembic
@@ -168,12 +205,14 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 - Backend FastAPI optimizado
 
 #### Documentación
+
 - Guía de producción completa
 - Script de instalación interactivo
 - Sitio web de distribución profesional
 - README con instrucciones claras
 
 ### Conocidos Issues (Para 1.0.0)
+
 - [ ] Integración con Ansible pendiente de testing extensivo
 - [ ] Métricas y monitoreo en tiempo real (próxima versión)
 - [ ] Soporte para más proveedores OAuth
@@ -185,12 +224,14 @@ y este proyecto adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 ## Roadmap hacia 1.0.0
 
 ### [0.9.5-rc] - Release Candidate
+
 - Testing exhaustivo en producción
 - Documentación completa de API
 - Guías de troubleshooting
 - Benchmarks de rendimiento
 
 ### [1.0.0] - Stable Release
+
 - Primera versión estable para producción
 - Garantía de compatibilidad hacia atrás
 - Soporte LTS (Long Term Support)

@@ -53,6 +53,11 @@ impl SSHManager {
             .context("Failed to create SSH session")?;
         
         session.set_tcp_stream(tcp);
+        
+        // CRITICAL: Accept any host key (bypass known_hosts check)
+        // In production, you'd want to verify host keys properly
+        session.set_host_key_verification(|_| true);
+        
         session.handshake()
             .context("SSH handshake failed")?;
 

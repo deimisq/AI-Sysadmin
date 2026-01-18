@@ -24,8 +24,8 @@ export default function TerminalComponent(props: TerminalComponentProps) {
 
     // Detect Tauri
     useEffect(() => {
-        const isTauri = typeof window !== 'undefined' &&
-            ('__TAURI__' in window || '__TAURI_INTERNALS__' in window);
+        // TEMPORARILY DISABLED - using proxy only until SSH key handling is fixed
+        const isTauri = false;
         setIsDesktop(isTauri);
     }, []);
 

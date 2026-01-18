@@ -54,19 +54,13 @@ export function InteractiveTerminal({ sessionId, onClose }: InteractiveTerminalP
                 const cols = term.cols;
                 const rows = term.rows;
 
-                // Create PTY session in backend
-                const ptyId = await invoke<string>('pty_create', {
-                    sessionId,
-                    rows,
-                    cols
-                });
-
-                ptyIdRef.current = ptyId;
-                term.write(`\r\n✅ PTY Session created: ${ptyId}\r\n`);
-                term.write('---------------------------------------------------\r\n');
+                // FIX RACE CONDITION: Start listening BEFORE creating the PTY.
+                // The ptyId is the same as the sessionId in our backend logic.
+                const currentPtyId = sessionId;
+                ptyIdRef.current = currentPtyId;
 
                 // Set up event listener for PTY data
-                const unlisten = await listen<number[]>(`pty-data:${ptyId}`, (event) => {
+                const unlisten = await listen<number[]>(`pty-data:${currentPtyId}`, (event) => {
                     const data = event.payload;
                     if (data && data.length > 0) {
                         const uint8 = new Uint8Array(data);
@@ -74,6 +68,17 @@ export function InteractiveTerminal({ sessionId, onClose }: InteractiveTerminalP
                     }
                 });
                 unlistenRef.current = unlisten;
+
+                // Create PTY session in backend (this triggers the SSH connection and functionality)
+                // Now that we are listening, we will capture the initial MOTD/Welcome message.
+                await invoke<string>('pty_create', {
+                    sessionId,
+                    rows,
+                    cols
+                });
+
+                term.write(`\r\n✅ Connected to session: ${currentPtyId}\r\n`);
+                term.write('---------------------------------------------------\r\n');
 
                 // Handle input (user typing)
                 term.onData(async (data) => {

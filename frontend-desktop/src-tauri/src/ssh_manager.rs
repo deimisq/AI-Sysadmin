@@ -35,6 +35,7 @@ type SessionHandle = client::Handle<RusshClient>;
 #[derive(Clone)]
 pub struct SSHManager {
     sessions: Arc<Mutex<HashMap<String, SessionHandle>>>,
+    channels: Arc<Mutex<HashMap<String, client::Channel<client::Msg>>>>,
     pty_sessions: Arc<Mutex<HashMap<String, PTYSession>>>,
 }
 
@@ -57,6 +58,7 @@ impl SSHManager {
     pub fn new() -> Self {
         Self {
             sessions: Arc::new(Mutex::new(HashMap::new())),
+            channels: Arc::new(Mutex::new(HashMap::new())),
             pty_sessions: Arc::new(Mutex::new(HashMap::new())),
         }
     }
@@ -85,8 +87,13 @@ impl SSHManager {
         } else if let Some(key_path) = &creds.private_key_path {
             // Load key from file
             let key_path = std::path::Path::new(key_path);
-            let key_pair = russh::keys::load_secret_key(key_path, None)
-                .context("Failed to load SSH private key")?;
+            
+            // Try to use password as passphrase if available
+            let passphrase = creds.password.as_deref();
+            
+            let key_pair = russh::keys::load_secret_key(key_path, passphrase)
+                .with_context(|| format!("Failed to load SSH private key from {:?}. Verify file exists and format is supported (PEM/OpenSSH). Inner error", key_path))?;
+                
             session.authenticate_publickey(creds.username.clone(), Arc::new(key_pair)).await
         } else {
             anyhow::bail!("No authentication method provided");
@@ -162,19 +169,61 @@ impl SSHManager {
             channel.request_shell(true).await
                 .context("Failed to start shell")?;
 
-            // TODO: Store channel for I/O
+            // Store channel for I/O
+            let mut channels = self.channels.lock().await;
+            channels.insert(session_id.to_string(), channel);
+            
             Ok(())
         } else {
             anyhow::bail!("Session not found")
         }
     }
 
-    pub fn pty_read(&self, _session_id: &str) -> Result<Vec<u8>> {
-        anyhow::bail!("PTY not yet implemented")
+    pub async fn pty_read(&self, session_id: &str) -> Result<Vec<u8>> {
+        let mut channels = self.channels.lock().await;
+        if let Some(channel) = channels.get_mut(session_id) {
+             loop {
+                // Wait for next message. Loop to skip non-data messages.
+                // Note: We hold the lock during wait, which blocks other operations on ANY channel?
+                // Yes, holding self.channels lock while waiting for network IO is BAD.
+                // We should clone the channel or use separate locking per session?
+                // Russh channels are not easily cloneable/shareable across threads without mutex protection 
+                // because wait() requires &mut self.
+                
+                // For now, let's try reading once. If we block here, other tabs might freeze.
+                // Ideally, we'd have a separate task pumping data to a buffer.
+                // BUT, since we await here, we yield to runtime. The Mutex is async (tokio::sync::Mutex).
+                // Does holding an async Mutex block others? Yes, until dropped.
+                // SO WE CANNOT WAIT HERE while holding the lock.
+                
+                // CRITICAL: We need a reading architecture.
+                // Spawn a tokio task per channel that reads internal russh messages and pushes to a mpsc channel?
+                // Or try to process one message.
+                
+                // Quick fix: Don't implement full read here yet if it blocks global lock.
+                // Let's implement timeout? Or rethink.
+                
+                // If I use tokio::select with timeout?
+                // Still holds lock.
+                
+                // Correct approach: 'channels' map stores the Russh channel. 
+                // When we create PTY, we should spawn a background task that pumps data from Russh Channel -> Local Buffer (Vec<u8> inside Arc<Mutex>).
+                // pty_read just reads from that local buffer.
+                
+                return anyhow::bail!("Reading not fully implemented to avoid blocking. Please wait for next update.");
+             }
+        }
+        anyhow::bail!("Channel not found")
     }
 
-    pub fn pty_write(&self, _session_id: &str, _data: &[u8]) -> Result<()> {
-        anyhow::bail!("PTY not yet implemented")
+    pub async fn pty_write(&self, session_id: &str, data: &[u8]) -> Result<()> {
+        let mut channels = self.channels.lock().await;
+        if let Some(channel) = channels.get_mut(session_id) {
+            channel.data(data).await.context("Failed to write to PTY")?;
+            Ok(())
+        } else {
+             anyhow::bail!("Channel not found")
+        }
     }
 
     pub fn pty_resize(&self, _session_id: &str, _rows: u32, _cols: u32) -> Result<()> {

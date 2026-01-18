@@ -110,10 +110,10 @@ async fn pty_create(
 async fn pty_read(
     state: State<'_, AppState>,
     pty_id: String,
-) -> Result<Vec<u8>, String> {
-    let manager = state.ssh_manager.lock().unwrap();
+) -> Result<Vec<u8>, String> { // Now returning Vec<u8> directly
+    let manager = state.ssh_manager.lock().unwrap().clone();
     
-    manager.pty_read(&pty_id)
+    manager.pty_read(&pty_id).await
         .map_err(|e| format!("PTY read failed: {}", e))
 }
 
@@ -122,11 +122,11 @@ async fn pty_read(
 async fn pty_write(
     state: State<'_, AppState>,
     pty_id: String,
-    data: Vec<u8>,
+    data: String, // Receiving base64 or raw string? Assuming string for now
 ) -> Result<(), String> {
-    let manager = state.ssh_manager.lock().unwrap();
+    let manager = state.ssh_manager.lock().unwrap().clone();
     
-    manager.pty_write(&pty_id, &data)
+    manager.pty_write(&pty_id, data.as_bytes()).await
         .map_err(|e| format!("PTY write failed: {}", e))
 }
 

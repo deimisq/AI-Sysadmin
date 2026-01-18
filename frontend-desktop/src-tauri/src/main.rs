@@ -34,7 +34,7 @@ async fn ssh_connect(
 
     let manager = state.ssh_manager.lock().unwrap();
     
-    manager.connect(creds)
+    manager.connect_sync(creds)
         .map_err(|e| format!("SSH connection failed: {}", e))
 }
 

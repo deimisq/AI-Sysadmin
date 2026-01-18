@@ -2,6 +2,7 @@
 
 use russh::*;
 use russh::keys::*;
+use async_trait::async_trait;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::Mutex;
@@ -38,14 +39,16 @@ pub struct SSHManager {
 
 struct RusshClient;
 
+#[async_trait]
 impl client::Handler for RusshClient {
     type Error = russh::Error;
 
-    fn check_server_key<'a>(
-        &'a mut self,
-        _server_public_key: &'a key::PublicKey,
-    ) -> impl std::future::Future<Output = Result<bool, Self::Error>> + Send + 'a {
-        async move { Ok(true) }
+    async fn check_server_key(
+        &mut self,
+        _server_public_key: &key::PublicKey,
+    ) -> Result<bool, Self::Error> {
+        // Accept any server key (like ssh -o StrictHostKeyChecking=no)
+        Ok(true)
     }
 }
 

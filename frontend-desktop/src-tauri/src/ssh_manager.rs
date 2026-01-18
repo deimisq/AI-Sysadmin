@@ -54,12 +54,11 @@ impl SSHManager {
         
         session.set_tcp_stream(tcp);
         
-        // CRITICAL: Accept any host key (bypass known_hosts check)
-        // In production, you'd want to verify host keys properly
-        session.set_host_key_verification(|_| true);
-        
-        session.handshake()
-            .context("SSH handshake failed")?;
+        // Attempt handshake
+        if let Err(e) = session.handshake() {
+            eprintln!("SSH Handshake error: {:?}", e);
+            return Err(anyhow::anyhow!("SSH handshake failed: {}", e));
+        }
 
         // Authenticate
         if let Some(password) = &creds.password {

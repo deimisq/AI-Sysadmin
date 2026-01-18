@@ -46,7 +46,7 @@ export function AiAssistantPanel() {
                     setMessages([{ role: "system", content: "👋 Selecciona un servidor del menú superior para comenzar." }]);
                 }
             }
-        }).catch(err => {
+        }).catch(_err => {
             setMessages([{ role: "system", content: "❌ Error cargando lista de servidores." }]);
         });
     }, []);
@@ -243,8 +243,8 @@ export function AiAssistantPanel() {
                 {messages.map((msg, idx) => (
                     <div key={idx} className={`flex flex-col gap-1 ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
                         <div className={`p-3 rounded-lg max-w-[90%] ${msg.role === 'user' ? 'bg-primary text-primary-foreground' :
-                                msg.role === 'system' ? 'bg-muted text-muted-foreground text-xs' :
-                                    'bg-secondary text-secondary-foreground shadow-sm'
+                            msg.role === 'system' ? 'bg-muted text-muted-foreground text-xs' :
+                                'bg-secondary text-secondary-foreground shadow-sm'
                             }`}>
                             <div className="prose prose-sm dark:prose-invert break-words">
                                 <ReactMarkdown>

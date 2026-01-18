@@ -10,7 +10,7 @@ interface InteractiveTerminalProps {
     onClose?: () => void;
 }
 
-export function InteractiveTerminal({ sessionId, onClose }: InteractiveTerminalProps) {
+export function InteractiveTerminal({ sessionId, onClose: _onClose }: InteractiveTerminalProps) {
     const terminalRef = useRef<HTMLDivElement>(null);
     const xtermRef = useRef<Terminal | null>(null);
     const fitAddonRef = useRef<FitAddon | null>(null);

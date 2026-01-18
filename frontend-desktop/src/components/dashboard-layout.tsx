@@ -10,8 +10,7 @@ import {
     User,
     Shield,
     ChevronLeft,
-    ChevronRight,
-    MessageSquare
+    ChevronRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";

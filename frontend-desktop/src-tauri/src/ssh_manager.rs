@@ -189,7 +189,8 @@ impl SSHManager {
                     tokio::select! {
                         // Data from frontend to write to SSH
                         Some(data) = write_rx.recv() => {
-                            if let Err(e) = channel.data(&data).await {
+                            // russh data() takes &[u8] (which implements AsyncRead)
+                            if let Err(e) = channel.data(&data[..]).await {
                                 eprintln!("Error writing to SSH channel: {:?}", e);
                                 break;
                             }
@@ -197,27 +198,24 @@ impl SSHManager {
                         // Data from SSH to send to frontend
                         msg = channel.wait() => {
                             match msg {
-                                Some(Ok(russh::client::Msg::Data { data })) => {
+                                Some(russh::ChannelMsg::Data { data }) => {
                                     if read_tx.send(data.to_vec()).await.is_err() {
                                         break;
                                     }
                                 }
-                                Some(Ok(russh::client::Msg::ExtendedData { data, .. })) => {
+                                Some(russh::ChannelMsg::ExtendedData { data, .. }) => {
                                     if read_tx.send(data.to_vec()).await.is_err() {
                                         break;
                                     }
                                 }
-                                Some(Ok(russh::client::Msg::ExitStatus { .. })) | 
-                                Some(Ok(russh::client::Msg::Close)) | 
+                                Some(russh::ChannelMsg::Close) | 
+                                Some(russh::ChannelMsg::Eof) |
                                 None => {
                                     // Channel closed
                                     break;
                                 }
-                                Some(Err(e)) => {
-                                    eprintln!("SSH Channel Error: {:?}", e);
-                                    break;
-                                }
-                                _ => {} // Ignore other messages
+                                // Ignore other messages
+                                _ => {} 
                             }
                         }
                     }
@@ -244,11 +242,6 @@ impl SSHManager {
         if let Some(receiver) = receiver_arc {
             let mut rx = receiver.lock().await; // Lock only this session's receiver
             
-            // Wait for data (or return None if closed)
-            // We can add a timeout here if we want to return empty to send heartbeat to frontend,
-            // but typical 'await' is fine if frontend loop handles it.
-            // Using a small timeout to keep the UI loop responsive/checking connectivity might be good.
-            
              match tokio::time::timeout(std::time::Duration::from_millis(5000), rx.recv()).await {
                 Ok(Some(data)) => Ok(data),
                 Ok(None) => anyhow::bail!("Channel closed"), // Stream ended
@@ -260,9 +253,10 @@ impl SSHManager {
     }
 
     pub async fn pty_write(&self, session_id: &str, data: &[u8]) -> Result<()> {
-        let mut channels = self.channels.lock().await;
-        if let Some(channel) = channels.get_mut(session_id) {
-            channel.data(data).await.context("Failed to write to PTY")?;
+        let senders = self.write_senders.lock().await;
+        if let Some(sender) = senders.get(session_id) {
+            sender.send(data.to_vec()).await
+                .map_err(|_| anyhow::anyhow!("Channel closed"))?;
             Ok(())
         } else {
              anyhow::bail!("Channel not found")

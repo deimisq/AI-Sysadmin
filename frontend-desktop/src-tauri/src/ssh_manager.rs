@@ -41,7 +41,7 @@ pub struct SSHManager {
     // Map: SessionID -> Sender (for writing to PTY)
     write_senders: Arc<StdMutex<HashMap<String, tokio::sync::mpsc::Sender<Vec<u8>>>>>,
     // Reads are now handled via Tauri Events, no need for read_receivers map
-    pty_sessions: Arc<Mutex<HashMap<String, PTYSession>>>,
+    pty_sessions: Arc<StdMutex<HashMap<String, PTYSession>>>,
 }
 
 struct RusshClient;
@@ -150,7 +150,7 @@ impl SSHManager {
 
         if let Some(session_mutex) = session_arc {
             // Lock the specific session async
-            let mut session = session_mutex.lock().await; // tokio::sync::Mutex
+            let session = session_mutex.lock().await; // tokio::sync::Mutex
             
             let mut channel = session.channel_open_session().await
                 .context("Failed to open channel")?;
@@ -201,10 +201,10 @@ impl SSHManager {
         };
         
         if let Some(session_mutex) = session_arc {
-            let mut channel = {
-                let mut session = session_mutex.lock().await;
+            let channel = {
+                let session = session_mutex.lock().await;
                 // Open a channel
-                let mut channel = session.channel_open_session().await
+                let channel = session.channel_open_session().await
                     .context("Failed to open channel")?;
                 
                 // Request PTY

@@ -65,7 +65,19 @@ export default function TerminalComponent(props: TerminalComponentProps) {
 
                 } catch (e: any) {
                     console.error("❌ Auto-connect failed:", e);
-                    setError(e.message || "Error de conexión SSH");
+                    console.error("Full error object:", JSON.stringify(e, null, 2));
+
+                    // Extract detailed error message
+                    let errorMsg = "Error de conexión SSH";
+                    if (typeof e === 'string') {
+                        errorMsg = e;
+                    } else if (e.message) {
+                        errorMsg = e.message;
+                    } else if (e.toString) {
+                        errorMsg = e.toString();
+                    }
+
+                    setError(errorMsg);
                 } finally {
                     setConnecting(false);
                 }

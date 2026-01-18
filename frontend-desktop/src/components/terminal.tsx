@@ -21,16 +21,6 @@ export default function TerminalComponent(props: TerminalComponentProps) {
     const [error, setError] = useState<string | null>(null);
     const [retryCount, setRetryCount] = useState(0);
     const [serverInfo, setServerInfo] = useState<{ host: string; username: string } | null>(null);
-    const [isLocalNetwork, setIsLocalNetwork] = useState(false);
-
-    // Detect if server is in local network
-    const checkIfLocal = (ip: string) => {
-        return ip.startsWith('192.168.') ||
-            ip.startsWith('10.') ||
-            ip.startsWith('172.16.') ||
-            ip === 'localhost' ||
-            ip === '127.0.0.1';
-    };
 
     // Detect Tauri
     useEffect(() => {
@@ -39,19 +29,12 @@ export default function TerminalComponent(props: TerminalComponentProps) {
         setIsDesktop(isTauri);
     }, []);
 
-    // Check if server is local
+    // Auto-connect in Desktop mode for ALL servers
     useEffect(() => {
-        if (props.serverData) {
-            setIsLocalNetwork(checkIfLocal(props.serverData.ip_address));
-        }
-    }, [props.serverData]);
-
-    // Auto-connect in Desktop mode for LOCAL servers only
-    useEffect(() => {
-        if (isDesktop && isLocalNetwork && props.serverData && !sessionId && !connecting && retryCount === 0) {
+        if (isDesktop && props.serverData && !sessionId && !connecting && retryCount === 0) {
             autoConnect();
         }
-    }, [isDesktop, isLocalNetwork, props.serverData, sessionId, connecting, retryCount]);
+    }, [isDesktop, props.serverData, sessionId, connecting, retryCount]);
 
     const autoConnect = async () => {
         if (!props.serverData) return;
@@ -95,11 +78,8 @@ export default function TerminalComponent(props: TerminalComponentProps) {
         }
     };
 
-    // Use Legacy terminal if:
-    // - Not desktop, OR
-    // - Failed 3+ times, OR  
-    // - Server is REMOTE (not local network)
-    if (!isDesktop || retryCount >= 3 || (props.serverData && !isLocalNetwork)) {
+    // Use Legacy terminal ONLY if failed 3+ times OR not desktop
+    if (!isDesktop || retryCount >= 3) {
         return <LegacyTerminal {...props} />;
     }
 

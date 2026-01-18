@@ -36,7 +36,7 @@ use tauri::{AppHandle, Emitter}; // Add tauri imports
 
 #[derive(Clone)]
 pub struct SSHManager {
-    sessions: Arc<Mutex<HashMap<String, SessionHandle>>>,
+    sessions: Arc<Mutex<HashMap<String, Arc<Mutex<SessionHandle>>>>>,
     // Channels for communicating with the background I/O task
     // Map: SessionID -> Sender (for writing to PTY)
     write_senders: Arc<Mutex<HashMap<String, tokio::sync::mpsc::Sender<Vec<u8>>>>>,
@@ -117,8 +117,9 @@ impl SSHManager {
         // Store session
         let session_id = Uuid::new_v4().to_string();
         let mut sessions = self.sessions.lock().await;
-        sessions.insert(session_id.clone(), session);
-
+        sessions.insert(session_id.clone(), Arc::new(Mutex::new(session)));
+        
+        println!("SSH Session connected: {}", session_id);
         Ok(session_id)
     }
 
@@ -134,13 +135,16 @@ impl SSHManager {
     }
 
     pub async fn execute_command(&self, session_id: &str, command: &str) -> Result<String> {
-        // Clone session handle to execute without holding global lock
-        let session = {
-            let sessions = self.sessions.lock().await;
+        // Clone session handle (Arc<TokioMutex>) to execute without holding global lock
+        let session_arc = {
+            let sessions = self.sessions.lock().unwrap(); // std::sync::Mutex
             sessions.get(session_id).cloned()
         };
 
-        if let Some(mut session) = session {
+        if let Some(session_mutex) = session_arc {
+            // Lock the specific session async
+            let mut session = session_mutex.lock().await; // tokio::sync::Mutex
+            
             let mut channel = session.channel_open_session().await
                 .context("Failed to open channel")?;
             
@@ -156,14 +160,12 @@ impl SSHManager {
                          output.push_str(&String::from_utf8_lossy(&data));
                      },
                      russh::ChannelMsg::ExtendedData { data, .. } => {
-                         // Append stderr to output for now
                          output.push_str(&String::from_utf8_lossy(&data));
                      },
                      russh::ChannelMsg::Eof | russh::ChannelMsg::Close => break,
-                     _ => {} // Ignore others
+                     _ => {} 
                  }
             }
-            
             Ok(output)
         } else {
             anyhow::bail!("Session not found")
@@ -189,25 +191,32 @@ impl SSHManager {
 
     // PTY methods
     pub async fn create_pty(&self, app_handle: AppHandle, session_id: &str, rows: u32, cols: u32) -> Result<()> {
-        let mut sessions = self.sessions.lock().await;
+        let session_arc = {
+            let sessions = self.sessions.lock().unwrap();
+            sessions.get(session_id).cloned()
+        };
         
-        if let Some(session) = sessions.get_mut(session_id) {
-            // Open a channel
-            let mut channel = session.channel_open_session().await
-                .context("Failed to open channel")?;
-            
-            // Request PTY
-            channel.request_pty(
-                true, 
-                "xterm", 
-                cols, rows, 
-                0, 0, 
-                &[] // No special modes
-            ).await.context("Failed to request PTY")?;
-            
-            // Start shell
-            channel.request_shell(true).await
-                .context("Failed to start shell")?;
+        if let Some(session_mutex) = session_arc {
+            let mut channel = {
+                let mut session = session_mutex.lock().await;
+                // Open a channel
+                let mut channel = session.channel_open_session().await
+                    .context("Failed to open channel")?;
+                
+                // Request PTY
+                channel.request_pty(
+                    true, 
+                    "xterm", 
+                    cols, rows, 
+                    0, 0, 
+                    &[] // No special modes
+                ).await.context("Failed to request PTY")?;
+                
+                // Start shell
+                channel.request_shell(true).await
+                    .context("Failed to start shell")?;
+                channel
+            }; // Drop session lock here
 
             // Create channels for two-way communication
             // Frontend -> SSH (Write)

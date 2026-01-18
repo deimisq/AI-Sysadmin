@@ -85,7 +85,7 @@ async fn greet(name: String) -> String {
 async fn test_ssh_manual() -> Result<String, String> {
     use ssh_test::manual_test_ssh;
     
-    manual_test_ssh()
+    manual_test_ssh().await
         .map(|_| "SSH test completed successfully! Check console for details.".to_string())
 }
 

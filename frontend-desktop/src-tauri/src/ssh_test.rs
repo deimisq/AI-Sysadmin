@@ -6,9 +6,9 @@ use crate::ssh_manager::{SSHManager, SSHCredentials};
 mod integration_tests {
     use super::*;
 
-    #[test]
+    #[tokio::test]
     #[ignore] // Run with: cargo test -- --ignored
-    fn test_ssh_connection_to_localhost() {
+    async fn test_ssh_connection_to_localhost() {
         let manager = SSHManager::new();
         
         let creds = SSHCredentials {
@@ -20,14 +20,14 @@ mod integration_tests {
         };
 
         // Test connection
-        let result = manager.connect(creds);
+        let result = manager.connect(creds).await;
         
         match result {
             Ok(session_id) => {
                 println!("✅ Connected successfully! Session ID: {}", session_id);
                 
                 // Test command execution
-                let output = manager.execute_command(&session_id, "whoami").unwrap();
+                let output = manager.execute_command(&session_id, "whoami").await.unwrap();
                 println!("Command output: {}", output);
                 
                 assert!(output.contains("root") || output.len() > 0);
@@ -42,7 +42,7 @@ mod integration_tests {
     }
 }
 
-pub fn manual_test_ssh() -> Result<(), String> {
+pub async fn manual_test_ssh() -> Result<(), String> {
     println!("🧪 Running manual SSH test...");
     
     let manager = SSHManager::new();
@@ -57,8 +57,7 @@ pub fn manual_test_ssh() -> Result<(), String> {
 
     println!("Connecting to localhost:2222...");
     
-    let rt = tokio::runtime::Runtime::new().map_err(|e| e.to_string())?;
-    let session_id = rt.block_on(manager.connect(creds))
+    let session_id = manager.connect(creds).await
         .map_err(|e| format!("Connection failed: {}", e))?;
     
     println!("✅ Connected! Session ID: {}", session_id);
@@ -67,7 +66,7 @@ pub fn manual_test_ssh() -> Result<(), String> {
     
     for cmd in commands {
         println!("\n$ {}", cmd);
-        match manager.execute_command(&session_id, cmd) {
+        match manager.execute_command(&session_id, cmd).await {
             Ok(output) => println!("{}", output),
             Err(e) => eprintln!("Error: {}", e),
         }

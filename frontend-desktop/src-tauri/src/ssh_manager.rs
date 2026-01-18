@@ -32,6 +32,7 @@ pub struct SSHSessionInfo {
 
 type SessionHandle = client::Handle<RusshClient>;
 
+#[derive(Clone)]
 pub struct SSHManager {
     sessions: Arc<Mutex<HashMap<String, SessionHandle>>>,
     pty_sessions: Arc<Mutex<HashMap<String, PTYSession>>>,
@@ -100,12 +101,7 @@ impl SSHManager {
         Ok(session_id)
     }
 
-    /// This is called from Tauri commands (sync context), so we need a bridge
-    pub fn connect_sync(&self, creds: SSHCredentials) -> Result<String> {
-        // Create a runtime for this specific call
-        let rt = tokio::runtime::Runtime::new()?;
-        rt.block_on(self.connect(creds))
-    }
+    // connect_sync removed - use async connect() directly
 
     pub fn disconnect(&self, session_id: &str) -> Result<()> {
         let rt = tokio::runtime::Runtime::new()?;

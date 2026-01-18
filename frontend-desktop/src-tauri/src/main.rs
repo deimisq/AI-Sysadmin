@@ -32,9 +32,11 @@ async fn ssh_connect(
         private_key_path,
     };
 
-    let manager = state.ssh_manager.lock().unwrap();
+    // Clone manager and drop the lock immediately so we don't block other commands
+    let manager = state.ssh_manager.lock().unwrap().clone();
     
-    manager.connect_sync(creds)
+    // Now await the async operation without holding the lock
+    manager.connect(creds).await
         .map_err(|e| format!("SSH connection failed: {}", e))
 }
 

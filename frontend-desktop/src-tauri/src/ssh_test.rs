@@ -57,7 +57,7 @@ pub fn manual_test_ssh() -> Result<(), String> {
 
     println!("Connecting to localhost:2222...");
     
-    let session_id = manager.connect_sync(creds)
+    let session_id = manager.connect(creds).await
         .map_err(|e| format!("Connection failed: {}", e))?;
     
     println!("✅ Connected! Session ID: {}", session_id);

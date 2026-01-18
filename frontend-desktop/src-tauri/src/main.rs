@@ -98,6 +98,7 @@ async fn pty_create(
     let manager = state.ssh_manager.lock().unwrap();
     
     manager.create_pty(&session_id, rows, cols)
+        .map(|_| session_id)
         .map_err(|e| format!("PTY creation failed: {}", e))
 }
 

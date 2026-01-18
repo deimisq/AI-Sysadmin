@@ -41,9 +41,9 @@ struct RusshClient;
 impl client::Handler for RusshClient {
     type Error = russh::Error;
 
-    async fn check_server_key(
+    async fn check_server_key<'a>(
         &mut self,
-        _server_public_key: &key::PublicKey,
+        _server_public_key: &'a key::PublicKey,
     ) -> Result<bool, Self::Error> {
         // Accept any server key (like ssh -o StrictHostKeyChecking=no)
         Ok(true)

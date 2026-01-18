@@ -1,6 +1,5 @@
 // Stub for PTY session - will be re-implemented with russh
 
-use anyhow::Result;
 use serde::Serialize;
 
 #[derive(Serialize)]

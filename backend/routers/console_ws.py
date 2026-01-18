@@ -95,7 +95,11 @@ async def ssh_websocket_endpoint(websocket: WebSocket, server_id: int, token: st
                         data = await stdout.read(1024)
                         if not data:
                             break
-                        await websocket.send_text(data)
+                        try:
+                            await websocket.send_text(data)
+                        except:
+                            # Client disconnected, stop reading
+                            break
                 except Exception as e:
                     logger.error(f"Read error: {e}")
 
@@ -113,7 +117,10 @@ async def ssh_websocket_endpoint(websocket: WebSocket, server_id: int, token: st
                 except Exception as e:
                     logger.error(f"Write error: {e}")
                 finally:
-                    stdin.write_eof()
+                    try:
+                        stdin.write_eof()
+                    except:
+                        pass
 
             # Run both tasks
             await asyncio.gather(read_stdout(), write_stdin())
@@ -121,7 +128,8 @@ async def ssh_websocket_endpoint(websocket: WebSocket, server_id: int, token: st
     except Exception as e:
         logger.error(f"SSH Connection failed: {e}")
         try:
-            await websocket.send_text(f"\r\nError: Could not connect to SSH server: {str(e)}\r\n")
+            if websocket.client_state.name == 'CONNECTED':
+                await websocket.send_text(f"\r\nError: Could not connect to SSH server: {str(e)}\r\n")
         except:
             pass
     finally:

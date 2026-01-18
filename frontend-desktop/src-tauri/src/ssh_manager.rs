@@ -41,11 +41,11 @@ struct RusshClient;
 impl client::Handler for RusshClient {
     type Error = russh::Error;
 
-    fn check_server_key(
-        &mut self,
-        _server_public_key: &key::PublicKey,
-    ) -> impl std::future::Future<Output = Result<bool, Self::Error>> + Send {
-        async { Ok(true) }
+    fn check_server_key<'a>(
+        &'a mut self,
+        _server_public_key: &'a key::PublicKey,
+    ) -> impl std::future::Future<Output = Result<bool, Self::Error>> + Send + 'a {
+        async move { Ok(true) }
     }
 }
 

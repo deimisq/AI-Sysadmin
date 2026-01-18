@@ -1,4 +1,5 @@
-import { fetch } from '@tauri-apps/plugin-http';
+// Use native window.fetch instead of Tauri plugin for better compatibility
+// import { fetch } from '@tauri-apps/plugin-http';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://testing.sentrait.com.uy/api/v1';
 
@@ -20,9 +21,8 @@ class ApiClient {
     async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
         const url = `${this.baseUrl}${endpoint}`;
 
-        // Check if running in Tauri to decide fetch implementation
-        // Ideally use plugin-http always for desktop build
-        const response = await fetch(url, {
+        // Use native fetch (WebView's built-in)
+        const response = await window.fetch(url, {
             ...options,
             headers: {
                 ...this.getHeaders(),

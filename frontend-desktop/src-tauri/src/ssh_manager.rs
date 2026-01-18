@@ -1,7 +1,7 @@
 // SSH Connection Manager using russh (modern, async)
 
 use russh::*;
-use russh_keys::*;
+use russh::keys::*;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::Mutex;
@@ -43,7 +43,7 @@ impl client::Handler for RusshClient {
 
     fn check_server_key(
         &mut self,
-        _server_public_key: &ssh_key::PublicKey,
+        _server_public_key: &key::PublicKey,
     ) -> impl std::future::Future<Output = Result<bool, Self::Error>> + Send {
         async { Ok(true) }
     }

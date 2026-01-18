@@ -109,3 +109,5 @@ async def get_version():
             "currentYear": datetime.now().year,
             "error": str(e)
         }
+        
+# Force backend restart due to hanging processes (likely DB lock)

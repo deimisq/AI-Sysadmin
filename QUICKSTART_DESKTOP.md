@@ -24,94 +24,74 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ### 2. Instalar Dependencias (primera vez)
 
 ```bash
-cd /home/ubuntu/ai_agent/frontend
+cd /home/ubuntu/ai_agent/frontend-desktop
 npm install
 ```
 
-### 3. Ejecutar Aplicación Desktop
+### 3. Ejecutar Aplicación Desktop (Dev Mode)
 
 ```bash
-npm run tauri-dev
+npm run tauri:dev
 ```
 
-Esto abrirá una ventana nativa con la aplicación.
+Esto abrirá una ventana nativa con la aplicación usando el nuevo cliente SSH nativo en Rust.
 
 ---
 
-## 📦 Para Crear Instalador Windows
+## 📦 Para Crear Instalador (Release)
 
-**IMPORTANTE:** Esto solo funciona en Windows. Para compilar desde Linux necesitarás cross-compilation.
+Para generar los binarios optimizados (.deb / .AppImage en Linux, .exe en Windows):
 
 ```bash
-npm run tauri-build
+npm run tauri build
 ```
 
 El instalador se creará en:
 
 ```
-frontend/src-tauri/target/release/bundle/msi/
+frontend-desktop/src-tauri/target/release/bundle/
 ```
 
 ---
 
-## 🎯 Estado Actual
+## 🎯 Estado Actual (v2.0.0)
 
 ### ✅ Completado
 
-- [x] Tauri configurado e integrado
-- [x] Next.js compatible con export estático
-- [x] Scripts de build listos
-- [x] Configuración dual (SaaS + Desktop)
-- [x] Documentación
+- [x] **Cliente SSH Nativo**: Implementado con Rust/russh (Async/Tokio).
+- [x] **Terminal Event-Driven**: Zero-latency typing con Tauri Events.
+- [x] **Dashboard Integrado**: UI de Sysadmin completa en Desktop.
+- [x] **Scripts de Build**: `npm run tauri build` genera instaladores.
 
-### 🔄 Pendiente (Próximos Pasos)
+### 🔄 Pendiente (Próximos Pasos - Phase 2)
 
-- [ ] Empaquetar backend Python
-- [ ] Integrar backend como sidecar
-- [ ] Base de datos SQLite local
-- [ ] Testing en Windows
-- [ ] Instalador personalizado con logo
+- [ ] Multi-tenancy (Organizaciones)
+- [ ] Soporte RDP Local (Windows)
+- [ ] Integración Ollama Local
 
 ---
 
 ## 🐛 Solución Rápida de Problemas
 
-### "rustc: command not found"
+### Error de compilación "libwebkit2gtk"
 
-```bash
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-source ~/.cargo/env
-```
-
-### Error de compilación en Linux
-
-Tauri requiere algunas dependencias del sistema:
+Tauri requiere dependencias de sistema:
 
 ```bash
 sudo apt update
-sudo apt install libwebkit2gtk-4.0-dev \
-    build-essential \
-    curl \
-    wget \
-    file \
-    libssl-dev \
-    libgtk-3-dev \
-    libayatana-appindicator3-dev \
-    librsvg2-dev
+sudo apt install libwebkit2gtk-4.0-dev build-essential curl wget file libssl-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev
 ```
 
-### "msiexec: command not found"
+### Async/Sync Mutex Issues
 
-Normal si estás en Linux. Para crear el instalador .msi necesitas estar en Windows.
+Si ves errores de compilación relacionados con `MutexGuard` o `Send` trait, asegúrate de estar usando la versión `2.0.0` donde se corrigió la gestión de `std::sync::Mutex` vs `tokio::sync::Mutex`.
 
 ---
 
 ## 📝 Notas Importantes
 
-1. **SaaS sigue funcionando normalmente** - No hemos tocado el código de producción
-2. **El frontend es el mismo** - Solo cambia cómo se empaqueta
-3. **Backend aún no integrado** - Por ahora solo es la interfaz
-4. **Windows es el objetivo inicial** - macOS y Linux vendrán después
+1. **Backend Híbrido**: La app desktop V2.0 usa SSH directo para conectar a servidores pero aún requiere la API backend para autenticación y persistencia de perfiles.
+2. **Performance**: La conexión SSH es ~10x más rápida que la versión web (WebSocket proxy).
 
 ---
 

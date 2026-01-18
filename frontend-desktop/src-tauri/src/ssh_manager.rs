@@ -138,12 +138,13 @@ impl SSHManager {
     }
 
     // PTY methods
-    pub fn create_pty(&self, session_id: &str, rows: u32, cols: u32) -> Result<()> {
-        let rt = tokio::runtime::Runtime::new()?;
-        rt.block_on(async {
-            let mut sessions = self.sessions.lock().await;
-            let session = sessions.get_mut(session_id).context("Session not found")?;
-            
+    pub async fn create_pty(&self, session_id: &str, rows: u32, cols: u32) -> Result<()> {
+        let mut sessions = self.sessions.lock().await;
+        // Clone session handle to release lock early if possible, 
+        // but session access usually needs exclusive mutability or internal locking.
+        // Russh Client session handles are cloneable and share internal state.
+        
+        if let Some(session) = sessions.get_mut(session_id) {
             // Open a channel
             let mut channel = session.channel_open_session().await
                 .context("Failed to open channel")?;
@@ -161,16 +162,11 @@ impl SSHManager {
             channel.request_shell(true).await
                 .context("Failed to start shell")?;
 
-            // Store channel somewhere? 
-            // In russh, the channel IS the interaction point.
-            // We need to store this channel to read/write to it.
-            // But SessionHandle doesn't store channels directly in a way we can access later easily via ID
-            // unless we re-architect to store ChannelHandle instead of SessionHandle.
-            
-            // For now, let's just log success. 
-            // REAL IMPLEMENTATION requires storing the channel in a separate map.
+            // TODO: Store channel for I/O
             Ok(())
-        })
+        } else {
+            anyhow::bail!("Session not found")
+        }
     }
 
     pub fn pty_read(&self, _session_id: &str) -> Result<Vec<u8>> {

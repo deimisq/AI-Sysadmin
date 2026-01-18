@@ -97,9 +97,10 @@ async fn pty_create(
     rows: u32,
     cols: u32,
 ) -> Result<String, String> {
-    let manager = state.ssh_manager.lock().unwrap();
+    // Release lock and clone manager
+    let manager = state.ssh_manager.lock().unwrap().clone();
     
-    manager.create_pty(&session_id, rows, cols)
+    manager.create_pty(&session_id, rows, cols).await
         .map(|_| session_id)
         .map_err(|e| format!("PTY creation failed: {}", e))
 }

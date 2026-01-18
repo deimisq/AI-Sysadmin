@@ -189,16 +189,20 @@ impl SSHManager {
                     tokio::select! {
                         // Data from frontend to write to SSH
                         Some(data) = write_rx.recv() => {
+                            println!("DEBUG: I/O Loop received {} bytes to write: {:?}", data.len(), String::from_utf8_lossy(&data));
                             // russh data() takes &[u8] (which implements AsyncRead)
                             if let Err(e) = channel.data(&data[..]).await {
                                 eprintln!("Error writing to SSH channel: {:?}", e);
                                 break;
+                            } else {
+                                println!("DEBUG: Scuceesfully wrote data to SSH channel");
                             }
                         }
                         // Data from SSH to send to frontend
                         msg = channel.wait() => {
                             match msg {
                                 Some(russh::ChannelMsg::Data { data }) => {
+                                    println!("DEBUG: Received {} bytes from SSH", data.len());
                                     if read_tx.send(data.to_vec()).await.is_err() {
                                         break;
                                     }
@@ -211,6 +215,7 @@ impl SSHManager {
                                 Some(russh::ChannelMsg::Close) | 
                                 Some(russh::ChannelMsg::Eof) |
                                 None => {
+                                    println!("DEBUG: SSH Channel closed/EOF");
                                     // Channel closed
                                     break;
                                 }
@@ -253,12 +258,14 @@ impl SSHManager {
     }
 
     pub async fn pty_write(&self, session_id: &str, data: &[u8]) -> Result<()> {
+        println!("DEBUG: pty_write called for session {} with {} bytes: {:?}", session_id, data.len(), String::from_utf8_lossy(data));
         let senders = self.write_senders.lock().await;
         if let Some(sender) = senders.get(session_id) {
             sender.send(data.to_vec()).await
                 .map_err(|_| anyhow::anyhow!("Channel closed"))?;
             Ok(())
         } else {
+             println!("DEBUG: Session write channel not found for {}", session_id);
              anyhow::bail!("Channel not found")
         }
     }

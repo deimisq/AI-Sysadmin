@@ -379,6 +379,36 @@ def update_server(
 
     return db_server
 
+@router.get("/servers/{server_id}/credentials")
+def get_server_credentials(
+    server_id: int,
+    current_user: models.User = Depends(dependencies.get_current_active_user),
+    db: Session = Depends(dependencies.get_db)
+):
+    """Get decrypted credentials for direct SSH connection (Desktop only)"""
+    db_server = db.query(models.Server).filter(models.Server.id == server_id).first()
+    if not db_server:
+        raise HTTPException(status_code=404, detail="Server not found")
+    
+    # Permission check
+    is_admin = current_user.role in [models.RoleType.SUPERADMIN.value, models.RoleType.ADMIN.value]
+    is_owner = db_server.created_by == current_user.id
+    
+    if not (is_admin or is_owner):
+        raise HTTPException(status_code=403, detail="Access denied")
+
+    # Decrypt credentials
+    decrypted_password = decrypt_data(db_server.ssh_password) if db_server.ssh_password else None
+    decrypted_key = decrypt_data(db_server.ssh_key_path) if db_server.ssh_key_path else None
+
+    return {
+        "ip_address": db_server.ip_address,
+        "ssh_username": db_server.ssh_username,
+        "ssh_password": decrypted_password,
+        "ssh_key_path": decrypted_key,
+        "ssh_port": db_server.ssh_port or 22
+    }
+
 
 
 @router.post("/execute/", response_model=schemas.CommandResponse)

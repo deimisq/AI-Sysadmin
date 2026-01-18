@@ -50,19 +50,51 @@ export default function TerminalComponent(props: TerminalComponentProps) {
     }, []);
 
 
-    // Pre-fill form from server data
+    // AUTO-CONNECT: Get credentials and connect automatically
     useEffect(() => {
-        if (props.serverData) {
-            console.log("Pre-filling connection form with:", props.serverData);
-            setForm(prev => ({
-                ...prev,
-                host: props.serverData?.ip_address || props.hostname || '',
-                username: props.serverData?.ssh_username || 'ubuntu',
-                // Note: ssh_key_path from DB is server-side, not client-side, so we don't autofill it
-                // unless we want to assume a convention.
-            }));
+        if (isDesktop && props.serverData && !sessionId && !connecting) {
+            const autoConnect = async () => {
+                setConnecting(true);
+                setError(null);
+
+                try {
+                    console.log("🔐 Fetching credentials for auto-connect...");
+                    const { fetchServerCredentials } = await import('../lib/api');
+                    const creds = await fetchServerCredentials(props.serverData!.id);
+
+                    console.log("🚀 Auto-connecting to", creds.ip_address);
+                    const sid = await invoke<string>('ssh_connect', {
+                        host: creds.ip_address,
+                        port: creds.ssh_port,
+                        username: creds.ssh_username,
+                        password: creds.ssh_password || null,
+                        privateKeyPath: creds.ssh_key_path || null
+                    });
+
+                    console.log("✅ Connected! Session:", sid);
+                    setSessionId(sid);
+
+                } catch (e: any) {
+                    console.error("❌ Auto-connect failed:", e);
+                    setError("No se pudo conectar automáticamente. Verifica las credenciales.");
+
+                    // Fallback: pre-fill form for manual connection
+                    if (props.serverData) {
+                        setForm(prev => ({
+                            ...prev,
+                            host: props.serverData?.ip_address || '',
+                            username: props.serverData?.ssh_username || 'ubuntu',
+                        }));
+                    }
+                } finally {
+                    setConnecting(false);
+                }
+            };
+
+            autoConnect();
         }
-    }, [props.serverData, props.hostname]);
+    }, [isDesktop, props.serverData, sessionId, connecting]);
+
 
 
     const handleChange = (field: string, value: any) => {

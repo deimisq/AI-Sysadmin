@@ -57,7 +57,8 @@ pub fn manual_test_ssh() -> Result<(), String> {
 
     println!("Connecting to localhost:2222...");
     
-    let session_id = manager.connect(creds).await
+    let rt = tokio::runtime::Runtime::new().map_err(|e| e.to_string())?;
+    let session_id = rt.block_on(manager.connect(creds))
         .map_err(|e| format!("Connection failed: {}", e))?;
     
     println!("✅ Connected! Session ID: {}", session_id);

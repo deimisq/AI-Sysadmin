@@ -133,9 +133,41 @@ impl SSHManager {
         })
     }
 
-    pub fn execute_command(&self, _session_id: &str, _command: &str) -> Result<String> {
-        // Stub - russh command execution needs channel implementation
-        anyhow::bail!("Command execution not yet implemented with russh")
+    pub async fn execute_command(&self, session_id: &str, command: &str) -> Result<String> {
+        // Clone session handle to execute without holding global lock
+        let session = {
+            let sessions = self.sessions.lock().await;
+            sessions.get(session_id).cloned()
+        };
+
+        if let Some(mut session) = session {
+            let mut channel = session.channel_open_session().await
+                .context("Failed to open channel")?;
+            
+            channel.exec(true, command).await
+                .context("Failed to execute command")?;
+            
+            let mut output = String::new();
+            
+            // Read output until closed
+            while let Some(msg) = channel.wait().await {
+                 match msg {
+                     russh::ChannelMsg::Data { data } => {
+                         output.push_str(&String::from_utf8_lossy(&data));
+                     },
+                     russh::ChannelMsg::ExtendedData { data, .. } => {
+                         // Append stderr to output for now
+                         output.push_str(&String::from_utf8_lossy(&data));
+                     },
+                     russh::ChannelMsg::Eof | russh::ChannelMsg::Close => break,
+                     _ => {} // Ignore others
+                 }
+            }
+            
+            Ok(output)
+        } else {
+            anyhow::bail!("Session not found")
+        }
     }
 
     pub fn list_sessions(&self) -> Vec<SSHSessionInfo> {

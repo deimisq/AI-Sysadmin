@@ -47,9 +47,9 @@ async fn ssh_execute(
     session_id: String,
     command: String,
 ) -> Result<String, String> {
-    let manager = state.ssh_manager.lock().unwrap();
+    let manager = state.ssh_manager.lock().unwrap().clone();
     
-    manager.execute_command(&session_id, &command)
+    manager.execute_command(&session_id, &command).await
         .map_err(|e| format!("Command execution failed: {}", e))
 }
 

@@ -4,8 +4,8 @@ use russh::*;
 use russh::keys::*;
 use async_trait::async_trait;
 use std::collections::HashMap;
-use std::sync::Arc;
-use tokio::sync::Mutex;
+use std::sync::{Arc, Mutex as StdMutex};
+use tokio::sync::Mutex as TokioMutex;
 use anyhow::{Result, Context};
 use uuid::Uuid;
 use serde::{Serialize, Deserialize};
@@ -36,10 +36,10 @@ use tauri::{AppHandle, Emitter}; // Add tauri imports
 
 #[derive(Clone)]
 pub struct SSHManager {
-    sessions: Arc<Mutex<HashMap<String, Arc<Mutex<SessionHandle>>>>>,
+    sessions: Arc<StdMutex<HashMap<String, Arc<TokioMutex<SessionHandle>>>>>,
     // Channels for communicating with the background I/O task
     // Map: SessionID -> Sender (for writing to PTY)
-    write_senders: Arc<Mutex<HashMap<String, tokio::sync::mpsc::Sender<Vec<u8>>>>>,
+    write_senders: Arc<StdMutex<HashMap<String, tokio::sync::mpsc::Sender<Vec<u8>>>>>,
     // Reads are now handled via Tauri Events, no need for read_receivers map
     pty_sessions: Arc<Mutex<HashMap<String, PTYSession>>>,
 }
@@ -62,9 +62,9 @@ impl client::Handler for RusshClient {
 impl SSHManager {
     pub fn new() -> Self {
         Self {
-            sessions: Arc::new(Mutex::new(HashMap::new())),
-            write_senders: Arc::new(Mutex::new(HashMap::new())),
-            pty_sessions: Arc::new(Mutex::new(HashMap::new())),
+            sessions: Arc::new(StdMutex::new(HashMap::new())),
+            write_senders: Arc::new(StdMutex::new(HashMap::new())),
+            pty_sessions: Arc::new(StdMutex::new(HashMap::new())),
         }
     }
 
@@ -116,8 +116,8 @@ impl SSHManager {
 
         // Store session
         let session_id = Uuid::new_v4().to_string();
-        let mut sessions = self.sessions.lock().await;
-        sessions.insert(session_id.clone(), Arc::new(Mutex::new(session)));
+        let mut sessions = self.sessions.lock().unwrap();
+        sessions.insert(session_id.clone(), Arc::new(TokioMutex::new(session)));
         
         println!("SSH Session connected: {}", session_id);
         Ok(session_id)
@@ -126,12 +126,19 @@ impl SSHManager {
     // connect_sync removed - use async connect() directly
 
     pub fn disconnect(&self, session_id: &str) -> Result<()> {
-        let rt = tokio::runtime::Runtime::new()?;
-        rt.block_on(async {
-            let mut sessions = self.sessions.lock().await;
+        // Remove from sessions map (closes connection when Arc drops)
+        {
+            let mut sessions = self.sessions.lock().unwrap();
             sessions.remove(session_id);
-            Ok(())
-        })
+        }
+        
+        // Remove from write channels
+        {
+            let mut senders = self.write_senders.lock().unwrap();
+            senders.remove(session_id);
+        }
+        
+        Ok(())
     }
 
     pub async fn execute_command(&self, session_id: &str, command: &str) -> Result<String> {
@@ -173,20 +180,17 @@ impl SSHManager {
     }
 
     pub fn list_sessions(&self) -> Vec<SSHSessionInfo> {
-        let rt = tokio::runtime::Runtime::new().unwrap();
-        rt.block_on(async {
-            let sessions = self.sessions.lock().await;
-            sessions
-                .keys()
-                .map(|id| SSHSessionInfo {
-                    session_id: id.clone(),
-                    host: "unknown".to_string(),
-                    username: "unknown".to_string(),
-                    connected_at: "unknown".to_string(),
-                    is_active: true,
-                })
-                .collect()
-        })
+        let sessions = self.sessions.lock().unwrap();
+        sessions
+            .keys()
+            .map(|id| SSHSessionInfo {
+                session_id: id.clone(),
+                host: "unknown".to_string(),
+                username: "unknown".to_string(),
+                connected_at: "unknown".to_string(),
+                is_active: true,
+            })
+            .collect()
     }
 
     // PTY methods
@@ -278,7 +282,7 @@ impl SSHManager {
             });
 
             // Store channels
-            self.write_senders.lock().await.insert(session_id.to_string(), write_tx);
+            self.write_senders.lock().unwrap().insert(session_id.to_string(), write_tx);
             
             Ok(())
         } else {
@@ -290,7 +294,7 @@ impl SSHManager {
 
     pub async fn pty_write(&self, session_id: &str, data: &[u8]) -> Result<()> {
         println!("DEBUG: pty_write called for session {} with {} bytes: {:?}", session_id, data.len(), String::from_utf8_lossy(data));
-        let senders = self.write_senders.lock().await;
+        let senders = self.write_senders.lock().unwrap();
         if let Some(sender) = senders.get(session_id) {
             sender.send(data.to_vec()).await
                 .map_err(|_| anyhow::anyhow!("Channel closed"))?;

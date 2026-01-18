@@ -44,9 +44,9 @@ impl client::Handler for RusshClient {
     async fn check_server_key(
         self,
         _server_public_key: &key::PublicKey,
-    ) -> Result<bool, Self::Error> {
+    ) -> Result<(Self, bool), Self::Error> {
         // Accept any server key (like ssh -o StrictHostKeyChecking=no)
-        Ok(true)
+        Ok((self, true))
     }
 }
 

@@ -185,10 +185,12 @@ impl SSHManager {
             let session_id_clone = session_id.to_string();
             // Spawn background task to handle I/O loop
             tokio::spawn(async move {
+                println!("DEBUG: Starting I/O Loop for session {}", session_id_clone);
                 loop {
                     tokio::select! {
                         // Data from frontend to write to SSH
                         Some(data) = write_rx.recv() => {
+                            println!("DEBUG: I/O Loop received {} bytes to write", data.len());
                             // russh data() takes &[u8] (which implements AsyncRead)
                             if let Err(e) = channel.data(&data[..]).await {
                                 eprintln!("Error writing to SSH channel: {:?}", e);
@@ -199,25 +201,39 @@ impl SSHManager {
                         msg = channel.wait() => {
                             match msg {
                                 Some(russh::ChannelMsg::Data { data }) => {
+                                    println!("DEBUG: Received {} bytes from SSH", data.len());
                                     // Emit event to frontend
-                                    let _ = app_handle.emit(&format!("pty-data:{}", session_id_clone), data.to_vec());
+                                    if let Err(e) = app_handle.emit(&format!("pty-data:{}", session_id_clone), data.to_vec()) {
+                                        eprintln!("Failed to emit pty-data event: {}", e);
+                                    }
                                 }
                                 Some(russh::ChannelMsg::ExtendedData { data, .. }) => {
                                      let _ = app_handle.emit(&format!("pty-data:{}", session_id_clone), data.to_vec());
                                 }
-                                Some(russh::ChannelMsg::Close) | 
-                                Some(russh::ChannelMsg::Eof) |
+                                Some(russh::ChannelMsg::Close) => {
+                                    println!("DEBUG: SSH Channel received CLOSE msg");
+                                    break;
+                                }
+                                Some(russh::ChannelMsg::Eof) => {
+                                    println!("DEBUG: SSH Channel received EOF msg");
+                                    // Often EOF is followed by Close, but some servers send it early.
+                                    // We might want to keep writing? Usually EOF from server means shell closed.
+                                    break;
+                                }
                                 None => {
-                                    println!("DEBUG: SSH Channel closed/EOF");
+                                    println!("DEBUG: SSH Channel wait() returned None (Channel closed locally or connection lost)");
                                     // Channel closed
                                     break;
                                 }
                                 // Ignore other messages
-                                _ => {} 
+                                msg => {
+                                    println!("DEBUG: SSH Ignored msg: {:?}", msg);
+                                } 
                             }
                         }
                     }
                 }
+                println!("DEBUG: I/O Loop ENDED for session {}", session_id_clone);
             });
 
             // Store channels

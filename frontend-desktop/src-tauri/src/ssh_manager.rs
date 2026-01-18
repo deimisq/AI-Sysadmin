@@ -84,16 +84,22 @@ impl SSHManager {
         // Authenticate
         let auth_res = if let Some(password) = &creds.password {
             session.authenticate_password(creds.username.clone(), password.clone()).await
-        } else if let Some(key_path) = &creds.private_key_path {
-            // Load key from file
-            let key_path = std::path::Path::new(key_path);
+        } else if let Some(key_or_path) = &creds.private_key_path {
+            // Check if it's content (PEM) or path
+            let key_pair = if key_or_path.contains("-----BEGIN") {
+                // It's the key content
+                 let passphrase = creds.password.as_deref();
+                 russh::keys::decode_secret_key(key_or_path, passphrase)
+                    .context("Failed to decode SSH private key content")?
+            } else {
+                // It's a file path
+                let key_path = std::path::Path::new(key_or_path);
+                // Try to use password as passphrase if available
+                let passphrase = creds.password.as_deref();
+                russh::keys::load_secret_key(key_path, passphrase)
+                    .with_context(|| format!("Failed to load SSH private key from {:?}.", key_path))?
+            };
             
-            // Try to use password as passphrase if available
-            let passphrase = creds.password.as_deref();
-            
-            let key_pair = russh::keys::load_secret_key(key_path, passphrase)
-                .with_context(|| format!("Failed to load SSH private key from {:?}. Verify file exists and format is supported (PEM/OpenSSH). Inner error", key_path))?;
-                
             session.authenticate_publickey(creds.username.clone(), Arc::new(key_pair)).await
         } else {
             anyhow::bail!("No authentication method provided");

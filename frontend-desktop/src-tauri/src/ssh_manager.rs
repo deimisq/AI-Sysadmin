@@ -46,7 +46,6 @@ impl client::Handler for RusshClient {
         _server_public_key: &key::PublicKey,
     ) -> Result<bool, Self::Error> {
         // Accept any server key (like ssh -o StrictHostKeyChecking=no)
-        // In production, verify against known_hosts
         Ok(true)
     }
 }
@@ -63,7 +62,7 @@ impl SSHManager {
     pub async fn connect(&self, creds: SSHCredentials) -> Result<String> {
         let config = client::Config {
             inactivity_timeout: Some(std::time::Duration::from_secs(300)),
-            ..<Default as std::default::Default>::default()
+            ..Default::default()
         };
         
         let client = RusshClient;
@@ -115,11 +114,16 @@ impl SSHManager {
         })
     }
 
-    pub fn list_sessions(&self) -> Result<Vec<SSHSessionInfo>> {
-        let rt = tokio::runtime::Runtime::new()?;
+    pub fn execute_command(&self, _session_id: &str, _command: &str) -> Result<String> {
+        // Stub - russh command execution needs channel implementation
+        anyhow::bail!("Command execution not yet implemented with russh")
+    }
+
+    pub fn list_sessions(&self) -> Vec<SSHSessionInfo> {
+        let rt = tokio::runtime::Runtime::new().unwrap();
         rt.block_on(async {
             let sessions = self.sessions.lock().await;
-            Ok(sessions
+            sessions
                 .keys()
                 .map(|id| SSHSessionInfo {
                     session_id: id.clone(),
@@ -128,21 +132,21 @@ impl SSHManager {
                     connected_at: "unknown".to_string(),
                     is_active: true,
                 })
-                .collect())
+                .collect()
         })
     }
 
-    // PTY methods remain the same structure
-    pub fn pty_create_sync(&self, session_id: &str) -> Result<()> {
+    // PTY methods
+    pub fn create_pty(&self, _session_id: &str, _rows: u32, _cols: u32) -> Result<()> {
         // Stub for now - russh PTY integration needed
         anyhow::bail!("PTY not yet implemented with russh")
     }
 
-    pub fn pty_read(&self, _session_id: &str) -> Result<String> {
+    pub fn pty_read(&self, _session_id: &str) -> Result<Vec<u8>> {
         anyhow::bail!("PTY not yet implemented")
     }
 
-    pub fn pty_write(&self, _session_id: &str, _data: &str) -> Result<()> {
+    pub fn pty_write(&self, _session_id: &str, _data: &[u8]) -> Result<()> {
         anyhow::bail!("PTY not yet implemented")
     }
 

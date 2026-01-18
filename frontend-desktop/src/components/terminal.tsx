@@ -50,6 +50,16 @@ export default function TerminalComponent(props: TerminalComponentProps) {
                     const creds = await fetchServerCredentials(props.serverData!.id);
 
                     console.log("🚀 Auto-connecting to", creds.ip_address);
+                    console.log("📋 Credentials received from backend:", {
+                        ip: creds.ip_address,
+                        port: creds.ssh_port,
+                        username: creds.ssh_username,
+                        hasPassword: !!creds.ssh_password,
+                        passwordLength: creds.ssh_password?.length || 0,
+                        passwordPreview: creds.ssh_password?.substring(0, 5) + '...',
+                        hasKey: !!creds.ssh_key_path,
+                    });
+
                     setServerInfo({ host: creds.ip_address, username: creds.ssh_username });
 
                     const sid = await invoke<string>('ssh_connect', {

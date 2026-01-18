@@ -34,6 +34,7 @@ export default function TerminalComponent(props: TerminalComponentProps) {
     });
     const [connecting, setConnecting] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [autoConnectAttempted, setAutoConnectAttempted] = useState(false);
 
     // Initial check
     useEffect(() => {
@@ -52,8 +53,9 @@ export default function TerminalComponent(props: TerminalComponentProps) {
 
     // AUTO-CONNECT: Get credentials and connect automatically
     useEffect(() => {
-        if (isDesktop && props.serverData && !sessionId && !connecting) {
+        if (isDesktop && props.serverData && !sessionId && !connecting && !autoConnectAttempted) {
             const autoConnect = async () => {
+                setAutoConnectAttempted(true); // Prevent re-runs
                 setConnecting(true);
                 setError(null);
 
@@ -76,7 +78,7 @@ export default function TerminalComponent(props: TerminalComponentProps) {
 
                 } catch (e: any) {
                     console.error("❌ Auto-connect failed:", e);
-                    setError("No se pudo conectar automáticamente. Verifica las credenciales.");
+                    setError("No se pudo conectar automáticamente. Usa el formulario.");
 
                     // Fallback: pre-fill form for manual connection
                     if (props.serverData) {
@@ -93,7 +95,7 @@ export default function TerminalComponent(props: TerminalComponentProps) {
 
             autoConnect();
         }
-    }, [isDesktop, props.serverData, sessionId, connecting]);
+    }, [isDesktop, props.serverData, sessionId, connecting, autoConnectAttempted]);
 
 
 

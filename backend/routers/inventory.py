@@ -99,7 +99,7 @@ def update_group(
     # Org check
     if not current_user.is_superuser:
         if db_group.organization_id is not None and db_group.organization_id != current_user.organization_id:
-        raise HTTPException(status_code=404, detail="Group not found")
+            raise HTTPException(status_code=404, detail="Group not found")
     
     # Check permissions: only creator or admins can edit
     is_admin = current_user.role in [models.RoleType.SUPERADMIN.value, models.RoleType.ADMIN.value]
@@ -133,7 +133,7 @@ def delete_group(
     # Org check
     if not current_user.is_superuser:
         if db_group.organization_id is not None and db_group.organization_id != current_user.organization_id:
-        raise HTTPException(status_code=404, detail="Group not found")
+            raise HTTPException(status_code=404, detail="Group not found")
     
     # Check permissions: only creator or admins can delete
     is_admin = current_user.role in [models.RoleType.SUPERADMIN.value, models.RoleType.ADMIN.value]
@@ -344,7 +344,7 @@ def delete_server(
     # Org check
     if not current_user.is_superuser:
         if server.organization_id is not None and server.organization_id != current_user.organization_id:
-        raise HTTPException(status_code=404, detail="Server not found")
+            raise HTTPException(status_code=404, detail="Server not found")
     
     # Check permissions
     is_admin = current_user.role in [models.RoleType.SUPERADMIN.value, models.RoleType.ADMIN.value]
@@ -387,7 +387,7 @@ def update_server(
     # Org check
     if not current_user.is_superuser:
         if db_server.organization_id is not None and db_server.organization_id != current_user.organization_id:
-        raise HTTPException(status_code=404, detail="Server not found")
+            raise HTTPException(status_code=404, detail="Server not found")
     
     # Check permissions
     is_admin = current_user.role in [models.RoleType.SUPERADMIN.value, models.RoleType.ADMIN.value]
@@ -443,7 +443,7 @@ def get_server_credentials(
     # Org check
     if not current_user.is_superuser:
         if db_server.organization_id is not None and db_server.organization_id != current_user.organization_id:
-        raise HTTPException(status_code=404, detail="Server not found")
+            raise HTTPException(status_code=404, detail="Server not found")
     
     # Permission check
     is_admin = current_user.role in [models.RoleType.SUPERADMIN.value, models.RoleType.ADMIN.value]
@@ -479,7 +479,7 @@ async def execute_command(
     # Org check
     if not current_user.is_superuser:
         if server.organization_id is not None and server.organization_id != current_user.organization_id:
-        raise HTTPException(status_code=404, detail="Server not found")
+            raise HTTPException(status_code=404, detail="Server not found")
     
     # Decrypt SSH credentials before using them
     from utils.encryption import decrypt_data
@@ -693,7 +693,7 @@ async def get_server_diagnostic(
     # Org check
     if not current_user.is_superuser:
         if server.organization_id is not None and server.organization_id != current_user.organization_id:
-        raise HTTPException(status_code=404, detail="Server not found")
+            raise HTTPException(status_code=404, detail="Server not found")
     
     # Decrypt SSH credentials before using them
     ssh_key_path = None
@@ -834,7 +834,7 @@ async def diagnose_server_problem_chat(
     # Org check
     if not current_user.is_superuser:
         if server.organization_id is not None and server.organization_id != current_user.organization_id:
-        raise HTTPException(status_code=404, detail="Server not found")
+            raise HTTPException(status_code=404, detail="Server not found")
 
     try:
         # Gather diagnostics first

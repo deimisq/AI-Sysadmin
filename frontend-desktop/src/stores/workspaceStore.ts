@@ -1,15 +1,16 @@
 import { create } from 'zustand';
 import { type Server } from '../lib/api';
 
-export type TabType = 'terminal' | 'dashboard' | 'settings' | 'rdp' | 'reports' | 'docs' | 'profile' | 'admin' | 'help';
+export type TabType = 'terminal' | 'rdp';
+export type OverlayType = 'dashboard' | 'settings' | 'profile' | 'admin' | 'docs' | 'reports' | 'help' | null;
 
 export interface Tab {
     id: string;
     type: TabType;
     title: string;
-    serverId?: string; // If tied to a server
-    server?: Server;   // Full server object for connection
-    data?: any;       // Extra data (e.g. initial command)
+    serverId?: string;
+    server?: Server;
+    data?: any;
 }
 
 interface WorkspaceState {
@@ -17,6 +18,7 @@ interface WorkspaceState {
     activeTabId: string | null;
     sidebarVisible: boolean;
     aiPanelVisible: boolean;
+    activeOverlay: OverlayType; // New: Global overlay state
 
     // Actions
     openTab: (tab: Omit<Tab, 'id'> & { id?: string }) => void;
@@ -24,6 +26,7 @@ interface WorkspaceState {
     setActiveTab: (id: string) => void;
     toggleSidebar: () => void;
     toggleAIPanel: () => void;
+    setActiveOverlay: (overlay: OverlayType) => void; // New action
 }
 
 export const useWorkspaceStore = create<WorkspaceState>((set) => ({
@@ -31,21 +34,13 @@ export const useWorkspaceStore = create<WorkspaceState>((set) => ({
     activeTabId: null,
     sidebarVisible: true,
     aiPanelVisible: true,
+    activeOverlay: null,
 
     openTab: (tabData) => set((state) => {
-        // Dedup logic: if tab with same serverId/type exists, focus it
         if (tabData.serverId) {
             const existing = state.tabs.find(t => t.serverId === tabData.serverId && t.type === tabData.type);
             if (existing) {
-                return { activeTabId: existing.id };
-            }
-        }
-
-        // Dedup by ID if provided (e.g. menu items)
-        if (tabData.id) {
-            const existing = state.tabs.find(t => t.id === tabData.id);
-            if (existing) {
-                return { activeTabId: existing.id };
+                return { activeTabId: existing.id, activeOverlay: null }; // Close overlay when opening tab
             }
         }
 
@@ -54,7 +49,8 @@ export const useWorkspaceStore = create<WorkspaceState>((set) => ({
 
         return {
             tabs: [...state.tabs, newTab],
-            activeTabId: id
+            activeTabId: id,
+            activeOverlay: null // Close overlay when opening tab
         };
     }),
 
@@ -72,7 +68,8 @@ export const useWorkspaceStore = create<WorkspaceState>((set) => ({
         };
     }),
 
-    setActiveTab: (id) => set({ activeTabId: id }),
+    setActiveTab: (id) => set({ activeTabId: id, activeOverlay: null }),
     toggleSidebar: () => set((state) => ({ sidebarVisible: !state.sidebarVisible })),
     toggleAIPanel: () => set((state) => ({ aiPanelVisible: !state.aiPanelVisible })),
+    setActiveOverlay: (overlay) => set({ activeOverlay: overlay }),
 }));

@@ -1,4 +1,4 @@
-import { User, LogOut, ChevronDown } from 'lucide-react';
+import { LogOut, ChevronDown } from 'lucide-react';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -18,22 +18,21 @@ const MENU_ITEMS = [
 ];
 
 export function TopBar() {
-    const { openTab } = useWorkspaceStore();
+    const { setActiveOverlay, activeOverlay } = useWorkspaceStore();
 
     // TODO: Read real user from Auth Context or LocalStorage
     const user = { name: 'Admin User', email: 'admin@sentrait.com' };
 
     const handleMenuClick = (type: string) => {
-        openTab({
-            type: type as any,
-            title: type.charAt(0).toUpperCase() + type.slice(1),
-            id: 'feature-' + type
-        });
+        if (activeOverlay === type) {
+            setActiveOverlay(null);
+        } else {
+            setActiveOverlay(type as any);
+        }
     };
 
     const handleLogout = () => {
         localStorage.removeItem('token');
-        // Simple redirect to login, ideally use router or auth context logout
         window.location.hash = '#/login';
         window.location.reload();
     };
@@ -42,7 +41,7 @@ export function TopBar() {
         <div className="h-10 bg-[#333333] border-b border-[#1e1e1e] flex items-center justify-between px-4 select-none shrink-0 z-50">
             {/* Logo + Menu */}
             <div className="flex items-center gap-6">
-                <div className="flex items-center gap-2 text-blue-400 font-bold">
+                <div className="flex items-center gap-2 text-blue-400 font-bold cursor-pointer" onClick={() => setActiveOverlay(null)}>
                     {/* SVG Logo Placeholder */}
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5" />
@@ -58,7 +57,10 @@ export function TopBar() {
                         <button
                             key={item.label}
                             onClick={() => handleMenuClick(item.type)}
-                            className="hover:text-white transition-colors focus:outline-none"
+                            className={`
+                                transition-colors focus:outline-none px-2 py-1 rounded
+                                ${activeOverlay === item.type ? 'bg-[#555] text-white font-medium' : 'hover:text-white hover:bg-[#444]'}
+                            `}
                         >
                             {item.label}
                         </button>

@@ -4,6 +4,7 @@ import { WorkspaceArea } from './WorkspaceArea';
 import { TopBar } from './TopBar';
 import { AIChatPanel } from '../ai/AIChatPanel';
 import { useWorkspaceStore } from '../../stores/workspaceStore';
+import { OverlayContainer } from './OverlayContainer';
 
 export function DesktopLayout() {
     const { sidebarVisible, aiPanelVisible } = useWorkspaceStore();
@@ -43,6 +44,9 @@ export function DesktopLayout() {
                     )}
                 </PanelGroup>
             </div>
+
+            {/* Global Overlays */}
+            <OverlayContainer />
         </div>
     );
 }

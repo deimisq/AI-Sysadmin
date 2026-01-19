@@ -43,7 +43,14 @@ export function ServerExplorer() {
             })
             .catch(err => {
                 console.error("Failed to load data", err);
-                setError(err.message || "Failed to load inventory");
+                const errorMessage = err.message || "";
+                if (errorMessage.includes("Could not validate credentials") || errorMessage.includes("401")) {
+                    localStorage.removeItem('token');
+                    window.location.href = '#/login'; // Force navigation
+                    window.location.reload();
+                    return;
+                }
+                setError(errorMessage || "Failed to load inventory");
                 setLoading(false);
             });
     };

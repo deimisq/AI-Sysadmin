@@ -1,34 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { X, Plus, Terminal as TerminalIcon } from 'lucide-react';
 import TerminalComponent from '../terminal';
-import { type Server } from '../../lib/api';
+import { useTerminal } from '../../contexts/TerminalContext';
 
-interface Tab {
-    id: string;
-    title: string;
-    server: Server;
-}
-
-export function MultiTabTerminal({ initialServer }: { initialServer: Server }) {
-    const [tabs, setTabs] = useState<Tab[]>([]);
-    const [activeTabId, setActiveTabId] = useState<string | null>(null);
-
-    // Initialize with the requested server
-    useEffect(() => {
-        if (initialServer && tabs.length === 0) {
-            const newTab = {
-                id: crypto.randomUUID(),
-                title: initialServer.hostname,
-                server: initialServer
-            };
-            setTabs([newTab]);
-            setActiveTabId(newTab.id);
-        }
-    }, [initialServer]);
+export function MultiTabTerminal() {
+    const { tabs, activeTabId, setActiveTab, closeSession, openSession } = useTerminal();
 
     // Force resize event when switching tabs to ensure xterm fits correctly
     useEffect(() => {
-        // Small delay to allow CSS display transition
         const timer = setTimeout(() => {
             window.dispatchEvent(new Event('resize'));
         }, 50);
@@ -38,29 +17,17 @@ export function MultiTabTerminal({ initialServer }: { initialServer: Server }) {
     const closeTab = (id: string, e: React.MouseEvent) => {
         e.stopPropagation();
         e.preventDefault();
-
-        const newTabs = tabs.filter(t => t.id !== id);
-        setTabs(newTabs);
-
-        if (activeTabId === id) {
-            if (newTabs.length > 0) {
-                setActiveTabId(newTabs[newTabs.length - 1].id);
-            } else {
-                setActiveTabId(null);
-            }
-        }
+        closeSession(id);
     };
 
     const addNewTab = () => {
-        // For now, duplicate current server. In future, open server selector.
-        if (initialServer) {
-            const newTab = {
-                id: crypto.randomUUID(),
-                title: initialServer.hostname, // + ` (${tabs.length + 1})`,
-                server: initialServer
-            };
-            setTabs([...tabs, newTab]);
-            setActiveTabId(newTab.id);
+        // Simple clone of active tab for now
+        // Ideally show a server selector modal
+        const currentTab = tabs.find(t => t.id === activeTabId);
+        if (currentTab) {
+            openSession(currentTab.server);
+        } else if (tabs.length > 0) {
+            openSession(tabs[tabs.length - 1].server);
         }
     };
 
@@ -73,7 +40,7 @@ export function MultiTabTerminal({ initialServer }: { initialServer: Server }) {
                     return (
                         <div
                             key={tab.id}
-                            onClick={() => setActiveTabId(tab.id)}
+                            onClick={() => setActiveTab(tab.id)}
                             className={`
                                 group flex items-center gap-2 px-3 py-2 text-sm cursor-pointer border-r border-[#333] min-w-[150px] max-w-[200px] h-9
                                 transition-colors
@@ -101,7 +68,7 @@ export function MultiTabTerminal({ initialServer }: { initialServer: Server }) {
                 <button
                     onClick={addNewTab}
                     className="p-2 h-9 text-[#969696] hover:text-white hover:bg-[#333] transition-colors"
-                    title="New Terminal Session"
+                    title="Clone Session"
                 >
                     <Plus className="w-4 h-4" />
                 </button>
@@ -114,15 +81,13 @@ export function MultiTabTerminal({ initialServer }: { initialServer: Server }) {
                         key={tab.id}
                         className="absolute inset-0"
                         style={{
-                            // Use visibility + z-index to keep in DOM but hide
-                            // Display none causes xterm fit issues, but we trigger resize event on switch.
                             display: activeTabId === tab.id ? 'block' : 'none',
                         }}
                     >
+                        {/* We use key={tab.id} to preserve component instance */}
                         <TerminalComponent
                             serverData={tab.server}
                             hostname={tab.server.hostname}
-                        // Pass handlers if needed
                         />
                     </div>
                 ))}
@@ -131,12 +96,7 @@ export function MultiTabTerminal({ initialServer }: { initialServer: Server }) {
                     <div className="flex flex-col items-center justify-center h-full text-[#555] gap-4">
                         <TerminalIcon className="w-16 h-16 opacity-20" />
                         <p>No active sessions</p>
-                        <button
-                            onClick={addNewTab}
-                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm transition-colors"
-                        >
-                            Start New Session
-                        </button>
+                        <p className="text-xs">Select a server from Dashboard to connect</p>
                     </div>
                 )}
             </div>

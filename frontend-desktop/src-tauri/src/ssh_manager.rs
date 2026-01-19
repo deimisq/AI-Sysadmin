@@ -349,6 +349,12 @@ impl SSHManager {
     }
 
     pub fn pty_close(&self, session_id: &str) -> Result<()> {
-        self.disconnect(session_id)
+        // Only remove the PTY session, keep the SSH session and credentials alive
+        // This prevents the "Session credentials not found" error when the terminal component
+        // re-mounts (e.g. React Strict Mode or navigation) and tries to recreate the PTY
+        // with the same session ID.
+        let mut ptys = self.pty_sessions.lock().unwrap();
+        ptys.remove(session_id);
+        Ok(())
     }
 }

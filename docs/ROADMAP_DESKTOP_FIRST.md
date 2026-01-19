@@ -2,8 +2,8 @@
 
 **Strategic Vision**: Transform AI Sysadmin Agent from a cloud-centric SaaS platform to a desktop-first, enterprise-grade multi-tenant solution with hybrid cloud capabilities.
 
-**Version**: 2.0 Roadmap  
-**Status**: Planning Phase  
+**Version**: 2.1 Roadmap
+**Status**: Development Phase (Active)
 **Target Release**: Q2-Q3 2026
 
 ---
@@ -39,25 +39,25 @@ This roadmap outlines the strategic and technical evolution of AI Sysadmin Agent
 
 ## Architecture Evolution
 
-### Current State (v1.0)
-
-```
-Desktop App ──HTTPS──> Backend (Python/FastAPI) ──SSH──> Target Servers
-                │
-                └──> PostgreSQL (inventory, audit)
-```
-
-**Limitations**:
-
-- Backend is connection bottleneck
-- Cannot access LAN/VPN-only servers from desktop
-- All SSH traffic flows through cloud (latency + privacy concerns)
-
-### Target State (v2.0)
+### Current State (v2.0-dev)
 
 ```
 Desktop App (Rust Core)
-    ├── Direct SSH ──> Target Servers (LAN/Internet)
+    ├── Direct Native SSH (portable-pty) ──> Target Servers (LAN/Internet)
+    ├── AI Automation (russh) ──> Automated tasks
+    └── Backend (Python/FastAPI) ──> Sync & Management
+```
+
+**Achievements**:
+
+- ✅ Hybrid Architecture: Native PTY for humans + Russh for AI
+- ✅ Backend-independent terminal sessions
+
+### Target State (v2.0-stable)
+
+```
+Desktop App (Rust Core)
+    ├── Multi-Tab Terminal Manager
     ├── RDP Client ──> Windows Servers
     ├── Local AI (Ollama) ──> Private diagnostics
     │
@@ -67,34 +67,28 @@ Desktop App (Rust Core)
                                 └── PostgreSQL
 ```
 
-**Benefits**:
-
-- ✅ Direct LAN access (VPN/private networks)
-- ✅ Zero backend latency for SSH
-- ✅ Offline mode (with local DB sync)
-- ✅ Multi-protocol (SSH, RDP, PowerShell)
-
 ---
 
 ## Implementation Phases
 
 ### Phase 1: Client-Side SSH & Multi-Tab Terminal (Q1 2026)
 
-**Duration**: 6-8 weeks  
-**Status**: 🟡 In Planning
+**Duration**: 6-8 weeks
+**Status**: 🟢 In Progress
 
 **Deliverables**:
 
-- Rust SSH library integration (`ssh2` or `thrussh`)
-- Multi-tab terminal UI (React state management)
-- Session persistence (background processes)
-- Credential vault (local encryption)
+- [x] **Rust SSH Core**: Integration of `russh` for automation and connection handling.
+- [x] **Native PTY**: Implementation of `portable-pty` for full native terminal experience (Ctrl+C, vim, colors).
+- [x] **Session Persistence**: Backend architecture to keep SSH sessions alive independent of UI state.
+- [ ] **Multi-Tab UI**: React implementation for managing multiple simultaneous connections.
+- [ ] **Credential Vault**: Secure local storage for keys/passwords.
 
 **Success Metrics**:
 
-- [ ] SSH connections initiated < 500ms
+- [x] SSH connections initiated < 500ms
 - [ ] Support 20+ concurrent tabs without lag
-- [ ] 100% feature parity with current web terminal
+- [ ] 100% feature parity with current web terminal (Completed: Native terminal exceeds web parity)
 
 **Technical Details**: See [`PHASE1_CLIENT_SSH.md`](#)
 

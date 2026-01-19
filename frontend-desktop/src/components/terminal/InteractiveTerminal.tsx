@@ -71,6 +71,12 @@ export function InteractiveTerminal({ sessionId, onClose: _onClose }: Interactiv
 
                 // Create PTY session in backend (this triggers the SSH connection and functionality)
                 // Now that we are listening, we will capture the initial MOTD/Welcome message.
+
+                if (!isMounted.current) {
+                    console.log('Component unmounted before pty_create, aborting');
+                    return;
+                }
+
                 await invoke<string>('pty_create', {
                     sessionId,
                     rows,
@@ -90,7 +96,7 @@ export function InteractiveTerminal({ sessionId, onClose: _onClose }: Interactiv
 
                     try {
                         await invoke('pty_write', {
-                            ptyId: ptyIdRef.current,
+                            sessionId: ptyIdRef.current,
                             data: bytes
                         });
                     } catch (e) {
@@ -106,7 +112,7 @@ export function InteractiveTerminal({ sessionId, onClose: _onClose }: Interactiv
                     const { cols, rows } = xtermRef.current!;
 
                     invoke('pty_resize', {
-                        ptyId: ptyIdRef.current,
+                        sessionId: ptyIdRef.current,
                         rows,
                         cols
                     }).catch(console.error);
@@ -137,7 +143,7 @@ export function InteractiveTerminal({ sessionId, onClose: _onClose }: Interactiv
             // Ideally should refactor handleResize to use ref or be outside.
 
             if (ptyIdRef.current) {
-                invoke('pty_close', { ptyId: ptyIdRef.current }).catch(console.error);
+                invoke('pty_close', { sessionId: ptyIdRef.current }).catch(console.error);
                 ptyIdRef.current = null;
             }
             if (xtermRef.current) {

@@ -6,13 +6,13 @@ import {
     updateServer,
     deleteServer,
     type Server
-} from '../lib/api';
+} from '../../lib/api';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '../components/ui/card';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Label } from '../components/ui/label';
-import { Textarea } from '../components/ui/textarea';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '../ui/card';
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
+import { Label } from '../ui/label';
+import { Textarea } from '../ui/textarea';
 import {
     Dialog,
     DialogContent,
@@ -20,7 +20,7 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-} from '../components/ui/dialog';
+} from '../ui/dialog';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -30,13 +30,13 @@ import {
     AlertDialogFooter,
     AlertDialogHeader,
     AlertDialogTitle,
-} from '../components/ui/alert-dialog';
+} from '../ui/alert-dialog';
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
-} from '../components/ui/dropdown-menu';
+} from '../ui/dropdown-menu';
 import {
     Terminal,
     Search,
@@ -54,11 +54,11 @@ import {
     ChevronDown,
     MessageSquare
 } from 'lucide-react';
-// import DashboardLayout from '../components/dashboard-layout';
-import { CSVImport } from '../components/csv-import';
-import { GroupManager } from '../components/group-manager';
-import { ServerDiagnostic } from '../components/server-diagnostic';
-import { ConversationalChat } from '../components/conversational-chat';
+// import DashboardLayout from '../dashboard-layout';
+import { CSVImport } from '../csv-import';
+import { GroupManager } from '../group-manager';
+import { ServerDiagnostic } from '../server-diagnostic';
+import { ConversationalChat } from '../conversational-chat';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -554,287 +554,287 @@ export function DashboardView() {
                     </div>
                 )}
             </div>
+
+            {/* Add Server Dialog */}
+            <Dialog open={addServerOpen} onOpenChange={setAddServerOpen}>
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                        <DialogTitle className="text-2xl">Agregar Nuevo Servidor</DialogTitle>
+                        <DialogDescription>
+                            Agrega servidores manualmente o importa varios desde un archivo CSV
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="flex gap-2 border-b pb-4">
+                        <Button
+                            variant="outline"
+                            className="flex-1 gap-2"
+                            type="button"
+                        >
+                            <ServerIcon className="h-4 w-4" />
+                            Agregar Manualmente
+                        </Button>
+                        <Button
+                            variant="outline"
+                            className="flex-1 gap-2"
+                            onClick={() => setAddServerMode('csv')}
+                            type="button"
+                        >
+                            <Plus className="h-4 w-4" />
+                            Importar desde CSV
+                        </Button>
+                    </div>
+
+                    <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <Label>Nombre *</Label>
+                                <Input
+                                    value={serverForm.hostname}
+                                    onChange={(e) => setServerForm({ ...serverForm, hostname: e.target.value })}
+                                    placeholder="ej., servidor-web-01"
+                                />
+                            </div>
+                            <div>
+                                <Label>Dirección IP *</Label>
+                                <Input
+                                    value={serverForm.ip_address}
+                                    onChange={(e) => setServerForm({ ...serverForm, ip_address: e.target.value })}
+                                    placeholder="ej., 192.168.1.100"
+                                />
+                            </div>
+                        </div>
+
+                        <div>
+                            <Label>Sistema Operativo</Label>
+                            <Input
+                                value={serverForm.os_info}
+                                onChange={(e) => setServerForm({ ...serverForm, os_info: e.target.value })}
+                                placeholder="ej., Ubuntu 22.04"
+                            />
+                        </div>
+
+                        <div>
+                            <Label>Grupo</Label>
+                            <select
+                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                value={serverForm.group_id || ''}
+                                onChange={(e) => setServerForm({ ...serverForm, group_id: e.target.value ? Number(e.target.value) : null })}
+                            >
+                                <option value="">Selecciona un grupo</option>
+                                {groups.map(g => (
+                                    <option key={g.id} value={g.id}>{g.name}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <Label>Usuario SSH</Label>
+                                <Input
+                                    value={serverForm.ssh_username}
+                                    onChange={(e) => setServerForm({ ...serverForm, ssh_username: e.target.value })}
+                                    placeholder="root"
+                                />
+                            </div>
+                            <div>
+                                <Label>Contraseña SSH (Opcional)</Label>
+                                <Input
+                                    type="password"
+                                    value={serverForm.ssh_password}
+                                    onChange={(e) => setServerForm({ ...serverForm, ssh_password: e.target.value })}
+                                    placeholder="••••••••"
+                                />
+                            </div>
+                        </div>
+
+                        <div>
+                            <Label>Ruta a la clave privada (/home/user/.ssh/id_rsa) O pega el contenido de la clave aquí</Label>
+                            <Textarea
+                                className="min-h-[100px] font-mono text-xs"
+                                value={serverForm.ssh_key_path}
+                                onChange={(e) => setServerForm({ ...serverForm, ssh_key_path: e.target.value })}
+                                placeholder="-----BEGIN OPENSSH PRIVATE KEY-----&#10;..."
+                            />
+                            <p className="text-xs text-muted-foreground mt-1">
+                                Proporciona contraseña SSH o ruta de clave privada (no ambas)
+                            </p>
+                        </div>
+
+                        <div>
+                            <Label>Descripción opcional</Label>
+                            <Textarea
+                                value={serverForm.description}
+                                onChange={(e) => setServerForm({ ...serverForm, description: e.target.value })}
+                                placeholder="Información adicional sobre el servidor"
+                            />
+                        </div>
+                    </div>
+
+                    <DialogFooter className="gap-2 sm:gap-0">
+                        <Button variant="outline" onClick={() => { setAddServerOpen(false); resetForm(); }}>
+                            Cancelar
+                        </Button>
+                        <Button onClick={handleAddServer} className="gap-2">
+                            <Plus className="h-4 w-4" />
+                            Agregar Servidor
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Edit Server Dialog */}
+            <Dialog open={!!editingServer} onOpenChange={(open) => !open && setEditingServer(null)}>
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                        <DialogTitle className="text-2xl">Editar Servidor</DialogTitle>
+                        <DialogDescription>Modifica los datos del servidor</DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <Label>Nombre *</Label>
+                                <Input
+                                    value={serverForm.hostname}
+                                    onChange={(e) => setServerForm({ ...serverForm, hostname: e.target.value })}
+                                    placeholder="ej., servidor-web-01"
+                                />
+                            </div>
+                            <div>
+                                <Label>Dirección IP *</Label>
+                                <Input
+                                    value={serverForm.ip_address}
+                                    onChange={(e) => setServerForm({ ...serverForm, ip_address: e.target.value })}
+                                    placeholder="ej., 192.168.1.100"
+                                />
+                            </div>
+                        </div>
+
+                        <div>
+                            <Label>Sistema Operativo</Label>
+                            <Input
+                                value={serverForm.os_info}
+                                onChange={(e) => setServerForm({ ...serverForm, os_info: e.target.value })}
+                                placeholder="ej., Ubuntu 22.04"
+                            />
+                        </div>
+
+                        <div>
+                            <Label>Grupo</Label>
+                            <select
+                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                value={serverForm.group_id || ''}
+                                onChange={(e) => setServerForm({ ...serverForm, group_id: e.target.value ? Number(e.target.value) : null })}
+                            >
+                                <option value="">Selecciona un grupo</option>
+                                {groups.map(g => (
+                                    <option key={g.id} value={g.id}>{g.name}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <Label>Usuario SSH</Label>
+                                <Input
+                                    value={serverForm.ssh_username}
+                                    onChange={(e) => setServerForm({ ...serverForm, ssh_username: e.target.value })}
+                                    placeholder="ubuntu"
+                                />
+                            </div>
+                            <div>
+                                <Label>Contraseña SSH (dejar en blanco para mantener)</Label>
+                                <Input
+                                    type="password"
+                                    value={serverForm.ssh_password}
+                                    onChange={(e) => setServerForm({ ...serverForm, ssh_password: e.target.value })}
+                                    placeholder="••••••••"
+                                />
+                            </div>
+                        </div>
+
+                        <div>
+                            <Label>Ruta de Clave Privada SSH (dejar en blanco para mantener)</Label>
+                            <Textarea
+                                className="min-h-[100px] font-mono text-xs"
+                                value={serverForm.ssh_key_path}
+                                onChange={(e) => setServerForm({ ...serverForm, ssh_key_path: e.target.value })}
+                                placeholder="-----BEGIN OPENSSH PRIVATE KEY-----&#10;..."
+                            />
+                            <p className="text-xs text-muted-foreground mt-1">
+                                Proporciona contraseña SSH o ruta de clave privada (no ambas)
+                            </p>
+                        </div>
+
+                        <div>
+                            <Label>Descripción opcional</Label>
+                            <Textarea
+                                value={serverForm.description}
+                                onChange={(e) => setServerForm({ ...serverForm, description: e.target.value })}
+                                placeholder="Información adicional sobre el servidor"
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter className="gap-2 sm:gap-0">
+                        <Button variant="outline" onClick={() => { setEditingServer(null); resetForm(); }}>
+                            Cancelar
+                        </Button>
+                        <Button onClick={handleEditServer}>Guardar Cambios</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Delete Confirmation */}
+            <AlertDialog open={!!deletingServer} onOpenChange={(open) => !open && setDeletingServer(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>¿Eliminar servidor?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Esta acción eliminará permanentemente el servidor <strong>{deletingServer?.hostname}</strong>.
+                            Esta acción no se puede deshacer.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDeleteServer} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                            Eliminar
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            {/* Manage Groups Dialog */}
+            <Dialog open={manageGroupsOpen} onOpenChange={setManageGroupsOpen}>
+                <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden p-0">
+                    <GroupManager onClose={() => { setManageGroupsOpen(false); loadData(); }} />
+                </DialogContent>
+            </Dialog>
+
+            {/* CSV Import Dialog */}
+            <Dialog open={addServerOpen && addServerMode === 'csv'} onOpenChange={(open) => { if (!open) { setAddServerOpen(false); setAddServerMode('manual'); } }}>
+                <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden p-0">
+                    <CSVImport
+                        onImportComplete={() => { loadData(); setAddServerOpen(false); setAddServerMode('manual'); }}
+                        onCancel={() => { setAddServerOpen(false); setAddServerMode('manual'); }}
+                    />
+                </DialogContent>
+            </Dialog>
+
+            {/* Server Diagnostic Dialog */}
+            <ServerDiagnostic
+                server={diagnosticServer}
+                onClose={() => setDiagnosticServer(null)}
+            />
+
+            {/* Conversational Chat with AI */}
+            {
+                chatServer && (
+                    <ConversationalChat
+                        server={chatServer}
+                        onClose={() => setChatServer(null)}
+                    />
+                )
+            }
         </div>
-
-            {/* Add Server Dialog */ }
-    <Dialog open={addServerOpen} onOpenChange={setAddServerOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-                <DialogTitle className="text-2xl">Agregar Nuevo Servidor</DialogTitle>
-                <DialogDescription>
-                    Agrega servidores manualmente o importa varios desde un archivo CSV
-                </DialogDescription>
-            </DialogHeader>
-
-            <div className="flex gap-2 border-b pb-4">
-                <Button
-                    variant="outline"
-                    className="flex-1 gap-2"
-                    type="button"
-                >
-                    <ServerIcon className="h-4 w-4" />
-                    Agregar Manualmente
-                </Button>
-                <Button
-                    variant="outline"
-                    className="flex-1 gap-2"
-                    onClick={() => setAddServerMode('csv')}
-                    type="button"
-                >
-                    <Plus className="h-4 w-4" />
-                    Importar desde CSV
-                </Button>
-            </div>
-
-            <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                    <div>
-                        <Label>Nombre *</Label>
-                        <Input
-                            value={serverForm.hostname}
-                            onChange={(e) => setServerForm({ ...serverForm, hostname: e.target.value })}
-                            placeholder="ej., servidor-web-01"
-                        />
-                    </div>
-                    <div>
-                        <Label>Dirección IP *</Label>
-                        <Input
-                            value={serverForm.ip_address}
-                            onChange={(e) => setServerForm({ ...serverForm, ip_address: e.target.value })}
-                            placeholder="ej., 192.168.1.100"
-                        />
-                    </div>
-                </div>
-
-                <div>
-                    <Label>Sistema Operativo</Label>
-                    <Input
-                        value={serverForm.os_info}
-                        onChange={(e) => setServerForm({ ...serverForm, os_info: e.target.value })}
-                        placeholder="ej., Ubuntu 22.04"
-                    />
-                </div>
-
-                <div>
-                    <Label>Grupo</Label>
-                    <select
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                        value={serverForm.group_id || ''}
-                        onChange={(e) => setServerForm({ ...serverForm, group_id: e.target.value ? Number(e.target.value) : null })}
-                    >
-                        <option value="">Selecciona un grupo</option>
-                        {groups.map(g => (
-                            <option key={g.id} value={g.id}>{g.name}</option>
-                        ))}
-                    </select>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                    <div>
-                        <Label>Usuario SSH</Label>
-                        <Input
-                            value={serverForm.ssh_username}
-                            onChange={(e) => setServerForm({ ...serverForm, ssh_username: e.target.value })}
-                            placeholder="root"
-                        />
-                    </div>
-                    <div>
-                        <Label>Contraseña SSH (Opcional)</Label>
-                        <Input
-                            type="password"
-                            value={serverForm.ssh_password}
-                            onChange={(e) => setServerForm({ ...serverForm, ssh_password: e.target.value })}
-                            placeholder="••••••••"
-                        />
-                    </div>
-                </div>
-
-                <div>
-                    <Label>Ruta a la clave privada (/home/user/.ssh/id_rsa) O pega el contenido de la clave aquí</Label>
-                    <Textarea
-                        className="min-h-[100px] font-mono text-xs"
-                        value={serverForm.ssh_key_path}
-                        onChange={(e) => setServerForm({ ...serverForm, ssh_key_path: e.target.value })}
-                        placeholder="-----BEGIN OPENSSH PRIVATE KEY-----&#10;..."
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">
-                        Proporciona contraseña SSH o ruta de clave privada (no ambas)
-                    </p>
-                </div>
-
-                <div>
-                    <Label>Descripción opcional</Label>
-                    <Textarea
-                        value={serverForm.description}
-                        onChange={(e) => setServerForm({ ...serverForm, description: e.target.value })}
-                        placeholder="Información adicional sobre el servidor"
-                    />
-                </div>
-            </div>
-
-            <DialogFooter className="gap-2 sm:gap-0">
-                <Button variant="outline" onClick={() => { setAddServerOpen(false); resetForm(); }}>
-                    Cancelar
-                </Button>
-                <Button onClick={handleAddServer} className="gap-2">
-                    <Plus className="h-4 w-4" />
-                    Agregar Servidor
-                </Button>
-            </DialogFooter>
-        </DialogContent>
-    </Dialog>
-
-    {/* Edit Server Dialog */ }
-    <Dialog open={!!editingServer} onOpenChange={(open) => !open && setEditingServer(null)}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-                <DialogTitle className="text-2xl">Editar Servidor</DialogTitle>
-                <DialogDescription>Modifica los datos del servidor</DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                    <div>
-                        <Label>Nombre *</Label>
-                        <Input
-                            value={serverForm.hostname}
-                            onChange={(e) => setServerForm({ ...serverForm, hostname: e.target.value })}
-                            placeholder="ej., servidor-web-01"
-                        />
-                    </div>
-                    <div>
-                        <Label>Dirección IP *</Label>
-                        <Input
-                            value={serverForm.ip_address}
-                            onChange={(e) => setServerForm({ ...serverForm, ip_address: e.target.value })}
-                            placeholder="ej., 192.168.1.100"
-                        />
-                    </div>
-                </div>
-
-                <div>
-                    <Label>Sistema Operativo</Label>
-                    <Input
-                        value={serverForm.os_info}
-                        onChange={(e) => setServerForm({ ...serverForm, os_info: e.target.value })}
-                        placeholder="ej., Ubuntu 22.04"
-                    />
-                </div>
-
-                <div>
-                    <Label>Grupo</Label>
-                    <select
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                        value={serverForm.group_id || ''}
-                        onChange={(e) => setServerForm({ ...serverForm, group_id: e.target.value ? Number(e.target.value) : null })}
-                    >
-                        <option value="">Selecciona un grupo</option>
-                        {groups.map(g => (
-                            <option key={g.id} value={g.id}>{g.name}</option>
-                        ))}
-                    </select>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                    <div>
-                        <Label>Usuario SSH</Label>
-                        <Input
-                            value={serverForm.ssh_username}
-                            onChange={(e) => setServerForm({ ...serverForm, ssh_username: e.target.value })}
-                            placeholder="ubuntu"
-                        />
-                    </div>
-                    <div>
-                        <Label>Contraseña SSH (dejar en blanco para mantener)</Label>
-                        <Input
-                            type="password"
-                            value={serverForm.ssh_password}
-                            onChange={(e) => setServerForm({ ...serverForm, ssh_password: e.target.value })}
-                            placeholder="••••••••"
-                        />
-                    </div>
-                </div>
-
-                <div>
-                    <Label>Ruta de Clave Privada SSH (dejar en blanco para mantener)</Label>
-                    <Textarea
-                        className="min-h-[100px] font-mono text-xs"
-                        value={serverForm.ssh_key_path}
-                        onChange={(e) => setServerForm({ ...serverForm, ssh_key_path: e.target.value })}
-                        placeholder="-----BEGIN OPENSSH PRIVATE KEY-----&#10;..."
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">
-                        Proporciona contraseña SSH o ruta de clave privada (no ambas)
-                    </p>
-                </div>
-
-                <div>
-                    <Label>Descripción opcional</Label>
-                    <Textarea
-                        value={serverForm.description}
-                        onChange={(e) => setServerForm({ ...serverForm, description: e.target.value })}
-                        placeholder="Información adicional sobre el servidor"
-                    />
-                </div>
-            </div>
-            <DialogFooter className="gap-2 sm:gap-0">
-                <Button variant="outline" onClick={() => { setEditingServer(null); resetForm(); }}>
-                    Cancelar
-                </Button>
-                <Button onClick={handleEditServer}>Guardar Cambios</Button>
-            </DialogFooter>
-        </DialogContent>
-    </Dialog>
-
-    {/* Delete Confirmation */ }
-    <AlertDialog open={!!deletingServer} onOpenChange={(open) => !open && setDeletingServer(null)}>
-        <AlertDialogContent>
-            <AlertDialogHeader>
-                <AlertDialogTitle>¿Eliminar servidor?</AlertDialogTitle>
-                <AlertDialogDescription>
-                    Esta acción eliminará permanentemente el servidor <strong>{deletingServer?.hostname}</strong>.
-                    Esta acción no se puede deshacer.
-                </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                <AlertDialogAction onClick={handleDeleteServer} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                    Eliminar
-                </AlertDialogAction>
-            </AlertDialogFooter>
-        </AlertDialogContent>
-    </AlertDialog>
-
-    {/* Manage Groups Dialog */ }
-    <Dialog open={manageGroupsOpen} onOpenChange={setManageGroupsOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden p-0">
-            <GroupManager onClose={() => { setManageGroupsOpen(false); loadData(); }} />
-        </DialogContent>
-    </Dialog>
-
-    {/* CSV Import Dialog */ }
-    <Dialog open={addServerOpen && addServerMode === 'csv'} onOpenChange={(open) => { if (!open) { setAddServerOpen(false); setAddServerMode('manual'); } }}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden p-0">
-            <CSVImport
-                onImportComplete={() => { loadData(); setAddServerOpen(false); setAddServerMode('manual'); }}
-                onCancel={() => { setAddServerOpen(false); setAddServerMode('manual'); }}
-            />
-        </DialogContent>
-    </Dialog>
-
-    {/* Server Diagnostic Dialog */ }
-    <ServerDiagnostic
-        server={diagnosticServer}
-        onClose={() => setDiagnosticServer(null)}
-    />
-
-    {/* Conversational Chat with AI */ }
-    {
-        chatServer && (
-            <ConversationalChat
-                server={chatServer}
-                onClose={() => setChatServer(null)}
-            />
-        )
-    }
     );
 }

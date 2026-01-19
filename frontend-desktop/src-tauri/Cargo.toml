@@ -41,9 +41,15 @@ anyhow = "1.0"
 thiserror = "1.0"
 portable-pty = "0.8"
 
+[profile.dev]
+incremental = false   # Disable incremental compilation to save memory (trades time for RAM)
+codegen-units = 256   # Split into many small chunks to reduce peak RAM per chunk
+opt-level = 0         # No optimizations
+debug = false         # Reduce debug info size
+
 [profile.release]
 panic = "abort"
-codegen-units = 1
+codegen-units = 1     # Keep this for final binary size, but use Jobs=1 in CI
 lto = true
 opt-level = "z"
 strip = true

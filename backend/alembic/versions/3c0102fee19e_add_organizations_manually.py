@@ -20,34 +20,46 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     """Upgrade schema."""
-    # Organizations table
-    op.create_table('organizations',
-        sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('name', sa.String(), nullable=False),
-        sa.Column('slug', sa.String(), nullable=False),
-        sa.Column('subscription_tier', sa.String(), nullable=True, server_default='free'),
-        sa.Column('max_users', sa.Integer(), nullable=True, server_default='1'),
-        sa.Column('stripe_customer_id', sa.String(), nullable=True),
-        sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=True),
-        sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
-        sa.PrimaryKeyConstraint('id')
-    )
-    op.create_index(op.f('ix_organizations_id'), 'organizations', ['id'], unique=False)
-    op.create_index(op.f('ix_organizations_name'), 'organizations', ['name'], unique=True)
-    op.create_index(op.f('ix_organizations_slug'), 'organizations', ['slug'], unique=True)
+    conn = op.get_bind()
+    inspector = sa.inspect(conn)
+    
+    # Organizations table - only create if doesn't exist
+    if 'organizations' not in inspector.get_table_names():
+        op.create_table('organizations',
+            sa.Column('id', sa.Integer(), nullable=False),
+            sa.Column('name', sa.String(), nullable=False),
+            sa.Column('slug', sa.String(), nullable=False),
+            sa.Column('subscription_tier', sa.String(), nullable=True, server_default='free'),
+            sa.Column('max_users', sa.Integer(), nullable=True, server_default='1'),
+            sa.Column('stripe_customer_id', sa.String(), nullable=True),
+            sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=True),
+            sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
+            sa.PrimaryKeyConstraint('id')
+        )
+        op.create_index(op.f('ix_organizations_id'), 'organizations', ['id'], unique=False)
+        op.create_index(op.f('ix_organizations_name'), 'organizations', ['name'], unique=True)
+        op.create_index(op.f('ix_organizations_slug'), 'organizations', ['slug'], unique=True)
 
-    # Add FKs
-    with op.batch_alter_table('users') as batch_op:
-        batch_op.add_column(sa.Column('organization_id', sa.Integer(), nullable=True))
-        batch_op.create_foreign_key('fk_users_org', 'organizations', ['organization_id'], ['id'])
+    # Add organization_id to users if not exists
+    users_columns = [c['name'] for c in inspector.get_columns('users')]
+    if 'organization_id' not in users_columns:
+        with op.batch_alter_table('users') as batch_op:
+            batch_op.add_column(sa.Column('organization_id', sa.Integer(), nullable=True))
+            batch_op.create_foreign_key('fk_users_org', 'organizations', ['organization_id'], ['id'])
 
-    with op.batch_alter_table('servers') as batch_op:
-        batch_op.add_column(sa.Column('organization_id', sa.Integer(), nullable=True))
-        batch_op.create_foreign_key('fk_servers_org', 'organizations', ['organization_id'], ['id'])
+    # Add organization_id to servers if not exists
+    servers_columns = [c['name'] for c in inspector.get_columns('servers')]
+    if 'organization_id' not in servers_columns:
+        with op.batch_alter_table('servers') as batch_op:
+            batch_op.add_column(sa.Column('organization_id', sa.Integer(), nullable=True))
+            batch_op.create_foreign_key('fk_servers_org', 'organizations', ['organization_id'], ['id'])
 
-    with op.batch_alter_table('server_groups') as batch_op:
-        batch_op.add_column(sa.Column('organization_id', sa.Integer(), nullable=True))
-        batch_op.create_foreign_key('fk_groups_org', 'organizations', ['organization_id'], ['id'])
+    # Add organization_id to server_groups if not exists
+    groups_columns = [c['name'] for c in inspector.get_columns('server_groups')]
+    if 'organization_id' not in groups_columns:
+        with op.batch_alter_table('server_groups') as batch_op:
+            batch_op.add_column(sa.Column('organization_id', sa.Integer(), nullable=True))
+            batch_op.create_foreign_key('fk_groups_org', 'organizations', ['organization_id'], ['id'])
 
 
 def downgrade() -> None:

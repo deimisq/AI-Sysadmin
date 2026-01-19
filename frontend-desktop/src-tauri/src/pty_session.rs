@@ -1,7 +1,7 @@
 use portable_pty::{CommandBuilder, NativePtySystem, PtySize, PtySystem, MasterPty, Child};
 use std::sync::{Arc, Mutex};
 use std::io::{Read, Write};
-use anyhow::{Result, Context};
+use anyhow::Result; // Removed Context unused
 use tauri::{Emitter, AppHandle};
 
 pub struct PTYSession {
@@ -80,9 +80,11 @@ impl PTYSession {
     }
 
     pub fn write(&self, data: &[u8]) -> Result<()> {
-        let mut master = self.master.lock().unwrap();
-        master.write_all(data)?;
-        master.flush()?;
+        let master = self.master.lock().unwrap();
+        // MasterPty is not Write itself, but we can get a writer
+        let mut writer = master.try_clone_writer()?;
+        writer.write_all(data)?;
+        writer.flush()?;
         Ok(())
     }
 }

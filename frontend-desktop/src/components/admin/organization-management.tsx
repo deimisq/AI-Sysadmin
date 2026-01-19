@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,9 +8,9 @@ import {
     fetchOrganizations,
     createOrganization,
     updateOrganization,
-    deleteOrganization,
-    Organization
+    deleteOrganization
 } from "@/lib/api";
+import type { Organization } from "@/lib/api";
 
 export function OrganizationManagement() {
     const [organizations, setOrganizations] = useState<Organization[]>([]);

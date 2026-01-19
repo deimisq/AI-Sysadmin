@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect } from 'react';
 import { X, Plus, Terminal as TerminalIcon } from 'lucide-react';
 import TerminalComponent from '../terminal';
 import { useTerminal } from '../../contexts/TerminalContext';

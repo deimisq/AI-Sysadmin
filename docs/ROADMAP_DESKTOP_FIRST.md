@@ -81,7 +81,7 @@ Desktop App (Rust Core)
 - [x] **Rust SSH Core**: Integration of `russh` for automation and connection handling.
 - [x] **Native PTY**: Implementation of `portable-pty` for full native terminal experience (Ctrl+C, vim, colors).
 - [x] **Session Persistence**: Backend architecture to keep SSH sessions alive independent of UI state.
-- [ ] **Multi-Tab UI**: React implementation for managing multiple simultaneous connections.
+- [x] **Multi-Tab UI**: React implementation for managing multiple simultaneous connections.
 - [ ] **Credential Vault**: Secure local storage for keys/passwords.
 
 **Success Metrics**:

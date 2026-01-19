@@ -96,7 +96,7 @@ export function InteractiveTerminal({ sessionId, onClose: _onClose }: Interactiv
 
                     try {
                         await invoke('pty_write', {
-                            sessionId: ptyIdRef.current,
+                            ptyId: ptyIdRef.current,
                             data: bytes
                         });
                     } catch (e) {
@@ -112,7 +112,7 @@ export function InteractiveTerminal({ sessionId, onClose: _onClose }: Interactiv
                     const { cols, rows } = xtermRef.current!;
 
                     invoke('pty_resize', {
-                        sessionId: ptyIdRef.current,
+                        ptyId: ptyIdRef.current,
                         rows,
                         cols
                     }).catch(console.error);
@@ -143,7 +143,7 @@ export function InteractiveTerminal({ sessionId, onClose: _onClose }: Interactiv
             // Ideally should refactor handleResize to use ref or be outside.
 
             if (ptyIdRef.current) {
-                invoke('pty_close', { sessionId: ptyIdRef.current }).catch(console.error);
+                invoke('pty_close', { ptyId: ptyIdRef.current }).catch(console.error);
                 ptyIdRef.current = null;
             }
             if (xtermRef.current) {

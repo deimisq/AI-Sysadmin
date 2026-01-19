@@ -40,7 +40,11 @@ def create_group(
     db: Session = Depends(dependencies.get_db)
 ):
     """Create a new server group"""
-    db_group = models.ServerGroup(**group.dict(), created_by=current_user.id)
+    db_group = models.ServerGroup(
+        **group.dict(), 
+        created_by=current_user.id,
+        organization_id=current_user.organization_id
+    )
     db.add(db_group)
     db.commit()
     db.refresh(db_group)
@@ -54,10 +58,19 @@ def read_groups(
     db: Session = Depends(dependencies.get_db)
 ):
     """Get groups - admins see all, users see only their assigned groups"""
-    # Superadmins and Admins can see all groups
-    if current_user.role in [models.RoleType.SUPERADMIN.value, models.RoleType.ADMIN.value]:
+    # Superadmins can see all groups globally
+    if current_user.is_superuser:
         groups = db.query(models.ServerGroup).offset(skip).limit(limit).all()
         return groups
+    
+    # Base query filtered by organization
+    query = db.query(models.ServerGroup)
+    if current_user.organization_id:
+        query = query.filter(models.ServerGroup.organization_id == current_user.organization_id)
+        
+    # Org Admins see all groups in their org
+    if current_user.role == models.RoleType.ADMIN.value:
+        return query.offset(skip).limit(limit).all()
     
     # Regular users can only see groups they have access to
     user_group_ids = [perm.group_id for perm in current_user.group_permissions_detail]
@@ -81,6 +94,10 @@ def update_group(
     """Update a group - only creator or admins can edit"""
     db_group = db.query(models.ServerGroup).filter(models.ServerGroup.id == group_id).first()
     if not db_group:
+        raise HTTPException(status_code=404, detail="Group not found")
+    
+    # Org check
+    if not current_user.is_superuser and db_group.organization_id != current_user.organization_id:
         raise HTTPException(status_code=404, detail="Group not found")
     
     # Check permissions: only creator or admins can edit
@@ -110,6 +127,10 @@ def delete_group(
     """Delete a group - only creator or admins can delete"""
     db_group = db.query(models.ServerGroup).filter(models.ServerGroup.id == group_id).first()
     if not db_group:
+        raise HTTPException(status_code=404, detail="Group not found")
+    
+    # Org check
+    if not current_user.is_superuser and db_group.organization_id != current_user.organization_id:
         raise HTTPException(status_code=404, detail="Group not found")
     
     # Check permissions: only creator or admins can delete
@@ -153,6 +174,7 @@ def create_server(
     
     # Add owner information
     server_data['created_by'] = current_user.id
+    server_data['organization_id'] = current_user.organization_id
     
     db_server = models.Server(**server_data)
     db.add(db_server)
@@ -240,6 +262,10 @@ def get_server(
     if not server:
         raise HTTPException(status_code=404, detail="Server not found")
     
+    # Org check
+    if not current_user.is_superuser and server.organization_id != current_user.organization_id:
+        raise HTTPException(status_code=404, detail="Server not found")
+    
     # Check permissions
     if current_user.role not in [models.RoleType.SUPERADMIN.value, models.RoleType.ADMIN.value]:
         # Check if user has access to this server's group
@@ -265,10 +291,20 @@ def read_servers(
     - Admins: See ALL servers
     - Users: See servers they created + servers in their assigned groups
     """
-    # Superadmins and Admins can see all servers
-    if current_user.role in [models.RoleType.SUPERADMIN.value, models.RoleType.ADMIN.value]:
+    # Superadmins can see all servers
+    if current_user.is_superuser:
         servers = db.query(models.Server).offset(skip).limit(limit).all()
         return servers
+        
+    query = db.query(models.Server)
+    
+    # Filter by Organization
+    if current_user.organization_id:
+        query = query.filter(models.Server.organization_id == current_user.organization_id)
+    
+    # Org Admins see all servers in their org
+    if current_user.role == models.RoleType.ADMIN.value:
+        return query.offset(skip).limit(limit).all()
     
     #Regular users see:
     # 1. Servers they created
@@ -299,6 +335,10 @@ def delete_server(
     """Delete a server - users can only delete their own servers, admins can delete any"""
     server = db.query(models.Server).filter(models.Server.id == server_id).first()
     if not server:
+        raise HTTPException(status_code=404, detail="Server not found")
+    
+    # Org check
+    if not current_user.is_superuser and server.organization_id != current_user.organization_id:
         raise HTTPException(status_code=404, detail="Server not found")
     
     # Check permissions
@@ -337,6 +377,10 @@ def update_server(
     """Update a server - users can only edit their own servers, admins can edit any"""
     db_server = db.query(models.Server).filter(models.Server.id == server_id).first()
     if not db_server:
+        raise HTTPException(status_code=404, detail="Server not found")
+        
+    # Org check
+    if not current_user.is_superuser and db_server.organization_id != current_user.organization_id:
         raise HTTPException(status_code=404, detail="Server not found")
     
     # Check permissions
@@ -390,6 +434,10 @@ def get_server_credentials(
     if not db_server:
         raise HTTPException(status_code=404, detail="Server not found")
     
+    # Org check
+    if not current_user.is_superuser and db_server.organization_id != current_user.organization_id:
+        raise HTTPException(status_code=404, detail="Server not found")
+    
     # Permission check
     is_admin = current_user.role in [models.RoleType.SUPERADMIN.value, models.RoleType.ADMIN.value]
     is_owner = db_server.created_by == current_user.id
@@ -412,9 +460,17 @@ def get_server_credentials(
 
 
 @router.post("/execute/", response_model=schemas.CommandResponse)
-async def execute_command(request: schemas.CommandRequest, db: Session = Depends(dependencies.get_db)):
+async def execute_command(
+    request: schemas.CommandRequest, 
+    db: Session = Depends(dependencies.get_db),
+    current_user: models.User = Depends(dependencies.get_current_active_user)
+):
     server = db.query(models.Server).filter(models.Server.id == request.server_id).first()
     if not server:
+        raise HTTPException(status_code=404, detail="Server not found")
+    
+    # Org check
+    if not current_user.is_superuser and server.organization_id != current_user.organization_id:
         raise HTTPException(status_code=404, detail="Server not found")
     
     # Decrypt SSH credentials before using them
@@ -539,7 +595,8 @@ async def import_servers_from_csv(
                     group = models.ServerGroup(
                         name=group_name,
                         description=f"Auto-created from CSV import",
-                        created_by=current_user.id
+                        created_by=current_user.id,
+                        organization_id=current_user.organization_id
                     )
                     db.add(group)
                     db.commit()
@@ -567,7 +624,8 @@ async def import_servers_from_csv(
                 "description": row.get('description', '').strip() or None,
                 "os_info": row.get('os_info', '').strip() or None,
                 "client_id": default_client.id,
-                "group_id": group_id
+                "group_id": group_id,
+                "organization_id": current_user.organization_id
             }
             
             # Encrypt sensitive data
@@ -622,6 +680,10 @@ async def get_server_diagnostic(
     # Get server from database
     server = db.query(models.Server).filter(models.Server.id == server_id).first()
     if not server:
+        raise HTTPException(status_code=404, detail="Server not found")
+        
+    # Org check
+    if not current_user.is_superuser and server.organization_id != current_user.organization_id:
         raise HTTPException(status_code=404, detail="Server not found")
     
     # Decrypt SSH credentials before using them
@@ -753,10 +815,15 @@ class ChatExecuteRequest(BaseModel):
 async def diagnose_server_problem_chat(
     server_id: int, 
     request: ChatDiagnoseRequest, 
-    db: Session = Depends(dependencies.get_db)
+    db: Session = Depends(dependencies.get_db),
+    current_user: models.User = Depends(dependencies.get_current_active_user)
 ):
     server = db.query(models.Server).filter(models.Server.id == server_id).first()
     if not server:
+        raise HTTPException(status_code=404, detail="Server not found")
+
+    # Org check
+    if not current_user.is_superuser and server.organization_id != current_user.organization_id:
         raise HTTPException(status_code=404, detail="Server not found")
 
     try:

@@ -74,7 +74,7 @@ Desktop App (Rust Core)
 ### Phase 1: Client-Side SSH & Multi-Tab Terminal (Q1 2026)
 
 **Duration**: 6-8 weeks
-**Status**: 🟢 In Progress
+**Status**: ✅ Completed
 
 **Deliverables**:
 
@@ -82,13 +82,13 @@ Desktop App (Rust Core)
 - [x] **Native PTY**: Implementation of `portable-pty` for full native terminal experience (Ctrl+C, vim, colors).
 - [x] **Session Persistence**: Backend architecture to keep SSH sessions alive independent of UI state.
 - [x] **Multi-Tab UI**: React implementation for managing multiple simultaneous connections.
-- [ ] **Credential Vault**: Secure local storage for keys/passwords.
+- [~] **Credential Vault**: Pivot to Cloud-based Vault for Enterprise sharing (Phase 2).
 
 **Success Metrics**:
 
 - [x] SSH connections initiated < 500ms
-- [ ] Support 20+ concurrent tabs without lag
-- [ ] 100% feature parity with current web terminal (Completed: Native terminal exceeds web parity)
+- [x] Support 20+ concurrent tabs without lag
+- [x] 100% feature parity with current web terminal
 
 **Technical Details**: See [`PHASE1_CLIENT_SSH.md`](#)
 
@@ -97,7 +97,7 @@ Desktop App (Rust Core)
 ### Phase 2: Multi-Tenancy & Organizations (Q2 2026)
 
 **Duration**: 8-10 weeks  
-**Status**: 🔴 Not Started
+**Status**: 🟢 In Progress
 
 **Deliverables**:
 

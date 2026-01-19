@@ -152,3 +152,19 @@ export const deleteGroup = (id: number) => api.delete(`/groups/${id}`);
 
 export const fetchCurrentUser = () => api.get<any>('/auth/me');
 export const register = (data: any) => api.post<{ access_token: string }>('/auth/register', data);
+
+// Organization Endpoints
+export interface Organization {
+    id: number;
+    name: string;
+    slug: string;
+    subscription_tier: string;
+    max_users: number;
+    created_at: string;
+}
+
+export const fetchOrganizations = () => api.get<Organization[]>('/organizations/');
+export const fetchOrganization = (id: number) => api.get<Organization>(`/organizations/${id}`);
+export const createOrganization = (data: Partial<Organization>) => api.post<Organization>('/organizations/', data);
+export const updateOrganization = (id: number, data: Partial<Organization>) => api.put<Organization>(`/organizations/${id}`, data);
+export const deleteOrganization = (id: number) => api.delete(`/organizations/${id}`);

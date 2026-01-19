@@ -65,6 +65,26 @@ class UserGroupPermission(Base):
     user = relationship("User", back_populates="group_permissions_detail")
     group = relationship("ServerGroup", back_populates="user_permissions_detail")
 
+class Organization(Base):
+    __tablename__ = "organizations"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, unique=True, index=True, nullable=False)
+    slug = Column(String, unique=True, index=True, nullable=False)
+    subscription_tier = Column(String, default="free")  # free, team, enterprise
+    max_users = Column(Integer, default=1)
+    
+    # Billing info (simplified)
+    stripe_customer_id = Column(String, nullable=True)
+    
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    # Relationships
+    users = relationship("User", back_populates="organization")
+    servers = relationship("Server", back_populates="organization")
+    groups = relationship("ServerGroup", back_populates="organization")
+
 class User(Base):
     __tablename__ = "users"
 
@@ -79,6 +99,10 @@ class User(Base):
     role = Column(String, default=RoleType.USER.value)  # Global role (SUPERADMIN, ADMIN only)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    # Multi-tenancy
+    organization_id = Column(Integer, ForeignKey("organizations.id"), nullable=True)
+    organization = relationship("Organization", back_populates="users")
     
     # Notification preferences
     notify_new_users = Column(Boolean, default=True)  # Notify when new users register
@@ -117,6 +141,10 @@ class ServerGroup(Base):
     created_by = Column(Integer, ForeignKey("users.id"), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     
+    # Multi-tenancy
+    organization_id = Column(Integer, ForeignKey("organizations.id"), nullable=True)
+    organization = relationship("Organization", back_populates="groups")
+    
     servers = relationship("Server", back_populates="group")
     creator = relationship("User", foreign_keys=[created_by])
     user_permissions_detail = relationship(
@@ -141,6 +169,10 @@ class Server(Base):
     ssh_username = Column(String)
     ssh_password = Column(String, nullable=True)  # Encrypted
     ssh_key_path = Column(String, nullable=True)  # Encrypted
+    
+    # Multi-tenancy
+    organization_id = Column(Integer, ForeignKey("organizations.id"), nullable=True)
+    organization = relationship("Organization", back_populates="servers")
     
     created_by = Column(Integer, ForeignKey("users.id"), nullable=True)  # Track who created the server
     created_at = Column(DateTime(timezone=True), server_default=func.now())

@@ -13,6 +13,7 @@ class UserCreate(UserBase):
     role: Optional[str] = "user"
     is_active: Optional[bool] = True
     preferred_language: Optional[str] = "en"
+    organization_id: Optional[int] = None
 
 class UserUpdate(BaseModel):
     email: Optional[EmailStr] = None
@@ -54,6 +55,30 @@ class User(UserBase):
     notify_system_events: Optional[bool] = True
     notify_version_updates: Optional[bool] = True
     preferred_language: Optional[str] = "en"
+    organization_id: Optional[int] = None
+    
+    class Config:
+        from_attributes = True
+
+# Organization Schemas
+class OrganizationBase(BaseModel):
+    name: str
+    slug: str
+    subscription_tier: Optional[str] = "free"
+    max_users: Optional[int] = 1
+
+class OrganizationCreate(OrganizationBase):
+    pass
+
+class OrganizationUpdate(BaseModel):
+    name: Optional[str] = None
+    subscription_tier: Optional[str] = None
+    max_users: Optional[int] = None
+
+class Organization(OrganizationBase):
+    id: int
+    created_at: datetime
+    updated_at: Optional[datetime] = None
     
     class Config:
         from_attributes = True
@@ -104,6 +129,7 @@ class ServerGroup(ServerGroupBase):
     id: int
     created_by: Optional[int] = None
     created_at: datetime
+    organization_id: Optional[int] = None
     class Config:
         from_attributes = True
 
@@ -136,6 +162,7 @@ class ServerUpdate(BaseModel):
 class Server(ServerBase):
     id: int
     created_at: datetime
+    organization_id: Optional[int] = None
     class Config:
         from_attributes = True
 

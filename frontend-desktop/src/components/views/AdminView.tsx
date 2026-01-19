@@ -11,6 +11,8 @@ import { CommunicationSettings } from "@/components/admin/communication-settings
 import { FrontendParameters } from "@/components/admin/frontend-parameters";
 import { BackendParameters } from "@/components/admin/backend-parameters";
 import { AuditLogs } from "@/components/admin/audit-logs";
+import { OrganizationManagement } from "@/components/admin/organization-management";
+import { fetchCurrentUser } from "@/lib/api";
 import { fetch } from '@tauri-apps/plugin-http';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1";
@@ -18,8 +20,21 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api/
 export function AdminView() {
     const [activeTab, setActiveTab] = useState("users");
     const [stats, setStats] = useState<any>(null);
-    // Mock current user for now, in real app this comes from context or auth hook
-    const currentUser = { role: "superadmin", id: 1 };
+    const [currentUser, setCurrentUser] = useState<any>(null);
+
+    useEffect(() => {
+        // Load current user
+        const loadUser = async () => {
+            try {
+                const user = await fetchCurrentUser();
+                setCurrentUser(user);
+                // If superadmin, default tab could be organizations, but lets keep users for now or check url params
+            } catch (error) {
+                console.error("Failed to load current user", error);
+            }
+        };
+        loadUser();
+    }, []);
 
     useEffect(() => {
         if (activeTab === "stats") {
@@ -44,6 +59,10 @@ export function AdminView() {
         }
     };
 
+    if (!currentUser) {
+        return <div className="p-6">Cargando perfil de administrador...</div>;
+    }
+
     return (
         <div className="p-6 h-full overflow-y-auto">
             <div className="space-y-6">
@@ -56,9 +75,11 @@ export function AdminView() {
                 </div>
 
                 {/* Tabs */}
-                <AdminTabs activeTab={activeTab} onTabChange={setActiveTab} />
+                <AdminTabs activeTab={activeTab} onTabChange={setActiveTab} currentUser={currentUser} />
 
                 {/* Tab Content */}
+                {activeTab === "organizations" && <OrganizationManagement />}
+
                 {activeTab === "users" && <UserManagement currentUser={currentUser} />}
 
                 {activeTab === "servers" && <ServerManagement currentUser={currentUser} />}

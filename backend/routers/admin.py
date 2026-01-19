@@ -29,7 +29,14 @@ def list_users(
     if current_user.role not in [RoleType.SUPERADMIN.value, RoleType.ADMIN.value]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
-    users = db.query(models.User).offset(skip).limit(limit).all()
+    query = db.query(models.User)
+    
+    # Filter by organization for non-superusers
+    if not current_user.is_superuser:
+        if current_user.organization_id:
+            query = query.filter(models.User.organization_id == current_user.organization_id)
+        
+    users = query.offset(skip).limit(limit).all()
     return users
 
 @router.post("/users", response_model=schemas.User, status_code=status.HTTP_201_CREATED)
@@ -53,6 +60,19 @@ def create_user(
     # Hash password
     hashed_password = get_password_hash(user_create.password)
     
+    # Determine organization_id
+    org_id = current_user.organization_id
+    
+    if current_user.is_superuser:
+        if user_create.organization_id:
+            # Check if org exists
+            org = db.query(models.Organization).filter(models.Organization.id == user_create.organization_id).first()
+            if not org:
+                 raise HTTPException(status_code=400, detail="Organization not found")
+            org_id = user_create.organization_id
+    elif user_create.organization_id and user_create.organization_id != current_user.organization_id:
+         raise HTTPException(status_code=403, detail="Cannot assign user to another organization")
+
     # Create user
     new_user = models.User(
         email=user_create.email,
@@ -60,7 +80,8 @@ def create_user(
         hashed_password=hashed_password,
         full_name=user_create.full_name,
         role=user_create.role if user_create.role else RoleType.USER.value,
-        is_active=user_create.is_active if user_create.is_active is not None else True
+        is_active=user_create.is_active if user_create.is_active is not None else True,
+        organization_id=org_id
     )
     
     db.add(new_user)
@@ -95,6 +116,11 @@ def get_user(
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+        
+    # Check organization isolation
+    if not current_user.is_superuser and user_id != current_user.id:
+        if user.organization_id != current_user.organization_id:
+             raise HTTPException(status_code=404, detail="User not found")
     
     return user
 
@@ -113,6 +139,11 @@ def update_user(
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+        
+    # Check organization isolation
+    if not current_user.is_superuser and user_id != current_user.id:
+        if user.organization_id != current_user.organization_id:
+             raise HTTPException(status_code=404, detail="User not found")
     
     # Check if user is being activated (approved)
     was_inactive = not user.is_active
@@ -164,16 +195,28 @@ def update_user(
 @router.delete("/users/{user_id}")
 def delete_user(
     user_id: int,
-    current_user: models.User = Depends(get_current_superuser),
+    current_user: models.User = Depends(get_current_active_user), # Allow Org Admins to delete users
     db: Session = Depends(get_db)
 ):
-    """Delete user (superadmin only)"""
+    """Delete user (admin only)"""
+    if current_user.role not in [RoleType.SUPERADMIN.value, RoleType.ADMIN.value]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+        
     if user_id == current_user.id:
         raise HTTPException(status_code=400, detail="Cannot delete yourself")
     
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+        
+    # Check organization isolation
+    if not current_user.is_superuser:
+        if user.organization_id != current_user.organization_id:
+             raise HTTPException(status_code=404, detail="User not found")
+             
+    # Prevent Org Admin from deleting SuperAdmin (edge case if in same org somehow)
+    if user.is_superuser and not current_user.is_superuser:
+        raise HTTPException(status_code=403, detail="Cannot delete superuser")
     
     db.delete(user)
     db.commit()
@@ -250,6 +293,15 @@ def grant_group_access(
     # Validate role
     if role not in ["user", "group_admin"]:
         raise HTTPException(status_code=400, detail="Invalid role. Must be 'user' or 'group_admin'")
+        
+    # Verify group and user exist and belong to org
+    group = db.query(models.ServerGroup).filter(models.ServerGroup.id == group_id).first()
+    if not group or (not current_user.is_superuser and group.organization_id != current_user.organization_id):
+        raise HTTPException(status_code=404, detail="Group not found")
+        
+    target_user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not target_user or (not current_user.is_superuser and target_user.organization_id != current_user.organization_id):
+        raise HTTPException(status_code=404, detail="User not found")
     
     # Check if permission already exists
     existing = db.query(models.UserGroupPermission).filter(
@@ -297,6 +349,11 @@ def revoke_group_access(
     if current_user.role not in [RoleType.SUPERADMIN.value, RoleType.ADMIN.value]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
+    # Verify group exists and belongs to org
+    group = db.query(models.ServerGroup).filter(models.ServerGroup.id == group_id).first()
+    if not group or (not current_user.is_superuser and group.organization_id != current_user.organization_id):
+        raise HTTPException(status_code=404, detail="Group not found")
+    
     # Find and delete permission
     permission = db.query(models.UserGroupPermission).filter(
         models.UserGroupPermission.user_id == user_id,
@@ -335,6 +392,9 @@ def get_user_groups(
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+        
+    if not current_user.is_superuser and user.organization_id != current_user.organization_id:
+         raise HTTPException(status_code=404, detail="User not found")
     
     # Get groups with role information
     permissions = db.query(models.UserGroupPermission).filter(

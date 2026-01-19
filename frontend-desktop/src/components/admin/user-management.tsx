@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Users, Edit2, Trash2, Shield, FolderOpen, Plus, X, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { fetch } from '@tauri-apps/plugin-http';
+import { fetchOrganizations } from "@/lib/api";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1";
 
@@ -28,6 +29,7 @@ export function UserManagement({ currentUser }: UserManagementProps) {
     });
     const [managingPermissions, setManagingPermissions] = useState<any>(null);
     const [userGroups, setUserGroups] = useState<any[]>([]);
+    const [organizationsList, setOrganizationsList] = useState<any[]>([]);
 
     useEffect(() => {
         loadData();
@@ -43,13 +45,20 @@ export function UserManagement({ currentUser }: UserManagementProps) {
 
     const loadData = async () => {
         try {
-            const [usersRes, groupsRes] = await Promise.all([
-                fetch(`${API_BASE_URL}/admin/users`, { headers: getAuthHeaders() }),
-                fetch(`${API_BASE_URL}/groups/`, { headers: getAuthHeaders() })
-            ]);
+            const promises: Promise<any>[] = [
+                fetch(`${API_BASE_URL}/admin/users`, { headers: getAuthHeaders() }).then(r => r.json()),
+                fetch(`${API_BASE_URL}/groups/`, { headers: getAuthHeaders() }).then(r => r.json())
+            ];
 
-            if (usersRes.ok) setUsers(await usersRes.json());
-            if (groupsRes.ok) setGroups(await groupsRes.json());
+            if (currentUser?.role === 'superadmin') {
+                promises.push(fetchOrganizations());
+            }
+
+            const [usersData, groupsData, orgsData] = await Promise.all(promises);
+
+            setUsers(usersData || []);
+            setGroups(groupsData || []);
+            if (orgsData) setOrganizationsList(orgsData);
         } catch (error) {
             console.error("Failed to load data", error);
         } finally {
@@ -71,6 +80,7 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                 full_name: editingUser.full_name,
                 role: editingUser.role,
                 is_active: editingUser.is_active,
+                organization_id: editingUser.organization_id ? parseInt(editingUser.organization_id) : null
             };
 
             // Only include password if it was changed
@@ -306,6 +316,21 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                                 )}
                             </select>
                         </div>
+                        {currentUser?.role === "superadmin" && (
+                            <div>
+                                <label className="text-sm font-medium">Organización</label>
+                                <select
+                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                    value={newUser.organization_id || ""}
+                                    onChange={(e) => setNewUser({ ...newUser, organization_id: e.target.value ? parseInt(e.target.value) : undefined })}
+                                >
+                                    <option value="">(Tu organización actual)</option>
+                                    {organizationsList.map((org) => (
+                                        <option key={org.id} value={org.id}>{org.name}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
                         <div className="flex items-center gap-2">
                             <input
                                 type="checkbox"
@@ -383,6 +408,21 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                                 )}
                             </select>
                         </div>
+                        {currentUser?.role === "superadmin" && (
+                            <div>
+                                <label className="text-sm font-medium">Organización</label>
+                                <select
+                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                    value={editingUser.organization_id || ""}
+                                    onChange={(e) => setEditingUser({ ...editingUser, organization_id: e.target.value ? parseInt(e.target.value) : undefined })}
+                                >
+                                    <option value="">(Sin asignar)</option>
+                                    {organizationsList.map((org) => (
+                                        <option key={org.id} value={org.id}>{org.name}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
                         <div className="flex items-center gap-2">
                             <input
                                 type="checkbox"

@@ -1,6 +1,6 @@
 import DashboardLayout from "@/components/dashboard-layout";
 import { Card, CardContent } from "@/components/ui/card";
-import { Users, Server, Shield, Settings, Activity, Bell, Code, Mail, FileText } from "lucide-react";
+import { Users, Server, Shield, Settings, Activity, Bell, Code, Mail, FileText, Building2 } from "lucide-react";
 
 interface AdminLayoutProps {
     children: React.ReactNode;
@@ -53,14 +53,25 @@ const tabs = [
 interface AdminTabsProps {
     activeTab: string;
     onTabChange: (tab: string) => void;
+    currentUser?: any;
 }
 
-export function AdminTabs({ activeTab, onTabChange }: AdminTabsProps) {
+export function AdminTabs({ activeTab, onTabChange, currentUser }: AdminTabsProps) {
+    const visibleTabs = [...tabs];
+
+    // Insert Organizations tab at the beginning if superadmin
+    if (currentUser?.role === 'superadmin') {
+        // Check if already exists to avoid duplicates if re-rendered
+        if (!visibleTabs.some(t => t.id === "organizations")) {
+            visibleTabs.unshift({ id: "organizations", label: "Organizaciones", icon: Building2 });
+        }
+    }
+
     return (
         <Card className="mb-6">
             <CardContent className="p-4">
                 <div className="flex flex-wrap gap-2">
-                    {tabs.map((tab) => (
+                    {visibleTabs.map((tab) => (
                         <TabButton
                             key={tab.id}
                             icon={tab.icon}

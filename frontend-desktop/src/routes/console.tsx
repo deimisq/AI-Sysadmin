@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import TerminalComponent from '../components/terminal';
+import { MultiTabTerminal } from '../components/terminal/MultiTabTerminal';
 import { fetchServer, executeCommand, type Server } from '../lib/api';
 import { Button } from '../components/ui/button';
 import { ArrowLeft } from 'lucide-react';
@@ -12,28 +12,12 @@ export default function ServerConsole() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const [server, setServer] = useState<Server | null>(null);
-    const [wsUrl, setWsUrl] = useState<string | undefined>(undefined);
 
     useEffect(() => {
         if (!id) return;
-
         // Fetch server details
         fetchServer(id).then(setServer).catch(console.error);
-
-        // Build WebSocket URL for real terminal session
-        const token = localStorage.getItem('token');
-        if (token) {
-            const wsBase = API_BASE_URL.replace(/^http/, 'ws');
-            const url = `${wsBase}/ws/ssh/${id}?token=${token}`;
-            setWsUrl(url);
-        }
     }, [id]);
-
-    // Legacy handler kept as fallback, but WS mode takes precedence in TerminalComponent
-    const handleCommand = async (cmd: string) => {
-        if (!id) return '';
-        return executeCommand(id, cmd);
-    };
 
     if (!server) return (
         <div className="h-full flex items-center justify-center text-muted-foreground">
@@ -62,12 +46,9 @@ export default function ServerConsole() {
                     </div>
                 </header>
                 <div className="flex-1 overflow-hidden bg-[#1e1e1e] relative">
-                    <div className="absolute inset-0 p-2">
-                        <TerminalComponent
-                            serverData={server}
-                            hostname={server.hostname}
-                            onCommand={handleCommand}
-                            websocketUrl={wsUrl}
+                    <div className="absolute inset-0">
+                        <MultiTabTerminal
+                            initialServer={server}
                         />
                     </div>
                 </div>

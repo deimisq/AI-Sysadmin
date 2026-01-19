@@ -1,6 +1,6 @@
 import { X, LayoutDashboard } from 'lucide-react';
 import { useWorkspaceStore } from '../../stores/workspaceStore';
-import Dashboard from '../../routes/dashboard';
+import { DashboardView } from '../views/DashboardView';
 
 export function OverlayContainer() {
     const { activeOverlay, setActiveOverlay } = useWorkspaceStore();
@@ -12,10 +12,8 @@ export function OverlayContainer() {
 
     switch (activeOverlay) {
         case 'dashboard':
-            // Renders Dashboard route. Requires handling Layout duplication if present.
-            // For now, we wrap it in a div that might hide layout via CSS hacks if needed,
-            // or we accept it might look weird until refactored.
-            Content = <div className="h-full"><Dashboard /></div>;
+            // Renders Dashboard View (without Layout)
+            Content = <div className="h-full"><DashboardView /></div>;
             title = "Dashboard";
             break;
         case 'settings':

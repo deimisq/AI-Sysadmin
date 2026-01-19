@@ -11,7 +11,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { Server, createServer, updateServer } from '@/lib/api';
+import { type Server, createServer, updateServer } from '@/lib/api';
 import { toast } from 'sonner';
 
 interface ServerFormDialogProps {

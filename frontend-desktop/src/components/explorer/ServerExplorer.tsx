@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
-import { Search, Server as ServerIcon, ChevronDown, ChevronRight, RotateCw, MoreVertical, Terminal, MessageSquare, Pencil, Trash2, Zap, Plus } from 'lucide-react';
+import { Search, Server as ServerIcon, ChevronDown, ChevronRight, RotateCw, MoreVertical, Terminal, MessageSquare, Pencil, Trash2, Plus } from 'lucide-react';
 import { fetchServers, fetchGroups, deleteServer, type Server } from '../../lib/api';
 import { useWorkspaceStore } from '../../stores/workspaceStore';
 import { ServerFormDialog } from '../servers/ServerFormDialog';
@@ -301,7 +301,7 @@ function ServerItem({ server, onConnect, onChat, onEdit, onDelete }: ServerItemP
                     <DropdownMenuItem onClick={onEdit} className="hover:bg-[#333] focus:bg-[#333] cursor-pointer py-1.5">
                         <Pencil className="mr-2 h-3.5 w-3.5" /> Editar
                     </DropdownMenuItem>
-                    <div className="h-[1px] bg-[#444] my-1" />
+                    <DropdownMenuSeparator className="bg-[#444]" />
                     <DropdownMenuItem onClick={onDelete} className="hover:bg-[#333] focus:bg-[#333] text-red-400 hover:text-red-300 focus:text-red-300 cursor-pointer py-1.5">
                         <Trash2 className="mr-2 h-3.5 w-3.5" /> Eliminar
                     </DropdownMenuItem>

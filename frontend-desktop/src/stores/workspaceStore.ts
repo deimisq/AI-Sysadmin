@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { type Server } from '../lib/api';
 
 export type TabType = 'terminal' | 'rdp';
-export type OverlayType = 'dashboard' | 'settings' | 'profile' | 'admin' | 'docs' | 'reports' | 'help' | null;
+export type OverlayType = 'dashboard' | 'settings' | 'profile' | 'admin' | 'documentation' | 'reports' | 'help' | null;
 
 export interface Tab {
     id: string;

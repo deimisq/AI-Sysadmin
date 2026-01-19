@@ -1,6 +1,12 @@
 import { X, LayoutDashboard } from 'lucide-react';
 import { useWorkspaceStore } from '../../stores/workspaceStore';
 import { DashboardView } from '../views/DashboardView';
+import { ReportsView } from '../views/ReportsView';
+import { DocsView } from '../views/DocsView';
+import { ProfileView } from '../views/ProfileView';
+import { AdminView } from '../views/AdminView';
+import { SettingsView } from '../views/SettingsView';
+import { HelpView } from '../views/HelpView';
 
 export function OverlayContainer() {
     const { activeOverlay, setActiveOverlay } = useWorkspaceStore();
@@ -12,32 +18,35 @@ export function OverlayContainer() {
 
     switch (activeOverlay) {
         case 'dashboard':
-            // Renders Dashboard View (without Layout)
             Content = <div className="h-full"><DashboardView /></div>;
             title = "Dashboard";
             break;
-        case 'settings':
-            Content = <div className="p-10 text-[#ccc]">
-                <h3 className="text-xl font-bold mb-4">Ajustes de la Aplicación</h3>
-                <p>Configuración de apariencia, idioma y conexiones.</p>
-            </div>;
-            title = "Ajustes";
+        case 'reports':
+            Content = <div className="h-full"><ReportsView /></div>;
+            title = "Informes";
+            break;
+        case 'documentation':
+            Content = <div className="h-full"><DocsView /></div>;
+            title = "Documentación";
             break;
         case 'profile':
-            title = "Perfil de Usuario";
-            Content = <div className="p-10 text-[#ccc]">
-                <h3 className="text-xl font-bold mb-4">Admin User</h3>
-                <p>admin@sentrait.com</p>
-                <button className="mt-4 px-4 py-2 bg-red-600 rounded text-white">Cerrar Sesión</button>
-            </div>;
+            Content = <div className="h-full"><ProfileView /></div>;
+            title = "Perfil";
             break;
-        case 'reports':
-            title = "Informes";
-            Content = <div className="p-10 text-[#ccc]">Módulo de Informes en construcción.</div>;
+        case 'admin':
+            Content = <div className="h-full"><AdminView /></div>;
+            title = "Administración";
+            break;
+        case 'settings':
+            Content = <div className="h-full"><SettingsView /></div>;
+            title = "Ajustes";
+            break;
+        case 'help':
+            Content = <div className="h-full"><HelpView /></div>;
+            title = "Ayuda";
             break;
         default:
-            title = activeOverlay.charAt(0).toUpperCase() + activeOverlay.slice(1);
-            Content = <div className="p-10 text-[#ccc]">Sección {title} en construcción.</div>;
+            return null;
     }
 
     return (

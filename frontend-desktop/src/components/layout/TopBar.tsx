@@ -8,9 +8,8 @@ import {
 import { useWorkspaceStore } from '../../stores/workspaceStore';
 
 const MENU_ITEMS = [
-    { label: 'Dashboard', type: 'dashboard' },
     { label: 'Informes', type: 'reports' },
-    { label: 'Docs', type: 'docs' },
+    { label: 'Docs', type: 'documentation' },
     { label: 'Perfil', type: 'profile' },
     { label: 'Admin', type: 'admin' },
     { label: 'Ajustes', type: 'settings' },

@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { type Server } from '../lib/api';
 
-export type TabType = 'terminal' | 'dashboard' | 'settings' | 'rdp';
+export type TabType = 'terminal' | 'dashboard' | 'settings' | 'rdp' | 'reports' | 'docs' | 'profile' | 'admin' | 'help';
 
 export interface Tab {
     id: string;
@@ -16,23 +16,34 @@ interface WorkspaceState {
     tabs: Tab[];
     activeTabId: string | null;
     sidebarVisible: boolean;
+    aiPanelVisible: boolean;
 
     // Actions
     openTab: (tab: Omit<Tab, 'id'> & { id?: string }) => void;
     closeTab: (id: string) => void;
     setActiveTab: (id: string) => void;
     toggleSidebar: () => void;
+    toggleAIPanel: () => void;
 }
 
 export const useWorkspaceStore = create<WorkspaceState>((set) => ({
     tabs: [],
     activeTabId: null,
     sidebarVisible: true,
+    aiPanelVisible: true,
 
     openTab: (tabData) => set((state) => {
         // Dedup logic: if tab with same serverId/type exists, focus it
         if (tabData.serverId) {
             const existing = state.tabs.find(t => t.serverId === tabData.serverId && t.type === tabData.type);
+            if (existing) {
+                return { activeTabId: existing.id };
+            }
+        }
+
+        // Dedup by ID if provided (e.g. menu items)
+        if (tabData.id) {
+            const existing = state.tabs.find(t => t.id === tabData.id);
             if (existing) {
                 return { activeTabId: existing.id };
             }
@@ -63,4 +74,5 @@ export const useWorkspaceStore = create<WorkspaceState>((set) => ({
 
     setActiveTab: (id) => set({ activeTabId: id }),
     toggleSidebar: () => set((state) => ({ sidebarVisible: !state.sidebarVisible })),
+    toggleAIPanel: () => set((state) => ({ aiPanelVisible: !state.aiPanelVisible })),
 }));

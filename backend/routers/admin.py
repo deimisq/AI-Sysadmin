@@ -296,11 +296,11 @@ def grant_group_access(
         
     # Verify group and user exist and belong to org
     group = db.query(models.ServerGroup).filter(models.ServerGroup.id == group_id).first()
-    if not group or (not current_user.is_superuser and group.organization_id != current_user.organization_id):
+    if not group or (not current_user.is_superuser and group.organization_id is not None and group.organization_id != current_user.organization_id):
         raise HTTPException(status_code=404, detail="Group not found")
         
     target_user = db.query(models.User).filter(models.User.id == user_id).first()
-    if not target_user or (not current_user.is_superuser and target_user.organization_id != current_user.organization_id):
+    if not target_user or (not current_user.is_superuser and target_user.organization_id is not None and target_user.organization_id != current_user.organization_id):
         raise HTTPException(status_code=404, detail="User not found")
     
     # Check if permission already exists
@@ -351,7 +351,7 @@ def revoke_group_access(
     
     # Verify group exists and belongs to org
     group = db.query(models.ServerGroup).filter(models.ServerGroup.id == group_id).first()
-    if not group or (not current_user.is_superuser and group.organization_id != current_user.organization_id):
+    if not group or (not current_user.is_superuser and group.organization_id is not None and group.organization_id != current_user.organization_id):
         raise HTTPException(status_code=404, detail="Group not found")
     
     # Find and delete permission
@@ -393,7 +393,7 @@ def get_user_groups(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
         
-    if not current_user.is_superuser and user.organization_id != current_user.organization_id:
+    if not current_user.is_superuser and user.organization_id is not None and user.organization_id != current_user.organization_id:
          raise HTTPException(status_code=404, detail="User not found")
     
     # Get groups with role information

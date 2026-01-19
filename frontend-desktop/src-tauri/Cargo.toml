@@ -42,10 +42,10 @@ thiserror = "1.0"
 portable-pty = "0.8"
 
 [profile.dev]
-incremental = false   # Disable incremental compilation to save memory (trades time for RAM)
-codegen-units = 256   # Split into many small chunks to reduce peak RAM per chunk
-opt-level = 0         # No optimizations
-debug = false         # Reduce debug info size
+incremental = true    # Re-enable incremental compilation for speed
+codegen-units = 256   # Keep splitting to manage peak RAM
+opt-level = 0
+debug = false
 
 [profile.release]
 panic = "abort"

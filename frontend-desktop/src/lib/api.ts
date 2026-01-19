@@ -119,9 +119,30 @@ export const updateServer = (id: number, data: Partial<Server>) => api.put<Serve
 
 export const deleteServer = (id: number) => api.delete(`/servers/${id}`);
 
-export const executeCommand = async (serverId: string, command: string) => {
-    const response = await api.post<{ output: string; exit_code: number }>(`/servers/${serverId}/execute`, { command });
-    return response.output;
+// ... imports
+
+// Diagnosis Response Type
+export interface DiagnosisResponse {
+    analysis: string | {
+        analysis: string;
+        proposed_command?: string;
+    };
+}
+
+export const diagnoseProblem = (serverId: number | string, problem: string, language: string = "es") => {
+    return api.post<DiagnosisResponse>('/agent/diagnose', {
+        server_id: Number(serverId),
+        problem_description: problem,
+        language
+    });
+};
+
+// Update executeCommand to use correct global endpoint
+export const executeCommand = async (serverId: number | string, command: string) => {
+    return api.post<{ output: string; exit_code: number; stderr?: string; stdout?: string }>('/execute/', {
+        server_id: Number(serverId),
+        command
+    });
 };
 
 export const fetchGroups = () => api.get<any[]>('/groups/');

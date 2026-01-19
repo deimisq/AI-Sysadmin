@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Search, Monitor, Terminal, Server as ServerIcon, Folder, ChevronDown, ChevronRight, RotateCw } from 'lucide-react';
+import { Search, Server as ServerIcon, ChevronDown, ChevronRight, RotateCw } from 'lucide-react';
 import { fetchServers, type Server } from '../../lib/api';
 import { useWorkspaceStore } from '../../stores/workspaceStore';
 

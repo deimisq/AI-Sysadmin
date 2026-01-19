@@ -1,5 +1,5 @@
 import { X, LayoutDashboard } from 'lucide-react';
-import { useWorkspaceStore, OverlayType } from '../../stores/workspaceStore';
+import { useWorkspaceStore } from '../../stores/workspaceStore';
 import Dashboard from '../../routes/dashboard';
 
 export function OverlayContainer() {

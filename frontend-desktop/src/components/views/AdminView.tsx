@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { AdminTabs } from "@/components/admin-layout";
 import { UserManagement } from "@/components/admin/user-management";
+import { GroupManagement } from "@/components/admin/group-management";
 import { ServerManagement } from "@/components/admin/server-management";
 import { AIParameters } from "@/components/admin/ai-parameters";
 import { SystemStats } from "@/components/admin/system-stats";

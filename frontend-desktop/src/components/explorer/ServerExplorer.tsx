@@ -1,8 +1,11 @@
 import { useEffect, useState, useMemo } from 'react';
 import { Search, Server as ServerIcon, ChevronDown, ChevronRight, RotateCw, MoreVertical, Terminal, MessageSquare, Pencil, Trash2, Plus } from 'lucide-react';
-import { fetchServers, fetchGroups, deleteServer, type Server } from '../../lib/api';
+import { fetchServers, fetchGroups, fetchCurrentUser, deleteServer, type Server } from '../../lib/api';
 import { useWorkspaceStore } from '../../stores/workspaceStore';
 import { ServerFormDialog } from '../servers/ServerFormDialog';
+import { GroupManagement } from '@/components/admin/group-management';
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import { FolderCog } from 'lucide-react';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -18,6 +21,8 @@ export function ServerExplorer() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const [currentUser, setCurrentUser] = useState<any>(null);
+    const [showGroupManager, setShowGroupManager] = useState(false);
 
     // Actions
     const { openTab, toggleAIPanel, aiPanelVisible } = useWorkspaceStore();
@@ -39,6 +44,8 @@ export function ServerExplorer() {
             .then(([serversData, groupsData]) => {
                 setServers(serversData);
                 setGroups(groupsData);
+                // Also fetch current user if not present (silent)
+                fetchCurrentUser().then(setCurrentUser).catch(console.error);
                 setLoading(false);
             })
             .catch(err => {
@@ -161,6 +168,9 @@ export function ServerExplorer() {
                         <button onClick={handleAddServer} title="Agregar Servidor" className="hover:bg-[#333] p-1 rounded text-gray-400 hover:text-white">
                             <Plus className="w-3.5 h-3.5" />
                         </button>
+                        <button onClick={() => setShowGroupManager(true)} title="Gestionar Grupos" className="hover:bg-[#333] p-1 rounded text-gray-400 hover:text-white">
+                            <FolderCog className="w-3.5 h-3.5" />
+                        </button>
                         <button onClick={loadData} title="Refrescar" className="hover:bg-[#333] p-1 rounded text-gray-400 hover:text-white">
                             <RotateCw className="w-3.5 h-3.5" />
                         </button>
@@ -245,6 +255,12 @@ export function ServerExplorer() {
                 groups={groups}
                 onSuccess={loadData}
             />
+
+            <Dialog open={showGroupManager} onOpenChange={setShowGroupManager}>
+                <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-card text-card-foreground border-border">
+                    <GroupManagement currentUser={currentUser} />
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

@@ -26,10 +26,10 @@ function TabButton({ icon: Icon, label, active, onClick }: TabButtonProps) {
     return (
         <button
             onClick={onClick}
-            className={`flex items - center gap - 2 px - 4 py - 2 rounded - lg transition - colors ${active
-                    ? "bg-primary text-primary-foreground"
-                    : "hover:bg-muted text-muted-foreground"
-                } `}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${active
+                ? "bg-primary text-primary-foreground"
+                : "hover:bg-muted text-muted-foreground"
+                }`}
         >
             <Icon className="h-4 w-4" />
             <span className="font-medium">{label}</span>
@@ -39,6 +39,7 @@ function TabButton({ icon: Icon, label, active, onClick }: TabButtonProps) {
 
 const tabs = [
     { id: "users", label: "Usuarios", icon: Users },
+    { id: "groups", label: "Grupos", icon: Folder },
     { id: "servers", label: "Servidores", icon: Server },
     { id: "ai", label: "Parámetros IA", icon: Settings },
     { id: "stats", label: "Estadísticas", icon: Activity },

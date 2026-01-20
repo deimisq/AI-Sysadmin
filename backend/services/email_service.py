@@ -309,8 +309,7 @@ def send_invitation_email(db, invitation_email: str, invitation_token: str, invi
     import os
     
     # Get frontend URL from environment
-    frontend_url = os.getenv('FRONTEND_URL', 'https://testing.sentrait.com.uy')
-    invitation_url = f"{frontend_url}/#/accept-invitation?token={invitation_token}"
+    download_url = os.getenv('DOWNLOAD_URL', 'https://agent.sentrait.com.uy')
     
     # Build subject
     subject = "You've been invited to AI Sysadmin Agent"
@@ -333,22 +332,30 @@ def send_invitation_email(db, invitation_email: str, invitation_token: str, invi
             <div style="max-width: 600px; margin: 0 auto; background-color: white; border-radius: 8px; padding: 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                 <h2 style="color: #2563eb; margin-top: 0;">Welcome to AI Sysadmin Agent!</h2>
                 <p style="font-size: 16px; color: #374151;">{greeting}.</p>
-                <p style="font-size: 16px; color: #374151;">Click the button below to create your account and get started:</p>
+                
+                <div style="background-color: #f0f9ff; border-left: 4px solid #2563eb; padding: 15px; margin: 20px 0;">
+                    <p style="margin: 0 0 10px 0; font-weight: 600; color: #1e40af;">Your Invitation Token:</p>
+                    <code style="display: block; background-color: white; padding: 12px; border-radius: 4px; font-size: 14px; font-family: monospace; word-break: break-all; border: 1px solid #bfdbfe;">{invitation_token}</code>
+                    <p style="margin: 10px 0 0 0; font-size: 12px; color: #64748b;">Copy this token - you'll need it to activate your account.</p>
+                </div>
+                
+                <h3 style="color: #1e40af; margin-top: 30px;">How to Get Started:</h3>
+                <ol style="color: #374151; line-height: 1.8;">
+                    <li><strong>Download</strong> the AI Sysadmin Agent desktop application from our website</li>
+                    <li><strong>Install</strong> the application on your computer</li>
+                    <li><strong>Open</strong> the app and look for "Accept Invitation" or use the token above</li>
+                    <li><strong>Create</strong> your account using your invitation token</li>
+                </ol>
                 
                 <div style="text-align: center; margin: 30px 0;">
-                    <a href="{invitation_url}" 
+                    <a href="{download_url}" 
                        style="background-color: #2563eb; color: white; 
                               padding: 14px 28px; text-decoration: none; 
                               border-radius: 6px; display: inline-block;
                               font-weight: 600; font-size: 16px;">
-                        Accept Invitation
+                        Download Desktop App
                     </a>
                 </div>
-                
-                <p style="font-size: 14px; color: #6b7280;">
-                    Or copy and paste this link into your browser:<br>
-                    <a href="{invitation_url}" style="color: #2563eb; word-break: break-all;">{invitation_url}</a>
-                </p>
                 
                 <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
                     <p style="font-size: 12px; color: #9ca3af; margin: 0;">
@@ -367,8 +374,17 @@ Welcome to AI Sysadmin Agent!
 
 {greeting}.
 
-Click the link below to create your account and get started:
-{invitation_url}
+YOUR INVITATION TOKEN:
+{invitation_token}
+
+Copy this token - you'll need it to activate your account.
+
+HOW TO GET STARTED:
+
+1. Download the AI Sysadmin Agent desktop application from: {download_url}
+2. Install the application on your computer
+3. Open the app and look for "Accept Invitation"
+4. Create your account using your invitation token
 
 This invitation will expire in 7 days.
 

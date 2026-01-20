@@ -183,7 +183,7 @@ export default function LandingPage() {
                                     <li>✓ Soporte por email</li>
                                     <li>✓ Actualizaciones incluidas</li>
                                 </ul>
-                                <Button className="w-full" variant="outline" disabled>Próximamente</Button>
+                                <Button className="w-full" variant="outline" onClick={() => router.push("/subscribe?plan=starter")}>Comenzar</Button>
                             </CardContent>
                         </Card>
                         <Card className="border-2 border-blue-500 shadow-lg">
@@ -201,7 +201,7 @@ export default function LandingPage() {
                                     <li>✓ IA avanzada</li>
                                     <li>✓ Multi-tenant</li>
                                 </ul>
-                                <Button className="w-full" disabled>Próximamente</Button>
+                                <Button className="w-full" onClick={() => router.push("/subscribe?plan=professional")}>Comenzar</Button>
                             </CardContent>
                         </Card>
                         <Card>
@@ -218,7 +218,7 @@ export default function LandingPage() {
                                     <li>✓ Implementación dedicada</li>
                                     <li>✓ SLA garantizado</li>
                                 </ul>
-                                <Button className="w-full" variant="outline" disabled>Contactar</Button>
+                                <Button className="w-full" variant="outline" onClick={() => router.push("/subscribe?plan=enterprise")}>Contactar</Button>
                             </CardContent>
                         </Card>
                     </div>

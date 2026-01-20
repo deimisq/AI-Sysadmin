@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { AdminTabs } from "@/components/admin-layout";
 import { UserManagement } from "@/components/admin/user-management";
+import { InvitationManagement } from "@/components/admin/invitation-management";
 import { GroupManagement } from "@/components/admin/group-management";
 import { ServerManagement } from "@/components/admin/server-management";
 import { AIParameters } from "@/components/admin/ai-parameters";
@@ -82,6 +83,7 @@ export function AdminView() {
                 {activeTab === "organizations" && <OrganizationManagement />}
 
                 {activeTab === "users" && <UserManagement currentUser={currentUser} />}
+                {activeTab === "invitations" && <InvitationManagement currentUser={currentUser} />}
                 {activeTab === "groups" && <GroupManagement currentUser={currentUser} />}
                 {activeTab === "servers" && <ServerManagement currentUser={currentUser} />}
 

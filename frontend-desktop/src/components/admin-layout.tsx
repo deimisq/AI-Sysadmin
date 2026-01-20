@@ -1,7 +1,7 @@
 
 import DashboardLayout from "@/components/dashboard-layout";
 import { Card, CardContent } from "@/components/ui/card";
-import { Users, Server, Shield, Settings, Activity, Bell, Code, Mail, FileText, Building2, Folder } from "lucide-react";
+import { Users, Server, Shield, Settings, Activity, Bell, Code, Mail, FileText, Building2, Folder, UserPlus } from "lucide-react";
 
 interface AdminLayoutProps {
     children: React.ReactNode;
@@ -39,6 +39,7 @@ function TabButton({ icon: Icon, label, active, onClick }: TabButtonProps) {
 
 const tabs = [
     { id: "users", label: "Usuarios", icon: Users },
+    { id: "invitations", label: "Invitaciones", icon: UserPlus },
     { id: "groups", label: "Grupos", icon: Folder },
     { id: "servers", label: "Servidores", icon: Server },
     { id: "ai", label: "Parámetros IA", icon: Settings },

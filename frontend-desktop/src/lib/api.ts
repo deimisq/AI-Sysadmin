@@ -168,3 +168,8 @@ export const fetchOrganization = (id: number) => api.get<Organization>(`/organiz
 export const createOrganization = (data: Partial<Organization>) => api.post<Organization>('/organizations/', data);
 export const updateOrganization = (id: number, data: Partial<Organization>) => api.put<Organization>(`/organizations/${id}`, data);
 export const deleteOrganization = (id: number) => api.delete(`/organizations/${id}`);
+
+// Invitations
+export const fetchInvitations = () => api.get<any[]>('/invitations/');
+export const createInvitation = (data: { email: string; role: string; organization_id?: number }) => api.post<any>('/invitations/', data);
+export const deleteInvitation = (id: number) => api.delete(`/invitations/${id}`);

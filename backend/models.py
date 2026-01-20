@@ -399,3 +399,23 @@ class HealthCheckReport(Base):
     # Relationships
     scheduled_check = relationship("ScheduledHealthCheck", back_populates="reports")
     server = relationship("Server", foreign_keys=[server_id])
+
+
+class Invitation(Base):
+    __tablename__ = "invitations"
+
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String, index=True, nullable=False)
+    role = Column(String, default=RoleType.USER.value)
+    token = Column(String, unique=True, index=True, nullable=False)
+    expires_at = Column(DateTime(timezone=True), nullable=False)
+    accepted = Column(Boolean, default=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    
+    # User who created the invitation
+    created_by_id = Column(Integer, ForeignKey("users.id"))
+    created_by = relationship("User", foreign_keys=[created_by_id])
+    
+    # Organization
+    organization_id = Column(Integer, ForeignKey("organizations.id"))
+    organization = relationship("Organization")

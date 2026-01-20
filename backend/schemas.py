@@ -244,6 +244,26 @@ class Notification(NotificationBase):
     class Config:
         from_attributes = True
 
+# Invitation Schemas
+class InvitationBase(BaseModel):
+    email: EmailStr
+    role: Optional[str] = "user"
+    organization_id: Optional[int] = None
+
+class InvitationCreate(InvitationBase):
+    pass
+
+class Invitation(InvitationBase):
+    id: int
+    token: str
+    expires_at: datetime
+    accepted: bool
+    created_at: datetime
+    created_by_id: Optional[int]
+    
+    class Config:
+        from_attributes = True
+
 # System Config Schemas
 class SystemConfigBase(BaseModel):
     key: str

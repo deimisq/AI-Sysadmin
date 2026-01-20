@@ -15,11 +15,18 @@ export default function App() {
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <HashRouter>
         <Routes>
+          {/* Public routes - must be before catch-all */}
           <Route path="/login" element={<Login />} />
           <Route path="/accept-invitation" element={<AcceptInvitation />} />
-          {/* Catch-all route to render the IDE layout for everything else */}
+
+          {/* Default route - redirect to dashboard if authenticated, login otherwise */}
+          <Route path="/" element={
+            isAuthenticated() ? <DesktopLayout /> : <Navigate to="/login" />
+          } />
+
+          {/* Catch-all route for authenticated app */}
           <Route
-            path="/*"
+            path="*"
             element={
               <PrivateRoute>
                 <DesktopLayout />

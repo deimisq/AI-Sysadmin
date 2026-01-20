@@ -62,13 +62,7 @@ export function InvitationManagement({ currentUser }: InvitationManagementProps)
             }
 
             const res = await createInvitation(payload);
-            setLastCreatedToken(res.data.token); // Assuming API interceptor returns full response or just data? 
-            // My api.ts wrapper returns data directly usually? No, it returns AxiosResponse usually, but helper might unwrap?
-            // Let's assume standard axios response
-            // Wait, api.post returns Promise<AxiosResponse<T>>. So res.data.
-
-            // Correction check: api.ts: `api.post<any>` returns `Promise<AxiosResponse<any>>`.
-            // So `res.data` is the object. `res.data.token`.
+            setLastCreatedToken(res.token);
 
             await loadData();
             setCreating(false);
@@ -219,5 +213,3 @@ export function InvitationManagement({ currentUser }: InvitationManagementProps)
         </Card>
     );
 }
-
-// Ensure createInvitation in api.ts returns AxiosResponse with data property

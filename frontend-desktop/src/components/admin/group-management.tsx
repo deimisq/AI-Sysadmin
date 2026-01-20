@@ -82,7 +82,8 @@ export function GroupManagement({ currentUser }: GroupManagementProps) {
             await updateGroup(editingGroup.id, {
                 name: editingGroup.name,
                 description: editingGroup.description,
-                color: editingGroup.color
+                color: editingGroup.color,
+                organization_id: editingGroup.organization_id ? parseInt(editingGroup.organization_id) : undefined
             });
             await loadData();
             setEditingGroup(null);
@@ -220,15 +221,21 @@ export function GroupManagement({ currentUser }: GroupManagementProps) {
                                 onChange={(e) => setEditingGroup({ ...editingGroup, description: e.target.value })}
                             />
                         </div>
-                        {currentUser?.role === "superadmin" && editingGroup.organization_id && (
+                        {currentUser?.role === "superadmin" && (
                             <div className="col-span-2">
                                 <label className="text-sm font-medium">Organización</label>
-                                <Input
-                                    disabled
-                                    value={getOrganizationName(editingGroup.organization_id)}
-                                />
+                                <select
+                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                    value={editingGroup.organization_id || ""}
+                                    onChange={(e) => setEditingGroup({ ...editingGroup, organization_id: e.target.value })}
+                                >
+                                    <option value="">(Tu organización actual / Sin asignar)</option>
+                                    {organizations.map((org) => (
+                                        <option key={org.id} value={org.id}>{org.name}</option>
+                                    ))}
+                                </select>
                                 <p className="text-xs text-muted-foreground mt-1">
-                                    La organización no se puede cambiar después de creado.
+                                    Cambiar la organización puede afectar la visibilidad para otros usuarios.
                                 </p>
                             </div>
                         )}

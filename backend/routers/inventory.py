@@ -125,6 +125,9 @@ def update_group(
     
     update_data = group_update.dict(exclude_unset=True)
     for key, value in update_data.items():
+        # Only superusers can change organization
+        if key == 'organization_id' and not current_user.is_superuser:
+            continue
         setattr(db_group, key, value)
         
     db.commit()

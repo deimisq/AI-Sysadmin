@@ -124,6 +124,7 @@ class ServerGroupUpdate(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
     color: Optional[str] = None
+    organization_id: Optional[int] = None
 
 class ServerGroup(ServerGroupBase):
     id: int

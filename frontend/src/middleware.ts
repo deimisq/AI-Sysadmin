@@ -12,6 +12,7 @@ const protectedRoutes = [
 const publicRoutes = [
     '/login',
     '/auth',
+    '/accept-invitation',
     '/',
 ]
 

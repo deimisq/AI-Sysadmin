@@ -40,10 +40,22 @@ def create_group(
     db: Session = Depends(dependencies.get_db)
 ):
     """Create a new server group"""
+    group_data = group.dict()
+    
+    # Determine organization_id
+    # Default to current user's org
+    org_id = current_user.organization_id
+    
+    # Allow superadmins to specify organization
+    if current_user.is_superuser and group_data.get('organization_id'):
+        org_id = group_data['organization_id']
+        
+    # Enforce organization_id in input data
+    group_data['organization_id'] = org_id
+
     db_group = models.ServerGroup(
-        **group.dict(), 
-        created_by=current_user.id,
-        organization_id=current_user.organization_id
+        **group_data, 
+        created_by=current_user.id
     )
     db.add(db_group)
     db.commit()

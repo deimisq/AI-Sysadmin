@@ -1,6 +1,7 @@
+
 import DashboardLayout from "@/components/dashboard-layout";
 import { Card, CardContent } from "@/components/ui/card";
-import { Users, Server, Shield, Settings, Activity, Bell, Code, Mail, FileText, Building2 } from "lucide-react";
+import { Users, Server, Shield, Settings, Activity, Bell, Code, Mail, FileText, Building2, Folder } from "lucide-react";
 
 interface AdminLayoutProps {
     children: React.ReactNode;
@@ -25,10 +26,10 @@ function TabButton({ icon: Icon, label, active, onClick }: TabButtonProps) {
     return (
         <button
             onClick={onClick}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${active
-                ? "bg-primary text-primary-foreground"
-                : "hover:bg-muted text-muted-foreground"
-                }`}
+            className={`flex items - center gap - 2 px - 4 py - 2 rounded - lg transition - colors ${active
+                    ? "bg-primary text-primary-foreground"
+                    : "hover:bg-muted text-muted-foreground"
+                } `}
         >
             <Icon className="h-4 w-4" />
             <span className="font-medium">{label}</span>

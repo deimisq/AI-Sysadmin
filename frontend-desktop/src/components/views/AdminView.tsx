@@ -81,7 +81,7 @@ export function AdminView() {
                 {activeTab === "organizations" && <OrganizationManagement />}
 
                 {activeTab === "users" && <UserManagement currentUser={currentUser} />}
-
+                {activeTab === "groups" && <GroupManagement currentUser={currentUser} />}
                 {activeTab === "servers" && <ServerManagement currentUser={currentUser} />}
 
                 {activeTab === "ai" && <AIParameters />}

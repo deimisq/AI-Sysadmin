@@ -118,7 +118,7 @@ class ServerGroupBase(BaseModel):
     color: Optional[str] = None
 
 class ServerGroupCreate(ServerGroupBase):
-    pass
+    organization_id: Optional[int] = None
 
 class ServerGroupUpdate(BaseModel):
     name: Optional[str] = None

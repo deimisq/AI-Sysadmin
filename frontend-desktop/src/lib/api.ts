@@ -146,8 +146,8 @@ export const executeCommand = async (serverId: number | string, command: string)
 };
 
 export const fetchGroups = () => api.get<any[]>('/groups/');
-export const createGroup = (data: { name: string; description?: string }) => api.post<any>('/groups/', data);
-export const updateGroup = (id: number, data: { name: string; description?: string }) => api.put<any>(`/groups/${id}`, data);
+export const createGroup = (data: { name: string; description?: string; color?: string; organization_id?: number }) => api.post<any>('/groups/', data);
+export const updateGroup = (id: number, data: { name: string; description?: string; color?: string }) => api.put<any>(`/groups/${id}`, data);
 export const deleteGroup = (id: number) => api.delete(`/groups/${id}`);
 
 export const fetchCurrentUser = () => api.get<any>('/auth/me');

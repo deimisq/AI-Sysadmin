@@ -70,7 +70,7 @@ export default function LandingPage() {
             {/* Hero Section */}
             <section className="pt-32 pb-20 px-4">
                 <div className="container mx-auto text-center max-w-4xl">
-                    <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                    <h1 className="text-5xl md:text-6xl font-bold mb-6 pb-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
                         Gestión de Servidores con Inteligencia Artificial
                     </h1>
                     <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">

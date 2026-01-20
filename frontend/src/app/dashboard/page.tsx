@@ -5,7 +5,6 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ServerList } from "@/components/server-list";
 import { AddServerForm } from "@/components/add-server-form";
-import { ConversationalChat } from "@/components/conversational-chat";
 import { GroupManager } from "@/components/group-manager";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { ThemeSwitcher } from "@/components/theme-switcher";
@@ -18,7 +17,6 @@ import { fetchCurrentUser } from "@/lib/api";
 export default function Dashboard() {
     const router = useRouter();
     const { t } = useI18n();
-    const [selectedServer, setSelectedServer] = useState<any>(null);
     const [editingServer, setEditingServer] = useState<any>(null);
     const [showAddForm, setShowAddForm] = useState(false);
     const [showGroupManager, setShowGroupManager] = useState(false);
@@ -138,20 +136,10 @@ export default function Dashboard() {
                             </div>
                         )}
 
-                        {selectedServer ? (
-                            <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
-                                <ConversationalChat
-                                    server={selectedServer}
-                                    onClose={() => setSelectedServer(null)}
-                                />
-                            </div>
-                        ) : (
-                            <ServerList
-                                key={refreshKey}
-                                onDiagnose={setSelectedServer}
-                                onEdit={handleEdit}
-                            />
-                        )}
+                        <ServerList
+                            key={refreshKey}
+                            onEdit={handleEdit}
+                        />
                     </div>
                 </div>
             </main>

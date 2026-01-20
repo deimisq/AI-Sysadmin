@@ -3,7 +3,6 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { I18nProvider } from "@/lib/i18n-context";
 import { ThemeProvider } from "@/lib/theme-context";
-import { FeedbackButton } from "@/components/feedback-button";
 import { VersionNotification } from "@/components/version-notification";
 import { AuthProvider } from "@/components/auth-provider";
 import { Toaster } from "sonner";
@@ -22,14 +21,13 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="en" suppressHydrationWarning>
-            <body className={`${inter.className} flex flex-col h-full`}>
+            <body className={`${inter.className} min-h-screen flex flex-col`}>
                 <ThemeProvider>
                     <I18nProvider>
                         <AuthProvider>
-                            <div className="flex-1 flex flex-col overflow-hidden">
+                            <div className="flex-1 flex flex-col">
                                 {children}
                             </div>
-                            <FeedbackButton />
                             <VersionNotification />
                         </AuthProvider>
                         <Toaster

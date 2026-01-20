@@ -9,7 +9,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Book, Search, FileText, Zap, Shield, HelpCircle, Rocket, AlertCircle, ArrowLeft } from "lucide-react";
 import { useI18n } from "@/lib/i18n-context";
 import { Footer } from "@/components/footer";
-import { FeedbackButton } from "@/components/feedback-button";
 import ReactMarkdown from 'react-markdown';
 
 interface DocSection {
@@ -1059,9 +1058,6 @@ export default function DocumentationPage() {
 
             {/* Footer */}
             <Footer />
-
-            {/* Feedback Button */}
-            <FeedbackButton />
         </div>
     );
 }

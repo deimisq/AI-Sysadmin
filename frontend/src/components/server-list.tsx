@@ -61,12 +61,11 @@ type SortField = 'hostname' | 'ip_address' | 'group' | 'os_info';
 type SortOrder = 'asc' | 'desc';
 
 interface ServerListProps {
-    onDiagnose: (server: Server) => void;
     onEdit: (server: Server) => void;
     refreshKey?: number;
 }
 
-export function ServerList({ onDiagnose, onEdit, refreshKey }: ServerListProps) {
+export function ServerList({ onEdit, refreshKey }: ServerListProps) {
     const { t } = useI18n();
     const [servers, setServers] = useState<Server[]>([]);
     const [groups, setGroups] = useState<ServerGroup[]>([]);
@@ -316,24 +315,6 @@ export function ServerList({ onDiagnose, onEdit, refreshKey }: ServerListProps) 
     const ActionButtons = ({ server, compact = false }: { server: Server; compact?: boolean }) => (
         <div className={`flex gap-1 justify-end ${compact ? '' : 'gap-2'}`}>
             <Button
-                variant="default"
-                size={compact ? "sm" : "default"}
-                title={t.serverList?.console || "Console"}
-                onClick={() => window.location.href = `/dashboard/server/${server.id}/console`}
-            >
-                <Terminal className={`${compact ? '' : 'mr-2'} h-4 w-4`} />
-                {!compact && (t.serverList?.console || "Console")}
-            </Button>
-            <Button
-                variant="outline"
-                size={compact ? "sm" : "default"}
-                title={t.serverList?.diagnose || "Diagnose"}
-                onClick={() => onDiagnose(server)}
-            >
-                <Activity className={`${compact ? '' : 'mr-2'} h-4 w-4`} />
-                {!compact && (t.serverList?.diagnose || "Diagnose")}
-            </Button>
-            <Button
                 variant="outline"
                 size="icon"
                 title={t.common?.edit || "Edit"}
@@ -368,27 +349,7 @@ export function ServerList({ onDiagnose, onEdit, refreshKey }: ServerListProps) 
                         <p className="text-xs text-muted-foreground truncate">{server.os_info} - {server.description}</p>
                     </CardContent>
                     <CardFooter className="pt-0">
-                        <div className="flex flex-wrap gap-2 w-full">
-                            <Button
-                                variant="default"
-                                size="sm"
-                                className="flex-1 min-w-0"
-                                title={t.serverList?.console || "Console"}
-                                onClick={() => window.location.href = `/dashboard/server/${server.id}/console`}
-                            >
-                                <Terminal className="mr-1 h-3 w-3" />
-                                <span className="truncate">{t.serverList?.console || "Console"}</span>
-                            </Button>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className="flex-1 min-w-0"
-                                title={t.serverList?.diagnose || "Diagnose"}
-                                onClick={() => onDiagnose(server)}
-                            >
-                                <Activity className="mr-1 h-3 w-3" />
-                                <span className="truncate">{t.serverList?.diagnose || "Diagnose"}</span>
-                            </Button>
+                        <div className="flex flex-wrap gap-2 w-full justify-end">
                             <Button variant="outline" size="icon" className="h-8 w-8 flex-shrink-0" title={t.common?.edit || "Edit"} onClick={() => onEdit(server)}>
                                 ✏️
                             </Button>
@@ -414,12 +375,6 @@ export function ServerList({ onDiagnose, onEdit, refreshKey }: ServerListProps) 
                             <p className="text-xs text-muted-foreground">{server.ip_address}</p>
                         </div>
                         <div className="flex gap-1 mt-2">
-                            <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => window.location.href = `/dashboard/server/${server.id}/console`}>
-                                <Terminal className="h-3 w-3" />
-                            </Button>
-                            <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => onDiagnose(server)}>
-                                <Activity className="h-3 w-3" />
-                            </Button>
                             <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => onEdit(server)}>
                                 ✏️
                             </Button>

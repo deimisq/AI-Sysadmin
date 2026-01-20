@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getInvitationDetails, acceptInvitation } from "@/lib/api";
-import { UserPlus, Loader2, CheckCircle2 } from "lucide-react";
+import { UserPlus, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 
 export default function AcceptInvitation() {
@@ -15,6 +15,7 @@ export default function AcceptInvitation() {
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [success, setSuccess] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     const [invitation, setInvitation] = useState<any>(null);
     const [formData, setFormData] = useState({
         username: "",
@@ -24,9 +25,13 @@ export default function AcceptInvitation() {
     });
 
     useEffect(() => {
+        console.log("Accept Invitation - Token:", token);
+        console.log("Full URL:", window.location.href);
+
         if (!token) {
-            toast.error("Token de invitación no válido");
-            navigate("/login");
+            console.error("No token in URL");
+            setError("Token de invitación no encontrado en la URL");
+            setLoading(false);
             return;
         }
 
@@ -35,13 +40,14 @@ export default function AcceptInvitation() {
 
     const loadInvitation = async () => {
         try {
+            console.log("Fetching invitation details for token:", token);
             const details = await getInvitationDetails(token!);
+            console.log("Invitation details loaded:", details);
             setInvitation(details);
+            setLoading(false);
         } catch (error: any) {
-            console.error(error);
-            toast.error(error.message || "Invitación no válida o expirada");
-            setTimeout(() => navigate("/login"), 2000);
-        } finally {
+            console.error("Error loading invitation:", error);
+            setError(error.message || "Invitación no válida o expirada");
             setLoading(false);
         }
     };
@@ -90,8 +96,32 @@ export default function AcceptInvitation() {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
                 <Card className="w-full max-w-md">
-                    <CardContent className="pt-6 flex items-center justify-center">
+                    <CardContent className="pt-6 flex flex-col items-center justify-center gap-2">
                         <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+                        <p className="text-sm text-muted-foreground">Cargando invitación...</p>
+                    </CardContent>
+                </Card>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-rose-100 dark:from-gray-900 dark:to-gray-800">
+                <Card className="w-full max-w-md">
+                    <CardHeader>
+                        <div className="flex justify-center mb-4">
+                            <div className="p-3 bg-red-100 dark:bg-red-900 rounded-full">
+                                <AlertCircle className="h-8 w-8 text-red-600 dark:text-red-400" />
+                            </div>
+                        </div>
+                        <CardTitle className="text-center text-red-600">Error</CardTitle>
+                    </CardHeader>
+                    <CardContent className="text-center space-y-4">
+                        <p className="text-muted-foreground">{error}</p>
+                        <Button onClick={() => navigate("/login")}>
+                            Ir al Login
+                        </Button>
                     </CardContent>
                 </Card>
             </div>

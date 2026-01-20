@@ -294,3 +294,94 @@ def notify_user_approved(db, user_email: str, user_username: str, language: str 
     except Exception as e:
         logger.error(f"Failed to send approval notification to {user_email}: {e}")
         return False
+
+
+def send_invitation_email(db, invitation_email: str, invitation_token: str, inviter_name: str = None, organization_name: str = None):
+    """Send an invitation email with a token link
+    
+    Args:
+        db: Database session
+        invitation_email: Email address to send invitation to
+        invitation_token: Unique invitation token
+        inviter_name: Name of the person who sent the invitation (optional)
+        organization_name: Name of the organization (optional)
+    """
+    import os
+    
+    # Get frontend URL from environment
+    frontend_url = os.getenv('FRONTEND_URL', 'https://testing.sentrait.com.uy')
+    invitation_url = f"{frontend_url}/#/accept-invitation?token={invitation_token}"
+    
+    # Build subject
+    subject = "You've been invited to AI Sysadmin Agent"
+    if organization_name:
+        subject = f"Invitation to join {organization_name} on AI Sysadmin Agent"
+    
+    # Build greeting
+    greeting = "You have been invited"
+    if inviter_name:
+        greeting = f"{inviter_name} has invited you"
+    if organization_name:
+        greeting += f" to join {organization_name} on AI Sysadmin Agent"
+    else:
+        greeting += " to AI Sysadmin Agent"
+    
+    # HTML body
+    body_html = f"""
+    <html>
+        <body style="font-family: Arial, sans-serif; padding: 20px; background-color: #f9fafb;">
+            <div style="max-width: 600px; margin: 0 auto; background-color: white; border-radius: 8px; padding: 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <h2 style="color: #2563eb; margin-top: 0;">Welcome to AI Sysadmin Agent!</h2>
+                <p style="font-size: 16px; color: #374151;">{greeting}.</p>
+                <p style="font-size: 16px; color: #374151;">Click the button below to create your account and get started:</p>
+                
+                <div style="text-align: center; margin: 30px 0;">
+                    <a href="{invitation_url}" 
+                       style="background-color: #2563eb; color: white; 
+                              padding: 14px 28px; text-decoration: none; 
+                              border-radius: 6px; display: inline-block;
+                              font-weight: 600; font-size: 16px;">
+                        Accept Invitation
+                    </a>
+                </div>
+                
+                <p style="font-size: 14px; color: #6b7280;">
+                    Or copy and paste this link into your browser:<br>
+                    <a href="{invitation_url}" style="color: #2563eb; word-break: break-all;">{invitation_url}</a>
+                </p>
+                
+                <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+                    <p style="font-size: 12px; color: #9ca3af; margin: 0;">
+                        This invitation will expire in 7 days.<br>
+                        If you didn't expect this invitation, you can safely ignore this email.
+                    </p>
+                </div>
+            </div>
+        </body>
+    </html>
+    """
+    
+    # Text body
+    body_text = f"""
+Welcome to AI Sysadmin Agent!
+
+{greeting}.
+
+Click the link below to create your account and get started:
+{invitation_url}
+
+This invitation will expire in 7 days.
+
+If you didn't expect this invitation, you can safely ignore this email.
+
+---
+This is an automated email from AI Sysadmin Agent.
+    """
+    
+    try:
+        send_notification_email(db, invitation_email, subject, body_html, body_text)
+        logger.info(f"Sent invitation email to {invitation_email}")
+        return True
+    except Exception as e:
+        logger.error(f"Failed to send invitation email to {invitation_email}: {e}")
+        return False

@@ -173,3 +173,7 @@ export const deleteOrganization = (id: number) => api.delete(`/organizations/${i
 export const fetchInvitations = () => api.get<any[]>('/invitations/');
 export const createInvitation = (data: { email: string; role: string; organization_id?: number }) => api.post<any>('/invitations/', data);
 export const deleteInvitation = (id: number) => api.delete(`/invitations/${id}`);
+export const getInvitationDetails = (token: string) => api.get<any>(`/invitations/details/${token}`);
+export const acceptInvitation = (token: string, userData: { username: string; password: string; full_name: string }) =>
+    api.post<any>(`/invitations/accept/${token}`, userData);
+

@@ -9,8 +9,8 @@ use tokio::sync::Mutex as TokioMutex;
 use anyhow::{Result, Context};
 use uuid::Uuid;
 use serde::{Serialize, Deserialize};
-use russh_sftp::client::SftpSession;
-use russh_keys::PublicKey;
+// use russh_sftp::client::SftpSession;
+// use russh_keys::PublicKey;
 use std::borrow::Cow;
 use crate::pty_session::PTYSession;
 
@@ -65,7 +65,7 @@ impl client::Handler for RusshClient {
 
     async fn check_server_key(
         &mut self,
-        _server_public_key: &PublicKey,
+        _server_public_key: &key::PublicKey,
     ) -> Result<bool, Self::Error> {
         // Accept any server key (like ssh -o StrictHostKeyChecking=no)
         Ok(true)
@@ -234,40 +234,9 @@ impl SSHManager {
         }
     }
 
-    pub async fn list_files(&self, session_id: &str, path: &str) -> Result<Vec<FileEntry>> {
-        let session_arc = {
-            let sessions = self.sessions.lock().unwrap();
-            sessions.get(session_id).cloned()
-        };
-
-        if let Some(session_mutex) = session_arc {
-            let session = session_mutex.lock().await;
-
-            let channel = session.channel_open_session().await.context("Failed to open channel")?;
-            channel.request_subsystem(true, "sftp").await.context("Failed to request sftp subsystem")?;
-
-            let sftp = SftpSession::new(channel.into_stream()).await?;
-            
-            let files = sftp.read_dir(path).await?;
-            
-            let entries: Vec<FileEntry> = files.into_iter()
-                .map(|f| {
-                    let name = f.file_name().clone();
-                    // Attempt metadata access or fallback
-                    FileEntry {
-                        name,
-                        is_dir: false, // Pending proper attr parsing for sftp 2.x
-                        size: 0,
-                        modified: 0,
-                        permissions: 0,
-                    }
-                })
-                .collect();
-                
-            Ok(entries)
-        } else {
-            anyhow::bail!("Session not found")
-        }
+    pub async fn list_files(&self, _session_id: &str, _path: &str) -> Result<Vec<FileEntry>> {
+        // SFTP disabled to restore SSH connectivity with russh 0.45
+        anyhow::bail!("SFTP functionality temporarily disabled. Please use SSH terminal.")
     }
 
     pub fn list_sessions(&self) -> Vec<SSHSessionInfo> {

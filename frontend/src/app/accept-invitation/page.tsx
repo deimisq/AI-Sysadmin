@@ -1,102 +1,89 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { UserPlus, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Shield, CheckCircle2, AlertCircle } from "lucide-react";
+import { ThemeSwitcher } from "@/components/theme-switcher";
+import { getInvitationDetails, acceptInvitation } from "@/lib/api";
 import { toast } from "sonner";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://testing.sentrait.com.uy/api/v1';
-
 export default function AcceptInvitationPage() {
-    const searchParams = useSearchParams();
     const router = useRouter();
+    const searchParams = useSearchParams();
     const token = searchParams.get("token");
 
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
-    const [success, setSuccess] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [invitation, setInvitation] = useState<any>(null);
+
     const [formData, setFormData] = useState({
         username: "",
+        full_name: "",
         password: "",
-        confirmPassword: "",
-        full_name: ""
+        confirm_password: ""
     });
 
     useEffect(() => {
-        console.log("Accept Invitation - Token:", token);
-
         if (!token) {
             setError("Token de invitación no encontrado");
             setLoading(false);
             return;
         }
 
-        loadInvitation();
-    }, [token]);
+        const loadDetails = async () => {
+            try {
+                const details = await getInvitationDetails(token);
+                setInvitation(details);
+                // Pre-fill username with email prefix as suggestion
+                if (details.email) {
+                    setFormData(prev => ({
+                        ...prev,
+                        username: details.email.split('@')[0]
+                    }));
+                }
+            } catch (err: any) {
+                console.error(err);
+                setError(err.message || "Invitación inválida o expirada");
+            } finally {
+                setLoading(false);
+            }
+        };
 
-    const loadInvitation = async () => {
-        try {
-            const response = await fetch(`${API_BASE_URL}/invitations/details/${token}`);
-            if (!response.ok) throw new Error("Invitación no válida");
-            const details = await response.json();
-            setInvitation(details);
-            setLoading(false);
-        } catch (error: any) {
-            console.error(error);
-            setError(error.message || "Invitación no válida o expirada");
-            setLoading(false);
-        }
-    };
+        loadDetails();
+    }, [token]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!formData.username || !formData.password || !formData.full_name) {
-            toast.error("Todos los campos son requeridos");
-            return;
-        }
-
-        if (formData.password !== formData.confirmPassword) {
+        if (formData.password !== formData.confirm_password) {
             toast.error("Las contraseñas no coinciden");
             return;
         }
 
-        if (formData.password.length < 6) {
-            toast.error("La contraseña debe tener al menos 6 caracteres");
+        if (formData.password.length < 8) {
+            toast.error("La contraseña debe tener al menos 8 caracteres");
             return;
         }
 
+        if (!token) return;
+
         setSubmitting(true);
         try {
-            const response = await fetch(`${API_BASE_URL}/invitations/accept/${token}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    username: formData.username,
-                    password: formData.password,
-                    full_name: formData.full_name
-                })
+            await acceptInvitation(token, {
+                username: formData.username,
+                password: formData.password,
+                full_name: formData.full_name || formData.username
             });
 
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.detail || "Error al crear la cuenta");
-            }
-
-            setSuccess(true);
-            toast.success("¡Cuenta creada exitosamente!");
-
-            setTimeout(() => {
-                router.push("/login");
-            }, 3000);
-        } catch (error: any) {
-            console.error(error);
-            toast.error(error.message || "Error al crear la cuenta");
+            toast.success("Cuenta creada exitosamente");
+            router.push("/login?registered=true");
+        } catch (err: any) {
+            toast.error(err.message || "Error al crear la cuenta");
         } finally {
             setSubmitting(false);
         }
@@ -104,50 +91,31 @@ export default function AcceptInvitationPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
-                <Card className="w-full max-w-md">
-                    <CardContent className="pt-6 flex flex-col items-center justify-center gap-2">
-                        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-                        <p className="text-sm text-muted-foreground">Cargando invitación...</p>
-                    </CardContent>
-                </Card>
+            <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
             </div>
         );
     }
 
     if (error) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-rose-100 dark:from-gray-900 dark:to-gray-800">
-                <Card className="w-full max-w-md">
+            <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 p-4">
+                <Card className="w-full max-w-md shadow-lg border-red-200 dark:border-red-900/30">
                     <CardHeader>
                         <div className="flex justify-center mb-4">
-                            <div className="p-3 bg-red-100 dark:bg-red-900 rounded-full">
+                            <div className="p-3 bg-red-100 rounded-full dark:bg-red-900/20">
                                 <AlertCircle className="h-8 w-8 text-red-600 dark:text-red-400" />
                             </div>
                         </div>
-                        <CardTitle className="text-center text-red-600">Error</CardTitle>
+                        <CardTitle className="text-center text-red-600 dark:text-red-400">Invitación Inválida</CardTitle>
+                        <CardDescription className="text-center">
+                            {error}
+                        </CardDescription>
                     </CardHeader>
-                    <CardContent className="text-center space-y-4">
-                        <p className="text-muted-foreground">{error}</p>
-                        <Button onClick={() => router.push("/login")}>
-                            Ir al Login
+                    <CardContent className="flex justify-center">
+                        <Button onClick={() => router.push("/")} variant="outline">
+                            Volver al Inicio
                         </Button>
-                    </CardContent>
-                </Card>
-            </div>
-        );
-    }
-
-    if (success) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-emerald-100 dark:from-gray-900 dark:to-gray-800">
-                <Card className="w-full max-w-md">
-                    <CardContent className="pt-6 text-center">
-                        <CheckCircle2 className="h-16 w-16 text-green-600 mx-auto mb-4" />
-                        <h2 className="text-2xl font-bold text-green-600 mb-2">¡Cuenta Creada!</h2>
-                        <p className="text-muted-foreground">
-                            Redirigiendo al inicio de sesión...
-                        </p>
                     </CardContent>
                 </Card>
             </div>
@@ -155,108 +123,85 @@ export default function AcceptInvitationPage() {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4">
-            <Card className="w-full max-w-md shadow-xl">
+        <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 p-4 relative">
+            <div className="absolute top-4 right-4">
+                <ThemeSwitcher />
+            </div>
+
+            <Card className="w-full max-w-md shadow-lg border-2 border-slate-200 dark:border-slate-800">
                 <CardHeader className="space-y-1">
                     <div className="flex items-center justify-center mb-4">
-                        <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-full">
-                            <UserPlus className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+                        <div className="p-3 bg-blue-600/10 rounded-lg">
+                            <Shield className="h-10 w-10 text-blue-600" />
                         </div>
                     </div>
-                    <CardTitle className="text-2xl text-center">Bienvenido a AI Sysadmin Agent</CardTitle>
+                    <CardTitle className="text-2xl font-bold text-center">Aceptar Invitación</CardTitle>
                     <CardDescription className="text-center">
-                        Has sido invitado a crear una cuenta
-                        {invitation?.organization_name && (
-                            <> para <strong>{invitation.organization_name}</strong></>
-                        )}
+                        {invitation.organization_name
+                            ? `Has sido invitado a unirte a ${invitation.organization_name}`
+                            : "Has sido invitado a unirte a AI Sysadmin Agent"}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
+                    <div className="bg-blue-50 dark:bg-blue-900/10 p-4 rounded-md mb-6 border border-blue-100 dark:border-blue-900/30">
+                        <p className="text-sm text-center text-blue-800 dark:text-blue-200">
+                            Registrándose como: <strong>{invitation.email}</strong>
+                        </p>
+                        <p className="text-xs text-center text-blue-600 dark:text-blue-300 mt-1">
+                            Rol asignado: {invitation.role}
+                        </p>
+                    </div>
+
                     <form onSubmit={handleSubmit} className="space-y-4">
-                        <div>
-                            <label className="text-sm font-medium">Email (pre-asignado)</label>
+                        <div className="space-y-2">
+                            <Label htmlFor="username">Nombre de Usuario</Label>
                             <Input
-                                type="email"
-                                value={invitation?.email || ""}
-                                disabled
-                                className="bg-muted"
-                            />
-                        </div>
-
-                        <div>
-                            <label className="text-sm font-medium">Nombre Completo</label>
-                            <Input
-                                value={formData.full_name}
-                                onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                                placeholder="Juan Pérez"
-                                required
-                            />
-                        </div>
-
-                        <div>
-                            <label className="text-sm font-medium">Nombre de Usuario</label>
-                            <Input
+                                id="username"
                                 value={formData.username}
                                 onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                                placeholder="juanperez"
                                 required
                             />
                         </div>
 
-                        <div>
-                            <label className="text-sm font-medium">Contraseña</label>
+                        <div className="space-y-2">
+                            <Label htmlFor="full_name">Nombre Completo</Label>
                             <Input
+                                id="full_name"
+                                value={formData.full_name}
+                                onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+                                placeholder="John Doe"
+                                required
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="password">Contraseña</Label>
+                            <Input
+                                id="password"
                                 type="password"
                                 value={formData.password}
                                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                placeholder="Mínimo 6 caracteres"
                                 required
+                                minLength={8}
                             />
                         </div>
 
-                        <div>
-                            <label className="text-sm font-medium">Confirmar Contraseña</label>
+                        <div className="space-y-2">
+                            <Label htmlFor="confirm_password">Confirmar Contraseña</Label>
                             <Input
+                                id="confirm_password"
                                 type="password"
-                                value={formData.confirmPassword}
-                                onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                                placeholder="Confirma tu contraseña"
+                                value={formData.confirm_password}
+                                onChange={(e) => setFormData({ ...formData, confirm_password: e.target.value })}
                                 required
+                                minLength={8}
                             />
                         </div>
 
-                        {invitation?.role && (
-                            <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
-                                <p className="text-sm text-blue-800 dark:text-blue-300">
-                                    <strong>Rol asignado:</strong> {invitation.role}
-                                </p>
-                            </div>
-                        )}
-
-                        <Button
-                            type="submit"
-                            className="w-full"
-                            disabled={submitting}
-                        >
-                            {submitting ? (
-                                <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    Creando cuenta...
-                                </>
-                            ) : (
-                                "Crear Cuenta"
-                            )}
+                        <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={submitting}>
+                            {submitting ? "Creando cuenta..." : "Completar Registro"}
                         </Button>
                     </form>
-
-                    <div className="mt-4 text-center">
-                        <p className="text-sm text-muted-foreground">
-                            ¿Ya tienes una cuenta?{" "}
-                            <a href="/login" className="text-blue-600 hover:underline">
-                                Iniciar sesión
-                            </a>
-                        </p>
-                    </div>
                 </CardContent>
             </Card>
         </div>

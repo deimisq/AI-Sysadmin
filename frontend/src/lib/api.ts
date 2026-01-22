@@ -556,6 +556,28 @@ export async function fetchOrganizations() {
     return res.json();
 }
 
+export async function getInvitationDetails(token: string) {
+    const res = await fetch(`${API_BASE_URL}/invitations/details/${token}`);
+    if (!res.ok) {
+        const error = await res.json().catch(() => ({}));
+        throw new Error(error.detail || "Failed to get invitation details");
+    }
+    return res.json();
+}
+
+export async function acceptInvitation(token: string, data: any) {
+    const res = await fetch(`${API_BASE_URL}/invitations/accept/${token}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+        const error = await res.json().catch(() => ({}));
+        throw new Error(error.detail || "Failed to accept invitation");
+    }
+    return res.json();
+}
+
 export async function fetchServer(serverId: number) {
     const token = typeof window !== 'undefined' ? localStorage.getItem("token") : null;
     const res = await fetch(`/api/v1/servers/${serverId}`, {

@@ -83,8 +83,13 @@ export default function LoginPage() {
             const data = await res.json();
             setAuthToken(data.access_token);
 
-            // Redirect to dashboard (Admin Panel)
-            router.push("/dashboard");
+            toast.success("Welcome back! Redirecting...");
+
+            // Use window.location.href to force full reload and ensure cookies are sent to middleware
+            // Small delay to allow toast to be visible briefly
+            setTimeout(() => {
+                window.location.href = "/dashboard";
+            }, 500);
 
         } catch (error: any) {
             console.error(error);

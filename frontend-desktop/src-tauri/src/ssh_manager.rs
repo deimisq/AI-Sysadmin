@@ -1,7 +1,7 @@
 // SSH Connection Manager using russh (modern, async)
 
 use russh::*;
-use russh::keys::*;
+// use russh::keys::*;
 use async_trait::async_trait;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex as StdMutex};
@@ -86,19 +86,15 @@ impl SSHManager {
     pub async fn connect(&self, creds: SSHCredentials) -> Result<String> {
         let config = client::Config {
             inactivity_timeout: Some(std::time::Duration::from_secs(300)),
-            // Explicitly enable all algorithms including legacy ssh-rsa to avoid auth rejection
+            /* 
+            // Preferred algorithms temporarily disabled due to compilation errors with enum variants
             preferred: russh::Preferred {
                 key: Cow::Borrowed(&[
-                    russh::keys::Algorithm::Ed25519,
-                    russh::keys::Algorithm::EcdsaSha2Nistp256,
-                    russh::keys::Algorithm::EcdsaSha2Nistp384,
-                    russh::keys::Algorithm::EcdsaSha2Nistp521,
-                    russh::keys::Algorithm::RsaSha2_256,
-                    russh::keys::Algorithm::RsaSha2_512,
-                    russh::keys::Algorithm::SshRsa,
+                     // ...
                 ]),
                 ..Default::default()
             },
+            */
             ..Default::default()
         };
         

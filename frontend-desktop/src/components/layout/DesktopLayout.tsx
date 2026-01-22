@@ -1,4 +1,5 @@
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
+import { useEffect } from 'react';
 import { ServerExplorer } from '../explorer/ServerExplorer';
 import { WorkspaceArea } from './WorkspaceArea';
 import { TopBar } from './TopBar';
@@ -8,6 +9,22 @@ import { OverlayContainer } from './OverlayContainer';
 
 export function DesktopLayout() {
     const { sidebarVisible, aiPanelVisible } = useWorkspaceStore();
+
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            // Block Ctrl+P (Print)
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'p') {
+                e.preventDefault();
+            }
+            // Block Ctrl+T (New Tab) - prevent browser behavior
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 't') {
+                e.preventDefault();
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, []);
 
     return (
         <div className="flex flex-col h-screen w-screen bg-[#1e1e1e] text-[#cccccc] overflow-hidden font-sans">

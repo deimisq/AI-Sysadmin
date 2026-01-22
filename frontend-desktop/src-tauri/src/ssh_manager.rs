@@ -9,7 +9,7 @@ use tokio::sync::Mutex as TokioMutex;
 use anyhow::{Result, Context};
 use uuid::Uuid;
 use serde::{Serialize, Deserialize};
-// use russh_sftp::client::SftpSession;
+use russh_sftp::client::SftpClient;
 // use russh_keys::PublicKey;
 
 use crate::pty_session::PTYSession;
@@ -225,8 +225,6 @@ impl SSHManager {
         }
     }
 
-/*
-    // SFTP Temporarily disabled due to russh version incompatibility
     pub async fn list_files(&self, session_id: &str, path: &str) -> Result<Vec<FileEntry>> {
         let session_arc = {
             let sessions = self.sessions.lock().unwrap();
@@ -239,17 +237,27 @@ impl SSHManager {
             let channel = session.channel_open_session().await.context("Failed to open channel")?;
             channel.request_subsystem(true, "sftp").await.context("Failed to request sftp subsystem")?;
 
-            // let sftp = SftpSession::new(channel.into_stream()).await?;
-            // let files = sftp.read_dir(path).await?;
-            // ...
-             anyhow::bail!("SFTP not supported in this version")
+            let sftp = SftpClient::new(channel).await?;
+            
+            let files = sftp.read_dir(path).await?;
+            
+            let entries: Vec<FileEntry> = files.into_iter()
+                .map(|f| {
+                    let attrs = f.attrs();
+                    FileEntry {
+                        name: f.filename().to_string_lossy().into_owned(),
+                        is_dir: attrs.is_dir(),
+                        size: attrs.size.unwrap_or(0),
+                        modified: attrs.mtime.unwrap_or(0) as u64,
+                        permissions: attrs.permissions.unwrap_or(0),
+                    }
+                })
+                .collect();
+                
+            Ok(entries)
         } else {
             anyhow::bail!("Session not found")
         }
-    }
-*/
-    pub async fn list_files(&self, _session_id: &str, _path: &str) -> Result<Vec<FileEntry>> {
-        anyhow::bail!("SFTP feature temporarily disabled to restore connection stability")
     }
 
     pub fn list_sessions(&self) -> Vec<SSHSessionInfo> {

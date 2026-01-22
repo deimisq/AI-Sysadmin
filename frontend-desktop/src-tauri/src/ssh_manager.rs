@@ -1,7 +1,7 @@
 // SSH Connection Manager using russh (modern, async)
 
 use russh::*;
-// use russh::keys::*;
+use russh::keys::*;
 use async_trait::async_trait;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex as StdMutex};
@@ -11,7 +11,7 @@ use uuid::Uuid;
 use serde::{Serialize, Deserialize};
 // use russh_sftp::client::SftpSession;
 // use russh_keys::PublicKey;
-use std::borrow::Cow;
+// use std::borrow::Cow;
 use crate::pty_session::PTYSession;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -65,7 +65,7 @@ impl client::Handler for RusshClient {
 
     async fn check_server_key(
         &mut self,
-        _server_public_key: &key::PublicKey,
+        _server_public_key: &russh::keys::PublicKey,
     ) -> Result<bool, Self::Error> {
         // Accept any server key (like ssh -o StrictHostKeyChecking=no)
         Ok(true)

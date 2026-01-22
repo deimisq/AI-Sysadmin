@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { fetchCurrentUser, fetchSystemStats } from "@/lib/api";
-import { Shield, Users, Server, FolderOpen, Activity, ArrowLeft, Calendar, Mail } from "lucide-react";
+import { Shield, Users, Server, FolderOpen, Activity, ArrowLeft, Calendar, Mail, Building2, Folder } from "lucide-react";
 import { UserManagement } from "@/components/admin/user-management";
 import { ServerManagement } from "@/components/admin/server-management";
 import { AIParameters } from "@/components/admin/ai-parameters";
@@ -19,6 +19,8 @@ import { SystemStats } from "@/components/admin/system-stats";
 import { AuditLogs } from "@/components/admin/audit-logs";
 import { ScheduledReports } from "@/components/admin/scheduled-reports";
 import { InvitationManagement } from "@/components/admin/invitation-management";
+import { OrganizationManagement } from "@/components/admin/organization-management";
+import { GroupManagement } from "@/components/admin/group-management";
 
 import { useI18n } from "@/lib/i18n-context";
 import { LanguageSwitcher } from "@/components/language-switcher";
@@ -159,6 +161,13 @@ export default function AdminPage() {
                     {/* Admin Tabs */}
                     <Tabs defaultValue="users" className="space-y-4">
                         <TabsList className="flex flex-wrap h-auto">
+                            {currentUser?.role === 'superadmin' && (
+                                <TabsTrigger value="organizations">
+                                    <Building2 className="mr-2 h-4 w-4" />
+                                    {t.admin.tabs.organizations || "Organizaciones"}
+                                </TabsTrigger>
+                            )}
+
                             <TabsTrigger value="users">
                                 <Users className="mr-2 h-4 w-4" />
                                 {t.admin.tabs.users}
@@ -171,6 +180,11 @@ export default function AdminPage() {
                                 <Server className="mr-2 h-4 w-4" />
                                 {t.admin.tabs.servers}
                             </TabsTrigger>
+                            <TabsTrigger value="groups">
+                                <Folder className="mr-2 h-4 w-4" />
+                                {t.admin.tabs.groups || "Grupos"}
+                            </TabsTrigger>
+
                             <TabsTrigger value="logs">
                                 <Activity className="mr-2 h-4 w-4" />
                                 {t.admin.tabs.logs}
@@ -211,12 +225,22 @@ export default function AdminPage() {
                             </TabsTrigger>
                         </TabsList>
 
+                        {currentUser?.role === 'superadmin' && (
+                            <TabsContent value="organizations" className="space-y-4">
+                                <OrganizationManagement />
+                            </TabsContent>
+                        )}
+
                         <TabsContent value="users" className="space-y-4">
                             <UserManagement currentUser={currentUser} />
                         </TabsContent>
 
                         <TabsContent value="invitations" className="space-y-4">
                             <InvitationManagement currentUser={currentUser} />
+                        </TabsContent>
+
+                        <TabsContent value="groups" className="space-y-4">
+                            <GroupManagement currentUser={currentUser} />
                         </TabsContent>
 
                         <TabsContent value="servers" className="space-y-4">

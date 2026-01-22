@@ -556,6 +556,35 @@ export async function fetchOrganizations() {
     return res.json();
 }
 
+export async function createOrganization(data: any) {
+    const res = await fetch(`${API_BASE_URL}/organizations/`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error("Failed to create organization");
+    return res.json();
+}
+
+export async function updateOrganization(orgId: number, data: any) {
+    const res = await fetch(`${API_BASE_URL}/organizations/${orgId}`, {
+        method: "PUT",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error("Failed to update organization");
+    return res.json();
+}
+
+export async function deleteOrganization(orgId: number) {
+    const res = await fetch(`${API_BASE_URL}/organizations/${orgId}`, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+    });
+    if (!res.ok) throw new Error("Failed to delete organization");
+    return res.json();
+}
+
 export async function getInvitationDetails(token: string) {
     const res = await fetch(`${API_BASE_URL}/invitations/details/${token}`);
     if (!res.ok) {

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { fetchAllUsers, createUser, updateUserAdmin, deleteUser, fetchGroups, grantGroupAccess, revokeGroupAccess, fetchUserGroups } from "@/lib/api";
+import { fetchAllUsers, createUser, updateUserAdmin, deleteUser, fetchGroups, grantGroupAccess, revokeGroupAccess, fetchUserGroups, fetchOrganizations } from "@/lib/api";
 import { Users, Edit2, Trash2, Shield, FolderOpen, Plus, X, Mail } from "lucide-react";
 import { useI18n } from "@/lib/i18n-context";
 import { toast } from "sonner";
@@ -26,10 +26,12 @@ export function UserManagement({ currentUser }: UserManagementProps) {
         password: "",
         full_name: "",
         role: "user",
-        is_active: true
+        is_active: true,
+        organization_id: undefined
     });
     const [managingPermissions, setManagingPermissions] = useState<any>(null);
     const [userGroups, setUserGroups] = useState<any[]>([]);
+    const [organizationsList, setOrganizationsList] = useState<any[]>([]);
 
     useEffect(() => {
         loadData();
@@ -37,12 +39,19 @@ export function UserManagement({ currentUser }: UserManagementProps) {
 
     const loadData = async () => {
         try {
-            const [usersData, groupsData] = await Promise.all([
+            const promises: Promise<any>[] = [
                 fetchAllUsers(),
                 fetchGroups()
-            ]);
+            ];
+
+            if (currentUser?.role === 'superadmin') {
+                promises.push(fetchOrganizations());
+            }
+
+            const [usersData, groupsData, orgsData] = await Promise.all(promises);
             setUsers(usersData);
             setGroups(groupsData);
+            if (orgsData) setOrganizationsList(orgsData);
         } catch (error) {
             console.error("Failed to load data", error);
         } finally {
@@ -64,6 +73,7 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                 full_name: editingUser.full_name,
                 role: editingUser.role,
                 is_active: editingUser.is_active,
+                organization_id: editingUser.organization_id ? parseInt(editingUser.organization_id) : null
             };
 
             // Only include password if it was changed
@@ -98,7 +108,8 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                 password: "",
                 full_name: "",
                 role: "user",
-                is_active: true
+                is_active: true,
+                organization_id: undefined
             });
             toast.success(t.userManagement.userCreated);
         } catch (error: any) {
@@ -286,6 +297,21 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                                 )}
                             </select>
                         </div>
+                        {currentUser.role === "superadmin" && (
+                            <div>
+                                <label className="text-sm font-medium">Organization</label>
+                                <select
+                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                    value={newUser.organization_id || ""}
+                                    onChange={(e) => setNewUser({ ...newUser, organization_id: e.target.value ? parseInt(e.target.value) : undefined })}
+                                >
+                                    <option value="">(Current Organization / Unassigned)</option>
+                                    {organizationsList.map((org) => (
+                                        <option key={org.id} value={org.id}>{org.name}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
                         <div className="flex items-center gap-2">
                             <input
                                 type="checkbox"
@@ -363,6 +389,21 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                                 )}
                             </select>
                         </div>
+                        {currentUser.role === "superadmin" && (
+                            <div>
+                                <label className="text-sm font-medium">Organization</label>
+                                <select
+                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                    value={editingUser.organization_id || ""}
+                                    onChange={(e) => setEditingUser({ ...editingUser, organization_id: e.target.value ? parseInt(e.target.value) : undefined })}
+                                >
+                                    <option value="">(Unassigned)</option>
+                                    {organizationsList.map((org) => (
+                                        <option key={org.id} value={org.id}>{org.name}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
                         <div className="flex items-center gap-2">
                             <input
                                 type="checkbox"

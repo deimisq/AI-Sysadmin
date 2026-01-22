@@ -25,6 +25,7 @@ russh = "0.45"
 russh-keys = "0.45"
 async-trait = "0.1"
 tokio = { version = "1.35", features = ["full"] }
+russh-sftp = "0.45"
 
 # Credential encryption
 argon2 = "0.5"

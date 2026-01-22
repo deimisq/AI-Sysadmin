@@ -3,6 +3,8 @@ import LegacyTerminal from './LegacyTerminal';
 import { InteractiveTerminal } from './terminal/InteractiveTerminal';
 import { invoke } from '@tauri-apps/api/core';
 import { Button } from './ui/button';
+import { Folder } from 'lucide-react';
+import { FileExplorer } from './terminal/FileExplorer';
 import { type Server } from '../lib/api';
 
 interface TerminalComponentProps {
@@ -21,6 +23,7 @@ export default function TerminalComponent(props: TerminalComponentProps) {
     const [error, setError] = useState<string | null>(null);
     const [retryCount, setRetryCount] = useState(0);
     const [serverInfo, setServerInfo] = useState<{ host: string; username: string } | null>(null);
+    const [showFiles, setShowFiles] = useState(false);
 
     // Detect Tauri
     useEffect(() => {
@@ -87,22 +90,41 @@ export default function TerminalComponent(props: TerminalComponentProps) {
     if (sessionId && serverInfo) {
         return (
             <div className="h-full flex flex-col">
-                <div className="bg-gray-900 border-b border-gray-700 p-2 flex justify-between items-center text-xs">
+                <div className="bg-gray-900 border-b border-gray-700 p-2 flex justify-between items-center text-xs shrink-0 z-20 relative">
                     <div className="flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
                         <span className="text-gray-300 font-mono">
                             {serverInfo.username}@{serverInfo.host}
                         </span>
                     </div>
-                    <button
-                        onClick={handleDisconnect}
-                        className="text-red-400 hover:text-red-300 px-2 py-1 rounded hover:bg-red-900/20"
-                    >
-                        Disconnect
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => setShowFiles(!showFiles)}
+                            className={`p-1.5 rounded text-xs flex items-center gap-1 transition-colors ${showFiles ? 'bg-[#333] text-white' : 'text-gray-400 hover:bg-[#333] hover:text-white'}`}
+                            title="Toggle File Explorer"
+                        >
+                            <Folder className="w-3.5 h-3.5" />
+                        </button>
+                        <div className="w-px h-4 bg-gray-700 mx-1"></div>
+                        <button
+                            onClick={handleDisconnect}
+                            className="text-red-400 hover:text-red-300 px-2 py-1 rounded hover:bg-red-900/20 transition-colors"
+                        >
+                            Disconnect
+                        </button>
+                    </div>
                 </div>
-                <div className="flex-grow bg-black">
-                    <InteractiveTerminal sessionId={sessionId} />
+                <div className="flex-grow flex overflow-hidden relative">
+                    <div className="flex-1 bg-black min-w-0">
+                        <InteractiveTerminal sessionId={sessionId} />
+                    </div>
+                    {showFiles && (
+                        <FileExplorer
+                            sessionId={sessionId}
+                            onClose={() => setShowFiles(false)}
+                            className="w-72 flex-shrink-0 border-l border-[#333] shadow-xl z-10"
+                        />
+                    )}
                 </div>
             </div>
         );

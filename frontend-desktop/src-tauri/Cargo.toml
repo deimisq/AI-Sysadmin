@@ -26,7 +26,13 @@ russh-keys = "0.45"
 async-trait = "0.1"
 tokio = { version = "1.35", features = ["full"] }
 # russh-sftp = "2.0"
-ironrdp = "0.1"
+
+# RDP functionality (Windows Remote Desktop)
+ironrdp = "0.5"
+ironrdp-tokio = "0.1"
+ironrdp-connector = "0.1"
+ironrdp-session = "0.1"
+ironrdp-graphics = "0.1"
 
 # Credential encryption
 argon2 = "0.5"

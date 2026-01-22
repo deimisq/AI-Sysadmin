@@ -101,31 +101,41 @@ impl SSHManager {
         .context("Failed to connect to SSH server")?;
 
         // Authenticate
+        println!("DEBUG: Starting authentication for user '{}' on {}:{}", creds.username, creds.host, creds.port);
+
         let auth_res = if let Some(password) = &creds.password {
+            println!("DEBUG: Attempting password auth");
             session.authenticate_password(creds.username.clone(), password.clone()).await
         } else if let Some(key_or_path) = &creds.private_key_path {
+            println!("DEBUG: Attempting key auth");
             // Check if it's content (PEM) or path
             let key_pair = if key_or_path.contains("-----BEGIN") {
                 // It's the key content
+                 println!("DEBUG: Decoding key from string content");
                  let passphrase = creds.password.as_deref();
                  russh::keys::decode_secret_key(key_or_path, passphrase)
                     .context("Failed to decode SSH private key content")?
             } else {
                 // It's a file path
                 let key_path = std::path::Path::new(key_or_path);
+                println!("DEBUG: Loading key from path: {:?}", key_path);
                 // Try to use password as passphrase if available
                 let passphrase = creds.password.as_deref();
                 russh::keys::load_secret_key(key_path, passphrase)
                     .with_context(|| format!("Failed to load SSH private key from {:?}.", key_path))?
             };
             
+            println!("DEBUG: Key loaded successfully. Sending public key to server.");
             session.authenticate_publickey(creds.username.clone(), Arc::new(key_pair)).await
         } else {
             anyhow::bail!("No authentication method provided");
         };
 
         if !auth_res.context("Authentication failed")? {
+            println!("DEBUG: Server rejected authentication request.");
             anyhow::bail!("Authentication rejected by server");
+        } else {
+            println!("DEBUG: Authentication successful!");
         }
 
         // Store session

@@ -28,11 +28,13 @@ tokio = { version = "1.35", features = ["full"] }
 # russh-sftp = "2.0"
 
 # RDP functionality (Windows Remote Desktop)
-ironrdp = "0.5"
-ironrdp-tokio = "0.1"
-ironrdp-connector = "0.1"
-ironrdp-session = "0.1"
-ironrdp-graphics = "0.1"
+# NOTE: IronRDP has internal dependency conflicts (picky_asn1 versions)
+# RDP will use basic TCP connection + mock until resolved
+# ironrdp = "0.5"
+# ironrdp-tokio = "0.1"
+# ironrdp-connector = "0.1"
+# ironrdp-session = "0.1"
+# ironrdp-graphics = "0.1"
 
 # Credential encryption
 argon2 = "0.5"

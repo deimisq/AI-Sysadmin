@@ -5,7 +5,7 @@ mod ssh_manager;
 mod ssh_test;
 mod pty_session;
 
-use ssh_manager::{SSHManager, SSHCredentials, SSHSessionInfo};
+use ssh_manager::{SSHManager, SSHCredentials, SSHSessionInfo, FileEntry};
 use std::sync::Mutex;
 use tauri::{State, Manager, AppHandle};
 
@@ -147,6 +147,19 @@ async fn pty_close(
         .map_err(|e| format!("PTY close failed: {}", e))
 }
 
+/// List files via SFTP
+#[tauri::command]
+async fn sftp_list_files(
+    state: State<'_, AppState>,
+    session_id: String,
+    path: String,
+) -> Result<Vec<FileEntry>, String> {
+    let manager = state.ssh_manager.lock().unwrap().clone();
+    
+    manager.list_files(&session_id, &path).await
+        .map_err(|e| format!("SFTP list failed: {}", e))
+}
+
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_http::init())
@@ -164,6 +177,7 @@ fn main() {
             pty_write,
             pty_resize,
             pty_close,
+            sftp_list_files,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

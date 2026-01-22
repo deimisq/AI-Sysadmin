@@ -3,7 +3,7 @@ import LegacyTerminal from './LegacyTerminal';
 import { InteractiveTerminal } from './terminal/InteractiveTerminal';
 import { invoke } from '@tauri-apps/api/core';
 import { Button } from './ui/button';
-import { Folder } from 'lucide-react';
+// import { Folder } from 'lucide-react';
 import { FileExplorer } from './terminal/FileExplorer';
 import { type Server } from '../lib/api';
 
@@ -98,14 +98,14 @@ export default function TerminalComponent(props: TerminalComponentProps) {
                         </span>
                     </div>
                     <div className="flex items-center gap-2">
+                        {/* SFTP disabled for now
                         <button
                             onClick={() => setShowFiles(!showFiles)}
-                            className={`px-3 py-1.5 rounded text-xs flex items-center gap-2 transition-colors ${showFiles ? 'bg-[#333] text-white' : 'text-gray-400 hover:bg-[#333] hover:text-white'}`}
-                            title="Toggle File Explorer"
+                             ...
                         >
-                            <Folder className="w-3.5 h-3.5" />
-                            <span>Archivos</span>
                         </button>
+                        <div className="w-px h-4 bg-gray-700 mx-1"></div>
+                        */}
                         <div className="w-px h-4 bg-gray-700 mx-1"></div>
                         <button
                             onClick={handleDisconnect}

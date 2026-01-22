@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { Button } from '../ui/button';
-import { Server, fetchServerCredentials } from '../../lib/api';
+import type { Server } from '../../lib/api';
+import { fetchServerCredentials } from '../../lib/api';
 
 interface RDPComponentProps {
     serverData: Server;

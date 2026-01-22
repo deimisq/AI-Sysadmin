@@ -7,7 +7,7 @@ mod pty_session;
 
 use ssh_manager::{SSHManager, SSHCredentials, SSHSessionInfo, FileEntry};
 use std::sync::Mutex;
-use tauri::{State, Manager, AppHandle};
+use tauri::{State, AppHandle};
 
 // Global SSH manager (shared across the app)
 struct AppState {

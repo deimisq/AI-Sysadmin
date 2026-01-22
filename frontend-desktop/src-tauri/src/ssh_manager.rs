@@ -9,7 +9,7 @@ use tokio::sync::Mutex as TokioMutex;
 use anyhow::{Result, Context};
 use uuid::Uuid;
 use serde::{Serialize, Deserialize};
-use russh_sftp::client::SftpClient; // Add sftp import
+use russh_sftp::client::SftpSession;
 
 use crate::pty_session::PTYSession;
 
@@ -42,7 +42,7 @@ pub struct FileEntry {
 
 type SessionHandle = client::Handle<RusshClient>;
 
-use tauri::{AppHandle, Emitter}; // Add tauri imports
+use tauri::AppHandle; // Removed Emitter
 
 #[derive(Clone)]
 pub struct SSHManager {
@@ -226,11 +226,11 @@ impl SSHManager {
             let channel = session.channel_open_session().await.context("Failed to open channel")?;
             channel.request_subsystem(true, "sftp").await.context("Failed to request sftp subsystem")?;
 
-            let sftp = SftpClient::new(channel).await?;
+            let sftp = SftpSession::new(channel).await?;
             
             let files = sftp.read_dir(path).await?;
             
-            let entries = files.into_iter()
+            let entries: Vec<FileEntry> = files.into_iter()
                 .map(|f| {
                     let attrs = f.attrs();
                     FileEntry {
@@ -379,7 +379,8 @@ impl SSHManager {
              pty.write(data)?;
              Ok(())
         } else {
-             anyhow::bail!("PTY Session not found")
+             // Use bail via anyhow
+             return Err(anyhow::anyhow!("PTY Session not found"));
         }
     }
 

@@ -10,6 +10,7 @@ use anyhow::{Result, Context};
 use uuid::Uuid;
 use serde::{Serialize, Deserialize};
 use russh_sftp::client::SftpSession;
+use russh_keys::PublicKey; // Explicit import
 
 use crate::pty_session::PTYSession;
 
@@ -64,7 +65,7 @@ impl client::Handler for RusshClient {
 
     async fn check_server_key(
         &mut self,
-        _server_public_key: &key::PublicKey,
+        _server_public_key: &PublicKey,
     ) -> Result<bool, Self::Error> {
         // Accept any server key (like ssh -o StrictHostKeyChecking=no)
         Ok(true)
@@ -226,13 +227,13 @@ impl SSHManager {
             let channel = session.channel_open_session().await.context("Failed to open channel")?;
             channel.request_subsystem(true, "sftp").await.context("Failed to request sftp subsystem")?;
 
-            let sftp = SftpSession::new(channel).await?;
+            let sftp = SftpSession::new(channel.into_stream()).await?;
             
             let files = sftp.read_dir(path).await?;
             
             let entries: Vec<FileEntry> = files.into_iter()
                 .map(|f| {
-                    let name = f.file_name().to_string_lossy().into_owned();
+                    let name = f.file_name().clone(); // file_name() returns String in newer versions
                     // Try accessing attrs as a field, or use defaults if unavailable
                     // Note: russh-sftp 2.x DirEntry might act differently.
                     // If attrs is not available, we default to 0. 

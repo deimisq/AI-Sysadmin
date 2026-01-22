@@ -4,14 +4,17 @@
 mod ssh_manager;
 mod ssh_test;
 mod pty_session;
+mod rdp_manager;
 
 use ssh_manager::{SSHManager, SSHCredentials, SSHSessionInfo, FileEntry};
+use rdp_manager::RDPManager;
 use std::sync::Mutex;
 use tauri::{State, AppHandle};
 
 // Global SSH manager (shared across the app)
 struct AppState {
     ssh_manager: Mutex<SSHManager>,
+    rdp_manager: Mutex<RDPManager>,
 }
 
 /// Connect to SSH server
@@ -147,6 +150,20 @@ async fn pty_close(
         .map_err(|e| format!("PTY close failed: {}", e))
 }
 
+/// Connect to RDP server
+#[tauri::command]
+async fn rdp_connect(
+    state: State<'_, AppState>,
+    host: String,
+    username: String,
+    password: String,
+) -> Result<String, String> {
+    let manager = state.rdp_manager.lock().unwrap().clone();
+    
+    manager.connect(host, username, password).await
+        .map_err(|e| format!("RDP connection failed: {}", e))
+}
+
 /// List files via SFTP
 #[tauri::command]
 async fn sftp_list_files(
@@ -165,6 +182,7 @@ fn main() {
         .plugin(tauri_plugin_http::init())
         .manage(AppState {
             ssh_manager: Mutex::new(SSHManager::new()),
+            rdp_manager: Mutex::new(RDPManager::new()),
         })
         .invoke_handler(tauri::generate_handler![
             greet,
@@ -178,6 +196,7 @@ fn main() {
             pty_resize,
             pty_close,
             sftp_list_files,
+            rdp_connect,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

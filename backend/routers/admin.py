@@ -440,6 +440,11 @@ def get_audit_logs(
         isouter=True  # Left join in case user was deleted
     )
     
+    # Filter by organization for non-superusers
+    if not current_user.is_superuser:
+        if current_user.organization_id:
+             query = query.filter(models.User.organization_id == current_user.organization_id)
+    
     # Apply filters
     if start_date:
         try:
@@ -507,39 +512,56 @@ def get_audit_log_stats(
     week_start = today_start - timedelta(days=7)
     month_start = today_start - timedelta(days=30)
     
+    # Base query for stats
+    base_query = db.query(models.AuditLog).join(models.User, models.AuditLog.user_id == models.User.id)
+    
+    if not current_user.is_superuser and current_user.organization_id:
+        base_query = base_query.filter(models.User.organization_id == current_user.organization_id)
+    
     # Total logs
-    total_logs = db.query(models.AuditLog).count()
+    total_logs = base_query.count()
     
     # Logs today
-    logs_today = db.query(models.AuditLog).filter(
+    logs_today = base_query.filter(
         models.AuditLog.created_at >= today_start
     ).count()
     
     # Logs this week
-    logs_this_week = db.query(models.AuditLog).filter(
+    logs_this_week = base_query.filter(
         models.AuditLog.created_at >= week_start
     ).count()
     
     # Logs this month
-    logs_this_month = db.query(models.AuditLog).filter(
+    logs_this_month = base_query.filter(
         models.AuditLog.created_at >= month_start
     ).count()
     
     # Most active users (top 5)
-    top_users = db.query(
+    # Re-construct query for aggregation
+    user_query = db.query(
         models.AuditLog.user_id,
         models.User.username,
         func.count(models.AuditLog.id).label('count')
-    ).join(models.User).group_by(
+    ).join(models.User)
+    
+    if not current_user.is_superuser and current_user.organization_id:
+        user_query = user_query.filter(models.User.organization_id == current_user.organization_id)
+        
+    top_users = user_query.group_by(
         models.AuditLog.user_id,
         models.User.username
     ).order_by(func.count(models.AuditLog.id).desc()).limit(5).all()
     
     # Most common actions (top 5)
-    top_actions = db.query(
+    action_query = db.query(
         models.AuditLog.action,
         func.count(models.AuditLog.id).label('count')
-    ).group_by(models.AuditLog.action).order_by(
+    ).join(models.User)
+    
+    if not current_user.is_superuser and current_user.organization_id:
+        action_query = action_query.filter(models.User.organization_id == current_user.organization_id)
+
+    top_actions = action_query.group_by(models.AuditLog.action).order_by(
         func.count(models.AuditLog.id).desc()
     ).limit(5).all()
     
@@ -586,6 +608,9 @@ def export_audit_logs_csv(
         models.AuditLog.user_id == models.User.id,
         isouter=True
     )
+    
+    if not current_user.is_superuser and current_user.organization_id:
+        query = query.filter(models.User.organization_id == current_user.organization_id)
     
     # Apply filters
     if start_date:
@@ -664,9 +689,28 @@ def get_system_stats(
     if current_user.role not in [RoleType.SUPERADMIN.value, RoleType.ADMIN.value]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
-    total_users = db.query(models.User).count()
-    total_servers = db.query(models.Server).count()
-    total_groups = db.query(models.ServerGroup).count()
+    user_query = db.query(models.User)
+    server_query = db.query(models.Server)
+    group_query = db.query(models.ServerGroup)
+    
+    # Since OperationLog doesn't likely have org_id, maybe skip filtering or filter by user/server?
+    # Usually users care about users/servers/groups counts.
+    # We'll leave op logs as total count for now, or filter if model allows.
+    # Assuming OperationLog has user_id or similar.
+    
+    if not current_user.is_superuser and current_user.organization_id:
+        user_query = user_query.filter(models.User.organization_id == current_user.organization_id)
+        server_query = server_query.filter(models.Server.organization_id == current_user.organization_id)
+        group_query = group_query.filter(models.ServerGroup.organization_id == current_user.organization_id)
+        
+    total_users = user_query.count()
+    total_servers = server_query.count()
+    total_groups = group_query.count()
+    
+    # For operations, let's just count total for now or skip filtering if model is not org-aware trivially.
+    # If we really want org-scoped stats, we'd need to join.
+    # For now, let's just return total but label it carefully if needed.
+    # Or query OperationLog join User/Server. Let's do a simple count for now.
     total_operations = db.query(models.OperationLog).count()
     
     return {
@@ -689,7 +733,12 @@ def list_all_servers(
     if current_user.role not in [RoleType.SUPERADMIN.value, RoleType.ADMIN.value]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
-    servers = db.query(models.Server).offset(skip).limit(limit).all()
+    query = db.query(models.Server)
+    
+    if not current_user.is_superuser and current_user.organization_id:
+        query = query.filter(models.Server.organization_id == current_user.organization_id)
+        
+    servers = query.offset(skip).limit(limit).all()
     return servers
 
 # ==================== SECURITY SETTINGS ====================

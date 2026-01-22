@@ -1,14 +1,20 @@
-from datetime import timedelta
-from fastapi import APIRouter, Depends, HTTPException, status
+from datetime import timedelta, datetime, timezone
+import json
+import logging
+from typing import Optional
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
+from sqlalchemy import func
+import httpx
+from pydantic import BaseModel
+
 import models
 import schemas
 from dependencies import get_db, get_current_active_user
 from utils.auth import verify_password, get_password_hash, create_access_token
 from services.audit_service import audit_service
 from settings import settings
-from fastapi import Request
 
 router = APIRouter()
 
@@ -82,7 +88,6 @@ def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
             notify_superadmins_new_user(db, user.email, user.username)
         except Exception as e:
             # Log error but don't fail registration
-            import logging
             logging.error(f"Failed to send email notifications: {e}")
     
     return db_user
@@ -95,7 +100,12 @@ def login(
 ):
     """Login and get access token"""
     # Authenticate user
-    user = db.query(models.User).filter(models.User.username == form_data.username).first()
+    # Allow login with either username or email (case-insensitive)
+    user = db.query(models.User).filter(
+        (models.User.username == form_data.username) | 
+        (func.lower(models.User.email) == func.lower(form_data.username)) |
+        (func.lower(models.User.username) == func.lower(form_data.username))
+    ).first()
     
     if not user or not verify_password(form_data.password, user.hashed_password):
         raise HTTPException(
@@ -147,11 +157,6 @@ def update_preferences(
     return {"status": "success"}
 
 # ==================== MICROSOFT OAUTH ====================
-
-import httpx
-import json
-from typing import Optional
-from pydantic import BaseModel
 
 class MicrosoftAuthRequest(BaseModel):
     code: str
@@ -290,3 +295,35 @@ async def microsoft_callback(
     )
     
     return {"access_token": access_token, "token_type": "bearer"}
+
+@router.post("/verify-email")
+def verify_email(token: str, db: Session = Depends(get_db)):
+    """Verify email address with token"""
+    # Find user with this token
+    user = db.query(models.User).filter(models.User.verification_token == token).first()
+    
+    if not user:
+        raise HTTPException(status_code=400, detail="Invalid verification token")
+        
+    # Check expiration
+    # Ensure we use timezone aware datetime for comparison with timezone aware DB field
+    now = datetime.now(timezone.utc)
+    
+    if user.verification_token_expires_at and user.verification_token_expires_at < now:
+         raise HTTPException(status_code=400, detail="Verification token expired")
+         
+    # Activate user
+    user.is_active = True
+    user.verification_token = None
+    user.verification_token_expires_at = None
+    db.commit()
+    
+    # Send welcome email now
+    try:
+        from services.email_service import send_welcome_email
+        if user.organization:
+             send_welcome_email(db, user.email, user.full_name, user.organization.name)
+    except Exception as e:
+        print(f"Error sending welcome email post-verification: {e}")
+        
+    return {"message": "Email verified successfully"}

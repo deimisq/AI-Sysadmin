@@ -39,22 +39,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const pathname = usePathname();
     const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-    const publicPaths = ["/login", "/register", "/forgot-password"];
+    const publicPaths = ["/login", "/register", "/forgot-password", "/subscribe", "/accept-invitation", "/verify-email"];
+
+    const isPublicPath = useCallback((path: string | null) => {
+        if (!path) return false;
+        if (path === "/") return true; // Root is public
+        return publicPaths.some(p => path.startsWith(p));
+    }, []);
 
     const logout = useCallback(() => {
         removeAuthToken();
         setIsAuthenticated(false);
         // Only redirect if not already on a public path
-        if (!publicPaths.some(p => pathname?.startsWith(p))) {
+        if (!isPublicPath(pathname)) {
             router.push("/login");
         }
-    }, [router, pathname]);
+    }, [router, pathname, isPublicPath]);
 
     const checkSession = useCallback(() => {
         const token = getAuthToken();
-        
+
         if (!token) {
-            if (!publicPaths.some(p => pathname?.startsWith(p))) {
+            if (!isPublicPath(pathname)) {
                 logout();
             }
             return;
@@ -86,7 +92,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Also set up a timer to logout exactly when token expires
         const timeUntilExpiry = getTimeUntilExpiry(token);
         let expiryTimeout: NodeJS.Timeout | undefined;
-        
+
         if (timeUntilExpiry > 0 && timeUntilExpiry < 24 * 60 * 60 * 1000) { // Only if less than 24h
             expiryTimeout = setTimeout(() => {
                 console.log("[Auth] Token expired by timer");

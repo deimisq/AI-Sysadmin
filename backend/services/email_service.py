@@ -401,3 +401,143 @@ This is an automated email from AI Sysadmin Agent.
     except Exception as e:
         logger.error(f"Failed to send invitation email to {invitation_email}: {e}")
         return False
+
+def send_welcome_email(db, user_email: str, user_name: str, org_name: str):
+    """Send welcome email to new organization admin after registration
+    
+    Args:
+        db: Database session
+        user_email: User's email
+        user_name: User's full name
+        org_name: Organization name
+    """
+    import os
+    frontend_url = os.getenv('FRONTEND_URL', 'https://testing.sentrait.com.uy')
+    login_url = f"{frontend_url}/login"
+    
+    subject = f"Bienvenido a AI Sysadmin Agent - {org_name}"
+    
+    body_html = f"""
+    <html>
+        <body style="font-family: Arial, sans-serif; padding: 20px;">
+            <div style="max-width: 600px; margin: 0 auto; background-color: white; border-radius: 8px; padding: 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <h2 style="color: #2563eb;">¡Bienvenido a bordo, {user_name}!</h2>
+                <p>Tu organización <strong>{org_name}</strong> ha sido creada exitosamente.</p>
+                
+                <p>Tu cuenta de administrador está activa y lista para usar. Ahora puedes:</p>
+                <ul>
+                    <li>Invitar a los miembros de tu equipo</li>
+                    <li>Registrar tus primeros servidores</li>
+                    <li>Configurar políticas de acceso</li>
+                </ul>
+                
+                <div style="text-align: center; margin: 30px 0;">
+                    <a href="{login_url}" 
+                       style="background-color: #2563eb; color: white; 
+                              padding: 14px 28px; text-decoration: none; 
+                              border-radius: 6px; display: inline-block;
+                              font-weight: 600; font-size: 16px;">
+                        Ir al Panel de Administración
+                    </a>
+                </div>
+                
+                <p style="font-size: 14px; color: #6b7280;">
+                    Si tienes alguna duda, responde a este correo o visita nuestra documentación.
+                </p>
+            </div>
+        </body>
+    </html>
+    """
+    
+    body_text = f"""
+    ¡Bienvenido a bordo, {user_name}!
+    
+    Tu organización {org_name} ha sido creada exitosamente.
+    
+    Tu cuenta de administrador está activa y lista para usar. Ve al Panel de Administración aquí:
+    {login_url}
+    """
+    
+    try:
+        sent = send_notification_email(db, user_email, subject, body_html, body_text)
+        if sent:
+            logger.info(f"Sent welcome email to {user_email}")
+        else:
+            logger.warning(f"Could not send welcome email to {user_email} (SMTP not configured or failed)")
+        return sent
+    except Exception as e:
+        logger.error(f"Failed to send welcome email to {{user_email}}: {{e}}")
+        return False
+
+def send_verification_email(db, user_email: str, user_name: str, verification_token: str):
+    """Send account verificatin email with a token link
+    
+    Args:
+        db: Database session
+        user_email: User's email address
+        user_name: User's full name
+        verification_token: Verification token
+    """
+    import os
+    
+    # Get frontend URL from environment
+    frontend_url = os.getenv('FRONTEND_URL', 'https://testing.sentrait.com.uy')
+    verify_url = f"{frontend_url}/verify-email?token={verification_token}"
+    
+    subject = "Verifica tu cuenta - AI Sysadmin Agent"
+    
+    body_html = f"""
+    <html>
+        <body style="font-family: Arial, sans-serif; padding: 20px;">
+            <div style="max-width: 600px; margin: 0 auto; background-color: white; border-radius: 8px; padding: 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <h2 style="color: #2563eb;">Verifica tu correo electrónico</h2>
+                <p>Hola <strong>{user_name}</strong>,</p>
+                <p>Gracias por registrarte en AI Sysadmin Agent. Para activar tu cuenta, por favor verifica tu dirección de correo electrónico.</p>
+                
+                <div style="text-align: center; margin: 30px 0;">
+                    <a href="{verify_url}" 
+                       style="background-color: #2563eb; color: white; 
+                              padding: 14px 28px; text-decoration: none; 
+                              border-radius: 6px; display: inline-block;
+                              font-weight: 600; font-size: 16px;">
+                        Verificar Cuenta
+                    </a>
+                </div>
+                
+                <p style="font-size: 14px; color: #6b7280;">
+                    Este enlace expirará en 7 días.<br>
+                    Si no creaste esta cuenta, puedes ignorar este correo.
+                </p>
+                <hr style="margin: 20px 0; border: none; border-top: 1px solid #e5e7eb;">
+                <p style="font-size: 12px; color: #9ca3af;">
+                    Si el botón no funciona, copia y pega este enlace en tu navegador:<br>
+                    {verify_url}
+                </p>
+            </div>
+        </body>
+    </html>
+    """
+    
+    body_text = f"""
+    Verifica tu correo electrónico
+    
+    Hola {user_name},
+    
+    Gracias por registrarte en AI Sysadmin Agent. Para activar tu cuenta, por favor verifica tu dirección de correo electrónico haciendo clic en el siguiente enlace:
+    
+    {verify_url}
+    
+    Este enlace expirará en 7 días.
+    Si no creaste esta cuenta, puedes ignorar este correo.
+    """
+    
+    try:
+        sent = send_notification_email(db, user_email, subject, body_html, body_text)
+        if sent:
+            logger.info(f"Sent verification email to {user_email}")
+        else:
+            logger.warning(f"Could not send verification email to {user_email}")
+        return sent
+    except Exception as e:
+        logger.error(f"Failed to send verification email to {user_email}: {e}")
+        return False

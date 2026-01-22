@@ -301,12 +301,12 @@ export async function fetchAuditLogs(
     }
 ) {
     const token = typeof window !== 'undefined' ? localStorage.getItem("token") : null;
-    
+
     const params = new URLSearchParams({
         skip: skip.toString(),
         limit: limit.toString(),
     });
-    
+
     if (filters) {
         if (filters.start_date) params.append('start_date', filters.start_date);
         if (filters.end_date) params.append('end_date', filters.end_date);
@@ -314,7 +314,7 @@ export async function fetchAuditLogs(
         if (filters.resource_type) params.append('resource_type', filters.resource_type);
         if (filters.user_id) params.append('user_id', filters.user_id.toString());
     }
-    
+
     const res = await fetch(`${API_BASE_URL}/admin/audit-logs?${params.toString()}`, {
         headers: {
             ...(token && { "Authorization": `Bearer ${token}` }),
@@ -343,7 +343,7 @@ export async function exportAuditLogsCSV(filters?: {
     user_id?: number;
 }) {
     const token = typeof window !== 'undefined' ? localStorage.getItem("token") : null;
-    
+
     const params = new URLSearchParams();
     if (filters) {
         if (filters.start_date) params.append('start_date', filters.start_date);
@@ -352,14 +352,14 @@ export async function exportAuditLogsCSV(filters?: {
         if (filters.resource_type) params.append('resource_type', filters.resource_type);
         if (filters.user_id) params.append('user_id', filters.user_id.toString());
     }
-    
+
     const res = await fetch(`${API_BASE_URL}/admin/audit-logs/export/csv?${params.toString()}`, {
         headers: {
             ...(token && { "Authorization": `Bearer ${token}` }),
         },
     });
     if (!res.ok) throw new Error("Failed to export audit logs");
-    
+
     const blob = await res.blob();
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -506,6 +506,53 @@ export async function activateLicenseKey(licenseKey: string) {
         const error = await res.json();
         throw new Error(error.detail || "Error al activar licencia");
     }
+    return res.json();
+}
+
+// ==================== INVITATIONS & ORGANIZATIONS ====================
+
+export interface Organization {
+    id: number;
+    name: string;
+    slug?: string;
+    subscription_tier?: string;
+}
+
+export async function fetchInvitations() {
+    const res = await fetch(`${API_BASE_URL}/invitations/`, {
+        headers: getAuthHeaders(),
+    });
+    if (!res.ok) throw new Error("Failed to fetch invitations");
+    return res.json();
+}
+
+export async function createInvitation(data: any) {
+    const res = await fetch(`${API_BASE_URL}/invitations/`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+        const error = await res.json().catch(() => ({}));
+        throw new Error(error.detail || "Failed to create invitation");
+    }
+    return res.json();
+}
+
+export async function deleteInvitation(invitationId: number) {
+    const res = await fetch(`${API_BASE_URL}/invitations/${invitationId}`, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+    });
+    if (!res.ok) throw new Error("Failed to delete invitation");
+    return res.json();
+}
+
+export async function fetchOrganizations() {
+    const res = await fetch(`${API_BASE_URL}/organizations/`, {
+        headers: getAuthHeaders(),
+    });
+    if (!res.ok) throw new Error("Failed to fetch organizations");
     return res.json();
 }
 

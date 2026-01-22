@@ -15,6 +15,7 @@ export default function SubscribePage() {
     const preselectedPlan = searchParams.get("plan") || "starter";
 
     const [isLoading, setIsLoading] = useState(false);
+    const [isSubmitted, setIsSubmitted] = useState(false);
     const [selectedPlan, setSelectedPlan] = useState(preselectedPlan);
     const [formData, setFormData] = useState({
         orgName: "",
@@ -56,20 +57,59 @@ export default function SubscribePage() {
         setIsLoading(true);
 
         try {
-            // TODO: Call backend API to create organization and admin user
-            // const res = await fetch("/api/v1/organizations/register", ...);
+            const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "/api/v1";
+            const res = await fetch(`${apiBaseUrl}/organizations/register`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    org_name: formData.orgName,
+                    admin_name: formData.adminName,
+                    email: formData.email,
+                    password: formData.password,
+                    plan: selectedPlan
+                })
+            });
 
-            // Simulation for now
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.detail || "Error en el registro");
+            }
 
-            toast.success("¡Registro exitoso! Por favor verifica tu email.");
-            router.push("/login?registered=true");
+            toast.success("¡Organización registrada exitosamente!");
+            setIsSubmitted(true);
+            window.scrollTo(0, 0);
         } catch (error) {
             toast.error("Error al registrar: " + (error as Error).message);
         } finally {
             setIsLoading(false);
         }
     };
+
+    if (isSubmitted) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 p-4">
+                <Card className="max-w-md w-full text-center">
+                    <CardHeader>
+                        <div className="mx-auto bg-blue-100 dark:bg-blue-900/30 p-4 rounded-full w-fit mb-4">
+                            <Shield className="h-12 w-12 text-blue-600 dark:text-blue-400" />
+                        </div>
+                        <CardTitle>¡Cuenta Creada!</CardTitle>
+                        <CardDescription>
+                            Hemos enviado un correo de verificación a <strong>{formData.email}</strong>
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <p className="text-sm text-muted-foreground">
+                            Por favor revisa tu bandeja de entrada (y spam) y haz clic en el enlace de verificación para activar tu cuenta y comenzar.
+                        </p>
+                        <Button variant="outline" onClick={() => router.push("/login")} className="w-full">
+                            Ir al Login
+                        </Button>
+                    </CardContent>
+                </Card>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-12 px-4 sm:px-6 lg:px-8">
@@ -96,8 +136,8 @@ export default function SubscribePage() {
                                 <div
                                     key={plan.id}
                                     className={`relative rounded-lg border-2 p-4 cursor-pointer transition-all ${selectedPlan === plan.id
-                                            ? "border-blue-600 bg-blue-50 dark:bg-blue-900/20"
-                                            : "border-gray-200 dark:border-gray-800 hover:border-blue-300"
+                                        ? "border-blue-600 bg-blue-50 dark:bg-blue-900/20"
+                                        : "border-gray-200 dark:border-gray-800 hover:border-blue-300"
                                         }`}
                                     onClick={() => setSelectedPlan(plan.id)}
                                 >

@@ -1,12 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import secrets
 import models
 import schemas
 from dependencies import get_db, get_current_active_user
 from models import RoleType
+from utils.auth import get_password_hash
 
 router = APIRouter()
 
@@ -33,7 +34,8 @@ def create_invitation(
 
     # generate token
     token = secrets.token_urlsafe(32)
-    expires_at = datetime.utcnow() + timedelta(days=7) # 7 days validity
+    # Use timezone aware UTC
+    expires_at = datetime.now(timezone.utc) + timedelta(days=7) # 7 days validity
     
     db_invitation = models.Invitation(
         email=invitation.email,
@@ -121,8 +123,6 @@ def accept_invitation(
     db: Session = Depends(get_db)
 ):
     """Accept an invitation and create user account (public endpoint)"""
-    from datetime import datetime
-    from utils.auth import get_password_hash
     
     # Find invitation by token
     invitation = db.query(models.Invitation).filter(
@@ -133,8 +133,8 @@ def accept_invitation(
     if not invitation:
         raise HTTPException(status_code=404, detail="Invalid or expired invitation")
     
-    # Check if expired
-    if invitation.expires_at < datetime.utcnow():
+    # Check if expired (use timezone aware UTC)
+    if invitation.expires_at < datetime.now(timezone.utc):
         raise HTTPException(status_code=400, detail="Invitation has expired")
     
     # Check if user already exists
@@ -182,7 +182,6 @@ def get_invitation_details(
     db: Session = Depends(get_db)
 ):
     """Get invitation details by token (public endpoint)"""
-    from datetime import datetime
     
     invitation = db.query(models.Invitation).filter(
         models.Invitation.token == token,
@@ -193,7 +192,7 @@ def get_invitation_details(
         raise HTTPException(status_code=404, detail="Invalid or expired invitation")
     
     # Check if expired
-    if invitation.expires_at < datetime.utcnow():
+    if invitation.expires_at < datetime.now(timezone.utc):
         raise HTTPException(status_code=400, detail="Invitation has expired")
     
     # Get organization name

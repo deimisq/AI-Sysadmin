@@ -113,6 +113,10 @@ class User(Base):
     
     # Language preference
     preferred_language = Column(String, default='en')  # User's preferred language for emails ('en' or 'es')
+
+    # Email Verification
+    verification_token = Column(String, unique=True, index=True, nullable=True)
+    verification_token_expires_at = Column(DateTime(timezone=True), nullable=True)
     
     # Relationships
     group_permissions_detail = relationship(

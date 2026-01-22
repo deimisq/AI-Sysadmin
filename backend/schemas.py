@@ -83,6 +83,13 @@ class Organization(OrganizationBase):
     class Config:
         from_attributes = True
 
+class OrganizationRegisterRequest(BaseModel):
+    org_name: str
+    admin_name: str
+    email: EmailStr
+    password: str
+    plan: Optional[str] = "starter"
+
 class Token(BaseModel):
     access_token: str
     token_type: str

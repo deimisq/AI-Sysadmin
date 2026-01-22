@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { fetchCurrentUser, fetchSystemStats } from "@/lib/api";
-import { Shield, Users, Server, FolderOpen, Activity, ArrowLeft, Calendar } from "lucide-react";
+import { Shield, Users, Server, FolderOpen, Activity, ArrowLeft, Calendar, Mail } from "lucide-react";
 import { UserManagement } from "@/components/admin/user-management";
 import { ServerManagement } from "@/components/admin/server-management";
 import { AIParameters } from "@/components/admin/ai-parameters";
@@ -18,6 +18,7 @@ import NotificationPreferences from "@/components/admin/notification-preferences
 import { SystemStats } from "@/components/admin/system-stats";
 import { AuditLogs } from "@/components/admin/audit-logs";
 import { ScheduledReports } from "@/components/admin/scheduled-reports";
+import { InvitationManagement } from "@/components/admin/invitation-management";
 
 import { useI18n } from "@/lib/i18n-context";
 import { LanguageSwitcher } from "@/components/language-switcher";
@@ -162,6 +163,10 @@ export default function AdminPage() {
                                 <Users className="mr-2 h-4 w-4" />
                                 {t.admin.tabs.users}
                             </TabsTrigger>
+                            <TabsTrigger value="invitations">
+                                <Mail className="mr-2 h-4 w-4" />
+                                {t.admin.tabs.invitations || "Invitaciones"}
+                            </TabsTrigger>
                             <TabsTrigger value="servers">
                                 <Server className="mr-2 h-4 w-4" />
                                 {t.admin.tabs.servers}
@@ -170,18 +175,24 @@ export default function AdminPage() {
                                 <Activity className="mr-2 h-4 w-4" />
                                 {t.admin.tabs.logs}
                             </TabsTrigger>
-                            <TabsTrigger value="ai-params">
-                                <Shield className="mr-2 h-4 w-4" />
-                                {t.admin.tabs.aiParams}
-                            </TabsTrigger>
-                            <TabsTrigger value="backend-params">
-                                <FolderOpen className="mr-2 h-4 w-4" />
-                                {t.admin.tabs.backendParams}
-                            </TabsTrigger>
-                            <TabsTrigger value="frontend-params">
-                                <FolderOpen className="mr-2 h-4 w-4" />
-                                {t.admin.tabs.frontendParams}
-                            </TabsTrigger>
+
+                            {currentUser?.role === 'superadmin' && (
+                                <>
+                                    <TabsTrigger value="ai-params">
+                                        <Shield className="mr-2 h-4 w-4" />
+                                        {t.admin.tabs.aiParams}
+                                    </TabsTrigger>
+                                    <TabsTrigger value="backend-params">
+                                        <FolderOpen className="mr-2 h-4 w-4" />
+                                        {t.admin.tabs.backendParams}
+                                    </TabsTrigger>
+                                    <TabsTrigger value="frontend-params">
+                                        <FolderOpen className="mr-2 h-4 w-4" />
+                                        {t.admin.tabs.frontendParams}
+                                    </TabsTrigger>
+                                </>
+                            )}
+
                             <TabsTrigger value="security">
                                 <Shield className="mr-2 h-4 w-4" />
                                 {t.admin.tabs.security}
@@ -204,6 +215,10 @@ export default function AdminPage() {
                             <UserManagement currentUser={currentUser} />
                         </TabsContent>
 
+                        <TabsContent value="invitations" className="space-y-4">
+                            <InvitationManagement currentUser={currentUser} />
+                        </TabsContent>
+
                         <TabsContent value="servers" className="space-y-4">
                             <ServerManagement currentUser={currentUser} />
                         </TabsContent>
@@ -212,17 +227,23 @@ export default function AdminPage() {
                             <AuditLogs />
                         </TabsContent>
 
-                        <TabsContent value="ai-params" className="space-y-4">
-                            <AIParameters currentUser={currentUser} />
-                        </TabsContent>
+                        {currentUser?.role === 'superadmin' && (
+                            <>
+                                <TabsContent value="ai-params" className="space-y-4">
+                                    <AIParameters currentUser={currentUser} />
+                                </TabsContent>
 
-                        <TabsContent value="backend-params" className="space-y-4">
-                            <BackendParameters currentUser={currentUser} />
-                        </TabsContent>
+                                <TabsContent value="backend-params" className="space-y-4">
+                                    <BackendParameters currentUser={currentUser} />
+                                </TabsContent>
 
-                        <TabsContent value="frontend-params" className="space-y-4">
-                            <FrontendParameters currentUser={currentUser} />
-                        </TabsContent>
+                                <TabsContent value="frontend-params" className="space-y-4">
+                                    <FrontendParameters currentUser={currentUser} />
+                                </TabsContent>
+                            </>
+                        )}
+
+
 
                         <TabsContent value="security" className="space-y-4">
                             <SecuritySettings currentUser={currentUser} />

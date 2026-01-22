@@ -5,7 +5,7 @@
 [![License](https://img.shields.io/badge/license-Proprietary-blue.svg)](LICENSE)
 [![Version](https://img.shields.io/badge/version-1.0.0--RC-green.svg)](VERSION.json)
 [![Docker](https://img.shields.io/badge/docker-ready-blue.svg)](docker-compose.yml)
-[![Status](https://img.shields.io/badge/status-stable-green.svg)](ROADMAP.md)
+[![Status](https://img.shields.io/badge/status-stable-green.svg)](docs/planning/ROADMAP.md)
 
 > 🚀 **v1.0.0 Release Candidate** - Complete Feature Parity achieved between Desktop and Web.
 
@@ -19,7 +19,6 @@ AI Sysadmin Agent is an advanced platform for intelligent server management, dia
 - **💻 Desktop Application**: Native Windows/Linux/Mac app (Tauri).
   - Connects to your Cloud Backend or runs locally.
   - Native experience with system notifications.
-  - **[Build Guide](BUILD_DESKTOP_SIMPLE.md)**
 
 ### ✨ Key Features (v1.0)
 
@@ -32,169 +31,81 @@ AI Sysadmin Agent is an advanced platform for intelligent server management, dia
 
 ## 📦 Repository Structure
 
-This repository contains the **complete source code**:
-
 - `backend/`: **FastAPI (Python)** application. Handles logic, DB, and AI.
-- `frontend/`: **Next.js** Web Application.
-- `frontend-desktop/`: **Tauri/React** Desktop Application code.
-- `docs/`: Deployment and Developer guides.
+- `frontend/`: **Next.js** Web Application & **Tauri** Desktop Core.
+- `docs/`: Complete project documentation.
 
-## 🚀 Quick Start
+## 📚 Documentation Index
 
-### Prerequisites
+We have organized our documentation to help you find what you need quickly.
 
-- Docker 20.10+
-- Docker Compose 2.0+
-- 2GB RAM minimum
-- 10GB disk space
+### 🏗️ Architecture & Design
 
-### Installation
+*Located in [docs/architecture/](docs/architecture/)*
 
-**📦 Download Pre-compiled Binaries**
+- **[System Architecture](docs/architecture/AUDIT_SYSTEM_ARCHITECTURE.md)**: Overview of the audit system and core components.
+- **[Zero Knowledge Vault](docs/architecture/DESIGN_ZERO_KNOWLEDGE_VAULT.md)**: Security design for credential storage.
+- **[Authentication](docs/architecture/AUTHENTICATION.md)**: Auth flows and mechanisms.
+- **[RBAC](docs/architecture/RBAC.md) / [Permissions](docs/architecture/ROLES_AND_PERMISSIONS.md)**: Role-Based Access Control details.
+- **[Multi-Tenancy](docs/architecture/MULTI_TENANCY_IMPLEMENTATION.md)**: How data isolation works.
 
-Binaries are distributed via [GitHub Releases](https://github.com/sentrait/ai_agent_public/releases/latest) to avoid repository size limits.
+### 📖 User & Developer Guides
 
-1. **Download the latest release**:
+*Located in [docs/guides/](docs/guides/)*
 
-   ```bash
-   # Download all required files
-   wget https://github.com/sentrait/ai_agent_public/releases/download/v1.0.0/backend-binary-linux-x64.tar.gz
-   wget https://github.com/sentrait/ai_agent_public/releases/download/v1.0.0/frontend-build.tar.gz
-   wget https://github.com/sentrait/ai_agent_public/releases/download/v1.0.0/deployment-files.tar.gz
-   wget https://github.com/sentrait/ai_agent_public/releases/download/v1.0.0/SHA256SUMS
-   
-   # Verify integrity
-   sha256sum -c SHA256SUMS
-   ```
+- **[Quick Start (Desktop)](docs/guides/QUICKSTART_DESKTOP.md)**: Get up and running with the desktop app.
+- **[Windows Guide](docs/guides/WINDOWS_START_HERE.md)**: Specific instructions for Windows users.
+- **[Production Guide](docs/guides/PRODUCTION_GUIDE.md)**: Deploying to production environments.
+- **[Developer Guide](docs/guides/DEVELOPER_GUIDE.md)**: Setup for contributors and developers.
+- **[Testing Guide](docs/guides/WINDOWS_TESTING_GUIDE.md)**: How to run tests.
 
-2. **Extract files**:
+### 🔧 Reference
 
-   ```bash
-   # Extract deployment configuration
-   tar -xzf deployment-files.tar.gz
-   
-   # Extract backend binary
-   mkdir -p backend/dist
-   tar -xzf backend-binary-linux-x64.tar.gz -C backend/dist/
-   
-   # Extract frontend build
-   mkdir -p frontend
-   tar -xzf frontend-build.tar.gz -C frontend/
-   ```
+*Located in [docs/reference/](docs/reference/)*
 
-3. **Configure environment**:
+- **[API Reference](docs/reference/API_REFERENCE.md)**: Backend API documentation.
+- **[Roles Quick Reference](docs/reference/ROLES_QUICK_REFERENCE.md)**: Cheat sheet for user roles.
 
-   ```bash
-   cp .env.prod.template .env.prod
-   nano .env.prod  # Edit with your values
-   ```
+### 📅 Planning & Roadmap
 
-4. **Start services**:
+*Located in [docs/planning/](docs/planning/)*
 
-   ```bash
-   docker-compose -f docker-compose.prebuilt.yml up -d
-   ```
+- **[Roadmap](docs/planning/ROADMAP.md)**: Future plans and features.
+- **[Phase 1 Progress](docs/planning/PHASE1_PROGRESS.md)**: Status of initial phase.
+- **[Multi-Tenancy Plan](docs/planning/PHASE2_MULTITENANCY.md)**: Phase 2 details.
 
-5. **Access the application**:
-   - Open <http://your-server-ip> in your browser
-   - Default trial license: 30 days
+### 🛠️ Troubleshooting
 
-For detailed installation instructions, see [DEPLOYMENT.md](DEPLOYMENT.md)
+*Located in [docs/troubleshooting/](docs/troubleshooting/)*
 
-## 🔑 Licensing
+- **[Installer Troubleshooting](docs/troubleshooting/INSTALLER_TROUBLESHOOTING.md)**: Help with installation issues.
+- **[Troubleshooting Report](docs/troubleshooting/TROUBLESHOOTING_REPORT.md)**: Common problems and fixes.
 
-### Free Trial
+### 📦 Releases
 
-- **30 days** full-featured trial
-- Automatically activated on first startup
-- No credit card required
+*Located in [docs/releases/](docs/releases/)*
 
-### Commercial License
+- **[Changelog](docs/releases/CHANGELOG.md)**: History of changes.
+- **[Release Process](docs/releases/RELEASE_PROCESS.md)**: How we ship updates.
 
-After the trial period, purchase a commercial license:
+### 🏗️ Build Instructions
+
+*Located in [docs/build/](docs/build/)*
+
+- **[Backend Build](docs/build/BACKEND_BUILD.md)**: How to compile the Python backend.
+- **[Desktop Build](docs/build/BUILD_DESKTOP_SIMPLE.md)**: Simple guide for desktop builds.
+
+## 🚀 Quick Start (Docker)
+
+To run the full stack locally:
 
 ```bash
-python3 activate_license.py YOUR-LICENSE-KEY
-```
-
-**Purchase a license**: [Contact Sales](mailto:sales@yourdomain.com)
-
-## 📚 Documentation
-
-- [Deployment Guide](DEPLOYMENT.md) - Complete installation and configuration
-- [License Activation](DEPLOYMENT.md#license-activation) - How to activate your license
-- [Troubleshooting](DEPLOYMENT.md#troubleshooting) - Common issues and solutions
-
-## 🛡️ Security
-
-This software is distributed as compiled binaries to protect intellectual property and ensure security:
-
-- Backend: Native compiled binary (Nuitka)
-- Frontend: Optimized standalone build
-- Containers: Minimal distroless images
-- No source code included
-
-## 💼 Commercial Use
-
-This software is licensed for commercial use. Each installation requires a valid license key.
-
-**Features**:
-
-- Unlimited servers
-- Priority support
-- Regular updates
-- Custom integrations available
-
-**Contact**: <sales@yourdomain.com>
-
-## 🆘 Support
-
-- **Documentation**: Full guides included in this repository
-- **Email Support**: <support@yourdomain.com>
-- **License Issues**: <license@yourdomain.com>
-- **Enterprise Support**: Available with commercial licenses
-
-## 📋 System Requirements
-
-### Minimum
-
-- 2 CPU cores
-- 2GB RAM
-- 10GB disk space
-- Docker & Docker Compose
-
-### Recommended
-
-- 4 CPU cores
-- 4GB RAM
-- 20GB SSD
-- Ubuntu 20.04+ or similar
-
-## 🔄 Updates
-
-Updates are delivered as new Docker images. To update:
-
-```bash
-docker-compose -f docker-compose.prod.yml pull
 docker-compose -f docker-compose.prod.yml up -d
 ```
 
-Your license and data are preserved during updates.
+Access the application at `http://localhost:3000`.
 
 ## ⚖️ License
 
-Copyright © 2024 Your Company Name. All rights reserved.
-
-This software is proprietary and confidential. Unauthorized copying, distribution, or modification is strictly prohibited.
-
+Copyright © 2024 Sentrait. All rights reserved.
 See [LICENSE](LICENSE) for full terms.
-
-## 🌐 Links
-
-- **Website**: <https://yourdomain.com>
-- **Documentation**: <https://docs.yourdomain.com>
-- **Support Portal**: <https://support.yourdomain.com>
-
----
-
-**AI Sysadmin Agent** - Making server management intelligent and effortless.

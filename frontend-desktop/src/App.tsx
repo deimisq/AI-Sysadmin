@@ -21,7 +21,9 @@ export default function App() {
 
           {/* Default route - redirect to dashboard if authenticated, login otherwise */}
           <Route path="/" element={
-            isAuthenticated() ? <DesktopLayout /> : <Navigate to="/login" />
+            <PrivateRoute>
+              <DesktopLayout />
+            </PrivateRoute>
           } />
 
           {/* Catch-all route for authenticated app */}

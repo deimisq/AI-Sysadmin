@@ -100,17 +100,18 @@ export default function TerminalComponent(props: TerminalComponentProps) {
                     <div className="flex items-center gap-2">
                         <button
                             onClick={() => setShowFiles(!showFiles)}
-                            className={`p-1.5 rounded text-xs flex items-center gap-1 transition-colors ${showFiles ? 'bg-[#333] text-white' : 'text-gray-400 hover:bg-[#333] hover:text-white'}`}
+                            className={`px-3 py-1.5 rounded text-xs flex items-center gap-2 transition-colors ${showFiles ? 'bg-[#333] text-white' : 'text-gray-400 hover:bg-[#333] hover:text-white'}`}
                             title="Toggle File Explorer"
                         >
                             <Folder className="w-3.5 h-3.5" />
+                            <span>Archivos</span>
                         </button>
                         <div className="w-px h-4 bg-gray-700 mx-1"></div>
                         <button
                             onClick={handleDisconnect}
                             className="text-red-400 hover:text-red-300 px-2 py-1 rounded hover:bg-red-900/20 transition-colors"
                         >
-                            Disconnect
+                            Desconectar
                         </button>
                     </div>
                 </div>

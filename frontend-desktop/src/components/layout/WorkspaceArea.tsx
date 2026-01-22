@@ -119,11 +119,11 @@ function WelcomeView() {
             </p>
             <div className="grid grid-cols-2 gap-4 text-xs font-mono">
                 <div className="flex items-center gap-2">
-                    <span className="bg-[#333] px-2 py-1 rounded">⌘ P</span>
+                    <span className="bg-[#333] px-2 py-1 rounded">Ctrl+P</span>
                     <span>Search Files</span>
                 </div>
                 <div className="flex items-center gap-2">
-                    <span className="bg-[#333] px-2 py-1 rounded">⌘ T</span>
+                    <span className="bg-[#333] px-2 py-1 rounded">Ctrl+T</span>
                     <span>New Terminal</span>
                 </div>
             </div>

@@ -39,6 +39,7 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
+import { OSIcon } from "./os-icon";
 
 interface Server {
     id: number;
@@ -342,7 +343,7 @@ export function ServerList({ onEdit, refreshKey }: ServerListProps) {
                 <Card key={server.id} className="hover:shadow-lg transition-shadow overflow-hidden">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium truncate flex-1 mr-2">{server.hostname}</CardTitle>
-                        <ServerIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                        <OSIcon os={server.os_info} className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                     </CardHeader>
                     <CardContent className="pb-3">
                         <div className="text-xl font-bold truncate">{server.ip_address}</div>
@@ -369,7 +370,7 @@ export function ServerList({ onEdit, refreshKey }: ServerListProps) {
             {serverList.map(server => (
                 <Card key={server.id} className="hover:shadow-md transition-shadow p-3">
                     <div className="flex flex-col items-center text-center gap-2">
-                        <ServerIcon className="h-8 w-8 text-primary" />
+                        <OSIcon os={server.os_info} className="h-8 w-8 text-primary" />
                         <div>
                             <p className="font-medium text-sm truncate w-full" title={server.hostname}>{server.hostname}</p>
                             <p className="text-xs text-muted-foreground">{server.ip_address}</p>
@@ -391,7 +392,7 @@ export function ServerList({ onEdit, refreshKey }: ServerListProps) {
             {serverList.map(server => (
                 <div key={server.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors">
                     <div className="flex items-center gap-4">
-                        <ServerIcon className="h-5 w-5 text-primary" />
+                        <OSIcon os={server.os_info} className="h-5 w-5 text-primary" />
                         <div>
                             <p className="font-medium">{server.hostname}</p>
                             <p className="text-sm text-muted-foreground">{server.ip_address} • {server.os_info}</p>

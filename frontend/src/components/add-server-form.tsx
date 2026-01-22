@@ -243,18 +243,41 @@ export function AddServerForm({ onServerAdded, initialData, onCancel }: ServerFo
                         required
                     />
                     <div className="col-span-2">
-                        <Input
-                            list="os-options"
-                            placeholder={t.addServer.osPlaceholder}
-                            value={formData.os_info}
-                            onChange={(e) => setFormData({ ...formData, os_info: e.target.value })}
-                            required
-                        />
-                        <datalist id="os-options">
-                            {OS_OPTIONS.map((os) => (
-                                <option key={os} value={os} />
-                            ))}
-                        </datalist>
+                        <div className="col-span-2">
+                            <label className="text-sm font-medium mb-1 block">
+                                {t.addServer.os || "Operating System"}
+                            </label>
+                            <div className="flex gap-2">
+                                <select
+                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                    value={OS_OPTIONS.includes(formData.os_info) ? formData.os_info : (formData.os_info ? "other" : "")}
+                                    onChange={(e) => {
+                                        const val = e.target.value;
+                                        if (val === "other") {
+                                            setFormData({ ...formData, os_info: "" });
+                                        } else {
+                                            setFormData({ ...formData, os_info: val });
+                                        }
+                                    }}
+                                >
+                                    <option value="" disabled>Select OS</option>
+                                    {OS_OPTIONS.map((os) => (
+                                        <option key={os} value={os}>{os}</option>
+                                    ))}
+                                    <option value="other">Other / Custom</option>
+                                </select>
+                            </div>
+                            {(!OS_OPTIONS.includes(formData.os_info) && (formData.os_info !== "" || formData.os_info === "")) && (
+                                <Input
+                                    className="mt-2"
+                                    placeholder={t.addServer.osPlaceholder || "e.g. Arch Linux"}
+                                    value={formData.os_info}
+                                    onChange={(e) => setFormData({ ...formData, os_info: e.target.value })}
+                                // Only required if we are effectively in "custom" mode, which usually means os_info isn't in options
+                                // But if user clears input, it is empty.
+                                />
+                            )}
+                        </div>
                     </div>
                     <div className="col-span-2 space-y-2">
                         <label className="text-sm font-medium">{t.addServer.group}</label>

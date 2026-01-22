@@ -14,6 +14,19 @@ import {
 import { type Server, createServer, updateServer } from '@/lib/api';
 import { toast } from 'sonner';
 
+const OS_OPTIONS = [
+    "Ubuntu 24.04",
+    "Ubuntu 22.04",
+    "Ubuntu 20.04",
+    "Debian 12",
+    "Debian 11",
+    "CentOS 7",
+    "Rocky Linux 9",
+    "AlmaLinux 9",
+    "Windows Server 2022",
+    "Windows Server 2019"
+];
+
 interface ServerFormDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
@@ -25,6 +38,7 @@ interface ServerFormDialogProps {
 export function ServerFormDialog({ open, onOpenChange, serverToEdit, groups, onSuccess }: ServerFormDialogProps) {
     const isEditing = !!serverToEdit;
     const [loading, setLoading] = useState(false);
+    const [isCustomOS, setIsCustomOS] = useState(false);
 
     // Form State
     const [formData, setFormData] = useState({
@@ -42,17 +56,23 @@ export function ServerFormDialog({ open, onOpenChange, serverToEdit, groups, onS
     useEffect(() => {
         if (open) {
             if (serverToEdit) {
+                const os = serverToEdit.os_info || '';
+                // If OS is present and NOT in options, it's custom
+                const custom = !!os && !OS_OPTIONS.includes(os);
+                setIsCustomOS(custom);
+
                 setFormData({
                     hostname: serverToEdit.hostname,
                     ip_address: serverToEdit.ip_address,
                     description: serverToEdit.description || '',
-                    os_info: serverToEdit.os_info || '',
+                    os_info: os,
                     group_id: serverToEdit.group_id || null,
                     ssh_username: serverToEdit.ssh_username || '',
                     ssh_password: '',
                     ssh_key_path: ''
                 });
             } else {
+                setIsCustomOS(false);
                 setFormData({
                     hostname: '',
                     ip_address: '',
@@ -80,7 +100,7 @@ export function ServerFormDialog({ open, onOpenChange, serverToEdit, groups, onS
                 group_id: formData.group_id ?? undefined
             };
 
-            // Remove empty password/key fields to avoid overwriting with empty strings if API doesn't handle it
+            // Remove empty password/key fields
             if (!payload.ssh_password) delete (payload as any).ssh_password;
             if (!payload.ssh_key_path) delete (payload as any).ssh_key_path;
 
@@ -139,12 +159,36 @@ export function ServerFormDialog({ open, onOpenChange, serverToEdit, groups, onS
 
                     <div className="space-y-2">
                         <Label className="text-gray-300">Sistema Operativo</Label>
-                        <Input
-                            value={formData.os_info}
-                            onChange={(e) => setFormData({ ...formData, os_info: e.target.value })}
-                            placeholder="ej., Ubuntu 22.04"
-                            className="bg-[#2d2d2d] border-[#444] text-white placeholder:text-gray-500"
-                        />
+                        <select
+                            className="flex h-10 w-full rounded-md border border-[#444] bg-[#2d2d2d] px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            value={isCustomOS ? "other" : formData.os_info}
+                            onChange={(e) => {
+                                const val = e.target.value;
+                                if (val === "other") {
+                                    setIsCustomOS(true);
+                                    setFormData({ ...formData, os_info: "" });
+                                } else {
+                                    setIsCustomOS(false);
+                                    setFormData({ ...formData, os_info: val });
+                                }
+                            }}
+                        >
+                            <option value="" disabled>Selecciona Sistema Operativo</option>
+                            {OS_OPTIONS.map((os) => (
+                                <option key={os} value={os}>{os}</option>
+                            ))}
+                            <option value="other">Otro / Personalizado...</option>
+                        </select>
+
+                        {isCustomOS && (
+                            <Input
+                                value={formData.os_info}
+                                onChange={(e) => setFormData({ ...formData, os_info: e.target.value })}
+                                placeholder="ej., Arch Linux"
+                                className="bg-[#2d2d2d] border-[#444] text-white placeholder:text-gray-500 mt-2"
+                                autoFocus
+                            />
+                        )}
                     </div>
 
                     <div className="space-y-2">

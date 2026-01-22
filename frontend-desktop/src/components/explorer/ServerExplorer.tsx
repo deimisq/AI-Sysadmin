@@ -14,6 +14,7 @@ import {
     DropdownMenuSeparator
 } from '../ui/dropdown-menu';
 import { toast } from 'sonner';
+import { OSIcon } from '../os-icon';
 
 export function ServerExplorer() {
     const [servers, setServers] = useState<Server[]>([]);
@@ -303,7 +304,7 @@ function ServerItem({ server, onConnect, onChat, onEdit, onDelete }: ServerItemP
             className="group flex items-center gap-2 pl-6 pr-2 py-1 cursor-pointer hover:bg-[#2a2d2e] text-sm text-gray-300 hover:text-white border border-transparent hover:border-[#333] relative"
             onDoubleClick={onConnect}
         >
-            <ServerIcon className={`h-3.5 w-3.5 min-w-[14px] ${getIconColor(server)}`} />
+            <OSIcon os={server.os_info} className="h-3.5 w-3.5 min-w-[14px]" />
             <div className="flex-1 min-w-0">
                 <div className="truncate text-xs leading-tight">{server.hostname}</div>
                 <div className="truncate text-[10px] text-gray-500 group-hover:text-gray-400 leading-tight">{server.ip_address}</div>
@@ -334,8 +335,4 @@ function ServerItem({ server, onConnect, onChat, onEdit, onDelete }: ServerItemP
     );
 }
 
-function getIconColor(server: Server) {
-    if (server.os_info?.toLowerCase().includes('windows')) return 'text-blue-400';
-    if (server.os_info?.toLowerCase().includes('linux') || server.os_info?.toLowerCase().includes('ubuntu') || server.os_info?.toLowerCase().includes('debian')) return 'text-orange-400';
-    return 'text-gray-400';
-}
+

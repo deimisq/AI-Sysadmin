@@ -6,17 +6,14 @@ import { TopBar } from './TopBar';
 import { AIChatPanel } from '../ai/AIChatPanel';
 import { useWorkspaceStore } from '../../stores/workspaceStore';
 import { OverlayContainer } from './OverlayContainer';
+import { CommandPalette } from '../CommandPalette';
 
 export function DesktopLayout() {
     const { sidebarVisible, aiPanelVisible } = useWorkspaceStore();
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
-            // Block Ctrl+P (Print)
-            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'p') {
-                e.preventDefault();
-            }
-            // Block Ctrl+T (New Tab) - prevent browser behavior
+            // Block Ctrl+T (New Tab in browser) - prevent browser behavior context for Tauri
             if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 't') {
                 e.preventDefault();
             }
@@ -63,6 +60,7 @@ export function DesktopLayout() {
             </div>
 
             {/* Global Overlays */}
+            <CommandPalette />
             <OverlayContainer />
         </div>
     );

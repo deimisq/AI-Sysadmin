@@ -97,14 +97,14 @@ Desktop App (Rust Core)
 ### Phase 2: Multi-Tenancy & Organizations (Q2 2026)
 
 **Duration**: 8-10 weeks  
-**Status**: 🟢 In Progress
+**Status**: ✅ Completed (Backend & Frontend Parity)
 
 **Deliverables**:
 
-- `Organization` model + database migrations
-- Tenant isolation (row-level security)
-- Org-level user invitations
-- Billing integration (Stripe API)
+- [x] `Organization` model + database migrations
+- [x] Tenant isolation (row-level security via middleware)
+- [x] Org-level user invitations
+- [ ] Billing integration (Stripe API)
 
 **Data Model Changes**:
 
@@ -333,10 +333,10 @@ Desktop ──SSH──> Jump Host (Bastion) ──SSH──> Target Server
 ## Next Steps
 
 1. ✅ Review and approve this roadmap
-2. 🟡 Create detailed technical specs for Phase 1
-3. 🔴 Hire Rust developer or upskill existing team
-4. 🔴 Set up Tauri build infrastructure
-5. 🔴 Begin Phase 1 development sprint
+2. ✅ Phase 1 & 2 Core Development (SSH, Multi-tenancy)
+3. 🟡 Implement Command Palette (Ctrl+K/P) for Desktop Experience
+4. 🔴 Begin Phase 3: Windows RDP Support research
+5. 🔴 Setup Automated Windows Builds (CI/CD)
 
 ---
 

@@ -22,8 +22,8 @@ pub struct RDPManager {
 impl RDPManager {
     pub fn new() -> Self {
         Self {
-            sessions: Arc<Mutex::new(Vec::new())),
-            sidecars: Arc<Mutex::new(Vec::new())),
+            sessions: Arc::new(Mutex::new(Vec::new())),
+            sidecars: Arc::new(Mutex::new(Vec::new())),
         }
     }
 

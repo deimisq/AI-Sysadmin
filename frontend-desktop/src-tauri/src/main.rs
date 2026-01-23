@@ -177,6 +177,77 @@ async fn sftp_list_files(
         .map_err(|e| format!("SFTP list failed: {}", e))
 }
 
+/// Launch native RDP client
+#[tauri::command]
+async fn launch_native_rdp(
+    host: String,
+    username: String,
+) -> Result<(), String> {
+    use std::process::Command;
+    
+    #[cfg(target_os = "windows")]
+    {
+        // Windows: Use mstsc.exe (built-in RDP client)
+        // cmdkey is used to store credentials temporarily
+        // Format: mstsc /v:hostname
+        let result = Command::new("mstsc")
+            .arg(format!("/v:{}", host))
+            .spawn();
+        
+        match result {
+            Ok(_) => {
+                println!("Launched mstsc for {}", host);
+                Ok(())
+            },
+            Err(e) => Err(format!("Failed to launch mstsc: {}", e))
+        }
+    }
+    
+    #[cfg(target_os = "linux")]
+    {
+        // Linux: Try xfreerdp or remmina
+        let result = Command::new("xfreerdp")
+            .arg(format!("/v:{}", host))
+            .arg(format!("/u:{}", username))
+            .arg("/cert:ignore")
+            .spawn();
+        
+        match result {
+            Ok(_) => {
+                println!("Launched xfreerdp for {}", host);
+                Ok(())
+            },
+            Err(_) => {
+                // Fallback to remmina
+                let remmina_result = Command::new("remmina")
+                    .arg("-c")
+                    .arg(format!("rdp://{}", host))
+                    .spawn();
+                
+                match remmina_result {
+                    Ok(_) => Ok(()),
+                    Err(e) => Err(format!("No RDP client found. Install xfreerdp or remmina. Error: {}", e))
+                }
+            }
+        }
+    }
+    
+    #[cfg(target_os = "macos")]
+    {
+        // macOS: Use Microsoft Remote Desktop if installed
+        let result = Command::new("open")
+            .arg("-a")
+            .arg("Microsoft Remote Desktop")
+            .arg(format!("rdp://full%20address=s:{}:3389", host))
+            .spawn();
+        
+        match result {
+            Ok(_) => Ok(()),
+            Err(e) => Err(format!("Failed to open Remote Desktop. Install 'Microsoft Remote Desktop' from App Store. Error: {}", e))
+        }
+    }
+}
+
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_http::init())
@@ -197,6 +268,7 @@ fn main() {
             pty_close,
             sftp_list_files,
             rdp_connect,
+            launch_native_rdp,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

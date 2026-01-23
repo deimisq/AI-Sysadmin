@@ -87,16 +87,22 @@ export default function TerminalComponent(props: TerminalComponentProps) {
         }
     };
 
+    // State to force SSH mode even for Windows servers
+    const [forceSSH, setForceSSH] = useState(false);
+
     const isWindows = props.serverData?.os_info?.toLowerCase().includes('windows');
 
-    if (isWindows && isDesktop && props.serverData) {
+    // Show RDP component for Windows servers (unless forceSSH is set)
+    if (isWindows && isDesktop && props.serverData && !forceSSH) {
         return (
             <RDPComponent
                 serverData={props.serverData}
                 onDisconnect={() => {
-                    // Logic to handle RDP disconnect (maybe navigate back or just show placeholder)
-                    // For now, reload or clear selection logic is outside this component scope
-                    window.location.reload(); // Simple reset for now
+                    window.location.reload();
+                }}
+                onSwitchToSSH={() => {
+                    // Switch to SSH terminal mode for this Windows server
+                    setForceSSH(true);
                 }}
             />
         );

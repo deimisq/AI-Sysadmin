@@ -7,22 +7,21 @@ import { fetchServerCredentials } from '../../lib/api';
 interface RDPComponentProps {
     serverData: Server;
     onDisconnect: () => void;
+    onSwitchToSSH?: () => void; // Optional callback to switch to SSH terminal mode
 }
 
-export function RDPComponent({ serverData, onDisconnect }: RDPComponentProps) {
+export function RDPComponent({ serverData, onDisconnect, onSwitchToSSH }: RDPComponentProps) {
     const [connecting, setConnecting] = useState(false);
     const [sessionId, setSessionId] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [nativeRdpLaunched, setNativeRdpLaunched] = useState(false);
 
     const connect = async () => {
         setConnecting(true);
         setError(null);
         try {
-            // Fetch credentials specifically for this server
             const creds = await fetchServerCredentials(serverData.id);
 
-            // Call backend RDP connection
-            // Note: We map ssh_username to RDP username as they share the credentials model generally
             const sid = await invoke<string>('rdp_connect', {
                 host: creds.ip_address,
                 username: creds.ssh_username || 'Administrator',
@@ -38,9 +37,25 @@ export function RDPComponent({ serverData, onDisconnect }: RDPComponentProps) {
         }
     };
 
+    const launchNativeRDP = async () => {
+        try {
+            const creds = await fetchServerCredentials(serverData.id);
+
+            // Launch native RDP client via Tauri shell command
+            await invoke('launch_native_rdp', {
+                host: creds.ip_address,
+                username: creds.ssh_username || 'Administrator',
+            });
+
+            setNativeRdpLaunched(true);
+        } catch (err: any) {
+            console.error("Failed to launch native RDP:", err);
+            setError(`Error al abrir cliente RDP: ${err.toString()}`);
+        }
+    };
+
     useEffect(() => {
         connect();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     if (error) {
@@ -64,45 +79,74 @@ export function RDPComponent({ serverData, onDisconnect }: RDPComponentProps) {
                 <div className="animate-pulse text-6xl mb-6">🪟</div>
                 <h2 className="text-xl font-semibold mb-2">Iniciando Escritorio Remoto</h2>
                 <p className="text-gray-400">Conectando a {serverData.hostname} ({serverData.ip_address})...</p>
-                <div className="mt-8 text-xs text-gray-600 font-mono">Protocolo: IronRDP</div>
             </div>
         );
     }
 
     return (
-        <div className="h-full flex flex-col bg-black relative overflow-hidden">
+        <div className="h-full flex flex-col bg-[#0a0a0a] relative overflow-hidden">
             {/* RDP Toolbar */}
-            <div className="bg-[#0078d7] px-4 py-2 flex justify-between items-center text-white shrink-0 shadow-md z-10">
-                <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-green-400 rounded-full shadow-[0_0_8px_rgba(74,222,128,0.8)]"></div>
-                    <span className="font-semibold text-sm">{serverData.hostname}</span>
-                    <span className="text-xs opacity-70 ml-2 font-mono">{serverData.ip_address}</span>
+            <div className="bg-gradient-to-r from-[#0078d7] to-[#005a9e] px-4 py-2 flex justify-between items-center text-white shrink-0 shadow-lg z-10">
+                <div className="flex items-center gap-3">
+                    <div className="w-2.5 h-2.5 bg-green-400 rounded-full shadow-[0_0_10px_rgba(74,222,128,0.9)] animate-pulse"></div>
+                    <span className="font-semibold">{serverData.hostname}</span>
+                    <span className="text-xs opacity-60 font-mono bg-black/20 px-2 py-0.5 rounded">{serverData.ip_address}</span>
                 </div>
 
-                <div className="flex gap-2">
-                    <button className="px-3 py-1 bg-white/10 hover:bg-white/20 rounded text-xs transition-colors">
-                        Ctrl+Alt+Del
-                    </button>
-                    <div className="w-px h-6 bg-white/20 mx-1"></div>
-                    <button onClick={onDisconnect} className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs font-semibold shadow-sm transition-colors">
+                <div className="flex gap-2 items-center">
+                    <button onClick={onDisconnect} className="bg-red-600/90 hover:bg-red-600 text-white px-4 py-1.5 rounded text-sm font-medium shadow-sm transition-all hover:shadow-md">
                         Desconectar
                     </button>
                 </div>
             </div>
 
-            {/* RDP Canvas Area (Placeholder for Phase 3 Phase B) */}
-            <div className="flex-1 flex items-center justify-center bg-[#101010] text-gray-500 relative">
-                {/* This area will contain the <canvas> element rendering the bitmap stream */}
-                <div className="text-center p-8 border border-gray-800 rounded-lg bg-[#1a1a1a]">
-                    <div className="text-4xl mb-4 opacity-50">🖥️</div>
-                    <h3 className="text-lg text-gray-300 font-medium mb-1">Sesión RDP Establecida</h3>
-                    <p className="text-sm text-gray-500 mb-4">Session ID: <span className="font-mono text-xs">{sessionId}</span></p>
+            {/* Main Content Area */}
+            <div className="flex-1 flex items-center justify-center bg-gradient-to-b from-[#0a0a0a] to-[#1a1a2e] text-gray-400 relative p-8">
+                <div className="text-center max-w-xl">
+                    {/* Status Icon */}
+                    <div className="text-6xl mb-6 opacity-80">🖥️</div>
 
-                    <div className="bg-blue-900/20 border border-blue-900/50 p-3 rounded text-left max-w-sm mx-auto">
+                    <h3 className="text-2xl text-white font-semibold mb-2">Servidor Windows Conectado</h3>
+                    <p className="text-sm text-gray-500 mb-6">
+                        Session ID: <span className="font-mono text-xs text-gray-600">{sessionId}</span>
+                    </p>
+
+                    {/* Options Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        {/* Option 1: Native RDP */}
+                        <div className="bg-[#1e1e2e] border border-[#2a2a3e] rounded-xl p-5 text-left hover:border-blue-500/50 transition-colors">
+                            <div className="text-3xl mb-3">🖼️</div>
+                            <h4 className="text-white font-semibold mb-2">Escritorio Remoto</h4>
+                            <p className="text-xs text-gray-500 mb-4">Abre el cliente RDP nativo del sistema para acceso visual completo.</p>
+                            <Button
+                                onClick={launchNativeRDP}
+                                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                                disabled={nativeRdpLaunched}
+                            >
+                                {nativeRdpLaunched ? '✓ Cliente RDP Abierto' : 'Abrir Escritorio Remoto'}
+                            </Button>
+                        </div>
+
+                        {/* Option 2: SSH/PowerShell Terminal */}
+                        <div className="bg-[#1e1e2e] border border-[#2a2a3e] rounded-xl p-5 text-left hover:border-green-500/50 transition-colors">
+                            <div className="text-3xl mb-3">⚡</div>
+                            <h4 className="text-white font-semibold mb-2">PowerShell Terminal</h4>
+                            <p className="text-xs text-gray-500 mb-4">Acceso por línea de comandos vía SSH (requiere OpenSSH en el servidor).</p>
+                            <Button
+                                onClick={onSwitchToSSH}
+                                variant="outline"
+                                className="w-full border-green-600 text-green-400 hover:bg-green-900/20"
+                            >
+                                Abrir Terminal SSH
+                            </Button>
+                        </div>
+                    </div>
+
+                    {/* Info Box */}
+                    <div className="bg-blue-900/20 border border-blue-800/50 p-4 rounded-lg text-left">
                         <p className="text-xs text-blue-300">
-                            <strong>Estado:</strong> Conectado al backend (Rust).<br />
-                            <strong>Renderizado:</strong> Pendiente de implementación (Canvas).<br />
-                            <strong>Input:</strong> Pendiente de implementación.
+                            <strong>💡 Nota:</strong> El renderizado RDP nativo en la aplicación está en desarrollo.
+                            Por ahora, usa el cliente RDP del sistema para acceso visual, o SSH para comandos.
                         </p>
                     </div>
                 </div>
@@ -110,3 +154,4 @@ export function RDPComponent({ serverData, onDisconnect }: RDPComponentProps) {
         </div>
     );
 }
+

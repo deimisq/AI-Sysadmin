@@ -41,27 +41,27 @@ impl GuacamoleManager {
             
             // Check if we have Node.js and guacamole-lite script
             if let Ok(node_path) = which::which("node") {
-                // List of paths to check for guacamole-lite-server.js
+                // List of paths to check for guacamole-lite-server.cjs
                 let mut search_paths = Vec::new();
                 
                 // 1. Check bundled location (next to exe)
                 if let Ok(exe_dir) = std::env::current_exe() {
                     if let Some(parent) = exe_dir.parent() {
-                        search_paths.push(parent.join("guacamole-lite-server.js"));
+                        search_paths.push(parent.join("guacamole-lite-server.cjs"));
                     }
                 }
                 
                 // 2. Check current working directory
                 if let Ok(cwd) = std::env::current_dir() {
-                    search_paths.push(cwd.join("guacamole-lite-server.js"));
+                    search_paths.push(cwd.join("guacamole-lite-server.cjs"));
                     
                     // 3. Check frontend-desktop directory (for dev mode)
-                    search_paths.push(cwd.join("frontend-desktop").join("guacamole-lite-server.js"));
+                    search_paths.push(cwd.join("frontend-desktop").join("guacamole-lite-server.cjs"));
                     
                     // 4. Check parent directory (in case we're in src-tauri)
                     if let Some(parent) = cwd.parent() {
-                        search_paths.push(parent.join("frontend-desktop").join("guacamole-lite-server.js"));
-                        search_paths.push(parent.join("guacamole-lite-server.js"));
+                        search_paths.push(parent.join("frontend-desktop").join("guacamole-lite-server.cjs"));
+                        search_paths.push(parent.join("guacamole-lite-server.cjs"));
                     }
                 }
                 
@@ -76,7 +76,7 @@ impl GuacamoleManager {
                     }
                 }
                 
-                println!("Node.js found but guacamole-lite-server.js not found in any search path");
+                println!("Node.js found but guacamole-lite-server.cjs not found in any search path");
             } else {
                 println!("Node.js not found in PATH");
             }

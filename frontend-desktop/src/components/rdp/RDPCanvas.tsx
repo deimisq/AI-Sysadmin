@@ -20,8 +20,7 @@ export function RDPCanvas({ sessionId, width = 1920, height = 1080 }: RDPCanvasP
     const [fps, setFps] = useState(0);
     const [error, setError] = useState<string | null>(null);
     const [frameCount, setFrameCount] = useState(0);
-    const animationFrameRef = useRef<number>();
-    const lastFrameTimeRef = useRef<number>(Date.now());
+    const animationFrameRef = useRef<number | undefined>(undefined);
 
     useEffect(() => {
         let isActive = true;

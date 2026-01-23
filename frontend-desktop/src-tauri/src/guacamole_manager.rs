@@ -30,10 +30,42 @@ impl GuacamoleManager {
         }
     }
 
-    /// Detect guacd binary on the system
-    pub fn detect_guacd() -> Result<PathBuf> {
+    /// Detect guacd binary or guacamole-lite on the system
+    pub fn detect_guacd() -> Result<(PathBuf, bool)> {
+        // Returns (path, is_node_js)
+        // is_node_js = true means we need to use "node path" instead of just "path"
+        
         #[cfg(target_os = "windows")]
         {
+            // On Windows, prefer guacamole-lite (Node.js) over guacd
+            
+            // Check if we have Node.js and guacamole-lite script
+            if let Ok(node_path) = which::which("node") {
+                // Check for bundled guacamole-lite-server.js
+                if let Ok(exe_dir) = std::env::current_exe() {
+                    let script_path = exe_dir.parent()
+                        .unwrap()
+                        .join("guacamole-lite-server.js");
+                    
+                    if script_path.exists() {
+                        println!("Found guacamole-lite script: {:?}", script_path);
+                        println!("Using Node.js: {:?}", node_path);
+                        return Ok((script_path, true));
+                    }
+                }
+                
+                // Try in project directory
+                let script_path = std::env::current_dir()
+                    .unwrap()
+                    .join("guacamole-lite-server.js");
+                
+                if script_path.exists() {
+                    println!("Found guacamole-lite script in cwd: {:?}", script_path);
+                    return Ok((script_path, true));
+                }
+            }
+            
+            // Fall back to guacd.exe if available
             // Try bundled binary first
             if let Ok(exe_dir) = std::env::current_exe() {
                 let bundled = exe_dir.parent()
@@ -43,7 +75,7 @@ impl GuacamoleManager {
                 
                 if bundled.exists() {
                     println!("Found bundled guacd.exe: {:?}", bundled);
-                    return Ok(bundled);
+                    return Ok((bundled, false));
                 }
             }
             
@@ -58,12 +90,16 @@ impl GuacamoleManager {
                 let p = PathBuf::from(path);
                 if p.exists() {
                     println!("Found guacd.exe: {:?}", p);
-                    return Ok(p);
+                    return Ok((p, false));
                 }
             }
             
             // Fallback: check PATH
-            which::which("guacd").context("guacd.exe not found. Please install Guacamole Server or place guacd.exe in binaries/ folder")
+            if let Ok(p) = which::which("guacd") {
+                return Ok((p, false));
+            }
+            
+            anyhow::bail!("Neither guacamole-lite (Node.js) nor guacd.exe found. Please install one of them.")
         }
 
         #[cfg(target_os = "linux")]
@@ -77,16 +113,20 @@ impl GuacamoleManager {
                 let p = PathBuf::from(path);
                 if p.exists() {
                     println!("Found guacd: {:?}", p);
-                    return Ok(p);
+                    return Ok((p, false));
                 }
             }
             
-            which::which("guacd").context("guacd not found. Install with: sudo apt install guacd")
+            which::which("guacd")
+                .map(|p| (p, false))
+                .context("guacd not found. Install with: sudo apt install guacd")
         }
 
         #[cfg(target_os = "macos")]
         {
-            which::which("guacd").context("guacd not found. Install with: brew install guacamole-server")
+            which::which("guacd")
+                .map(|p| (p, false))
+                .context("guacd not found. Install with: brew install guacamole-server")
         }
     }
 
@@ -97,48 +137,72 @@ impl GuacamoleManager {
             return Ok(());
         }
 
-        let guacd_path = Self::detect_guacd()?;
+        let (guacd_path, is_node_js) = Self::detect_guacd()?;
         
-        println!("Starting guacd: {:?}", guacd_path);
+        println!("Starting Guacamole server...");
+        println!("Path: {:?}", guacd_path);
+        println!("Mode: {}", if is_node_js { "Node.js (guacamole-lite)" } else { "Native (guacd)" });
         println!("Bind: {}:{}", self.bind_address, self.port);
 
-        let mut cmd = Command::new(guacd_path);
-        
-        // Foreground mode (doesn't fork)
-        cmd.arg("-f");
-        
-        // Bind address
-        cmd.arg("-b").arg(&self.bind_address);
-        
-        // Listen port
-        cmd.arg("-l").arg(self.port.to_string());
-        
-        // Verbosity for debugging
-        #[cfg(debug_assertions)]
-        cmd.arg("-L").arg("debug");
-        
-        // Redirect stdout/stderr for logging
-        cmd.stdout(Stdio::piped())
-           .stderr(Stdio::piped());
-        
-        println!("Command: {:?}", cmd);
-        
-        let child = cmd.spawn()
-            .context("Failed to spawn guacd process")?;
+        let child = if is_node_js {
+            // Use Node.js to run guacamole-lite
+            let node_path = which::which("node")?;
+            
+            let mut cmd = Command::new(node_path);
+            cmd.arg(guacd_path); // The JS script
+            
+            // Set environment variables for guacamole-lite
+            cmd.env("GUAC_PORT", self.port.to_string());
+            cmd.env("GUAC_HOST", &self.bind_address);
+            
+            // Redirect stdout/stderr
+            cmd.stdout(Stdio::piped())
+               .stderr(Stdio::piped());
+            
+            println!("Command: node {:?}", cmd);
+            
+            cmd.spawn()
+                .context("Failed to spawn guacamole-lite (Node.js) process")?
+        } else {
+           // Use native guacd
+            let mut cmd = Command::new(guacd_path);
+            
+            // Foreground mode (doesn't fork)
+            cmd.arg("-f");
+            
+            // Bind address
+            cmd.arg("-b").arg(&self.bind_address);
+            
+            // Listen port
+            cmd.arg("-l").arg(self.port.to_string());
+            
+            // Verbosity for debugging
+            #[cfg(debug_assertions)]
+            cmd.arg("-L").arg("debug");
+            
+            // Redirect stdout/stderr for logging
+            cmd.stdout(Stdio::piped())
+               .stderr(Stdio::piped());
+            
+            println!("Command: {:?}", cmd);
+            
+            cmd.spawn()
+                .context("Failed to spawn guacd process")?
+        };
         
         self.process = Some(child);
         
-        println!("guacd process spawned (PID: {:?})", self.process.as_ref().map(|p| p.id()));
+        println!("Guacamole server spawned (PID: {:?})", self.process.as_ref().map(|p| p.id()));
         
-        // Wait a bit for guacd to start listening
-        std::thread::sleep(Duration::from_millis(500));
+        // Wait a bit for server to start listening
+        std::thread::sleep(Duration::from_millis(1000)); // Node.js might need more time
         
         // Verify it's listening
         if !self.is_port_listening() {
-            return Err(anyhow::anyhow!("guacd started but not listening on port {}", self.port));
+            return Err(anyhow::anyhow!("Guacamole server started but not listening on port {}", self.port));
         }
         
-        println!("guacd is listening on {}:{}", self.bind_address, self.port);
+        println!("✅ Guacamole server is listening on {}:{}", self.bind_address, self.port);
         
         Ok(())
     }

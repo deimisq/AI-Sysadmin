@@ -7,17 +7,20 @@ mod pty_session;
 mod rdp_manager;
 mod rdp_sidecar;
 mod rdp_frame_capture;
+mod guacamole_manager;
 
 use ssh_manager::{SSHManager, SSHCredentials, SSHSessionInfo, FileEntry};
 use rdp_manager::RDPManager;
 use rdp_frame_capture::RdpFrame;
+use guacamole_manager::GuacamoleManager;
 use std::sync::Mutex;
 use tauri::{State, AppHandle};
 
-// Global SSH manager (shared across the app)
+// Global app state (shared across the app)
 struct AppState {
     ssh_manager: Mutex<SSHManager>,
     rdp_manager: Mutex<RDPManager>,
+    guacamole: Mutex<GuacamoleManager>,
 }
 
 /// Connect to SSH server
@@ -288,12 +291,51 @@ async fn rdp_get_frame(
         .map_err(|e| format!("Failed to get frame: {}", e))
 }
 
+/// Start Guacamole daemon
+#[tauri::command]
+async fn guacamole_start(
+    state: State<'_, AppState>,
+) -> Result<String, String> {
+    let mut guac = state.guacamole.lock().unwrap();
+    
+    guac.start()
+        .map_err(|e| format!("Failed to start guacd: {}", e))?;
+    
+    Ok(guac.get_ws_url())
+}
+
+/// Stop Guacamole daemon
+#[tauri::command]
+async fn guacamole_stop(
+    state: State<'_, AppState>,
+) -> Result<(), String> {
+    let mut guac = state.guacamole.lock().unwrap();
+    
+    guac.stop()
+        .map_err(|e| format!("Failed to stop guacd: {}", e))
+}
+
+/// Get Guacamole WebSocket URL
+#[tauri::command]
+async fn guacamole_get_url(
+    state: State<'_, AppState>,
+) -> Result<String, String> {
+    let guac = state.guacamole.lock().unwrap();
+    
+    if !guac.is_port_listening() {
+        return Err("guacd not running".to_string());
+    }
+    
+    Ok(guac.get_ws_url())
+}
+
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_http::init())
         .manage(AppState {
             ssh_manager: Mutex::new(SSHManager::new()),
             rdp_manager: Mutex::new(RDPManager::new()),
+            guacamole: Mutex::new(GuacamoleManager::new()),
         })
         .invoke_handler(tauri::generate_handler![
             greet,
@@ -310,6 +352,9 @@ fn main() {
             rdp_connect,
             launch_native_rdp,
             rdp_get_frame,
+            guacamole_start,
+            guacamole_stop,
+            guacamole_get_url,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

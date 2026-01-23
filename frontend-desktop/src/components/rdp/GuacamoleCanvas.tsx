@@ -1,5 +1,6 @@
 import { useRef, useEffect, useState } from 'react';
-import * as Guacamole from 'guacamole-common-js';
+// @ts-ignore - guacamole-common-js doesn't have perfect TS types
+import Guacamole from 'guacamole-common-js';
 
 interface GuacamoleCanvasProps {
     host: string;

@@ -1,6 +1,6 @@
 use std::process::{Command, Child, Stdio};
 use std::path::PathBuf;
-use anyhow::{Result, Context, bail};
+use anyhow::{Result, Context};
 use std::net::TcpStream;
 use std::time::Duration;
 
@@ -135,7 +135,7 @@ impl GuacamoleManager {
         
         // Verify it's listening
         if !self.is_port_listening() {
-            bail!("guacd started but not listening on port {}", self.port);
+            return Err(anyhow::anyhow!("guacd started but not listening on port {}", self.port));
         }
         
         println!("guacd is listening on {}:{}", self.bind_address, self.port);
@@ -180,30 +180,11 @@ impl GuacamoleManager {
         if let Some(mut process) = self.process.take() {
             println!("Stopping guacd (PID: {})", process.id());
             
-            #[cfg(target_os = "windows")]
-            {
-                // On Windows, guacd might not respond to kill immediately
-                // Try graceful shutdown first
-                let _ = process.kill();
-            }
+            // Kill the process
+            process.kill().context("Failed to kill guacd")?;
             
-            #[cfg(not(target_os = "windows"))]
-            {
-                process.kill().context("Failed to kill guacd")?;
-            }
-            
-            // Wait for process to exit
-            match process.wait_timeout(Duration::from_secs(5))? {
-                Some(status) => {
-                    println!("guacd exited with status: {:?}", status);
-                }
-                None => {
-                    // Force kill if still running
-                    println!("guacd didn't exit gracefully, force killing");
-                    process.kill()?;
-                    process.wait()?;
-                }
-            }
+            // Wait for it to exit
+            process.wait().context("Failed to wait for guacd termination")?;
             
             println!("guacd stopped");
         }

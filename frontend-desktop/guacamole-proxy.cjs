@@ -7,7 +7,7 @@ const url = require('url');
 
 const WS_PORT = parseInt(process.env.GUAC_PORT || '4822');
 const GUACD_HOST = '127.0.0.1';
-const GUACD_PORT = 4822; // Docker maps 4823->4822, so we connect to 4822
+const GUACD_PORT = 4823; // Docker container port mapping: host 4823 -> container 4822
 
 console.log(`[${new Date().toISOString()}] Starting Guacamole WebSocket Proxy`);
 console.log(`[${new Date().toISOString()}] WebSocket: 0.0.0.0:${WS_PORT}`);

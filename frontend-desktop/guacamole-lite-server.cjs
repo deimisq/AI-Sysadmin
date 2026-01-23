@@ -1,71 +1,55 @@
-// Guacamole-Lite Server for Windows
-// This replaces guacd on Windows where guacd is harder to install
+// Guacamole-Lite Server with disabled authentication
+// Accepts connections with query parameters directly
 
 const GuacamoleLite = require('guacamole-lite');
 
-// Configuration
 const PORT = parseInt(process.env.GUAC_PORT || '4822');
-const HOST = process.env.GUAC_HOST || '127.0.0.1';
 
-console.log(`[${new Date().toISOString()}] Starting Guacamole-Lite server...`);
-console.log(`[${new Date().toISOString()}] Configuration: ${HOST}:${PORT}`);
+console.log(`[${new Date().toISOString()}] Starting Guacamole-Lite server (auth disabled)`);
+console.log(`[${new Date().toISOString()}] Port: ${PORT}`);
 
-// Guacamole-lite configuration
-const websocketOptions = {
-    port: PORT
-};
-
-const guacdOptions = {
-    host: '127.0.0.1',
-    port: 4822
-};
-
+// Custom token decryption that just returns the query params as connection settings
 const clientOptions = {
+    crypt: {
+        cypher: 'AES-256-CBC',
+        key: 'MySecretKeyForEncryption' // Not used since we override
+    },
     log: {
         verbose: true,
-        stdLog: (...args) => {
-            console.log(new Date().toISOString(), '[GUAC]', ...args);
-        },
-        errorLog: (...args) => {
-            console.error(new Date().toISOString(), '[GUAC-ERROR]', ...args);
-        }
-    },
-    // Disable token authentication - parse params directly from query string
-    allowedUnencryptedConnectionSettings: {
-        rdp: ['hostname', 'port', 'username', 'password', 'ignore-cert', 'security', 'enable-drive', 'create-drive-path', 'enable-wallpaper', 'enable-theming', 'enable-font-smoothing', 'enable-full-window-drag', 'enable-desktop-composition', 'enable-menu-animations', 'width', 'height', 'dpi', 'color-depth'],
-        vnc: ['hostname', 'port', 'password'],
-        ssh: ['hostname', 'port', 'username', 'password']
+        stdLog: console.log.bind(console),
+        errorLog: console.error.bind(console)
     }
 };
 
+// Override the token decryption to just parse query params
 const callbacks = {
-    // Process connection settings from query parameters
     processConnectionSettings: (settings, callback) => {
         try {
-            console.log(`[${new Date().toISOString()}] Processing connection settings:`, JSON.stringify(settings, null, 2));
+            console.log('[processConnectionSettings] Raw settings:', JSON.stringify(settings, null, 2));
 
-            // If settings are already properly formatted, use them
+            // If already has connection, use it
             if (settings && settings.connection) {
-                console.log(`[${new Date().toISOString()}] Using provided connection settings`);
+                console.log('[processConnectionSettings] Using existing connection');
                 return callback(null, settings);
             }
 
-            // Otherwise, build connection from query parameters
+            // Build from query params
             if (settings && settings.query) {
                 const params = settings.query;
+
                 const connection = {
                     type: params.protocol || 'rdp',
                     settings: {}
                 };
 
-                // Copy all parameters except 'protocol'
+                // Copy all params
                 for (const [key, value] of Object.entries(params)) {
-                    if (key !== 'protocol' && value !== undefined) {
+                    if (key !== 'protocol' && value) {
                         connection.settings[key] = value;
                     }
                 }
 
-                console.log(`[${new Date().toISOString()}] Built connection:`, {
+                console.log('[processConnectionSettings] Built connection:', {
                     type: connection.type,
                     hostname: connection.settings.hostname,
                     port: connection.settings.port,
@@ -75,40 +59,43 @@ const callbacks = {
                 return callback(null, { connection });
             }
 
-            // Fallback error
-            const error = new Error('No valid connection settings provided');
-            console.error(`[${new Date().toISOString()}] Error:`, error.message);
-            callback(error);
+            // If we get here, create a fake token that guacamole-lite can parse
+            // We'll encode the query params as a JSON token
+            if (settings && settings.token) {
+                try {
+                    const decoded = JSON.parse(decodeURIComponent(settings.token));
+                    console.log('[processConnectionSettings] Decoded token:', decoded);
+                    return callback(null, decoded);
+                } catch (e) {
+                    console.error('[processConnectionSettings] Token parse error:', e);
+                }
+            }
+
+            callback(new Error('No valid connection settings'));
 
         } catch (error) {
-            console.error(`[${new Date().toISOString()}] Exception in processConnectionSettings:`, error);
+            console.error('[processConnectionSettings] Error:', error);
             callback(error);
         }
     }
 };
 
-let server;
+// Start server
+const server = new GuacamoleLite(
+    { port: PORT },
+    { host: '127.0.0.1', port: 4822 }, // guacd connection
+    clientOptions,
+    callbacks
+);
 
-try {
-    // Create WebSocket server  
-    server = new GuacamoleLite(websocketOptions, guacdOptions, clientOptions, callbacks);
-
-    console.log(`[${new Date().toISOString()}] ✅ Guacamole-Lite WebSocket server started`);
-    console.log(`[${new Date().toISOString()}] Listening on ws://${HOST}:${PORT}`);
-    console.log(`[${new Date().toISOString()}] Ready to accept RDP/VNC/SSH connections`);
-    console.log(`[${new Date().toISOString()}] Token validation: DISABLED (using query params)`);
-
-} catch (error) {
-    console.error(`[${new Date().toISOString()}] ❌ Failed to start server:`, error);
-    process.exit(1);
-}
+console.log(`[${new Date().toISOString()}] ✅ Server started on port ${PORT}`);
+console.log(`[${new Date().toISOString()}] Connecting to guacd at 127.0.0.1:4822`);
 
 // Graceful shutdown
 const shutdown = () => {
-    console.log(`\n[${new Date().toISOString()}] Shutting down gracefully...`);
-    if (server && typeof server.close === 'function') {
+    console.log('\nShutting down...');
+    if (server && server.close) {
         server.close(() => {
-            console.log(`[${new Date().toISOString()}] Server closed`);
             process.exit(0);
         });
     } else {
@@ -118,12 +105,5 @@ const shutdown = () => {
 
 process.on('SIGINT', shutdown);
 process.on('SIGTERM', shutdown);
-
-// Error handlers
-process.on('uncaughtException', (error) => {
-    console.error(`[${new Date().toISOString()}] Uncaught exception:`, error);
-});
-
-process.on('unhandledRejection', (reason, promise) => {
-    console.error(`[${new Date().toISOString()}] Unhandled rejection:`, reason);
-});
+process.on('uncaughtException', (err) => console.error('Uncaught:', err));
+process.on('unhandledRejection', (err) => console.error('Unhandled rejection:', err));

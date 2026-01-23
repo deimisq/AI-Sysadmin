@@ -3,6 +3,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { Button } from '../ui/button';
 import type { Server } from '../../lib/api';
 import { fetchServerCredentials } from '../../lib/api';
+import { RDPCanvas } from './RDPCanvas';
 
 interface RDPComponentProps {
     serverData: Server;
@@ -101,66 +102,38 @@ export function RDPComponent({ serverData, onDisconnect, onSwitchToSSH }: RDPCom
                 </div>
             </div>
 
-            {/* Main Content Area */}
-            <div className="flex-1 flex items-center justify-center bg-gradient-to-b from-[#0a0a0a] to-[#1a1a2e] text-gray-400 relative p-8">
-                <div className="text-center max-w-xl">
-                    {/* Status Icon */}
-                    <div className="text-6xl mb-6 opacity-80">🖥️</div>
+            {/* Main Content Area - Canvas */}
+            <div className="flex-1 flex flex-col bg-black relative overflow-hidden">
+                {/* Canvas renders here */}
+                <RDPCanvas sessionId={sessionId} width={1920} height={1080} />
 
-                    <h3 className="text-2xl text-white font-semibold mb-2">Servidor Windows Conectado</h3>
-                    <p className="text-sm text-gray-500 mb-6">
-                        Session ID: <span className="font-mono text-xs text-gray-600">{sessionId}</span>
-                    </p>
-
-                    {/* Options Cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                        {/* Option 1: Native RDP */}
-                        <div className="bg-[#1e1e2e] border border-[#2a2a3e] rounded-xl p-5 text-left hover:border-blue-500/50 transition-colors">
-                            <div className="text-3xl mb-3">🖼️</div>
-                            <h4 className="text-white font-semibold mb-2">Escritorio Remoto</h4>
-                            <p className="text-xs text-gray-500 mb-4">Abre el cliente RDP nativo del sistema para acceso visual completo.</p>
-                            <Button
+                {/* Floating Control Bar */}
+                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20">
+                    <div className="bg-[#1e1e2e]/95 backdrop-blur-sm border border-[#2a2a3e] rounded-xl px-4 py-3 shadow-2xl">
+                        <div className="flex gap-3 items-center">
+                            {/* Native RDP Button */}
+                            <button
                                 onClick={launchNativeRDP}
-                                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
                                 disabled={nativeRdpLaunched}
+                                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:opacity-50 text-white rounded-lg transition-colors text-sm font-medium shadow-md"
+                                title="Abre el cliente RDP nativo del sistema"
                             >
-                                {nativeRdpLaunched ? '✓ Cliente RDP Abierto' : 'Abrir Escritorio Remoto'}
-                            </Button>
-                        </div>
+                                <span className="text-lg">🖥️</span>
+                                <span>{nativeRdpLaunched ? '✓ RDP Nativo Abierto' : 'Cliente Nativo'}</span>
+                            </button>
 
-                        {/* Option 2: SSH/PowerShell Terminal */}
-                        <div className="bg-[#1e1e2e] border border-[#2a2a3e] rounded-xl p-5 text-left hover:border-green-500/50 transition-colors">
-                            <div className="text-3xl mb-3">⚡</div>
-                            <h4 className="text-white font-semibold mb-2">PowerShell Terminal</h4>
-                            <p className="text-xs text-gray-500 mb-4">Acceso por línea de comandos vía SSH (requiere OpenSSH en el servidor).</p>
-                            <Button
+                            <div className="w-px h-8 bg-gray-700"></div>
+
+                            {/* SSH Terminal Button */}
+                            <button
                                 onClick={onSwitchToSSH}
-                                variant="outline"
-                                className="w-full border-green-600 text-green-400 hover:bg-green-900/20"
+                                className="flex items-center gap-2 px-4 py-2 bg-green-600/20 hover:bg-green-600/30 border border-green-600 text-green-400 rounded-lg transition-colors text-sm font-medium"
+                                title="Cambiar a terminal SSH/PowerShell"
                             >
-                                Abrir Terminal SSH
-                            </Button>
+                                <span className="text-lg">⚡</span>
+                                <span>PowerShell/SSH</span>
+                            </button>
                         </div>
-                    </div>
-
-                    {/* Info Box */}
-                    <div className="bg-blue-900/20 border border-blue-800/50 p-4 rounded-lg text-left space-y-2">
-                        <p className="text-xs text-blue-300">
-                            <strong>🔧 Motor RDP:</strong> FreeRDP Sidecar (proceso embebido)
-                        </p>
-                        <p className="text-xs text-blue-300">
-                            <strong>💡 Nota:</strong> El renderizado en canvas está en desarrollo.
-                            Por ahora, usa "Abrir Escritorio Remoto" para acceso visual completo.
-                        </p>
-                        {!sessionId && (
-                            <p className="text-xs text-yellow-300 bg-yellow-900/20 p-2 rounded border border-yellow-800/50">
-                                <strong>⚠️ Requisito:</strong> FreeRDP debe estar instalado en tu sistema.
-                                <br />
-                                <span className="text-[10px] font-mono mt-1 block">
-                                    Windows: Descarga de devolutions.net • Linux: sudo apt install freerdp2-x11
-                                </span>
-                            </p>
-                        )}
                     </div>
                 </div>
             </div>

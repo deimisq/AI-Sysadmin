@@ -41,29 +41,46 @@ impl GuacamoleManager {
             
             // Check if we have Node.js and guacamole-lite script
             if let Ok(node_path) = which::which("node") {
-                // Check for bundled guacamole-lite-server.js
+                // List of paths to check for guacamole-lite-server.js
+                let mut search_paths = Vec::new();
+                
+                // 1. Check bundled location (next to exe)
                 if let Ok(exe_dir) = std::env::current_exe() {
-                    let script_path = exe_dir.parent()
-                        .unwrap()
-                        .join("guacamole-lite-server.js");
+                    if let Some(parent) = exe_dir.parent() {
+                        search_paths.push(parent.join("guacamole-lite-server.js"));
+                    }
+                }
+                
+                // 2. Check current working directory
+                if let Ok(cwd) = std::env::current_dir() {
+                    search_paths.push(cwd.join("guacamole-lite-server.js"));
                     
+                    // 3. Check frontend-desktop directory (for dev mode)
+                    search_paths.push(cwd.join("frontend-desktop").join("guacamole-lite-server.js"));
+                    
+                    // 4. Check parent directory (in case we're in src-tauri)
+                    if let Some(parent) = cwd.parent() {
+                        search_paths.push(parent.join("frontend-desktop").join("guacamole-lite-server.js"));
+                        search_paths.push(parent.join("guacamole-lite-server.js"));
+                    }
+                }
+                
+                // Try each path
+                for script_path in search_paths {
                     if script_path.exists() {
                         println!("Found guacamole-lite script: {:?}", script_path);
                         println!("Using Node.js: {:?}", node_path);
                         return Ok((script_path, true));
+                    } else {
+                        println!("Checked (not found): {:?}", script_path);
                     }
                 }
                 
-                // Try in project directory
-                let script_path = std::env::current_dir()
-                    .unwrap()
-                    .join("guacamole-lite-server.js");
-                
-                if script_path.exists() {
-                    println!("Found guacamole-lite script in cwd: {:?}", script_path);
-                    return Ok((script_path, true));
-                }
+                println!("Node.js found but guacamole-lite-server.js not found in any search path");
+            } else {
+                println!("Node.js not found in PATH");
             }
+
             
             // Fall back to guacd.exe if available
             // Try bundled binary first

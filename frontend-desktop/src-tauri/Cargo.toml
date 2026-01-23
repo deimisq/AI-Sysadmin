@@ -50,6 +50,7 @@ chrono = { version = "0.4", features = ["serde"] }
 anyhow = "1.0"
 thiserror = "1.0"
 portable-pty = "0.8"
+which = "6.0"
 
 [profile.dev]
 incremental = true    # Re-enable incremental compilation for speed

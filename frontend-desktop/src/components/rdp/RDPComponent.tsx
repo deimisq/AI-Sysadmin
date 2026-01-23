@@ -144,11 +144,23 @@ export function RDPComponent({ serverData, onDisconnect, onSwitchToSSH }: RDPCom
                     </div>
 
                     {/* Info Box */}
-                    <div className="bg-blue-900/20 border border-blue-800/50 p-4 rounded-lg text-left">
+                    <div className="bg-blue-900/20 border border-blue-800/50 p-4 rounded-lg text-left space-y-2">
                         <p className="text-xs text-blue-300">
-                            <strong>💡 Nota:</strong> El renderizado RDP nativo en la aplicación está en desarrollo.
-                            Por ahora, usa el cliente RDP del sistema para acceso visual, o SSH para comandos.
+                            <strong>🔧 Motor RDP:</strong> FreeRDP Sidecar (proceso embebido)
                         </p>
+                        <p className="text-xs text-blue-300">
+                            <strong>💡 Nota:</strong> El renderizado en canvas está en desarrollo.
+                            Por ahora, usa "Abrir Escritorio Remoto" para acceso visual completo.
+                        </p>
+                        {!sessionId && (
+                            <p className="text-xs text-yellow-300 bg-yellow-900/20 p-2 rounded border border-yellow-800/50">
+                                <strong>⚠️ Requisito:</strong> FreeRDP debe estar instalado en tu sistema.
+                                <br />
+                                <span className="text-[10px] font-mono mt-1 block">
+                                    Windows: Descarga de devolutions.net • Linux: sudo apt install freerdp2-x11
+                                </span>
+                            </p>
+                        )}
                     </div>
                 </div>
             </div>

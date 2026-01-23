@@ -5,6 +5,7 @@ mod ssh_manager;
 mod ssh_test;
 mod pty_session;
 mod rdp_manager;
+mod rdp_sidecar;
 
 use ssh_manager::{SSHManager, SSHCredentials, SSHSessionInfo, FileEntry};
 use rdp_manager::RDPManager;

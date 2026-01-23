@@ -165,8 +165,8 @@ impl GuacamoleManager {
             // Use Node.js to run guacamole-lite
             let node_path = which::which("node")?;
             
-            let mut cmd = Command::new(node_path);
-            cmd.arg(guacd_path); // The JS script
+            let mut cmd = Command::new(&node_path);
+            cmd.arg(&guacd_path); // The JS script
             
             // Set environment variables for guacamole-lite
             cmd.env("GUAC_PORT", self.port.to_string());

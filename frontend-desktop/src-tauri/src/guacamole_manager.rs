@@ -172,11 +172,11 @@ impl GuacamoleManager {
             cmd.env("GUAC_PORT", self.port.to_string());
             cmd.env("GUAC_HOST", &self.bind_address);
             
-            // Redirect stdout/stderr
-            cmd.stdout(Stdio::piped())
-               .stderr(Stdio::piped());
+            // Redirect stdout/stderr to parent process (Tauri console)
+            cmd.stdout(Stdio::inherit())
+               .stderr(Stdio::inherit());
             
-            println!("Command: node {:?}", cmd);
+            println!("Command: {:?} {:?}", node_path, guacd_path);
             
             cmd.spawn()
                 .context("Failed to spawn guacamole-lite (Node.js) process")?
@@ -198,8 +198,8 @@ impl GuacamoleManager {
             cmd.arg("-L").arg("debug");
             
             // Redirect stdout/stderr for logging
-            cmd.stdout(Stdio::piped())
-               .stderr(Stdio::piped());
+            cmd.stdout(Stdio::inherit())
+               .stderr(Stdio::inherit());
             
             println!("Command: {:?}", cmd);
             
@@ -211,12 +211,43 @@ impl GuacamoleManager {
         
         println!("Guacamole server spawned (PID: {:?})", self.process.as_ref().map(|p| p.id()));
         
-        // Wait a bit for server to start listening
-        std::thread::sleep(Duration::from_millis(1000)); // Node.js might need more time
+        // Wait longer for Node.js server to start listening
+        println!("Waiting for server to start listening on port {}...", self.port);
+        std::thread::sleep(Duration::from_millis(2000)); // Give Node.js more time
         
         // Verify it's listening
         if !self.is_port_listening() {
-            return Err(anyhow::anyhow!("Guacamole server started but not listening on port {}", self.port));
+            // Try to read process output if available
+            println!("⚠️  Port {} not listening yet, checking process status...", self.port);
+            
+            if let Some(ref mut child) = self.process {
+                // Check if process is still running
+                match child.try_wait() {
+                    Ok(Some(status)) => {
+                        return Err(anyhow::anyhow!(
+                            "Guacamole server process exited with status: {}. Check the console output above for errors.",
+                            status
+                        ));
+                    }
+                    Ok(None) => {
+                        // Process is still running, maybe needs more time
+                        println!("Process is running, waiting a bit more...");
+                        std::thread::sleep(Duration::from_millis(2000));
+                        
+                        if !self.is_port_listening() {
+                            return Err(anyhow::anyhow!(
+                                "Guacamole server is running but not listening on port {}. Check the console output for errors.",
+                                self.port
+                            ));
+                        }
+                    }
+                    Err(e) => {
+                        return Err(anyhow::anyhow!("Failed to check process status: {}", e));
+                    }
+                }
+            } else {
+                return Err(anyhow::anyhow!("Guacamole server started but not listening on port {}", self.port));
+            }
         }
         
         println!("✅ Guacamole server is listening on {}:{}", self.bind_address, self.port);

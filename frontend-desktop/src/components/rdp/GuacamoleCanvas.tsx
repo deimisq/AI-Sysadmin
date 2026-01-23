@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState } from 'react';
-import Guacamole from 'guacamole-common-js';
+import * as Guacamole from 'guacamole-common-js';
 
 interface GuacamoleCanvasProps {
     host: string;

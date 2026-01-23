@@ -45,6 +45,7 @@ export function RDPComponent({ serverData, onDisconnect, onSwitchToSSH }: RDPCom
             await invoke('launch_native_rdp', {
                 host: creds.ip_address,
                 username: creds.ssh_username || 'Administrator',
+                password: creds.ssh_password || '',
             });
 
             setNativeRdpLaunched(true);

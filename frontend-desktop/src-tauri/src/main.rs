@@ -182,21 +182,44 @@ async fn sftp_list_files(
 async fn launch_native_rdp(
     host: String,
     username: String,
+    password: String,
 ) -> Result<(), String> {
     use std::process::Command;
     
     #[cfg(target_os = "windows")]
     {
-        // Windows: Use mstsc.exe (built-in RDP client)
-        // cmdkey is used to store credentials temporarily
-        // Format: mstsc /v:hostname
+        // Windows: Use cmdkey to store credentials, then launch mstsc.exe
+        // This allows automatic login without prompting for password
+        
+        // Step 1: Store credentials using cmdkey
+        let cmdkey_result = Command::new("cmdkey")
+            .arg("/generic")
+            .arg(format!("TERMSRV/{}", host))
+            .arg("/user")
+            .arg(&username)
+            .arg("/pass")
+            .arg(&password)
+            .output();
+        
+        match cmdkey_result {
+            Ok(output) => {
+                if !output.status.success() {
+                    let error_msg = String::from_utf8_lossy(&output.stderr);
+                    return Err(format!("Failed to store credentials: {}", error_msg));
+                }
+                println!("Stored RDP credentials for {}", host);
+            },
+            Err(e) => return Err(format!("Failed to execute cmdkey: {}", e))
+        }
+        
+        // Step 2: Launch mstsc.exe
         let result = Command::new("mstsc")
             .arg(format!("/v:{}", host))
             .spawn();
         
         match result {
             Ok(_) => {
-                println!("Launched mstsc for {}", host);
+                println!("Launched mstsc for {} with stored credentials", host);
                 Ok(())
             },
             Err(e) => Err(format!("Failed to launch mstsc: {}", e))
@@ -205,10 +228,11 @@ async fn launch_native_rdp(
     
     #[cfg(target_os = "linux")]
     {
-        // Linux: Try xfreerdp or remmina
+        // Linux: Try xfreerdp with password parameter
         let result = Command::new("xfreerdp")
             .arg(format!("/v:{}", host))
             .arg(format!("/u:{}", username))
+            .arg(format!("/p:{}", password))
             .arg("/cert:ignore")
             .spawn();
         
@@ -218,10 +242,10 @@ async fn launch_native_rdp(
                 Ok(())
             },
             Err(_) => {
-                // Fallback to remmina
+                // Fallback to remmina (doesn't support password in CLI easily)
                 let remmina_result = Command::new("remmina")
                     .arg("-c")
-                    .arg(format!("rdp://{}", host))
+                    .arg(format!("rdp://{}@{}", username, host))
                     .spawn();
                 
                 match remmina_result {
@@ -234,11 +258,12 @@ async fn launch_native_rdp(
     
     #[cfg(target_os = "macos")]
     {
-        // macOS: Use Microsoft Remote Desktop if installed
+        // macOS: Microsoft Remote Desktop doesn't support password in CLI
+        // User will need to enter it manually
         let result = Command::new("open")
             .arg("-a")
             .arg("Microsoft Remote Desktop")
-            .arg(format!("rdp://full%20address=s:{}:3389", host))
+            .arg(format!("rdp://full%20address=s:{}:3389&username=s:{}", host, username))
             .spawn();
         
         match result {

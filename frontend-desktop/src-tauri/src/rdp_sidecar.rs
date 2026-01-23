@@ -2,6 +2,7 @@ use std::process::{Command, Child, Stdio};
 use std::path::PathBuf;
 use anyhow::{Result, Context, bail};
 use serde::{Serialize, Deserialize};
+use crate::rdp_frame_capture::{FrameCapture, CaptureMode, MockFrameGenerator};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RdpConfig {
@@ -29,6 +30,9 @@ impl Default for RdpConfig {
 pub struct RdpSidecar {
     process: Option<Child>,
     config: RdpConfig,
+    frame_capture: Option<FrameCapture>,
+    mock_generator: Option<MockFrameGenerator>,
+    use_mock: bool, // Use mock frames until real capture is implemented
 }
 
 impl RdpSidecar {
@@ -36,6 +40,19 @@ impl RdpSidecar {
         Self {
             process: None,
             config,
+            frame_capture: None,
+            mock_generator: None,
+            use_mock: true, // Start with mock mode for testing
+        }
+    }
+
+    pub fn enable_mock_frames(&mut self, enable: bool) {
+        self.use_mock = enable;
+        if enable && self.mock_generator.is_none() {
+            self.mock_generator = Some(MockFrameGenerator::new(
+                self.config.width,
+                self.config.height,
+            ));
         }
     }
 
@@ -147,6 +164,16 @@ impl RdpSidecar {
         } else {
             false
         }
+    }
+
+    /// Generate a mock frame for testing (until real capture works)
+    pub fn generate_mock_frame(&mut self) -> Option<crate::rdp_frame_capture::RdpFrame> {
+        if self.use_mock {
+            if let Some(ref mut generator) = self.mock_generator {
+                return Some(generator.generate_frame());
+            }
+        }
+        None
     }
 
     /// Terminate the FreeRDP process

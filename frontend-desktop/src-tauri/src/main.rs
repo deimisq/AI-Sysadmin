@@ -6,9 +6,11 @@ mod ssh_test;
 mod pty_session;
 mod rdp_manager;
 mod rdp_sidecar;
+mod rdp_frame_capture;
 
 use ssh_manager::{SSHManager, SSHCredentials, SSHSessionInfo, FileEntry};
 use rdp_manager::RDPManager;
+use rdp_frame_capture::RdpFrame;
 use std::sync::Mutex;
 use tauri::{State, AppHandle};
 
@@ -274,6 +276,18 @@ async fn launch_native_rdp(
     }
 }
 
+/// Get mock RDP frame for testing
+#[tauri::command]
+async fn rdp_get_frame(
+    state: State<'_, AppState>,
+    session_id: String,
+) -> Result<Option<rdp_frame_capture::RdpFrame>, String> {
+    let manager = state.rdp_manager.lock().unwrap().clone();
+    
+    manager.get_mock_frame(&session_id)
+        .map_err(|e| format!("Failed to get frame: {}", e))
+}
+
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_http::init())
@@ -295,6 +309,7 @@ fn main() {
             sftp_list_files,
             rdp_connect,
             launch_native_rdp,
+            rdp_get_frame,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

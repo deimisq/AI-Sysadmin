@@ -111,6 +111,16 @@ impl RDPManager {
         Ok(())
     }
     
+    pub fn get_mock_frame(&self, session_id: &str) -> Result<Option<crate::rdp_frame_capture::RdpFrame>> {
+        let mut sidecars = self.sidecars.lock().unwrap();
+        
+        if let Some((_sid, sidecar)) = sidecars.iter_mut().find(|(sid, _)| *sid == session_id) {
+            Ok(sidecar.generate_mock_frame())
+        } else {
+            Ok(None)
+        }
+    }
+    
     pub fn list_sessions(&self) -> Vec<RDPSessionInfo> {
         let sessions = self.sessions.lock().unwrap();
         sessions.clone()

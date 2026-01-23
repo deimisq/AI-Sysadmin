@@ -56,20 +56,22 @@ wss.on('connection', (ws, req) => {
                 params.hostname || '',
                 params.port || '3389',
                 params.username || '',
-                params.password || ''
+                params.password || '',
+                params['ignore-cert'] || 'true',
+                params.security || 'any'
             ];
 
             const connectElements = connectArgs.map(arg => `${arg.length}.${arg}`).join(',');
             const connectMsg = `7.connect,${connectElements};`;
 
             guacd.write(connectMsg);
-            console.log(`[${id}] Sent connect`);
+            console.log(`[${id}] Sent connect with ${connectArgs.length} params`);
             handshakeState = 'CONNECTED';
         }
 
-        // Forward all guacd data to WebSocket
+        // Forward all guacd data to WebSocket AS STRING
         if (ws.readyState === WebSocket.OPEN) {
-            ws.send(data);
+            ws.send(data.toString('utf8'));
         }
     });
 

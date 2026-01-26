@@ -1,13 +1,15 @@
 use std::process::Command;
 use std::thread;
 use std::time::Duration;
+use std::sync::{Arc, Mutex};
 use tauri::{Window, Runtime};
 use windows::core::{PCWSTR, HSTRING};
-use windows::Win32::Foundation::HWND;
+use windows::Win32::Foundation::{HWND, BOOL, LPARAM};
 use windows::Win32::UI::WindowsAndMessaging::{
-    FindWindowW, SetParent, SetWindowPos, GetWindowLongPtrW, SetWindowLongPtrW,
-    HWND_TOP, SWP_SHOWWINDOW, GWL_STYLE,
-    WS_CHILD, WS_CAPTION, WS_THICKFRAME, WS_MAXIMIZEBOX, WS_MINIMIZEBOX, WS_SYSMENU
+    SetParent, SetWindowPos, GetWindowLongPtrW, SetWindowLongPtrW, GetWindowThreadProcessId,
+    EnumWindows, IsWindowVisible,
+    HWND_TOP, SWP_SHOWWINDOW, GWL_STYLE, GWL_EXSTYLE,
+    WS_CHILD, WS_CAPTION, WS_THICKFRAME, WS_MAXIMIZEBOX, WS_MINIMIZEBOX, WS_SYSMENU, WS_POPUP, WS_VISIBLE
 };
 
 // Structure to pass RDP config
@@ -22,6 +24,21 @@ pub struct RdpConfig {
     pub y: i32,
 }
 
+// Global state to pass PID to EnumWindows callback
+static mut TARGET_PID: u32 = 0;
+static mut FOUND_HWND: isize = 0;
+
+unsafe extern "system" fn enum_window_proc(hwnd: HWND, _: LPARAM) -> BOOL {
+    let mut pid: u32 = 0;
+    GetWindowThreadProcessId(hwnd, Some(&mut pid));
+    
+    if pid == TARGET_PID && IsWindowVisible(hwnd).as_bool() {
+        FOUND_HWND = hwnd.0 as isize;
+        return BOOL(0); // Stop enumeration
+    }
+    BOOL(1) // Continue
+}
+
 pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) -> Result<String, String> {
     
     // Sanitize inputs
@@ -32,42 +49,43 @@ pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) 
 
     // 1. Save credentials using cmdkey
     let target = format!("TERMSRV/{}", config.host);
+    // Silent fail/log if cmdkey fails, mstsc will just prompt
     let _ = Command::new("cmdkey")
         .args(&["/generic", &target, &format!("/user:{}", config.username), &format!("/pass:{}", config.password)])
         .output();
 
     // 2. Launch mstsc.exe
-    // Note: Removed /noconnectionbar to stay safe
-    let _child = Command::new("mstsc")
+    // IMPORTANT: removed /w and /h because they sometimes cause the window to render oddly before we capture it
+    // We will resize it ourselves using SetWindowPos
+    let child = Command::new("mstsc")
         .args(&[
             &format!("/v:{}", config.host),
-            &format!("/w:{}", config.width),
-            &format!("/h:{}", config.height)
+            "/noconnectionbar" // Try re-adding this, helps with clean UI
         ])
         .spawn()
         .map_err(|e| format!("Failed to launch mstsc: {}", e))?;
-
-    // 3. Wait for the window to appear and find its HWND
-    thread::spawn(move || {
-        let mut rdp_hwnd = HWND(std::ptr::null_mut());
-        let mut attempts = 0;
         
+    let pid = child.id();
+    println!("MSTSC launched with PID: {}", pid);
+
+    // 3. Wait for the window to appear and find its HWND by PID
+    thread::spawn(move || {
+        let mut attempts = 0;
+        let mut rdp_hwnd = HWND(std::ptr::null_mut());
+        
+        unsafe {
+            TARGET_PID = pid;
+            FOUND_HWND = 0;
+        }
+
         // Try for up to 10 seconds
         while attempts < 100 {
             unsafe {
-                 let title = HSTRING::from(&config.host);
-                 // In newer windows-rs, FindWindowW returns Result<HWND>. We unwrap_or default (null).
-                 rdp_hwnd = FindWindowW(PCWSTR(std::ptr::null()), PCWSTR(title.as_ptr())).unwrap_or(HWND(std::ptr::null_mut()));
-                 
-                 // Fallback to class name if title match fails (TscShellContainerClass)
-                 if rdp_hwnd.0.is_null() {
-                    let class_name = HSTRING::from("TscShellContainerClass");
-                    rdp_hwnd = FindWindowW(PCWSTR(class_name.as_ptr()), PCWSTR(std::ptr::null())).unwrap_or(HWND(std::ptr::null_mut()));
-                 }
-            }
-
-            if !rdp_hwnd.0.is_null() {
-                break;
+                EnumWindows(Some(enum_window_proc), LPARAM(0));
+                if FOUND_HWND != 0 {
+                    rdp_hwnd = HWND(FOUND_HWND as *mut std::ffi::c_void);
+                    break;
+                }
             }
             
             thread::sleep(Duration::from_millis(100));
@@ -75,24 +93,31 @@ pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) 
         }
 
         if !rdp_hwnd.0.is_null() {
+            println!("Found MSTSC window HWND: {:?}", rdp_hwnd);
+            
             unsafe {
-                // 4. Modify Window Style to remove borders
+                // 4. Modify Window Style to remove borders (Aggressive stripping)
                 let style = GetWindowLongPtrW(rdp_hwnd, GWL_STYLE);
-                let new_style = style & !(WS_CAPTION | WS_THICKFRAME | WS_MAXIMIZEBOX | WS_MINIMIZEBOX | WS_SYSMENU).0 as isize;
-                let final_style = new_style | WS_CHILD.0 as isize;
                 
-                SetWindowLongPtrW(rdp_hwnd, GWL_STYLE, final_style);
+                // Remove everything that looks like a window
+                let style_mask = WS_CAPTION | WS_THICKFRAME | WS_MAXIMIZEBOX | WS_MINIMIZEBOX | WS_SYSMENU | WS_POPUP;
+                let new_style = (style & !style_mask.0 as isize) | WS_CHILD.0 as isize | WS_VISIBLE.0 as isize;
+                
+                SetWindowLongPtrW(rdp_hwnd, GWL_STYLE, new_style);
+                
+                // Also clear Extended styles (sometimes drop shadow stays)
+                SetWindowLongPtrW(rdp_hwnd, GWL_EXSTYLE, 0);
 
                 // 5. Reparent to Tauri Window
                 let tauri_hwnd = window.hwnd().unwrap(); 
-                // tauri handle is already an HWND-compatible type on Windows
                 let parent_hwnd = HWND(tauri_hwnd.0 as *mut std::ffi::c_void);
                 
-                // SetParent now expects Option<HWND>
                 let _ = SetParent(rdp_hwnd, Some(parent_hwnd));
 
                 // 6. Move to correct position
-                // SetWindowPos expects Option<HWND> for insert_after
+                // Wait a tiny bit for the parent change to apply
+                thread::sleep(Duration::from_millis(50));
+                
                 let _ = SetWindowPos(
                     rdp_hwnd, 
                     Some(HWND_TOP), 
@@ -103,7 +128,7 @@ pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) 
             }
             println!("RDP Window Embedded Successfully!");
         } else {
-            println!("Failed to find MSTSC window");
+            println!("Failed to find MSTSC window for PID {}", pid);
         }
     });
 

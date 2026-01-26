@@ -62,11 +62,17 @@ pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) 
                 let mut current_hwnd = HWND(std::ptr::null_mut());
                 
                 loop {
-                    // FindNext child of Desktop (NULL parent)
-                    current_hwnd = FindWindowExW(HWND(std::ptr::null_mut()), current_hwnd, PCWSTR(std::ptr::null()), PCWSTR(std::ptr::null())).unwrap_or(HWND(std::ptr::null_mut()));
+                    // Prepare child_after: None for first call, Some(current) for subsequent calls
+                    let child_after = if current_hwnd.0.is_null() { None } else { Some(current_hwnd) };
                     
-                    if current_hwnd.0.is_null() {
-                        break; // End of list
+                    // FindNext child of Desktop (None parent)
+                    // FindWindowExW returns Result<HWND>. If it fails or finds nothing, we break.
+                    match FindWindowExW(None, child_after, PCWSTR(std::ptr::null()), PCWSTR(std::ptr::null())) {
+                        Ok(hwnd) => {
+                            current_hwnd = hwnd;
+                            if current_hwnd.0.is_null() { break; } // Should usually be Err if null, but safety check
+                        },
+                        Err(_) => break, // End of list or error
                     }
                     
                     let mut window_pid: u32 = 0;

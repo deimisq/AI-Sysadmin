@@ -2,7 +2,7 @@ use std::process::Command;
 use std::thread;
 use std::time::Duration;
 use tauri::{Window, Runtime};
-use windows::Win32::Foundation::{HWND, LPARAM};
+use windows::Win32::Foundation::{HWND, BOOL, LPARAM};
 use windows::Win32::UI::WindowsAndMessaging::{
     SetParent, SetWindowPos, GetWindowLongPtrW, SetWindowLongPtrW, GetWindowThreadProcessId,
     EnumWindows, IsWindowVisible,
@@ -26,15 +26,15 @@ pub struct RdpConfig {
 static mut TARGET_PID: u32 = 0;
 static mut FOUND_HWND: isize = 0;
 
-unsafe extern "system" fn enum_window_proc(hwnd: HWND, _: LPARAM) -> bool {
+unsafe extern "system" fn enum_window_proc(hwnd: HWND, _: LPARAM) -> BOOL {
     let mut pid: u32 = 0;
     GetWindowThreadProcessId(hwnd, Some(&mut pid));
     
     if pid == TARGET_PID && IsWindowVisible(hwnd).as_bool() {
         FOUND_HWND = hwnd.0 as isize;
-        return false; // Stop enumeration
+        return BOOL(0); // Stop enumeration
     }
-    true // Continue
+    BOOL(1) // Continue
 }
 
 pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) -> Result<String, String> {

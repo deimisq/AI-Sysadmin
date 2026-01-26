@@ -48,28 +48,64 @@ wss.on('connection', (ws, req) => {
         const msg = data.toString();
 
         if (handshakeState === 'SELECT') {
-            // guacd responds with: args,param1,param2,...;
-            console.log(`[${id}] guacd args response`);
+            // Check if this is the args message (guacd protocol)
+            if (msg.indexOf('args,') !== -1) {
+                console.log(`[${id}] Received guacd 'args'`);
 
-            // Send connect with RDP parameters
-            const connectArgs = [
-                params.hostname || '',
-                params.port || '3389',
-                params.username || '',
-                params.password || '',
-                params['ignore-cert'] || 'true',
-                params.security || 'any'
-            ];
+                // Content after 'args,' example: 13.VERSION_1_5_0,8.hostname,4.port,...;
+                const argsPayload = msg.substring(msg.indexOf('args,') + 5);
 
-            const connectElements = connectArgs.map(arg => `${arg.length}.${arg}`).join(',');
-            const connectMsg = `7.connect,${connectElements};`;
+                // Parse the parameter names requested by guacd
+                // Format is Length.Value,Length.Value,...
+                const requestedParams = [];
+                const parts = argsPayload.split(',');
 
-            guacd.write(connectMsg);
-            console.log(`[${id}] Sent connect with ${connectArgs.length} params`);
-            handshakeState = 'CONNECTED';
+                // Skip version (first element), inspect others
+                for (let i = 1; i < parts.length; i++) {
+                    const part = parts[i];
+                    const dotIndex = part.indexOf('.');
+                    if (dotIndex !== -1) {
+                        const val = part.substring(dotIndex + 1);
+                        if (val && val !== ';') requestedParams.push(val);
+                    }
+                }
+
+                console.log(`[${id}] guacd expects: ${requestedParams.join(', ')}`);
+
+                // Prepare all available params
+                const allParams = { ...params };
+                // Defaults
+                if (!allParams.width) allParams.width = '1920';
+                if (!allParams.height) allParams.height = '1080';
+                if (!allParams.dpi) allParams.dpi = '96';
+                if (!allParams['ignore-cert']) allParams['ignore-cert'] = 'true';
+                if (!allParams.security) allParams.security = 'any';
+
+                // Send 'size' instruction first (width, height, dpi)
+                const sizeMsg = `4.size,${allParams.width.length}.${allParams.width},${allParams.height.length}.${allParams.height},${allParams.dpi.length}.${allParams.dpi};`;
+                guacd.write(sizeMsg);
+
+                // Send 'audio' (optional)
+                guacd.write('5.audio,9.audio/ogg,10.audio/opus;');
+                guacd.write('5.video;');
+                guacd.write('5.image;');
+
+                // Map values to the requested order
+                const values = requestedParams.map(key => allParams[key] || '');
+                const connectElements = values.map(v => `${String(v).length}.${String(v)}`).join(',');
+                const connectMsg = `7.connect,${connectElements};`;
+
+                guacd.write(connectMsg);
+                console.log(`[${id}] Sent handshake (size + connect)`);
+
+                handshakeState = 'CONNECTING'; // Now waiting for 'ready'
+
+                // CRITICAL: Do NOT forward 'args' to client used to simple tunnel
+                return;
+            }
         }
 
-        // Forward all guacd data to WebSocket AS STRING
+        // Forward 'ready' and all subsequent data
         if (ws.readyState === WebSocket.OPEN) {
             ws.send(data.toString('utf8'));
         }

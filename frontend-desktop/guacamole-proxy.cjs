@@ -127,8 +127,16 @@ wss.on('connection', (ws, req) => {
         }
     });
 
-    ws.on('close', () => {
-        console.log(`[${id}] WebSocket closed`);
+    // Keep-alive for guacd (send nop instruction every 5s)
+    const pingInterval = setInterval(() => {
+        if (guacd.writable && handshakeState === 'CONNECTING') {
+            guacd.write('3.nop;');
+        }
+    }, 5000);
+
+    ws.on('close', (code, reason) => {
+        clearInterval(pingInterval);
+        console.log(`[${id}] WebSocket closed (Code: ${code}, Reason: ${reason})`);
         guacd.end();
     });
 

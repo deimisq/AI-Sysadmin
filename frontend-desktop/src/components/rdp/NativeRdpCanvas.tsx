@@ -36,6 +36,13 @@ export function NativeRdpCanvas({
                 // We need to pass precise screen coordinates to Rust so it places the RDP window correctly
                 const rect = containerRef.current!.getBoundingClientRect();
 
+                // Ensure we have valid dimensions before launching to prevent MSTSC error
+                if (rect.width < 100 || rect.height < 100) {
+                    console.log('Container too small, retrying in 500ms...');
+                    setTimeout(launchRdp, 500);
+                    return;
+                }
+
                 // Get current window position to offset (client coords -> screen coords)
                 // Note: This needs proper coordination with window movement.
                 // For MVP, we pass client rect and let backend figure out screen position, 

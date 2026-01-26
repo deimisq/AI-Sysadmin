@@ -22,22 +22,27 @@ pub struct RdpConfig {
     pub y: i32,
 }
 
-pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, config: RdpConfig) -> Result<String, String> {
+pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) -> Result<String, String> {
     
+    // Sanitize inputs
+    if config.width < 400 { config.width = 1024; }
+    if config.height < 300 { config.height = 768; }
+    
+    println!("Starting MSTSC with: host={}, w={}, h={}", config.host, config.width, config.height);
+
     // 1. Save credentials using cmdkey
     let target = format!("TERMSRV/{}", config.host);
-    // Silent fail/log if cmdkey fails, mstsc will just prompt
     let _ = Command::new("cmdkey")
         .args(&["/generic", &target, &format!("/user:{}", config.username), &format!("/pass:{}", config.password)])
         .output();
 
     // 2. Launch mstsc.exe
+    // Note: Removed /noconnectionbar to stay safe
     let _child = Command::new("mstsc")
         .args(&[
             &format!("/v:{}", config.host),
             &format!("/w:{}", config.width),
-            &format!("/h:{}", config.height),
-            "/noconnectionbar" 
+            &format!("/h:{}", config.height)
         ])
         .spawn()
         .map_err(|e| format!("Failed to launch mstsc: {}", e))?;

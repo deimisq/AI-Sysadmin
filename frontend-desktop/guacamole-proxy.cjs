@@ -85,11 +85,6 @@ wss.on('connection', (ws, req) => {
                 const sizeMsg = `4.size,${allParams.width.length}.${allParams.width},${allParams.height.length}.${allParams.height},${allParams.dpi.length}.${allParams.dpi};`;
                 guacd.write(sizeMsg);
 
-                // Send 'audio' (optional)
-                guacd.write('5.audio,9.audio/ogg,10.audio/opus;');
-                guacd.write('5.video;');
-                guacd.write('5.image;');
-
                 // Map values to the requested order
                 const values = requestedParams.map(key => allParams[key] || '');
                 const connectElements = values.map(v => `${String(v).length}.${String(v)}`).join(',');
@@ -105,8 +100,12 @@ wss.on('connection', (ws, req) => {
             }
         }
 
-        // Forward 'ready' and all subsequent data
+        // Log forwarding (debug)
         if (ws.readyState === WebSocket.OPEN) {
+            // Log ready/error for debugging
+            if (msg.startsWith('5.ready') || msg.startsWith('5.error')) {
+                console.log(`[${id}] ← guacd: ${msg.substring(0, 100)}`);
+            }
             ws.send(data.toString('utf8'));
         }
     });

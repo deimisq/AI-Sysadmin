@@ -97,31 +97,36 @@ pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) 
             println!("Found MSTSC window HWND: {:?}", rdp_hwnd);
             
             unsafe {
-                // 4. Modify Window Style to remove borders (Aggressive stripping)
+                // 4. Modify Window Style
+                // Strategy: OVERLAY/POPUP (Not Child)
+                // We make it a borderless popup that floats ABOVE the main window
+                // This avoids Z-Order issues with WebView2
+                
                 let style = GetWindowLongPtrW(rdp_hwnd, GWL_STYLE);
                 
-                // Remove everything that looks like a window
-                let style_mask = WS_CAPTION | WS_THICKFRAME | WS_MAXIMIZEBOX | WS_MINIMIZEBOX | WS_SYSMENU | WS_POPUP;
-                let new_style = (style & !style_mask.0 as isize) | WS_CHILD.0 as isize | WS_VISIBLE.0 as isize;
+                // Remove borders/caption but keep POPUP
+                let style_mask = WS_CAPTION | WS_THICKFRAME | WS_MAXIMIZEBOX | WS_MINIMIZEBOX | WS_SYSMENU;
+                let new_style = (style & !style_mask.0 as isize) | WS_POPUP.0 as isize | WS_VISIBLE.0 as isize;
                 
-                SetWindowLongPtrW(rdp_hwnd, GWL_STYLE, new_style);
+                // Remove child flag if present (just in case mstsc adds it)
+                let final_style = new_style & !(WS_CHILD.0 as isize);
                 
-                // Also clear Extended styles (sometimes drop shadow stays)
+                SetWindowLongPtrW(rdp_hwnd, GWL_STYLE, final_style);
                 SetWindowLongPtrW(rdp_hwnd, GWL_EXSTYLE, 0);
 
-                // 5. Reparent to Tauri Window
-                let tauri_hwnd = window.hwnd().unwrap(); 
-                let parent_hwnd = HWND(tauri_hwnd.0 as *mut std::ffi::c_void);
-                
-                let _ = SetParent(rdp_hwnd, Some(parent_hwnd));
+                // 5. NO SetParent - Keep it independent but positioned
+                // let tauri_hwnd = window.hwnd().unwrap(); 
+                // let parent_hwnd = HWND(tauri_hwnd.0 as *mut std::ffi::c_void);
+                // let _ = SetParent(rdp_hwnd, Some(parent_hwnd));
 
-                // 6. Move to correct position
-                // Wait a tiny bit for the parent change to apply
+                // 6. Move to correct position & Z-Order TOPMOST
                 thread::sleep(Duration::from_millis(50));
                 
+                // Use HWND_TOPMOST to ensure it floats above the main app
+                // Note: HWND_TOP might be enough, but TOPMOST guarantees visibility
                 let _ = SetWindowPos(
                     rdp_hwnd, 
-                    Some(HWND_TOP), 
+                    Some(windows::Win32::UI::WindowsAndMessaging::HWND_TOPMOST), 
                     config.x, config.y, 
                     config.width, config.height, 
                     SWP_SHOWWINDOW

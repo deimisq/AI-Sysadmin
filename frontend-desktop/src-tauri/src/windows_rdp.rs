@@ -2,10 +2,11 @@ use std::process::Command;
 use std::thread;
 use std::time::Duration;
 use tauri::{Window, Runtime};
-use windows::Win32::Foundation::{HWND, BOOL, LPARAM};
+use windows::core::{PCWSTR, HSTRING};
+use windows::Win32::Foundation::HWND;
 use windows::Win32::UI::WindowsAndMessaging::{
     SetParent, SetWindowPos, GetWindowLongPtrW, SetWindowLongPtrW, GetWindowThreadProcessId,
-    EnumWindows, IsWindowVisible,
+    FindWindowExW, IsWindowVisible,
     HWND_TOP, SWP_SHOWWINDOW, GWL_STYLE, GWL_EXSTYLE,
     WS_CHILD, WS_CAPTION, WS_THICKFRAME, WS_MAXIMIZEBOX, WS_MINIMIZEBOX, WS_SYSMENU, WS_POPUP, WS_VISIBLE
 };
@@ -20,21 +21,6 @@ pub struct RdpConfig {
     pub height: i32,
     pub x: i32,
     pub y: i32,
-}
-
-// Global state to pass PID to EnumWindows callback
-static mut TARGET_PID: u32 = 0;
-static mut FOUND_HWND: isize = 0;
-
-unsafe extern "system" fn enum_window_proc(hwnd: HWND, _: LPARAM) -> BOOL {
-    let mut pid: u32 = 0;
-    GetWindowThreadProcessId(hwnd, Some(&mut pid));
-    
-    if pid == TARGET_PID && IsWindowVisible(hwnd).as_bool() {
-        FOUND_HWND = hwnd.0 as isize;
-        return BOOL(0); // Stop enumeration
-    }
-    BOOL(1) // Continue
 }
 
 pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) -> Result<String, String> {
@@ -53,12 +39,10 @@ pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) 
         .output();
 
     // 2. Launch mstsc.exe
-    // IMPORTANT: removed /w and /h because they sometimes cause the window to render oddly before we capture it
-    // We will resize it ourselves using SetWindowPos
     let child = Command::new("mstsc")
         .args(&[
             &format!("/v:{}", config.host),
-            "/noconnectionbar" // Try re-adding this, helps with clean UI
+            "/noconnectionbar" 
         ])
         .spawn()
         .map_err(|e| format!("Failed to launch mstsc: {}", e))?;
@@ -71,19 +55,32 @@ pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) 
         let mut attempts = 0;
         let mut rdp_hwnd = HWND(std::ptr::null_mut());
         
-        unsafe {
-            TARGET_PID = pid;
-            FOUND_HWND = 0;
-        }
-
         // Try for up to 10 seconds
         while attempts < 100 {
             unsafe {
-                EnumWindows(Some(enum_window_proc), LPARAM(0));
-                if FOUND_HWND != 0 {
-                    rdp_hwnd = HWND(FOUND_HWND as *mut std::ffi::c_void);
-                    break;
+                // Iterate top-level windows using FindWindowEx loop manually
+                let mut current_hwnd = HWND(std::ptr::null_mut());
+                
+                loop {
+                    // FindNext child of Desktop (NULL parent)
+                    current_hwnd = FindWindowExW(HWND(std::ptr::null_mut()), current_hwnd, PCWSTR(std::ptr::null()), PCWSTR(std::ptr::null())).unwrap_or(HWND(std::ptr::null_mut()));
+                    
+                    if current_hwnd.0.is_null() {
+                        break; // End of list
+                    }
+                    
+                    let mut window_pid: u32 = 0;
+                    GetWindowThreadProcessId(current_hwnd, Some(&mut window_pid));
+                    
+                    if window_pid == pid && IsWindowVisible(current_hwnd).as_bool() {
+                        rdp_hwnd = current_hwnd;
+                        break; // Found it!
+                    }
                 }
+            }
+            
+            if !rdp_hwnd.0.is_null() {
+                break;
             }
             
             thread::sleep(Duration::from_millis(100));

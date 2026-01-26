@@ -3,11 +3,11 @@ use std::thread;
 use std::time::Duration;
 use tauri::{Window, Runtime};
 use windows::core::{PCWSTR, HSTRING};
-use windows::Win32::Foundation::{HWND, BOOL, LPARAM};
+use windows::Win32::Foundation::HWND;
 use windows::Win32::UI::WindowsAndMessaging::{
     FindWindowW, SetParent, SetWindowPos, GetWindowLongPtrW, SetWindowLongPtrW,
     HWND_TOP, SWP_SHOWWINDOW, GWL_STYLE,
-    WS_POPUP, WS_CHILD, WS_CAPTION, WS_THICKFRAME, WS_MAXIMIZEBOX, WS_MINIMIZEBOX, WS_SYSMENU
+    WS_CHILD, WS_CAPTION, WS_THICKFRAME, WS_MAXIMIZEBOX, WS_MINIMIZEBOX, WS_SYSMENU
 };
 
 // Structure to pass RDP config

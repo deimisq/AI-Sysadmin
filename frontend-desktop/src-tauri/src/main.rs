@@ -247,7 +247,7 @@ async fn guacamole_stop(state: State<'_, AppState>) -> Result<(), String> {
 
 #[tauri::command]
 async fn guacamole_get_url(state: State<'_, AppState>) -> Result<String, String> {
-    state.guacamole.lock().unwrap().get_ws_url()
+    Ok(state.guacamole.lock().unwrap().get_ws_url())
 }
 
 fn main() {

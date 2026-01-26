@@ -43,6 +43,16 @@ export function GuacamoleCanvas({
 
             const tunnel = new Guacamole.WebSocketTunnel(wsUrl);
 
+            // Add detailed tunnel logging
+            tunnel.onerror = (status: Guacamole.Status) => {
+                console.error('[GuacamoleCanvas] Tunnel error:', status.code, status.message);
+            };
+
+            tunnel.onstatechange = (state: number) => {
+                const states = ['CONNECTING', 'OPEN', 'CLOSED'];
+                console.log(`[GuacamoleCanvas] Tunnel state: ${state} (${states[state] || 'UNKNOWN'})`);
+            };
+
             // Create Guacamole client
             const client = new Guacamole.Client(tunnel);
             clientRef.current = client;

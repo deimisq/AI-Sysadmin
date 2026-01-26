@@ -52,6 +52,7 @@ anyhow = "1.0"
 thiserror = "1.0"
 portable-pty = "0.8"
 which = "6.0"
+windows = { version = "0.62.2", features = ["Win32_Foundation", "Win32_UI_WindowsAndMessaging", "Win32_System_Threading", "Win32_System_Diagnostics_ToolHelp"] }
 
 [profile.dev]
 incremental = true    # Re-enable incremental compilation for speed

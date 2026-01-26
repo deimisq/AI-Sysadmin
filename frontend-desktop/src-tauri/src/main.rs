@@ -8,19 +8,89 @@ mod rdp_manager;
 mod rdp_sidecar;
 mod rdp_frame_capture;
 mod guacamole_manager;
+#[cfg(target_os = "windows")]
+mod windows_rdp;
 
 use ssh_manager::{SSHManager, SSHCredentials, SSHSessionInfo, FileEntry};
 use rdp_manager::RDPManager;
 use rdp_frame_capture::RdpFrame;
 use guacamole_manager::GuacamoleManager;
 use std::sync::Mutex;
-use tauri::{State, AppHandle};
+use tauri::{State, AppHandle, Window};
 
 // Global app state (shared across the app)
 struct AppState {
     ssh_manager: Mutex<SSHManager>,
     rdp_manager: Mutex<RDPManager>,
     guacamole: Mutex<GuacamoleManager>,
+}
+
+// ... existing ssh commands ...
+
+/// Start Embedded Native RDP (Windows Only)
+#[tauri::command]
+async fn start_embedded_rdp_command(
+    window: Window,
+    host: String,
+    username: String,
+    password: String,
+    width: i32,
+    height: i32,
+    x: i32,
+    y: i32
+) -> Result<String, String> {
+    #[cfg(target_os = "windows")]
+    {
+        let config = windows_rdp::RdpConfig {
+            host,
+            username,
+            password,
+            width,
+            height,
+            x,
+            y
+        };
+        windows_rdp::start_embedded_rdp(window, config)
+    }
+    
+    #[cfg(not(target_os = "windows"))]
+    {
+        Err("Native embedded RDP is only supported on Windows".to_string())
+    }
+}
+
+// ... existing commands ...
+
+fn main() {
+    tauri::Builder::default()
+        .plugin(tauri_plugin_http::init())
+        .manage(AppState {
+            ssh_manager: Mutex::new(SSHManager::new()),
+            rdp_manager: Mutex::new(RDPManager::new()),
+            guacamole: Mutex::new(GuacamoleManager::new()),
+        })
+        .invoke_handler(tauri::generate_handler![
+            greet,
+            test_ssh_manual,
+            ssh_connect,
+            ssh_execute,
+            ssh_disconnect,
+            ssh_list_sessions,
+            pty_create,
+            pty_write,
+            pty_resize,
+            pty_close,
+            sftp_list_files,
+            rdp_connect,
+            launch_native_rdp,
+            rdp_get_frame,
+            guacamole_start,
+            guacamole_stop,
+            guacamole_get_url,
+            start_embedded_rdp_command, // New command
+        ])
+        .run(tauri::generate_context!())
+        .expect("error while running tauri application");
 }
 
 /// Connect to SSH server
@@ -329,6 +399,40 @@ async fn guacamole_get_url(
     Ok(guac.get_ws_url())
 }
 
+// ... (guacamole url command) ...
+
+/// Start Embedded Native RDP (Windows Only)
+#[tauri::command]
+async fn start_embedded_rdp_command(
+    window: Window,
+    host: String,
+    username: String,
+    password: String,
+    width: i32,
+    height: i32,
+    x: i32,
+    y: i32
+) -> Result<String, String> {
+    #[cfg(target_os = "windows")]
+    {
+        let config = windows_rdp::RdpConfig {
+            host,
+            username,
+            password,
+            width,
+            height,
+            x,
+            y
+        };
+        windows_rdp::start_embedded_rdp(window, config)
+    }
+    
+    #[cfg(not(target_os = "windows"))]
+    {
+        Err("Native embedded RDP is only supported on Windows".to_string())
+    }
+}
+
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_http::init())
@@ -355,6 +459,7 @@ fn main() {
             guacamole_start,
             guacamole_stop,
             guacamole_get_url,
+            start_embedded_rdp_command, // Registered
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

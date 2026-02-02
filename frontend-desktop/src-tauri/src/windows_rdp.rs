@@ -119,7 +119,7 @@ pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) 
                         break;
                     }
                 }
-                }
+
             }
             
             if !rdp_hwnd.0.is_null() {

@@ -109,62 +109,20 @@ pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) 
                         Err(_) => break, 
                     }
                     
-                    if !IsWindowVisible(current_hwnd).as_bool() { continue; }
-
                     let mut window_pid: u32 = 0;
                     GetWindowThreadProcessId(current_hwnd, Some(&mut window_pid));
                     
-                    // Get Class Name
-                    use windows::Win32::UI::WindowsAndMessaging::{GetClassNameW, GetWindowTextW};
-                    let mut class_buf = [0u16; 256];
-                    let class_len = GetClassNameW(current_hwnd, &mut class_buf);
-                    let class_name = String::from_utf16_lossy(&class_buf[..class_len as usize]).trim_matches(char::from(0)).to_string();
-                    
-                    // Get Title
-                    let mut title_buf = [0u16; 512];
-                    let title_len = GetWindowTextW(current_hwnd, &mut title_buf);
-                    let title = String::from_utf16_lossy(&title_buf[..title_len as usize]).trim_matches(char::from(0)).to_string();
-                    let mut score = 0;
-                    
-                    // 1. PID Match (Perfect)
-                    if window_pid == pid {
-                        score = 100;
+                    // STRICT PID CHECK - Revert to simple logic
+                    if window_pid == pid && IsWindowVisible(current_hwnd).as_bool() {
+                        rdp_hwnd = current_hwnd;
+                        println!("Found RDP Window by PID match: {}", pid);
+                        break;
                     }
-                    
-                    // Check for blocking Dialogs (#32770)
-                    if class_name == "#32770" && (title.contains("Remote Desktop") || title.contains("Escritorio remoto") || title.contains(&config.host)) {
-                        println!("[WARNING] BLOCKING DIALOG DETECTED: '{}'. MSTSC might be waiting for input.", title);
-                    }
-
-                    // 2. Class Match (Required for others)
-                    if class_name.contains("TscShell") {
-                         // Log even if hidden
-                        if !IsWindowVisible(current_hwnd).as_bool() {
-                             println!("[DEBUG] Found HIDDEN RDP Window: '{}'", title);
-                        }
-
-                        if score < 100 { score = 10; } // Base score for just being RDP
-
-                        if title.contains(&config.host) {
-                            score += 50;
-                        }
-                        if title.contains("ai_agent") {
-                            score += 40;
-                        }
-                    }
-
-                    if score > max_score {
-                        max_score = score;
-                        best_hwnd = current_hwnd;
-                        println!("[DEBUG] New Best Candidate: Score {} | Title: '{}' | Class: '{}'", score, title, class_name);
-                    }
+                }
                 }
             }
             
-            // If we found a good enough candidate (Score > 0)
-            if !best_hwnd.0.is_null() && max_score > 0 {
-                rdp_hwnd = best_hwnd; // Valid assignment now
-                println!("Selected RDP Window with Score: {}", max_score);
+            if !rdp_hwnd.0.is_null() {
                 break;
             }
             

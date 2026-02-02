@@ -53,9 +53,77 @@ pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) 
         return Err(format!("Failed to write temp RDP file: {}", e));
     }
 
-    // ... (rest of launch code) ...
+    // 2. Save credentials using cmdkey
+    let target = format!("TERMSRV/{}", config.host);
+    println!("Running cmdkey for target: {}", target);
+    match Command::new("cmdkey")
+        .args(&["/generic", &target, &format!("/user:{}", config.username), &format!("/pass:{}", config.password)])
+        .output() {
+            Ok(_) => println!("cmdkey executed successfully"),
+            Err(e) => println!("cmdkey failed (non-critical): {}", e),
+        }
 
-                    // Scoring
+    // 3. Launch mstsc.exe with the file
+    // Use absolute path to ensure we find it
+    let mstsc_path = r"C:\Windows\System32\mstsc.exe";
+    println!("Launching MSTSC from: {} with file: {:?}", mstsc_path, rdp_path);
+
+    let mut child = Command::new(mstsc_path)
+        .arg(&rdp_path)
+        .spawn()
+        .map_err(|e| format!("Failed to spawn mstsc process: {}", e))?;
+        
+    let pid = child.id();
+    println!("MSTSC spawned with PID: {}", pid);
+
+    // CHECK: Did it die immediately?
+    thread::sleep(Duration::from_millis(500));
+    if let Ok(Some(exit_status)) = child.try_wait() {
+        return Err(format!("MSTSC process exited immediately with status: {}", exit_status));
+    }
+    println!("MSTSC process is stable (PID: {}). Starting window search...", pid);
+
+    // 3. Wait for the window to appear and find its HWND by PID
+    thread::spawn(move || {
+        let mut attempts = 0;
+        let mut rdp_hwnd = HWND(std::ptr::null_mut());
+        
+        // Best candidate strategy
+        let mut best_hwnd = HWND(std::ptr::null_mut());
+        let mut max_score = 0;
+
+        // Try for up to 15 seconds
+        while attempts < 150 {
+            unsafe {
+                let mut current_hwnd = HWND(std::ptr::null_mut());
+                best_hwnd = HWND(std::ptr::null_mut());
+                max_score = 0;
+                
+                loop {
+                    let child_after = if current_hwnd.0.is_null() { None } else { Some(current_hwnd) };
+                    match FindWindowExW(None, child_after, PCWSTR(std::ptr::null()), PCWSTR(std::ptr::null())) {
+                        Ok(hwnd) => {
+                            current_hwnd = hwnd;
+                            if current_hwnd.0.is_null() { break; }
+                        },
+                        Err(_) => break, 
+                    }
+                    
+                    if !IsWindowVisible(current_hwnd).as_bool() { continue; }
+
+                    let mut window_pid: u32 = 0;
+                    GetWindowThreadProcessId(current_hwnd, Some(&mut window_pid));
+                    
+                    // Get Class Name
+                    use windows::Win32::UI::WindowsAndMessaging::{GetClassNameW, GetWindowTextW};
+                    let mut class_buf = [0u16; 256];
+                    let class_len = GetClassNameW(current_hwnd, &mut class_buf);
+                    let class_name = String::from_utf16_lossy(&class_buf[..class_len as usize]).trim_matches(char::from(0)).to_string();
+                    
+                    // Get Title
+                    let mut title_buf = [0u16; 512];
+                    let title_len = GetWindowTextW(current_hwnd, &mut title_buf);
+                    let title = String::from_utf16_lossy(&title_buf[..title_len as usize]).trim_matches(char::from(0)).to_string();
                     let mut score = 0;
                     
                     // 1. PID Match (Perfect)

@@ -71,6 +71,8 @@ pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) 
     // 3. Wait for the window to appear and find its HWND by PID
     thread::spawn(move || {
         let mut attempts = 0;
+        let mut rdp_hwnd = HWND(std::ptr::null_mut()); // Restored definition
+        
         // Best candidate strategy
         let mut best_hwnd = HWND(std::ptr::null_mut());
         let mut max_score = 0;
@@ -138,16 +140,8 @@ pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) 
             
             // If we found a good enough candidate (Score > 0)
             if !best_hwnd.0.is_null() && max_score > 0 {
-                rdp_hwnd = best_hwnd;
+                rdp_hwnd = best_hwnd; // Valid assignment now
                 println!("Selected RDP Window with Score: {}", max_score);
-                break;
-            }
-            
-            thread::sleep(Duration::from_millis(100));
-            attempts += 1;
-        }
-            
-            if !rdp_hwnd.0.is_null() {
                 break;
             }
             

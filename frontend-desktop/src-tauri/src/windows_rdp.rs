@@ -55,18 +55,33 @@ pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) 
 
     // 2. Save credentials using cmdkey
     let target = format!("TERMSRV/{}", config.host);
-    let _ = Command::new("cmdkey")
+    println!("Running cmdkey for target: {}", target);
+    match Command::new("cmdkey")
         .args(&["/generic", &target, &format!("/user:{}", config.username), &format!("/pass:{}", config.password)])
-        .output();
+        .output() {
+            Ok(_) => println!("cmdkey executed successfully"),
+            Err(e) => println!("cmdkey failed (non-critical): {}", e),
+        }
 
     // 3. Launch mstsc.exe with the file
-    let child = Command::new("mstsc")
+    // Use absolute path to ensure we find it
+    let mstsc_path = r"C:\Windows\System32\mstsc.exe";
+    println!("Launching MSTSC from: {} with file: {:?}", mstsc_path, rdp_path);
+
+    let mut child = Command::new(mstsc_path)
         .arg(&rdp_path)
         .spawn()
-        .map_err(|e| format!("Failed to launch mstsc: {}", e))?;
+        .map_err(|e| format!("Failed to spawn mstsc process: {}", e))?;
         
     let pid = child.id();
-    println!("MSTSC launched with PID: {} using file {:?}", pid, rdp_path);
+    println!("MSTSC spawned with PID: {}", pid);
+
+    // CHECK: Did it die immediately?
+    thread::sleep(Duration::from_millis(500));
+    if let Ok(Some(exit_status)) = child.try_wait() {
+        return Err(format!("MSTSC process exited immediately with status: {}", exit_status));
+    }
+    println!("MSTSC process is stable (PID: {}). Starting window search...", pid);
 
     // 3. Wait for the window to appear and find its HWND by PID
     thread::spawn(move || {

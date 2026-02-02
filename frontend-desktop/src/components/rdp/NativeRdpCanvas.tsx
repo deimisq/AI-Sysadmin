@@ -99,12 +99,17 @@ export function NativeRdpCanvas({
             }
         };
 
-        // Small delay to ensure layout
-        const timer = setTimeout(launchRdp, 500);
+        // CRITICAL FIX: Don't use setTimeout - cleanup cancels it
+        // Use Promise microtask instead
+        Promise.resolve().then(() => {
+            if (isMounted && containerRef.current) {
+                console.log('[RDP] Executing launchRdp via microtask');
+                launchRdp();
+            }
+        });
 
         return () => {
             isMounted = false;
-            clearTimeout(timer);
         };
     }, [host, username, password]);
 

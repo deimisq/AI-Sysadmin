@@ -98,20 +98,26 @@ pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) 
                     if window_pid == pid {
                          found = true;
                     } 
-                    // 2. Check Title (Use HOST, not filename)
+                    // 2. Check Class Name (TscShellContainerClass) -> Most reliable method for RDP
                     else {
-                        use windows::Win32::UI::WindowsAndMessaging::GetWindowTextW;
+                        use windows::Win32::UI::WindowsAndMessaging::{GetClassNameW, GetWindowTextW};
+                        
+                        let mut class_buf = [0u16; 256];
+                        let class_len = GetClassNameW(current_hwnd, &mut class_buf);
+                        let class_name = String::from_utf16_lossy(&class_buf[..class_len as usize]);
+                        
                         let mut title_buf = [0u16; 512];
-                        let len = GetWindowTextW(current_hwnd, &mut title_buf);
-                        if len > 0 {
-                            let title = String::from_utf16_lossy(&title_buf[..len as usize]);
-                            
-                            // MSTSC title format is usually: "Hostname - Remote Desktop Connection"
-                            // We check if it contains the Host/IP we are connecting to.
-                            if title.contains(&config.host) && IsWindowVisible(current_hwnd).as_bool() {
-                                println!("Found RDP window by title match: '{}'", title);
-                                found = true;
-                            }
+                        let title_len = GetWindowTextW(current_hwnd, &mut title_buf);
+                        let title = String::from_utf16_lossy(&title_buf[..title_len as usize]);
+
+                        // Log visible windows for debugging
+                        if IsWindowVisible(current_hwnd).as_bool() {
+                             // println!("Visible Window: '{}' Class: '{}'", title, class_name);
+                        }
+
+                        if class_name == "TscShellContainerClass" && title.contains(&config.host) {
+                            println!("Found RDP window by Class: '{}' and Title match: '{}'", class_name, title);
+                            found = true;
                         }
                     }
 

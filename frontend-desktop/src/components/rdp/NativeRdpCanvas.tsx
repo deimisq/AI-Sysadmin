@@ -23,13 +23,18 @@ export function NativeRdpCanvas({
     const [status, setStatus] = useState<'init' | 'launching' | 'active' | 'error'>('init');
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-    useEffect(() => {
-        if (!containerRef.current) return;
+    const hasLaunched = useRef(false);
 
+    useEffect(() => {
+        if (!containerRef.current || hasLaunched.current) return;
+
+        // Mark as launched immediately to prevent duplicates
+        hasLaunched.current = true;
         let isMounted = true;
 
         const launchRdp = async () => {
             try {
+                if (!isMounted) return;
                 setStatus('launching');
 
                 const rect = containerRef.current!.getBoundingClientRect();
@@ -74,10 +79,11 @@ export function NativeRdpCanvas({
         };
 
         // Small delay to ensure layout
-        setTimeout(launchRdp, 500);
+        const timer = setTimeout(launchRdp, 500);
 
         return () => {
             isMounted = false;
+            clearTimeout(timer);
         };
     }, [host, username, password]);
 

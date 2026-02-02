@@ -76,29 +76,49 @@ pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) 
         // Try for up to 10 seconds
         while attempts < 100 {
             unsafe {
-                // Iterate top-level windows using FindWindowEx loop manually
+                // Iterate top-level windows manually
                 let mut current_hwnd = HWND(std::ptr::null_mut());
                 
                 loop {
-                    // Prepare child_after: None for first call, Some(current) for subsequent calls
                     let child_after = if current_hwnd.0.is_null() { None } else { Some(current_hwnd) };
                     
-                    // FindNext child of Desktop (None parent)
-                    // FindWindowExW returns Result<HWND>. If it fails or finds nothing, we break.
                     match FindWindowExW(None, child_after, PCWSTR(std::ptr::null()), PCWSTR(std::ptr::null())) {
                         Ok(hwnd) => {
                             current_hwnd = hwnd;
-                            if current_hwnd.0.is_null() { break; } // Should usually be Err if null, but safety check
+                            if current_hwnd.0.is_null() { break; }
                         },
-                        Err(_) => break, // End of list or error
+                        Err(_) => break, 
                     }
                     
+                    // Check Logic: PID first, then fallback to Title
                     let mut window_pid: u32 = 0;
                     GetWindowThreadProcessId(current_hwnd, Some(&mut window_pid));
                     
-                    if window_pid == pid && IsWindowVisible(current_hwnd).as_bool() {
+                    let mut found = false;
+                    
+                    // 1. Direct PID match (if mstsc didn't fork)
+                    if window_pid == pid {
+                         found = true;
+                    } 
+                    // 2. Title match (if mstsc forked)
+                    // The title usually contains the filename "ai_agent_..." so we check for that
+                    else {
+                        use windows::Win32::UI::WindowsAndMessaging::GetWindowTextW;
+                        let mut title_buf = [0u16; 512];
+                        let len = GetWindowTextW(current_hwnd, &mut title_buf);
+                        if len > 0 {
+                            let title = String::from_utf16_lossy(&title_buf[..len as usize]);
+                            // Check if title contains our unique marker "ai_agent_"
+                            if title.contains("ai_agent_") && IsWindowVisible(current_hwnd).as_bool() {
+                                println!("Found RDP window by title: {}", title);
+                                found = true;
+                            }
+                        }
+                    }
+
+                    if found && IsWindowVisible(current_hwnd).as_bool() {
                         rdp_hwnd = current_hwnd;
-                        break; // Found it!
+                        break; 
                     }
                 }
             }

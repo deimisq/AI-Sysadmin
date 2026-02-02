@@ -25,7 +25,17 @@ export function NativeRdpCanvas({
 
     const hasLaunched = useRef(false);
 
+    // DEBUG: Log component mount
+    console.log('[NativeRdpCanvas] Component rendered/mounted', { host, username });
+
     useEffect(() => {
+        console.log('[NativeRdpCanvas] useEffect triggered', {
+            hasContainer: !!containerRef.current,
+            hasLaunched: hasLaunched.current,
+            host,
+            username
+        });
+
         if (!containerRef.current || hasLaunched.current) return;
 
         // Mark as launched immediately to prevent duplicates

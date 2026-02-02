@@ -33,14 +33,21 @@ export function RDPComponent({ serverData, onDisconnect, onSwitchToSSH }: RDPCom
                 // Fetch credentials
                 console.log('[RDPComponent] Fetching credentials for server:', serverData.id);
                 const creds = await fetchServerCredentials(serverData.id);
+                console.log('[RDPComponent] Credentials fetched:', {
+                    ip: creds.ip_address,
+                    username: creds.ssh_username
+                });
 
                 if (isMounted) {
-                    setCredentials({
+                    const credData = {
                         ip: creds.ip_address,
                         username: creds.ssh_username || 'Administrator',
                         password: creds.ssh_password || ''
-                    });
+                    };
+                    console.log('[RDPComponent] Setting credentials:', credData);
+                    setCredentials(credData);
                     setLoading(false);
+                    console.log('[RDPComponent] Initialization complete, rendering NativeRdpCanvas');
                 }
 
             } catch (err: any) {

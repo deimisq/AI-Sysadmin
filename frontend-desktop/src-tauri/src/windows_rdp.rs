@@ -42,7 +42,9 @@ pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) 
     let child = Command::new("mstsc")
         .args(&[
             &format!("/v:{}", config.host),
-            "/noconnectionbar" 
+            &format!("/w:{}", config.width),
+            &format!("/h:{}", config.height),
+            // "/noconnectionbar" // Can cause issues if not in /f mode
         ])
         .spawn()
         .map_err(|e| format!("Failed to launch mstsc: {}", e))?;

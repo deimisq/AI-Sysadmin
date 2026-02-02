@@ -158,17 +158,17 @@ impl GuacamoleManager {
         
         println!("Starting Guacamole server...");
         println!("Path: {:?}", guacd_path);
-        println!("Mode: {}", if is_node_js { "Node.js (guacamole-lite)" } else { "Native (guacd)" });
+        println!("Mode: {}", if is_node_js { "Node.js (WebSocket Proxy)" } else { "Native (guacd)" });
         println!("Bind: {}:{}", self.bind_address, self.port);
 
         let child = if is_node_js {
-            // Use Node.js to run guacamole-lite
+            // Use Node.js to run guacamole-proxy
             let node_path = which::which("node")?;
             
             let mut cmd = Command::new(&node_path);
             cmd.arg(&guacd_path); // The JS script
             
-            // Set environment variables for guacamole-lite
+            // Set environment variables for proxy
             cmd.env("GUAC_PORT", self.port.to_string());
             cmd.env("GUAC_HOST", &self.bind_address);
             
@@ -179,7 +179,7 @@ impl GuacamoleManager {
             println!("Command: {:?} {:?}", node_path, guacd_path);
             
             cmd.spawn()
-                .context("Failed to spawn guacamole-lite (Node.js) process")?
+                .context("Failed to spawn guacamole-proxy (Node.js) process")?
         } else {
            // Use native guacd
             let mut cmd = Command::new(guacd_path);

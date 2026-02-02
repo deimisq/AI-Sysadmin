@@ -71,16 +71,19 @@ pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) 
     // 3. Wait for the window to appear and find its HWND by PID
     thread::spawn(move || {
         let mut attempts = 0;
-        let mut rdp_hwnd = HWND(std::ptr::null_mut());
-        
-        // Try for up to 20 seconds (200 * 100ms)
-        while attempts < 200 {
+        // Best candidate strategy
+        let mut best_hwnd = HWND(std::ptr::null_mut());
+        let mut max_score = 0;
+
+        // Try for up to 15 seconds
+        while attempts < 150 {
             unsafe {
                 let mut current_hwnd = HWND(std::ptr::null_mut());
+                best_hwnd = HWND(std::ptr::null_mut());
+                max_score = 0;
                 
                 loop {
                     let child_after = if current_hwnd.0.is_null() { None } else { Some(current_hwnd) };
-                    
                     match FindWindowExW(None, child_after, PCWSTR(std::ptr::null()), PCWSTR(std::ptr::null())) {
                         Ok(hwnd) => {
                             current_hwnd = hwnd;
@@ -89,46 +92,60 @@ pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) 
                         Err(_) => break, 
                     }
                     
+                    if !IsWindowVisible(current_hwnd).as_bool() { continue; }
+
                     let mut window_pid: u32 = 0;
                     GetWindowThreadProcessId(current_hwnd, Some(&mut window_pid));
                     
-                    let mut found = false;
+                    // Get Class Name
+                    use windows::Win32::UI::WindowsAndMessaging::{GetClassNameW, GetWindowTextW};
+                    let mut class_buf = [0u16; 256];
+                    let class_len = GetClassNameW(current_hwnd, &mut class_buf);
+                    let class_name = String::from_utf16_lossy(&class_buf[..class_len as usize]).trim_matches(char::from(0)).to_string();
                     
-                    // 1. Check PID
+                    // Get Title
+                    let mut title_buf = [0u16; 512];
+                    let title_len = GetWindowTextW(current_hwnd, &mut title_buf);
+                    let title = String::from_utf16_lossy(&title_buf[..title_len as usize]).trim_matches(char::from(0)).to_string();
+
+                    // Scoring
+                    let mut score = 0;
+                    
+                    // 1. PID Match (Perfect)
                     if window_pid == pid {
-                         found = true;
-                         println!("Found by PID match: {}", pid);
-                    } 
-                    // 2. Check Class Name & Title
-                    else {
-                        use windows::Win32::UI::WindowsAndMessaging::{GetClassNameW, GetWindowTextW};
-                        
-                        let mut class_buf = [0u16; 256];
-                        let class_len = GetClassNameW(current_hwnd, &mut class_buf);
-                        let class_name = String::from_utf16_lossy(&class_buf[..class_len as usize]).trim_matches(char::from(0)).to_string();
-                        
-                        let mut title_buf = [0u16; 512];
-                        let title_len = GetWindowTextW(current_hwnd, &mut title_buf);
-                        let title = String::from_utf16_lossy(&title_buf[..title_len as usize]).trim_matches(char::from(0)).to_string();
+                        score = 100;
+                    }
+                    
+                    // 2. Class Match (Required for others)
+                    if class_name.contains("TscShell") {
+                        if score < 100 { score = 10; } // Base score for just being RDP
 
-                        // DEBUG: Log ALL visible windows to find the correct one
-                        if IsWindowVisible(current_hwnd).as_bool() && !title.is_empty() {
-                             println!("[DEBUG] Window Found -> PID: {} | Class: '{}' | Title: '{}'", window_pid, class_name, title);
+                        if title.contains(&config.host) {
+                            score += 50;
                         }
-
-                        // RELAXED MATCH: Check if class is MSTSC OR Title contains host
-                        if (class_name == "TscShellContainerClass" || class_name.contains("TscShell")) && title.contains(&config.host) {
-                            println!("!!! MATCH FOUND !!! Class: '{}' Title: '{}'", class_name, title);
-                            found = true;
+                        if title.contains("ai_agent") {
+                            score += 40;
                         }
                     }
 
-                    if found && IsWindowVisible(current_hwnd).as_bool() {
-                        rdp_hwnd = current_hwnd;
-                        break; 
+                    if score > max_score {
+                        max_score = score;
+                        best_hwnd = current_hwnd;
+                        println!("[DEBUG] New Best Candidate: Score {} | Title: '{}' | Class: '{}'", score, title, class_name);
                     }
                 }
             }
+            
+            // If we found a good enough candidate (Score > 0)
+            if !best_hwnd.0.is_null() && max_score > 0 {
+                rdp_hwnd = best_hwnd;
+                println!("Selected RDP Window with Score: {}", max_score);
+                break;
+            }
+            
+            thread::sleep(Duration::from_millis(100));
+            attempts += 1;
+        }
             
             if !rdp_hwnd.0.is_null() {
                 break;

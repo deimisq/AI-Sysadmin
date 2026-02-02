@@ -45,7 +45,7 @@ pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) 
          smart sizing:i:1\r\n\
          displayconnectionbar:i:0\r\n\
          authentication level:i:2\r\n\
-         enablecredsspsupport:i:0\r\n", // 0 = allow fallback, 2 = warn
+         enablecredsspsupport:i:1\r\n", // 1 = enable CredSSP (Required for NLA)
         config.host, config.username, config.width, config.height
     );
 

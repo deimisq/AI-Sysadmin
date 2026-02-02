@@ -76,7 +76,6 @@ pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) 
         // Try for up to 10 seconds
         while attempts < 100 {
             unsafe {
-                // Iterate top-level windows manually
                 let mut current_hwnd = HWND(std::ptr::null_mut());
                 
                 loop {
@@ -90,27 +89,27 @@ pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) 
                         Err(_) => break, 
                     }
                     
-                    // Check Logic: PID first, then fallback to Title
                     let mut window_pid: u32 = 0;
                     GetWindowThreadProcessId(current_hwnd, Some(&mut window_pid));
                     
                     let mut found = false;
                     
-                    // 1. Direct PID match (if mstsc didn't fork)
+                    // 1. Check PID
                     if window_pid == pid {
                          found = true;
                     } 
-                    // 2. Title match (if mstsc forked)
-                    // The title usually contains the filename "ai_agent_..." so we check for that
+                    // 2. Check Title (Use HOST, not filename)
                     else {
                         use windows::Win32::UI::WindowsAndMessaging::GetWindowTextW;
                         let mut title_buf = [0u16; 512];
                         let len = GetWindowTextW(current_hwnd, &mut title_buf);
                         if len > 0 {
                             let title = String::from_utf16_lossy(&title_buf[..len as usize]);
-                            // Check if title contains our unique marker "ai_agent_"
-                            if title.contains("ai_agent_") && IsWindowVisible(current_hwnd).as_bool() {
-                                println!("Found RDP window by title: {}", title);
+                            
+                            // MSTSC title format is usually: "Hostname - Remote Desktop Connection"
+                            // We check if it contains the Host/IP we are connecting to.
+                            if title.contains(&config.host) && IsWindowVisible(current_hwnd).as_bool() {
+                                println!("Found RDP window by title match: '{}'", title);
                                 found = true;
                             }
                         }

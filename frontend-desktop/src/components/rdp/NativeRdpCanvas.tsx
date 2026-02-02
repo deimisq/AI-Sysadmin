@@ -35,29 +35,30 @@ export function NativeRdpCanvas({
         const launchRdp = async () => {
             try {
                 if (!isMounted) return;
+
+                console.log('[RDP] Starting launch sequence...');
                 setStatus('launching');
 
                 const rect = containerRef.current!.getBoundingClientRect();
+                console.log('[RDP] Container rect:', rect);
 
                 // Ensure valid dimensions
                 if (rect.width < 100 || rect.height < 100) {
-                    console.log('Container too small, retrying in 500ms...');
+                    console.warn('[RDP] Container too small, retrying in 500ms...', { w: rect.width, h: rect.height });
                     setTimeout(launchRdp, 500);
                     return;
                 }
 
                 // Calculate Absolute Screen Coordinates
-                // 1. Get window position on screen
+                console.log('[RDP] Getting window position...');
                 const windowPos = await getCurrentWindow().innerPosition();
+                console.log('[RDP] Window position:', windowPos);
 
                 // 2. Add element offset
                 const screenX = windowPos.x + Math.round(rect.left);
                 const screenY = windowPos.y + Math.round(rect.top);
 
-                console.log('Launching Native RDP at Screen Coords:', { screenX, screenY, w: rect.width, h: rect.height });
-
-                // Invoke Rust command with ABSOLUTE coordinates
-                await invoke('start_embedded_rdp_command', {
+                const params = {
                     host,
                     username,
                     password,
@@ -65,14 +66,24 @@ export function NativeRdpCanvas({
                     height: Math.round(rect.height),
                     x: screenX,
                     y: screenY
-                });
+                };
+
+                console.log('[RDP] Invoking Tauri command with params:', params);
+
+                // Invoke Rust command with ABSOLUTE coordinates
+                const result = await invoke('start_embedded_rdp_command', params);
+
+                console.log('[RDP] Command returned:', result);
 
                 if (isMounted) setStatus('active');
 
             } catch (err: any) {
-                console.error("Failed to launch native RDP:", err);
+                console.error("[RDP] FATAL ERROR:", err);
+                console.error("[RDP] Error stack:", err.stack);
+                console.error("[RDP] Error details:", JSON.stringify(err, null, 2));
+
                 if (isMounted) {
-                    setErrorMsg(err.toString());
+                    setErrorMsg(`RDP Launch Failed: ${err.toString()}`);
                     setStatus('error');
                 }
             }

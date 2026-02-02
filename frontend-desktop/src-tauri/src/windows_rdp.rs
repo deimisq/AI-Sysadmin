@@ -31,26 +31,42 @@ pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) 
     
     println!("Starting MSTSC with: host={}, w={}, h={}", config.host, config.width, config.height);
 
-    // 1. Save credentials using cmdkey
+    // 1. Create a temporary .rdp file (MORE RELIABLE than command line args)
+    let mut rdp_path = std::env::temp_dir();
+    let filename = format!("ai_agent_{}_{}.rdp", config.host.replace(":", "_"), std::process::id());
+    rdp_path.push(&filename);
+
+    let rdp_content = format!(
+        "full address:s:{}\r\n\
+         username:s:{}\r\n\
+         desktopwidth:i:{}\r\n\
+         desktopheight:i:{}\r\n\
+         screen mode id:i:1\r\n\
+         smart sizing:i:1\r\n\
+         displayconnectionbar:i:0\r\n\
+         authentication level:i:2\r\n\
+         enablecredsspsupport:i:0\r\n", // 0 = allow fallback, 2 = warn
+        config.host, config.username, config.width, config.height
+    );
+
+    if let Err(e) = std::fs::write(&rdp_path, rdp_content) {
+        return Err(format!("Failed to write temp RDP file: {}", e));
+    }
+
+    // 2. Save credentials using cmdkey
     let target = format!("TERMSRV/{}", config.host);
-    // Silent fail/log if cmdkey fails, mstsc will just prompt
     let _ = Command::new("cmdkey")
         .args(&["/generic", &target, &format!("/user:{}", config.username), &format!("/pass:{}", config.password)])
         .output();
 
-    // 2. Launch mstsc.exe
+    // 3. Launch mstsc.exe with the file
     let child = Command::new("mstsc")
-        .args(&[
-            &format!("/v:{}", config.host),
-            &format!("/w:{}", config.width),
-            &format!("/h:{}", config.height),
-            // "/noconnectionbar" // Can cause issues if not in /f mode
-        ])
+        .arg(&rdp_path)
         .spawn()
         .map_err(|e| format!("Failed to launch mstsc: {}", e))?;
         
     let pid = child.id();
-    println!("MSTSC launched with PID: {}", pid);
+    println!("MSTSC launched with PID: {} using file {:?}", pid, rdp_path);
 
     // 3. Wait for the window to appear and find its HWND by PID
     thread::spawn(move || {

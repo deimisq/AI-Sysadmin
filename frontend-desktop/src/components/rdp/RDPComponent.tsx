@@ -23,7 +23,8 @@ export function RDPComponent({ serverData, onDisconnect, onSwitchToSSH }: RDPCom
     } | null>(null);
 
     // Toggle between Native RDP and Guacamole
-    const [useGuacamole, setUseGuacamole] = useState<boolean>(true); // Default to Guacamole for better integration
+    // Default to Native (FreeRDP) since we want the native integration experience
+    const [useGuacamole, setUseGuacamole] = useState<boolean>(false);
 
 
     // Fetch credentials only

@@ -66,6 +66,19 @@ export function RDPComponent({ serverData, onDisconnect, onSwitchToSSH }: RDPCom
         };
     }, [serverData.id]);
 
+    // Handle RDP disconnect with cleanup
+    const handleDisconnect = async () => {
+        try {
+            console.log('[RDPComponent] Stopping RDP process...');
+            await invoke('stop_embedded_rdp_command');
+            console.log('[RDPComponent] RDP process stopped successfully');
+        } catch (err) {
+            console.error('[RDPComponent] Failed to stop RDP:', err);
+            // Still proceed with disconnect even if kill fails
+        }
+        onDisconnect();
+    };
+
     // Render error state
     if (error) {
         return (
@@ -84,7 +97,7 @@ export function RDPComponent({ serverData, onDisconnect, onSwitchToSSH }: RDPCom
                     </Button>
                     <Button
                         variant="outline"
-                        onClick={onDisconnect}
+                        onClick={handleDisconnect}
                         className="bg-transparent border-gray-600 hover:bg-gray-800 text-gray-300"
                     >
                         Volver
@@ -121,7 +134,7 @@ export function RDPComponent({ serverData, onDisconnect, onSwitchToSSH }: RDPCom
 
                 <div className="flex gap-2 items-center">
                     <button
-                        onClick={onDisconnect}
+                        onClick={handleDisconnect}
                         className="bg-red-600/90 hover:bg-red-600 text-white px-4 py-1.5 rounded text-sm font-medium shadow-sm transition-all hover:shadow-md"
                     >
                         Desconectar

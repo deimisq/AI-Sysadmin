@@ -10,6 +10,8 @@ mod rdp_frame_capture;
 mod guacamole_manager;
 #[cfg(target_os = "windows")]
 mod windows_rdp;
+#[cfg(target_os = "windows")]
+mod windows_rdp_killer;
 
 use ssh_manager::{SSHManager, SSHCredentials, SSHSessionInfo, FileEntry};
 use rdp_manager::RDPManager;
@@ -23,6 +25,8 @@ struct AppState {
     ssh_manager: Mutex<SSHManager>,
     rdp_manager: Mutex<RDPManager>,
     guacamole: Mutex<GuacamoleManager>,
+    #[cfg(target_os = "windows")]
+    rdp_process: Mutex<Option<u32>>, // Store RDP PID for cleanup
 }
 
 /// Connect to SSH server
@@ -205,6 +209,7 @@ async fn rdp_get_frame(
 /// Start Embedded Native RDP (Windows Only) - The New Option B
 #[tauri::command]
 async fn start_embedded_rdp_command(
+    state: State<'_, AppState>,
     window: Window,
     host: String,
     username: String,
@@ -225,13 +230,42 @@ async fn start_embedded_rdp_command(
             x,
             y
         };
-        windows_rdp::start_embedded_rdp(window, config)
+        let (result_msg, pid) = windows_rdp::start_embedded_rdp(window, config)?;
+        
+        // Store PID for cleanup
+        if let Ok(mut rdp_pid) = state.rdp_process.lock() {
+            *rdp_pid = Some(pid);
+        }
+        
+        Ok(result_msg)
     }
     #[cfg(not(target_os = "windows"))]
     {
         Err("Native embedded RDP is only supported on Windows".to_string())
     }
 }
+
+/// Stop Embedded Native RDP (Windows Only)
+#[tauri::command]
+async fn stop_embedded_rdp_command(state: State<'_, AppState>) -> Result<String, String> {
+    #[cfg(target_os = "windows")]
+    {
+        let mut rdp_pid = state.rdp_process.lock().unwrap();
+        
+        if let Some(pid) = *rdp_pid {
+            windows_rdp_killer::kill_rdp_process(pid)?;
+            *rdp_pid = None; // Clear the stored PID
+            Ok("RDP process terminated".to_string())
+        } else {
+            Err("No active RDP session found".to_string())
+        }
+    }
+    #[cfg(not(target_os = "windows"))]
+    {
+        Err("Native embedded RDP is only supported on Windows".to_string())
+    }
+}
+
 
 // Guacamole Commands (kept for legacy/backup)
 #[tauri::command]
@@ -257,6 +291,8 @@ fn main() {
             ssh_manager: Mutex::new(SSHManager::new()),
             rdp_manager: Mutex::new(RDPManager::new()),
             guacamole: Mutex::new(GuacamoleManager::new()),
+            #[cfg(target_os = "windows")]
+            rdp_process: Mutex::new(None),
         })
         .invoke_handler(tauri::generate_handler![
             greet,
@@ -277,6 +313,7 @@ fn main() {
             guacamole_stop,
             guacamole_get_url,
             start_embedded_rdp_command,
+            stop_embedded_rdp_command,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

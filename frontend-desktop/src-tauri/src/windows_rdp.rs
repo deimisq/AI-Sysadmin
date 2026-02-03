@@ -23,7 +23,7 @@ pub struct RdpConfig {
     pub y: i32,
 }
 
-pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) -> Result<String, String> {
+pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) -> Result<(String, u32), String> {
     
     // Sanitize inputs
     if config.width < 400 { config.width = 1024; }
@@ -175,5 +175,8 @@ pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) 
         }
     });
 
-    Ok("RDP Launched".to_string())
+    // CRITICAL: Don't drop the child - we need to keep the process running
+    std::mem::forget(child);
+
+    Ok(("RDP Launched".to_string(), pid))
 }

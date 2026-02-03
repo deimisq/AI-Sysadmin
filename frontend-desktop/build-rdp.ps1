@@ -11,17 +11,34 @@ $interopUrl = "https://github.com/mRemoteNG/mRemoteNG/raw/v1.77.3-dev/mRemoteNG/
 if (!(Test-Path $binDir)) { New-Item -ItemType Directory -Force -Path $binDir | Out-Null }
 
 # Setup Compiler
-$csc = "$env:WindowsMicrosoft.NET\Framework64\v4.0.30319\csc.exe"
-if (!(Test-Path $csc)) {
-    $csc = "$env:WindowsMicrosoft.NET\Framework\v4.0.30319\csc.exe"
+# Try standard locations
+$cscPaths = @(
+    "$env:SystemRoot\Microsoft.NET\Framework64\v4.0.30319\csc.exe",
+    "$env:SystemRoot\Microsoft.NET\Framework\v4.0.30319\csc.exe",
+    "C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe",
+    "C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe"
+)
+
+$csc = $null
+foreach ($path in $cscPaths) {
+    if (Test-Path $path) {
+        $csc = $path
+        break
+    }
 }
 
-if (!(Test-Path $csc)) {
-    Write-Host "❌ C# Compiler (csc.exe) not found!" -ForegroundColor Red
+if (!$csc) {
+    # Try finding in PATH
+    $csc = Get-Command "csc.exe" -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source -First 1
+}
+
+if (!$csc -or !(Test-Path $csc)) {
+    Write-Host "C# Compiler (csc.exe) not found!" -ForegroundColor Red
+    Write-Host "Please ensure .NET Framework 4.8 is installed (standard on Windows 10/11)."
     exit 1
 }
 
-Write-Host "✅ Found compiler: $csc" -ForegroundColor Green
+Write-Host "Found compiler: $csc" -ForegroundColor Green
 
 # We need AxInterop.MSTSCLib.dll and Interop.MSTSCLib.dll
 # Start simpler: Try to find aximp to generate them from mstscax.dll

@@ -182,52 +182,80 @@ pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) 
     if config.width < 400 { config.width = 1024; }
     if config.height < 300 { config.height = 768; }
     
-    println!("Starting MSTSC with: host={}, w={}, h={}", config.host, config.width, config.height);
+    // CHECK: Do we have wfreerdp.exe bundled?
+    let Ok(exe_dir) = std::env::current_exe() else {
+        return Err("Failed to get current exe path".to_string());
+    };
+    
+    let app_dir = exe_dir.parent().unwrap();
+    let freerdp_path = app_dir.join("binaries").join("wfreerdp.exe");
+    
+    // Also check local dev path
+    let dev_freerdp_path = std::path::Path::new("frontend-desktop/binaries/wfreerdp.exe"); // Relative to project root
+    
+    let use_freerdp = freerdp_path.exists() || dev_freerdp_path.exists();
+    
+    let child_res = if use_freerdp {
+        let exe_path = if freerdp_path.exists() { freerdp_path } else { dev_freerdp_path.to_path_buf() };
+        println!("🚀 Launching FreeRDP from: {:?}", exe_path);
+        
+        Command::new(exe_path)
+            .arg(format!("/v:{}", config.host))
+            .arg(format!("/u:{}", config.username))
+            .arg(format!("/p:{}", config.password))
+            .arg(format!("/w:{}", config.width))
+            .arg(format!("/h:{}", config.height))
+            .arg("/smart-sizing")
+            .arg("-decorations") // No window decorations
+            .arg("/cert:ignore")
+            .spawn()
+    } else {
+        println!("⚠️ FreeRDP not found. Falling back to MSTSC.");
+        
+        // 1. Create a temporary .rdp file (MORE RELIABLE than command line args)
+        let mut rdp_path = std::env::temp_dir();
+        let filename = format!("ai_agent_{}_{}.rdp", config.host.replace(":", "_"), std::process::id());
+        rdp_path.push(&filename);
 
-    // 1. Create a temporary .rdp file (MORE RELIABLE than command line args)
-    let mut rdp_path = std::env::temp_dir();
-    let filename = format!("ai_agent_{}_{}.rdp", config.host.replace(":", "_"), std::process::id());
-    rdp_path.push(&filename);
+        let rdp_content = format!(
+            "full address:s:{}\r\n\
+             username:s:{}\r\n\
+             desktopwidth:i:{}\r\n\
+             desktopheight:i:{}\r\n\
+             screen mode id:i:1\r\n\
+             smart sizing:i:1\r\n\
+             displayconnectionbar:i:0\r\n\
+             authentication level:i:0\r\n\
+             enablecredsspsupport:i:1\r\n", 
+            config.host, config.username, config.width, config.height
+        );
 
-    let rdp_content = format!(
-        "full address:s:{}\r\n\
-         username:s:{}\r\n\
-         desktopwidth:i:{}\r\n\
-         desktopheight:i:{}\r\n\
-         screen mode id:i:1\r\n\
-         smart sizing:i:1\r\n\
-         displayconnectionbar:i:0\r\n\
-         authentication level:i:0\r\n\
-         enablecredsspsupport:i:1\r\n", // 0 = No authentication requirement (bypass cert warnings)
-        config.host, config.username, config.width, config.height
-    );
-
-    if let Err(e) = std::fs::write(&rdp_path, rdp_content) {
-        return Err(format!("Failed to write temp RDP file: {}", e));
-    }
-
-    // 2. Save credentials using cmdkey
-    let target = format!("TERMSRV/{}", config.host);
-    println!("Running cmdkey for target: {}", target);
-    match Command::new("cmdkey")
-        .args(&["/generic", &target, &format!("/user:{}", config.username), &format!("/pass:{}", config.password)])
-        .output() {
-            Ok(_) => println!("cmdkey executed successfully"),
-            Err(e) => println!("cmdkey failed (non-critical): {}", e),
+        if let Err(e) = std::fs::write(&rdp_path, rdp_content) {
+            return Err(format!("Failed to write temp RDP file: {}", e));
         }
 
-    // 3. Launch mstsc.exe with the file
-    // Use absolute path to ensure we find it
-    let mstsc_path = r"C:\Windows\System32\mstsc.exe";
-    println!("Launching MSTSC from: {} with file: {:?}", mstsc_path, rdp_path);
+        // 2. Save credentials using cmdkey
+        let target = format!("TERMSRV/{}", config.host);
+        println!("Running cmdkey for target: {}", target);
+        match Command::new("cmdkey")
+            .args(&["/generic", &target, &format!("/user:{}", config.username), &format!("/pass:{}", config.password)])
+            .output() {
+                Ok(_) => println!("cmdkey executed successfully"),
+                Err(e) => println!("cmdkey failed (non-critical): {}", e),
+            }
 
-    let mut child = Command::new(mstsc_path)
-        .arg(&rdp_path)
-        .spawn()
-        .map_err(|e| format!("Failed to spawn mstsc process: {}", e))?;
-        
+        // 3. Launch mstsc.exe with the file
+        let mstsc_path = r"C:\Windows\System32\mstsc.exe";
+        println!("Launching MSTSC from: {} with file: {:?}", mstsc_path, rdp_path);
+
+        Command::new(mstsc_path)
+            .arg(&rdp_path)
+            .spawn()
+    };
+
+    let mut child = child_res.map_err(|e| format!("Failed to spawn process: {}", e))?;
     let pid = child.id();
-    println!("MSTSC spawned with PID: {}", pid);
+    println!("RDP Process spawned with PID: {}", pid);
 
     // CHECK: Did it die immediately?
     thread::sleep(Duration::from_millis(500));

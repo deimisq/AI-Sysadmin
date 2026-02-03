@@ -63,8 +63,9 @@ fn start_sync_thread<R: Runtime>(window: Window<R>, rdp_hwnd: HWND) {
     println!("[RDP Sync] Starting position sync thread");
     
     thread::spawn(move || {
-        let mut last_x = 0i32;
-        let mut last_y = 0i32;
+        let mut last_tauri_x = 0i32;
+        let mut last_tauri_y = 0i32;
+        let mut iteration = 0u32;
         
         loop {
             // Check if we should continue
@@ -81,39 +82,53 @@ fn start_sync_thread<R: Runtime>(window: Window<R>, rdp_hwnd: HWND) {
                 break;
             }
             
+            iteration += 1;
+            
             // Get current Tauri window position
             if let Ok(pos) = window.outer_position() {
-                let new_x = pos.x;
-                let new_y = pos.y;
+                let tauri_x = pos.x;
+                let tauri_y = pos.y;
                 
-                // Only update if position changed
-                if new_x != last_x || new_y != last_y {
+                // AGGRESSIVE MODE: Force position for the first 50 iterations (5 seconds)
+                // to fight MSTSC's tendency to reposition itself after connection
+                let force_update = iteration <= 50;
+                let position_changed = tauri_x != last_tauri_x || tauri_y != last_tauri_y;
+                
+                if force_update || position_changed {
                     unsafe {
                         let rdp_window = HWND(rdp_hwnd_raw as *mut _);
                         
-                        // Get RDP window size
+                        // Check current RDP window position
                         let mut rect = windows::Win32::Foundation::RECT::default();
                         if GetWindowRect(rdp_window, &mut rect).is_ok() {
+                            let rdp_x = rect.left;
+                            let rdp_y = rect.top;
                             let width = rect.right - rect.left;
                             let height = rect.bottom - rect.top;
                             
-                            // Update position (keep size, don't change Z-order)
-                            let _ = SetWindowPos(
-                                rdp_window,
-                                None, // Don't change Z-order
-                                new_x,
-                                new_y,
-                                width,
-                                height,
-                                SWP_NOZORDER | SWP_SHOWWINDOW
-                            );
-                            
-                            println!("[RDP Sync] Updated position to ({}, {})", new_x, new_y);
+                            // Only update if RDP position differs from desired Tauri position
+                            if rdp_x != tauri_x || rdp_y != tauri_y {
+                                let _ = SetWindowPos(
+                                    rdp_window,
+                                    Some(windows::Win32::UI::WindowsAndMessaging::HWND_TOPMOST),
+                                    tauri_x,
+                                    tauri_y,
+                                    width,
+                                    height,
+                                    SWP_SHOWWINDOW
+                                );
+                                
+                                if force_update {
+                                    println!("[RDP Sync] FORCE position to ({}, {}) [iter {}]", tauri_x, tauri_y, iteration);
+                                } else {
+                                    println!("[RDP Sync] Updated position to ({}, {})", tauri_x, tauri_y);
+                                }
+                            }
                         }
                     }
                     
-                    last_x = new_x;
-                    last_y = new_y;
+                    last_tauri_x = tauri_x;
+                    last_tauri_y = tauri_y;
                 }
             }
             

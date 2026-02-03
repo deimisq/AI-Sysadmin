@@ -229,10 +229,10 @@ pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) 
             .arg(format!("/w:{}", config.width))
             .arg(format!("/h:{}", config.height))
             .arg("/smart-sizing")
-            .arg("-decorations") // No window decorations
-            .arg("/cert-ignore") // Compatibility with newer versions
-            .arg("+clipboard")
-            .arg("/sound:sys:alsa") // Disable sound or set to sys
+            //.arg("-decorations") // Removed: This is X11 syntax. We'll handle borders via Win32 API if needed.
+            .arg("/cert-ignore")
+            .arg("/clipboard")     // Windows syntax is /clipboard (not +clipboard)
+            .arg("/audio-mode:1")  // 0=redirect, 1=play on server, 2=disable.
             .spawn()
     } else {
         println!("⚠️ FreeRDP not found. Falling back to MSTSC.");

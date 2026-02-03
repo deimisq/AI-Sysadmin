@@ -5,6 +5,7 @@ import type { Server } from '../../lib/api';
 import { fetchServerCredentials } from '../../lib/api';
 // import { GuacamoleCanvas } from './GuacamoleCanvas';
 import { NativeRdpCanvas } from './NativeRdpCanvas';
+import GuacamoleRdpCanvas from './GuacamoleRdpCanvas';
 
 interface RDPComponentProps {
     serverData: Server;
@@ -20,7 +21,10 @@ export function RDPComponent({ serverData, onDisconnect, onSwitchToSSH }: RDPCom
         username: string;
         password: string;
     } | null>(null);
-    const [guacamoleStatus, setGuacamoleStatus] = useState<string>('skipped');
+
+    // Toggle between Native RDP and Guacamole
+    const [useGuacamole, setUseGuacamole] = useState<boolean>(true); // Default to Guacamole for better integration
+
 
     // Fetch credentials only
     useEffect(() => {
@@ -140,6 +144,16 @@ export function RDPComponent({ serverData, onDisconnect, onSwitchToSSH }: RDPCom
                         Desconectar
                     </button>
 
+                    {/* Toggle Guacamole/Native */}
+                    <button
+                        onClick={() => setUseGuacamole(!useGuacamole)}
+                        className="flex items-center gap-2 px-3 py-1.5 bg-blue-600/80 hover:bg-blue-600 border border-white/20 text-white rounded text-xs font-medium"
+                        title={useGuacamole ? "Cambiar a RDP Nativo" : "Cambiar a Guacamole (mejor integración)"}
+                    >
+                        <span className="text-lg">{useGuacamole ? '🌐' : '🖥️'}</span>
+                        {useGuacamole ? 'Guacamole' : 'Nativo'}
+                    </button>
+
                     {onSwitchToSSH && (
                         <button
                             onClick={onSwitchToSSH}
@@ -152,14 +166,26 @@ export function RDPComponent({ serverData, onDisconnect, onSwitchToSSH }: RDPCom
                 </div>
             </div>
 
-            {/* Main Content Area - Native RDP Canvas */}
+
+            {/* Main Content Area - RDP Canvas (Guacamole or Native) */}
             <div className="flex-1 flex flex-col bg-black relative overflow-hidden">
-                <NativeRdpCanvas
-                    host={credentials.ip}
-                    username={credentials.username}
-                    password={credentials.password}
-                    onDisconnect={onDisconnect}
-                />
+                {useGuacamole ? (
+                    <GuacamoleRdpCanvas
+                        host={credentials.ip}
+                        username={credentials.username}
+                        password={credentials.password}
+                        width={800}
+                        height={600}
+                        onDisconnect={onDisconnect}
+                    />
+                ) : (
+                    <NativeRdpCanvas
+                        host={credentials.ip}
+                        username={credentials.username}
+                        password={credentials.password}
+                        onDisconnect={onDisconnect}
+                    />
+                )}
             </div>
         </div>
     );

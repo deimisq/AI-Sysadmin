@@ -1,15 +1,28 @@
 use std::process::Command;
 use std::thread;
 use std::time::Duration;
+use std::sync::{Arc, Mutex};
 use tauri::{Window, Runtime};
 use windows::core::{PCWSTR, HSTRING};
 use windows::Win32::Foundation::HWND;
 use windows::Win32::UI::WindowsAndMessaging::{
     SetParent, SetWindowPos, GetWindowLongPtrW, SetWindowLongPtrW, GetWindowThreadProcessId,
-    FindWindowExW, IsWindowVisible,
-    HWND_TOP, SWP_SHOWWINDOW, GWL_STYLE, GWL_EXSTYLE,
+    FindWindowExW, IsWindowVisible, GetWindowRect,
+    HWND_TOP, SWP_SHOWWINDOW, SWP_NOZORDER, GWL_STYLE, GWL_EXSTYLE,
     WS_CHILD, WS_CAPTION, WS_THICKFRAME, WS_MAXIMIZEBOX, WS_MINIMIZEBOX, WS_SYSMENU, WS_POPUP, WS_VISIBLE
 };
+
+use lazy_static::lazy_static;
+
+// Global state to track RDP window and sync thread
+lazy_static! {
+    static ref RDP_WINDOW_STATE: Arc<Mutex<Option<RdpWindowState>>> = Arc::new(Mutex::new(None));
+}
+
+struct RdpWindowState {
+    rdp_hwnd: isize, // Store as isize for thread safety
+    should_sync: bool,
+}
 
 // Structure to pass RDP config
 #[derive(serde::Deserialize)]
@@ -21,6 +34,93 @@ pub struct RdpConfig {
     pub height: i32,
     pub x: i32,
     pub y: i32,
+}
+
+// Stop synchronization thread
+pub fn stop_rdp_sync() {
+    if let Ok(mut state) = RDP_WINDOW_STATE.lock() {
+        if let Some(window_state) = state.as_mut() {
+            window_state.should_sync = false;
+            println!("[RDP Sync] Stopped synchronization");
+        }
+        *state = None;
+    }
+}
+
+// Start synchronization thread
+fn start_sync_thread<R: Runtime>(window: Window<R>, rdp_hwnd: HWND) {
+    let rdp_hwnd_raw = rdp_hwnd.0 as isize;
+    
+    // Store in global state
+    {
+        let mut state = RDP_WINDOW_STATE.lock().unwrap();
+        *state = Some(RdpWindowState {
+            rdp_hwnd: rdp_hwnd_raw,
+            should_sync: true,
+        });
+    }
+    
+    println!("[RDP Sync] Starting position sync thread");
+    
+    thread::spawn(move || {
+        let mut last_x = 0i32;
+        let mut last_y = 0i32;
+        
+        loop {
+            // Check if we should continue
+            let should_continue = {
+                if let Ok(state) = RDP_WINDOW_STATE.lock() {
+                    state.as_ref().map(|s| s.should_sync).unwrap_or(false)
+                } else {
+                    false
+                }
+            };
+            
+            if !should_continue {
+                println!("[RDP Sync] Thread stopped");
+                break;
+            }
+            
+            // Get current Tauri window position
+            if let Ok(pos) = window.outer_position() {
+                let new_x = pos.x;
+                let new_y = pos.y;
+                
+                // Only update if position changed
+                if new_x != last_x || new_y != last_y {
+                    unsafe {
+                        let rdp_window = HWND(rdp_hwnd_raw as *mut _);
+                        
+                        // Get RDP window size
+                        let mut rect = windows::Win32::Foundation::RECT::default();
+                        if GetWindowRect(rdp_window, &mut rect).is_ok() {
+                            let width = rect.right - rect.left;
+                            let height = rect.bottom - rect.top;
+                            
+                            // Update position (keep size, don't change Z-order)
+                            let _ = SetWindowPos(
+                                rdp_window,
+                                None, // Don't change Z-order
+                                new_x,
+                                new_y,
+                                width,
+                                height,
+                                SWP_NOZORDER | SWP_SHOWWINDOW
+                            );
+                            
+                            println!("[RDP Sync] Updated position to ({}, {})", new_x, new_y);
+                        }
+                    }
+                    
+                    last_x = new_x;
+                    last_y = new_y;
+                }
+            }
+            
+            // Sync every 100ms (10 FPS)
+            thread::sleep(Duration::from_millis(100));
+        }
+    });
 }
 
 pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) -> Result<(String, u32), String> {
@@ -82,6 +182,9 @@ pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) 
         return Err(format!("MSTSC process exited immediately with status: {}", exit_status));
     }
     println!("MSTSC process is stable (PID: {}). Starting window search...", pid);
+
+    // Clone window for the sync thread (we'll need it later)
+    let window_for_sync = window.clone();
 
     // 3. Wait for the window to appear and find its HWND by PID
     thread::spawn(move || {
@@ -170,6 +273,9 @@ pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) 
                 );
             }
             println!("RDP Window Embedded Successfully!");
+            
+            // Start continuous position synchronization
+            start_sync_thread(window_for_sync, rdp_hwnd);
         } else {
             println!("Failed to find MSTSC window for PID {}", pid);
         }

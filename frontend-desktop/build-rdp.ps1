@@ -51,22 +51,29 @@ if ($aximp) {
     # This usually generates both
 } else {
     Write-Host "⚠️ aximp.exe not found (no SDK installed)." -ForegroundColor Yellow
-    Write-Host "⬇️ Downloading pre-generated Interop DLLs..." -ForegroundColor Cyan
+    Write-Host "Downloading pre-generated Interop DLLs..." -ForegroundColor Cyan
     
-    # Download from a reliable generic source (e.g. a gist or repo that hosts these standard wrappers)
-    # Using a known gist raw url for these standard Microsoft wrappers would be ideal.
-    # For now, let's use a dummy check or ask user.
-    # PRO TIP: We can use PowerShell to compile a small stub that uses dynamic!
-    
-    # Let's try to download them from mRemoteNG repo (they are small)
-    # https://github.com/mRemoteNG/mRemoteNG/blob/v1.77.3-dev/mRemoteNG/References/AxInterop.MSTSCLib.dll?raw=true
-    
+    # FORCE TLS 1.2 (Required for GitHub)
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
+    $urls = @(
+        "https://github.com/mRemoteNG/mRemoteNG/raw/v1.77.3-dev/mRemoteNG/References/AxInterop.MSTSCLib.dll",
+        "https://github.com/mRemoteNG/mRemoteNG/raw/v1.77.3-dev/mRemoteNG/References/Interop.MSTSCLib.dll"
+    )
+
     try {
-        Invoke-WebRequest "https://github.com/mRemoteNG/mRemoteNG/blob/v1.77.3-dev/mRemoteNG/References/AxInterop.MSTSCLib.dll?raw=true" -OutFile "$srcDir\AxInterop.MSTSCLib.dll"
-        Invoke-WebRequest "https://github.com/mRemoteNG/mRemoteNG/blob/v1.77.3-dev/mRemoteNG/References/Interop.MSTSCLib.dll?raw=true" -OutFile "$srcDir\Interop.MSTSCLib.dll"
+        Invoke-WebRequest $urls[0] -OutFile "$srcDir\AxInterop.MSTSCLib.dll"
+        Invoke-WebRequest $urls[1] -OutFile "$srcDir\Interop.MSTSCLib.dll"
     } catch {
-        Write-Host "❌ Failed to download Interop DLLs." -ForegroundColor Red
-        exit 1
+        Write-Host "First download attempt failed. Trying alternative source..." -ForegroundColor Yellow
+        try {
+            # Backup URLs (Terminals repo or similar)
+            Invoke-WebRequest "https://github.com/Terminals-Origin/Terminals/raw/master/Source/Terminals/Lib/AxInterop.MSTSCLib.dll" -OutFile "$srcDir\AxInterop.MSTSCLib.dll"
+            Invoke-WebRequest "https://github.com/Terminals-Origin/Terminals/raw/master/Source/Terminals/Lib/Interop.MSTSCLib.dll" -OutFile "$srcDir\Interop.MSTSCLib.dll"
+        } catch {
+             Write-Host "Failed to download Interop DLLs. Error: $_" -ForegroundColor Red
+             exit 1
+        }
     }
 }
 

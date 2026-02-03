@@ -1,0 +1,15 @@
+{
+    "name": "guacamole-proxy",
+    "version": "1.0.0",
+    "description": "Embedded Guacamole WebSocket proxy for AI Sysadmin Desktop",
+    "main": "guacamole-proxy.cjs",
+    "scripts": {
+        "start": "node guacamole-proxy.cjs"
+    },
+    "dependencies": {
+        "ws": "^8.16.0"
+    },
+    "engines": {
+        "node": ">=16.0.0"
+    }
+}

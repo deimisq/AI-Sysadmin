@@ -180,14 +180,48 @@ pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) 
     
     // Sanitize inputs
     if config.width < 400 { config.width = 1024; }
-    if config.height < 300 { config.height = 768; }
     
-    // CHECK: Do we have wfreerdp.exe bundled?
+    // Define Paths
     let current_exe = std::env::current_exe().unwrap_or_default();
     let current_dir = std::env::current_dir().unwrap_or_default();
+    let app_dir = current_exe.parent().unwrap_or(std::path::Path::new("."));
+
+    // CHECK: 1. Custom RdpHost.exe (C# Sidecar, ActiveX Native) - BEST EXPERIENCE
+    let rdp_host_path = app_dir.join("binaries").join("RdpHost.exe");
+    // Local dev path check (relative logic)
+    let dev_rdp_host_path = current_dir.join("frontend-desktop").join("binaries").join("RdpHost.exe");
+    let dev_rdp_host_path_2 = current_dir.join("binaries").join("RdpHost.exe");
+    
+    let use_rdp_host = rdp_host_path.exists() || dev_rdp_host_path.exists() || dev_rdp_host_path_2.exists();
+
+    if use_rdp_host {
+        let exe_path = if rdp_host_path.exists() { rdp_host_path } 
+                      else if dev_rdp_host_path.exists() { dev_rdp_host_path }
+                      else { dev_rdp_host_path_2 };
+                      
+        println!("🚀 Launching Native Sidecar (RdpHost.exe) from: {:?}", exe_path);
+        
+        // Ensure we have a valid parent HWND
+        let hwnd = window.hwnd().map(|h| h.0 as isize).unwrap_or(0);
+
+        Command::new(exe_path)
+            .arg(format!("/v:{}", config.host))
+            .arg(format!("/u:{}", config.username))
+            .arg(format!("/p:{}", config.password))
+            .arg(format!("/w:{}", config.width))
+            .arg(format!("/h:{}", config.height))
+            .arg(format!("/parent:{}", hwnd))
+            .spawn()
+            .map_err(|e| format!("Failed to launch RdpHost: {}", e))?;
+            
+        return Ok(());
+    }
+
+    // CHECK: 2. FreeRDP (Portable) - GOOD EXPERIENCE (but binary compatibility issues)
+    // ... code for FreeRDP (wfreerdp.exe) ...
+    // Note: current_exe and current_dir are already defined above
     
     println!("[RDP] Current Executable: {:?}", current_exe);
-    println!("[RDP] Current Directory: {:?}", current_dir);
 
     // Potential paths to check
     let mut search_paths = vec![];

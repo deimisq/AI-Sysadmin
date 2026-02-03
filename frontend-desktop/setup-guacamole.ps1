@@ -53,10 +53,17 @@ try {
     
     Write-Host "OK - guacd container started on port 4822" -ForegroundColor Green
 } catch {
-    Write-Host "WARNING - Docker not found. You'll need to:" -ForegroundColor Yellow
-    Write-Host "   1. Install Docker Desktop, OR" -ForegroundColor Gray
-    Write-Host "   2. Download guacd.exe manually" -ForegroundColor Gray
-    Write-Host ""
+    Write-Host "WARNING - Docker not found." -ForegroundColor Yellow
+    Write-Host "Trying to download guacd binary for Windows..." -ForegroundColor Yellow
+    
+    # Run the downloader script
+    if (Test-Path "$currentDir/install-guacd.ps1") {
+        & "$currentDir/install-guacd.ps1"
+    } elseif (Test-Path "install-guacd.ps1") {
+        & ".\install-guacd.ps1"
+    } else {
+        Write-Host "Error: install-guacd.ps1 not found." -ForegroundColor Red
+    }
 }
 
 # Install guacamole-common-js for frontend

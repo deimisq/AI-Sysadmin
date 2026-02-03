@@ -8,13 +8,42 @@
 const net = require('net');
 const { WebSocketServer } = require('ws');
 
+const fs = require('fs');
+const path = require('path');
+const { spawn } = require('child_process');
+
 const GUAC_PORT = parseInt(process.env.GUAC_PORT || '4822');
 const GUAC_HOST = process.env.GUAC_HOST || '127.0.0.1';
 const WS_PORT = 4823; // WebSocket port for frontend
 
 console.log('🚀 Starting Guacamole WebSocket Proxy...');
-console.log(`   Guacamole: ${GUAC_HOST}:${GUAC_PORT}`);
-console.log(`   WebSocket: ws://${GUAC_HOST}:${WS_PORT}`);
+
+// --- Auto-start guacd logic ---
+const guacdPath = path.join(__dirname, 'bin', 'guacd', 'bin', 'guacd.exe');
+let guacdProcess = null;
+
+if (fs.existsSync(guacdPath)) {
+    console.log(`📦 Found local guacd: ${guacdPath}`);
+    console.log('   Spawning guacd process...');
+
+    guacdProcess = spawn(guacdPath, ['-b', GUAC_HOST, '-l', GUAC_PORT, '-f'], {
+        stdio: 'inherit'
+    });
+
+    guacdProcess.on('error', (err) => {
+        console.error('❌ Failed to start guacd:', err);
+    });
+
+    guacdProcess.on('exit', (code) => {
+        console.log(`⚠️  guacd exited with code ${code}`);
+    });
+} else {
+    console.log('⚠️  Local guacd.exe not found. Assuming external service (Docker/System).');
+    console.log(`   Looking for: ${guacdPath}`);
+}
+
+console.log(`   Guacamole Target: ${GUAC_HOST}:${GUAC_PORT}`);
+console.log(`   WebSocket Server: ws://localhost:${WS_PORT}`);
 
 const wss = new WebSocketServer({
     host: GUAC_HOST,
@@ -81,6 +110,10 @@ wss.on('error', (err) => {
 // Graceful shutdown
 process.on('SIGINT', () => {
     console.log('\n👋 Shutting down proxy...');
+    if (guacdProcess) {
+        console.log('   Stopping guacd...');
+        guacdProcess.kill();
+    }
     wss.close(() => {
         console.log('✅ Proxy stopped');
         process.exit(0);

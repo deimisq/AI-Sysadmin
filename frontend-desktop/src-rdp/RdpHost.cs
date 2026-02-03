@@ -2,15 +2,30 @@ using System;
 using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
-using MSTSCLib; // We will generate this Interop
+using System.Reflection;
 
 namespace RdpHost
 {
+    // Custom wrapper to avoid external DLL dependencies (Zero-Dependency AxHost)
+    public class NativeRdpClient : AxHost
+    {
+        // CLSID for MsRdpClient9NotSafeForScripting
+        public NativeRdpClient() : base("54d38bf7-b1ef-4479-9674-1bd6ea465258") 
+        {
+        }
+
+        // Fix for "ActiveX control cannot be instantiated"
+        protected override void AttachInterfaces()
+        {
+            base.AttachInterfaces();
+        }
+    }
+
     public class RdpForm : Form
     {
-        private AxMSTSCLib.AxMsRdpClient9NotSafeForScripting rdpClient;
+        private NativeRdpClient rdpClient;
         
-        // P/Invoke for SetParent
+        // P/Invoke for embedding
         [DllImport("user32.dll")]
         static extern IntPtr SetParent(IntPtr hWndChild, IntPtr hWndNewParent);
         
@@ -26,67 +41,69 @@ namespace RdpHost
 
         public RdpForm(string[] args)
         {
-            // Parse arguments
-            string host = "", user = "", pass = "";
-            int width = 800, height = 600;
-            IntPtr parentHwnd = IntPtr.Zero;
-
-            for (int i = 0; i < args.Length; i++)
+            try
             {
-                if (args[i].StartsWith("/parent:")) parentHwnd = new IntPtr(long.Parse(args[i].Substring(8)));
-                if (args[i].StartsWith("/v:")) host = args[i].Substring(3);
-                if (args[i].StartsWith("/u:")) user = args[i].Substring(3);
-                if (args[i].StartsWith("/p:")) pass = args[i].Substring(3);
-                if (args[i].StartsWith("/w:")) width = int.Parse(args[i].Substring(3));
-                if (args[i].StartsWith("/h:")) height = int.Parse(args[i].Substring(3));
-            }
+                // Parse arguments
+                string host = "", user = "", pass = "";
+                int width = 800, height = 600;
+                IntPtr parentHwnd = IntPtr.Zero;
 
-            // Window Setup
-            this.FormBorderStyle = FormBorderStyle.None;
-            this.Width = width;
-            this.Height = height;
-            this.BackColor = Color.Black;
-            this.ShowInTaskbar = false;
+                for (int i = 0; i < args.Length; i++)
+                {
+                    if (args[i].StartsWith("/parent:")) parentHwnd = new IntPtr(long.Parse(args[i].Substring(8)));
+                    if (args[i].StartsWith("/v:")) host = args[i].Substring(3);
+                    if (args[i].StartsWith("/u:")) user = args[i].Substring(3);
+                    if (args[i].StartsWith("/p:")) pass = args[i].Substring(3);
+                    if (args[i].StartsWith("/w:")) width = int.Parse(args[i].Substring(3));
+                    if (args[i].StartsWith("/h:")) height = int.Parse(args[i].Substring(3));
+                }
 
-            // Initialize RDP Control
-            try 
-            {
-                rdpClient = new AxMSTSCLib.AxMsRdpClient9NotSafeForScripting();
-                ((System.ComponentModel.ISupportInitialize)(rdpClient)).BeginInit();
+                // Window Setup
+                this.FormBorderStyle = FormBorderStyle.None;
+                this.Width = width;
+                this.Height = height;
+                this.BackColor = Color.Black;
+                this.ShowInTaskbar = false;
+
+                // Initialize RDP Control dynamically
+                rdpClient = new NativeRdpClient();
                 this.Controls.Add(rdpClient);
                 rdpClient.Dock = DockStyle.Fill;
                 
-                // Configure RDP
-                rdpClient.Server = host;
-                rdpClient.UserName = user;
-                rdpClient.AdvancedSettings7.ClearTextPassword = pass;
-                rdpClient.AdvancedSettings7.EnableCredSspSupport = true;
-                rdpClient.AdvancedSettings7.PublicMode = false;
-                rdpClient.AdvancedSettings7.SmartSizing = true;
+                // We need to wait for Handle creation to use OCX methods
+                rdpClient.CreateControl();
                 
-                // Events
-                rdpClient.OnDisconnected += (s, e) => Application.Exit();
+                // Use dynamic to access properties without typed DLLs
+                dynamic ocx = rdpClient.GetOcx();
 
-                ((System.ComponentModel.ISupportInitialize)(rdpClient)).EndInit();
+                ocx.Server = host;
+                ocx.UserName = user;
+                
+                // AdvancedSettings7 property
+                var advanced = ocx.AdvancedSettings7;
+                advanced.ClearTextPassword = pass;
+                advanced.EnableCredSspSupport = true;
+                advanced.PublicMode = false;
+                advanced.SmartSizing = true;
                 
                 // Connect
-                rdpClient.Connect();
+                ocx.Connect();
+                
+                // Embed if parent provided
+                if (parentHwnd != IntPtr.Zero)
+                {
+                    this.Load += (s, e) => {
+                        // Change style to Child
+                        int style = GetWindowLong(this.Handle, GWL_STYLE);
+                        SetWindowLong(this.Handle, GWL_STYLE, (style & ~WS_POPUP) | WS_CHILD);
+                        SetParent(this.Handle, parentHwnd);
+                    };
+                }
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error initializing RDP: " + ex.Message);
+                MessageBox.Show("Error: " + ex.Message + "\n" + ex.StackTrace);
                 Application.Exit();
-            }
-
-            // Embed if parent provided
-            if (parentHwnd != IntPtr.Zero)
-            {
-                this.Load += (s, e) => {
-                    // Change style to Child
-                    int style = GetWindowLong(this.Handle, GWL_STYLE);
-                    SetWindowLong(this.Handle, GWL_STYLE, (style & ~WS_POPUP) | WS_CHILD);
-                    SetParent(this.Handle, parentHwnd);
-                };
             }
         }
     }

@@ -229,9 +229,9 @@ pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) 
             .arg(format!("/w:{}", config.width))
             .arg(format!("/h:{}", config.height))
             .arg("/smart-sizing")
-            .arg("/cert-ignore")
-            //.arg("/clipboard")     // Removed: Caused crash at index 7
-            //.arg("/audio-mode:1")  // Removed: Simplifying to minimal valid args
+            //.arg("/cert-ignore") // Removed: Caused crash at index 7 on Nightly builds
+            //.arg("/clipboard")
+            //.arg("/audio-mode:1")
             .spawn()
     } else {
         println!("⚠️ FreeRDP not found. Falling back to MSTSC.");

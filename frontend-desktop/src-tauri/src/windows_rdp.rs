@@ -230,8 +230,8 @@ pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) 
             .arg(format!("/h:{}", config.height))
             .arg("/smart-sizing")
             .arg("/cert:ignore")
-            .arg("/sec:nla")
-            .arg("/tls-seclevel:0") // Fixes OpenSSL Legacy/MD4 error
+            .arg("/sec:rdp")       // Fallback to Standard RDP Security (bypasses TLS handshake issues)
+            //.arg("/tls-seclevel:0") // Removed: Invalid argument on this build
             .spawn()
     } else {
         println!("⚠️ FreeRDP not found. Falling back to MSTSC.");

@@ -115,9 +115,14 @@ fn start_sync_thread<R: Runtime>(window: Window<R>, rdp_pid: u32, offset_x: i32,
                             let mut current_hwnd = HWND(std::ptr::null_mut());
                             
                             loop {
-                                current_hwnd = FindWindowExW(None, current_hwnd, None, None);
-                                if current_hwnd.0.is_null() {
-                                    break;
+                                match FindWindowExW(None, Some(current_hwnd), None, None) {
+                                    Ok(hwnd) => {
+                                        current_hwnd = hwnd;
+                                        if current_hwnd.0.is_null() {
+                                            break;
+                                        }
+                                    },
+                                    Err(_) => break,
                                 }
                                 
                                 if !IsWindowVisible(current_hwnd).as_bool() {

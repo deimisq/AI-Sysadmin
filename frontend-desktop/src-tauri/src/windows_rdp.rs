@@ -230,7 +230,8 @@ pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) 
             .arg(format!("/h:{}", config.height))
             .arg("/smart-sizing")
             .arg("/cert:ignore")
-            .arg("/sec:nla")       // Try explicit NLA
+            .arg("/sec:nla")
+            .arg("/tls-seclevel:0") // Fixes OpenSSL Legacy/MD4 error
             .spawn()
     } else {
         println!("⚠️ FreeRDP not found. Falling back to MSTSC.");

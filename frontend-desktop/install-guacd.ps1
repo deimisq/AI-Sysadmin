@@ -2,8 +2,9 @@
 Write-Host "⬇️ Downloading guacd for Windows..." -ForegroundColor Cyan
 
 $zipUrl = "https://github.com/queleg/guacamole-server-windows/releases/download/v1.5.4/guacamole-server-1.5.4-win64.zip"
-$destDir = "frontend-desktop/bin/guacd"
-$zipFile = "guacd.zip"
+$scriptRoot = $PSScriptRoot
+$destDir = Join-Path $scriptRoot "bin\guacd"
+$zipFile = Join-Path $scriptRoot "guacd.zip"
 
 # Create directory
 if (!(Test-Path $destDir)) {
@@ -28,10 +29,10 @@ Expand-Archive -Path $zipFile -DestinationPath $destDir -Force
 Remove-Item $zipFile
 
 # Verify
-if (Test-Path "$destDir/bin/guacd.exe") {
+if (Test-Path (Join-Path $destDir "bin\guacd.exe")) {
     Write-Host ""
     Write-Host "✅ guacd installed successfully!" -ForegroundColor Green
-    Write-Host "Path: $destDir/bin/guacd.exe"
+    Write-Host "Path: $(Join-Path $destDir "bin\guacd.exe")"
 } else {
     Write-Host "⚠️ Warning: exe not found in expected path. Please check $destDir" -ForegroundColor Yellow
     Get-ChildItem -Recurse $destDir

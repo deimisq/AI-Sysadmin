@@ -95,19 +95,24 @@ fn start_sync_thread<R: Runtime>(window: Window<R>, rdp_pid: u32, offset_x: i32,
                 println!("[RDP Sync] Loop iteration {}", iteration);
             }
             
-            // Get current Tauri window position
+            // Get current Tauri window position and size
             match window.outer_position() {
                 Ok(pos) => {
-                    // Calculate absolute RDP position: window position + offset
-                    let tauri_x = pos.x + offset_x;
-                    let tauri_y = pos.y + offset_y;
+                    let window_changed = pos.x != last_tauri_x || pos.y != last_tauri_y;
+                    
+                    // Since RDP is now a child window, we use RELATIVE coordinates (offset from parent)
+                    // No need to add window position - coordinates are relative to parent
+                    let tauri_x = offset_x;
+                    let tauri_y = offset_y;
+                    
+                    // Check if window size changed (for resize support)
+                    let window_size = window.outer_size().unwrap_or_default();
                     
                     // AGGRESSIVE MODE: Force position for the first 50 iterations (5 seconds)
                     // to fight MSTSC's tendency to reposition itself after connection
                     let force_update = iteration <= 50;
-                    let position_changed = tauri_x != last_tauri_x || tauri_y != last_tauri_y;
                     
-                    if force_update || position_changed {
+                    if force_update || window_changed {
                         unsafe {
                             // DYNAMIC SEARCH: Find RDP window by PID each iteration
                             // This handles MSTSC creating multiple windows over time
@@ -139,34 +144,19 @@ fn start_sync_thread<R: Runtime>(window: Window<R>, rdp_pid: u32, offset_x: i32,
                             }
                             
                             if !rdp_window.0.is_null() {
-                                // Check current RDP window position
-                                let mut rect = windows::Win32::Foundation::RECT::default();
-                                if GetWindowRect(rdp_window, &mut rect).is_ok() {
-                                    let rdp_x = rect.left;
-                                    let rdp_y = rect.top;
-                                    
-                                    // Only update if RDP position differs from desired Tauri position
-                                    if rdp_x != tauri_x || rdp_y != tauri_y {
-                                        let _ = SetWindowPos(
-                                            rdp_window,
-                                            Some(windows::Win32::UI::WindowsAndMessaging::HWND_TOPMOST),
-                                            tauri_x,
-                                            tauri_y,
-                                            width,  // Use stored dimensions from config
-                                            height,
-                                            SWP_SHOWWINDOW
-                                        );
-                                        
-                                        if force_update {
-                                            println!("[RDP Sync] FORCE position to ({}, {}) size ({}, {}) [iter {}]", tauri_x, tauri_y, width, height, iteration);
-                                        } else {
-                                            println!("[RDP Sync] Updated position to ({}, {})", tauri_x, tauri_y);
-                                        }
-                                    }
-                                } else {
-                                    if iteration <= 5 {
-                                        println!("[RDP Sync] GetWindowRect failed for iteration {}", iteration);
-                                    }
+                                // Position using RELATIVE coordinates (child window)
+                                let _ = SetWindowPos(
+                                    rdp_window,
+                                    Some(windows::Win32::UI::WindowsAndMessaging::HWND_TOP),
+                                    tauri_x,
+                                    tauri_y,
+                                    width,
+                                    height,
+                                    SWP_SHOWWINDOW
+                                );
+                                
+                                if force_update && (iteration <= 5 || iteration % 10 == 0) {
+                                    println!("[RDP Sync] FORCE position to ({}, {}) size ({}, {}) [iter {}]", tauri_x, tauri_y, width, height, iteration);
                                 }
                             } else {
                                 if iteration <= 5 || iteration % 20 == 0 {
@@ -175,8 +165,8 @@ fn start_sync_thread<R: Runtime>(window: Window<R>, rdp_pid: u32, offset_x: i32,
                             }
                         }
                         
-                        last_tauri_x = tauri_x;
-                        last_tauri_y = tauri_y;
+                        last_tauri_x = pos.x;
+                        last_tauri_y = pos.y;
                     }
                 },
                 Err(e) => {
@@ -185,8 +175,8 @@ fn start_sync_thread<R: Runtime>(window: Window<R>, rdp_pid: u32, offset_x: i32,
                 }
             }
             
-            // Sync every 100ms (10 FPS)
-            thread::sleep(Duration::from_millis(100));
+            // Sync every 16ms (60 FPS) for smooth movement
+            thread::sleep(Duration::from_millis(16));
         }
     });
 }
@@ -309,36 +299,31 @@ pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) 
             println!("Found MSTSC window HWND: {:?}", rdp_hwnd);
             
             unsafe {
-                // 4. Modify Window Style
-                // Strategy: OVERLAY/POPUP (Not Child)
-                // We make it a borderless popup that floats ABOVE the main window
-                // This avoids Z-Order issues with WebView2
+                // 4. Modify Window Style - Make it a CHILD window
                 
                 let style = GetWindowLongPtrW(rdp_hwnd, GWL_STYLE);
                 
-                // Remove borders/caption but keep POPUP
-                let style_mask = WS_CAPTION | WS_THICKFRAME | WS_MAXIMIZEBOX | WS_MINIMIZEBOX | WS_SYSMENU;
-                let new_style = (style & !style_mask.0 as isize) | WS_POPUP.0 as isize | WS_VISIBLE.0 as isize;
+                // Make it a CHILD window (fully integrated)
+                let style_mask = WS_CAPTION | WS_THICKFRAME | WS_MAXIMIZEBOX | WS_MINIMIZEBOX | WS_SYSMENU | WS_POPUP;
+                let new_style = (style & !style_mask.0 as isize) | WS_CHILD.0 as isize | WS_VISIBLE.0 as isize;
                 
-                // Remove child flag if present (just in case mstsc adds it)
-                let final_style = new_style & !(WS_CHILD.0 as isize);
-                
-                SetWindowLongPtrW(rdp_hwnd, GWL_STYLE, final_style);
+                SetWindowLongPtrW(rdp_hwnd, GWL_STYLE, new_style);
                 SetWindowLongPtrW(rdp_hwnd, GWL_EXSTYLE, 0);
 
-                // 5. NO SetParent - Keep it independent but positioned
-                // let tauri_hwnd = window.hwnd().unwrap(); 
-                // let parent_hwnd = HWND(tauri_hwnd.0 as *mut std::ffi::c_void);
-                // let _ = SetParent(rdp_hwnd, Some(parent_hwnd));
+                // 5. SetParent - Make it a child of Tauri window
+                let tauri_hwnd = window.hwnd().unwrap(); 
+                let parent_hwnd = HWND(tauri_hwnd.0 as *mut std::ffi::c_void);
+                let _ = SetParent(rdp_hwnd, Some(parent_hwnd));
 
-                // 6. Move to correct position & Z-Order TOPMOST
+                println!("[RDP] Set RDP window as child of Tauri window");
+
+                // 6. Move to correct position within parent
                 thread::sleep(Duration::from_millis(50));
                 
-                // Use HWND_TOPMOST to ensure it floats above the main app
-                // Note: HWND_TOP might be enough, but TOPMOST guarantees visibility
+                // Position relative to parent window (not screen)
                 let _ = SetWindowPos(
                     rdp_hwnd, 
-                    Some(windows::Win32::UI::WindowsAndMessaging::HWND_TOPMOST), 
+                    Some(windows::Win32::UI::WindowsAndMessaging::HWND_TOP), 
                     config.x, config.y, 
                     config.width, config.height, 
                     SWP_SHOWWINDOW

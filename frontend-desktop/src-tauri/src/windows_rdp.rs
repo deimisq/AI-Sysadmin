@@ -183,23 +183,46 @@ pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) 
     if config.height < 300 { config.height = 768; }
     
     // CHECK: Do we have wfreerdp.exe bundled?
-    let Ok(exe_dir) = std::env::current_exe() else {
-        return Err("Failed to get current exe path".to_string());
-    };
+    let current_exe = std::env::current_exe().unwrap_or_default();
+    let current_dir = std::env::current_dir().unwrap_or_default();
     
-    let app_dir = exe_dir.parent().unwrap();
-    let freerdp_path = app_dir.join("binaries").join("wfreerdp.exe");
+    println!("[RDP] Current Executable: {:?}", current_exe);
+    println!("[RDP] Current Directory: {:?}", current_dir);
+
+    // Potential paths to check
+    let mut search_paths = vec![];
     
-    // Also check local dev path
-    let dev_freerdp_path = std::path::Path::new("frontend-desktop/binaries/wfreerdp.exe"); // Relative to project root
+    // 1. Next to executable (Production/Release)
+    if let Some(parent) = current_exe.parent() {
+        search_paths.push(parent.join("binaries").join("wfreerdp.exe"));
+        search_paths.push(parent.join("wfreerdp.exe"));
+    }
     
-    let use_freerdp = freerdp_path.exists() || dev_freerdp_path.exists();
+    // 2. Local Development (frontend-desktop/binaries)
+    // Check relative from current_dir
+    search_paths.push(current_dir.join("binaries").join("wfreerdp.exe"));
+    search_paths.push(current_dir.join("frontend-desktop").join("binaries").join("wfreerdp.exe"));
     
-    let child_res = if use_freerdp {
-        let exe_path = if freerdp_path.exists() { freerdp_path } else { dev_freerdp_path.to_path_buf() };
-        println!("🚀 Launching FreeRDP from: {:?}", exe_path);
+    // 3. Absolute fallback (Hardcoded for your specific setup if relative fails)
+    search_paths.push(std::path::PathBuf::from(r"C:\Users\DeimisQuintanilla\Proyectos\ai_agent\frontend-desktop\binaries\wfreerdp.exe"));
+    
+    let mut freerdp_path = std::path::PathBuf::new();
+    let mut found = false;
+    
+    for path in &search_paths {
+        println!("[RDP] Checking path: {:?}", path);
+        if path.exists() {
+            println!("[RDP] ✅ Found wfreerdp.exe at: {:?}", path);
+            freerdp_path = path.clone();
+            found = true;
+            break;
+        }
+    }
+    
+    let child_res = if found {
+        println!("🚀 Launching FreeRDP from: {:?}", freerdp_path);
         
-        Command::new(exe_path)
+        Command::new(freerdp_path)
             .arg(format!("/v:{}", config.host))
             .arg(format!("/u:{}", config.username))
             .arg(format!("/p:{}", config.password))

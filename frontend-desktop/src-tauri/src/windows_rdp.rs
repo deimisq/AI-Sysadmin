@@ -229,9 +229,9 @@ pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) 
             .arg(format!("/w:{}", config.width))
             .arg(format!("/h:{}", config.height))
             .arg("/smart-sizing")
-            .arg("/cert:ignore")   // Try colon syntax (standard)
-            .arg("/sec:nla")       // Force NLA (usually required)
-            .arg("/network:auto")  // Optimize network
+            .arg("/cert:ignore")   // Standard syntax
+            //.arg("/sec:nla")     // Removed: Let FreeRDP negotiate security automatically
+            //.arg("/network:auto") // Removed: Can cause issues on some LANs
             .spawn()
     } else {
         println!("⚠️ FreeRDP not found. Falling back to MSTSC.");

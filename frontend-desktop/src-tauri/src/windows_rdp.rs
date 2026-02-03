@@ -7,10 +7,12 @@ use windows::core::PCWSTR;
 use windows::Win32::Foundation::{HWND, RECT};
 use windows::Win32::UI::WindowsAndMessaging::{
     SetWindowPos, GetWindowLongPtrW, SetWindowLongPtrW, GetWindowThreadProcessId,
-    FindWindowExW, IsWindowVisible,
-    SWP_SHOWWINDOW, GWL_STYLE, GWL_EXSTYLE,
+    FindWindowExW, IsWindowVisible, GetWindowRect,
+    SWP_SHOWWINDOW, SWP_NOZORDER, GWL_STYLE, GWL_EXSTYLE,
     WS_CAPTION, WS_THICKFRAME, WS_CHILD, WS_POPUP,
+    WS_MAXIMIZEBOX, WS_MINIMIZEBOX, WS_SYSMENU, WS_VISIBLE,
 };
+use std::path::{Path, PathBuf};
 
 use lazy_static::lazy_static;
 

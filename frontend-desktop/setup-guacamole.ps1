@@ -19,7 +19,14 @@ try {
 # Install proxy dependencies
 Write-Host ""
 Write-Host "[2/5] Installing proxy dependencies..." -ForegroundColor Yellow
-cd frontend-desktop
+
+# Check if we're already in frontend-desktop
+$currentDir = Split-Path -Leaf (Get-Location)
+if ($currentDir -ne "frontend-desktop") {
+    if (Test-Path "frontend-desktop") {
+        cd frontend-desktop
+    }
+}
 
 # Install ws module
 Write-Host "Installing ws module..." -ForegroundColor Gray

@@ -3,13 +3,13 @@ use std::thread;
 use std::time::Duration;
 use std::sync::{Arc, Mutex};
 use tauri::{Window, Runtime};
-use windows::core::{PCWSTR, HSTRING};
-use windows::Win32::Foundation::HWND;
+use windows::core::PCWSTR;
+use windows::Win32::Foundation::{HWND, RECT};
 use windows::Win32::UI::WindowsAndMessaging::{
-    SetParent, SetWindowPos, GetWindowLongPtrW, SetWindowLongPtrW, GetWindowThreadProcessId,
-    FindWindowExW, IsWindowVisible, GetWindowRect,
-    HWND_TOP, SWP_SHOWWINDOW, SWP_NOZORDER, GWL_STYLE, GWL_EXSTYLE,
-    WS_CHILD, WS_CAPTION, WS_THICKFRAME, WS_MAXIMIZEBOX, WS_MINIMIZEBOX, WS_SYSMENU, WS_POPUP, WS_VISIBLE
+    SetWindowPos, GetWindowLongPtrW, SetWindowLongPtrW, GetWindowThreadProcessId,
+    FindWindowExW, IsWindowVisible,
+    SWP_SHOWWINDOW, GWL_STYLE, GWL_EXSTYLE,
+    WS_CAPTION, WS_THICKFRAME, WS_CHILD, WS_POPUP,
 };
 
 use lazy_static::lazy_static;
@@ -204,7 +204,7 @@ pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) 
         // Ensure we have a valid parent HWND
         let hwnd = window.hwnd().map(|h| h.0 as isize).unwrap_or(0);
 
-        Command::new(exe_path)
+        let child = Command::new(exe_path)
             .arg(format!("/v:{}", config.host))
             .arg(format!("/u:{}", config.username))
             .arg(format!("/p:{}", config.password))
@@ -214,7 +214,9 @@ pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) 
             .spawn()
             .map_err(|e| format!("Failed to launch RdpHost: {}", e))?;
             
-        return Ok(());
+        let pid = child.id();
+        println!("✅ RdpHost launched. PID: {}", pid);
+        return Ok(("Native Sidecar Launched".to_string(), pid));
     }
 
     // CHECK: 2. FreeRDP (Portable) - GOOD EXPERIENCE (but binary compatibility issues)

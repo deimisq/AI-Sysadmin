@@ -36,17 +36,32 @@ export function NativeRdpCanvas({
             username
         });
 
-        if (!containerRef.current || hasLaunched.current) return;
+        // CRITICAL: Check and set hasLaunched BEFORE any async operations
+        // to prevent React StrictMode double-execution
+        if (hasLaunched.current) {
+            console.log('[NativeRdpCanvas] Skipping - already launched');
+            return;
+        }
 
-        // Mark as launched immediately to prevent duplicates
+        if (!containerRef.current) {
+            console.log('[NativeRdpCanvas] Skipping - no container');
+            return;
+        }
+
+        // Mark as launched IMMEDIATELY to block second StrictMode execution
         hasLaunched.current = true;
+        console.log('[NativeRdpCanvas] Marked as launched, proceeding...');
+
         let isMounted = true;
 
         const launchRdp = async () => {
             try {
-                if (!isMounted) return;
+                console.log('[RDP] Starting launch sequence...', { isMounted });
+                if (!isMounted) {
+                    console.warn('[RDP] Aborted - component unmounted');
+                    return;
+                }
 
-                console.log('[RDP] Starting launch sequence...');
                 setStatus('launching');
 
                 const rect = containerRef.current!.getBoundingClientRect();
@@ -99,16 +114,12 @@ export function NativeRdpCanvas({
             }
         };
 
-        // CRITICAL FIX: Don't use setTimeout - cleanup cancels it
-        // Use Promise microtask instead
-        Promise.resolve().then(() => {
-            if (isMounted && containerRef.current) {
-                console.log('[RDP] Executing launchRdp via microtask');
-                launchRdp();
-            }
-        });
+        // Launch immediately - hasLaunched flag protects against double execution
+        console.log('[RDP] Calling launchRdp() immediately');
+        launchRdp();
 
         return () => {
+            console.log('[RDP] Cleanup called');
             isMounted = false;
         };
     }, [host, username, password]);

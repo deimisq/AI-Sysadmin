@@ -230,7 +230,9 @@ pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) 
             .arg(format!("/h:{}", config.height))
             .arg("/smart-sizing")
             .arg("-decorations") // No window decorations
-            .arg("/cert:ignore")
+            .arg("/cert-ignore") // Compatibility with newer versions
+            .arg("+clipboard")
+            .arg("/sound:sys:alsa") // Disable sound or set to sys
             .spawn()
     } else {
         println!("⚠️ FreeRDP not found. Falling back to MSTSC.");
@@ -281,9 +283,9 @@ pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) 
     println!("RDP Process spawned with PID: {}", pid);
 
     // CHECK: Did it die immediately?
-    thread::sleep(Duration::from_millis(500));
+    thread::sleep(Duration::from_millis(1000)); // Wait a bit longer for FreeRDP to init
     if let Ok(Some(exit_status)) = child.try_wait() {
-        return Err(format!("MSTSC process exited immediately with status: {}", exit_status));
+        return Err(format!("RDP process exited immediately with status: {}", exit_status));
     }
     println!("MSTSC process is stable (PID: {}). Starting window search...", pid);
 

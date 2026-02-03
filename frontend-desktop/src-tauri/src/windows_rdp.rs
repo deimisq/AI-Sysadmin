@@ -83,7 +83,7 @@ fn start_sync_thread<R: Runtime>(window: Window<R>, rdp_hwnd: HWND, offset_x: i3
                 } else {
                     false
                 }
-            }
+            };
             
             if !should_continue {
                 println!("[RDP Sync] Thread stopped");

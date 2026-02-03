@@ -360,6 +360,4 @@ pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) 
     Ok(("RDP Launched".to_string(), pid))
 }
 
-// Updated helper signature to include finding logic flag
-fn spawn_sync_thread<R: Runtime>(window: Window<R>, pid: u32, offset_x: i32, offset_y: i32, width: i32, height: i32, find_and_embed: bool) {
-    let window_clone = window.clone(); // ...
+// End of implementation

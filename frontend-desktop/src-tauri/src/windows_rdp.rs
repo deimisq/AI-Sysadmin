@@ -22,6 +22,10 @@ lazy_static! {
 struct RdpWindowState {
     rdp_hwnd: isize, // Store as isize for thread safety
     should_sync: bool,
+    offset_x: i32,   // Offset from window top-left to RDP container
+    offset_y: i32,
+    width: i32,
+    height: i32,
 }
 
 // Structure to pass RDP config
@@ -48,7 +52,7 @@ pub fn stop_rdp_sync() {
 }
 
 // Start synchronization thread
-fn start_sync_thread<R: Runtime>(window: Window<R>, rdp_hwnd: HWND) {
+fn start_sync_thread<R: Runtime>(window: Window<R>, rdp_hwnd: HWND, offset_x: i32, offset_y: i32, width: i32, height: i32) {
     let rdp_hwnd_raw = rdp_hwnd.0 as isize;
     
     // Store in global state
@@ -57,10 +61,14 @@ fn start_sync_thread<R: Runtime>(window: Window<R>, rdp_hwnd: HWND) {
         *state = Some(RdpWindowState {
             rdp_hwnd: rdp_hwnd_raw,
             should_sync: true,
+            offset_x,
+            offset_y,
+            width,
+            height,
         });
     }
     
-    println!("[RDP Sync] Starting position sync thread");
+    println!("[RDP Sync] Starting position sync thread with offset ({}, {})", offset_x, offset_y);
     
     thread::spawn(move || {
         let mut last_tauri_x = 0i32;
@@ -86,8 +94,9 @@ fn start_sync_thread<R: Runtime>(window: Window<R>, rdp_hwnd: HWND) {
             
             // Get current Tauri window position
             if let Ok(pos) = window.outer_position() {
-                let tauri_x = pos.x;
-                let tauri_y = pos.y;
+                // Calculate absolute RDP position: window position + offset
+                let tauri_x = pos.x + offset_x;
+                let tauri_y = pos.y + offset_y;
                 
                 // AGGRESSIVE MODE: Force position for the first 50 iterations (5 seconds)
                 // to fight MSTSC's tendency to reposition itself after connection
@@ -103,8 +112,6 @@ fn start_sync_thread<R: Runtime>(window: Window<R>, rdp_hwnd: HWND) {
                         if GetWindowRect(rdp_window, &mut rect).is_ok() {
                             let rdp_x = rect.left;
                             let rdp_y = rect.top;
-                            let width = rect.right - rect.left;
-                            let height = rect.bottom - rect.top;
                             
                             // Only update if RDP position differs from desired Tauri position
                             if rdp_x != tauri_x || rdp_y != tauri_y {
@@ -113,13 +120,13 @@ fn start_sync_thread<R: Runtime>(window: Window<R>, rdp_hwnd: HWND) {
                                     Some(windows::Win32::UI::WindowsAndMessaging::HWND_TOPMOST),
                                     tauri_x,
                                     tauri_y,
-                                    width,
+                                    width,  // Use stored dimensions from config
                                     height,
                                     SWP_SHOWWINDOW
                                 );
                                 
                                 if force_update {
-                                    println!("[RDP Sync] FORCE position to ({}, {}) [iter {}]", tauri_x, tauri_y, iteration);
+                                    println!("[RDP Sync] FORCE position to ({}, {}) size ({}, {}) [iter {}]", tauri_x, tauri_y, width, height, iteration);
                                 } else {
                                     println!("[RDP Sync] Updated position to ({}, {})", tauri_x, tauri_y);
                                 }
@@ -200,6 +207,10 @@ pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) 
 
     // Clone window for the sync thread (we'll need it later)
     let window_for_sync = window.clone();
+    let rdp_x = config.x;
+    let rdp_y = config.y;
+    let rdp_width = config.width;
+    let rdp_height = config.height;
 
     // 3. Wait for the window to appear and find its HWND by PID
     thread::spawn(move || {
@@ -289,8 +300,16 @@ pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) 
             }
             println!("RDP Window Embedded Successfully!");
             
+            // Calculate offset from window position
+            let window_pos = window_for_sync.outer_position().unwrap_or_default();
+            let offset_x = rdp_x - window_pos.x;
+            let offset_y = rdp_y - window_pos.y;
+            
+            println!("[RDP] Calculated offset: ({}, {}) from window ({}, {}) to RDP ({}, {})", 
+                offset_x, offset_y, window_pos.x, window_pos.y, rdp_x, rdp_y);
+            
             // Start continuous position synchronization
-            start_sync_thread(window_for_sync, rdp_hwnd);
+            start_sync_thread(window_for_sync, rdp_hwnd, offset_x, offset_y, rdp_width, rdp_height);
         } else {
             println!("Failed to find MSTSC window for PID {}", pid);
         }

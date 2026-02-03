@@ -54,9 +54,19 @@ if ($aximp) {
 }
 
 # Compile
-Write-Host "🔨 Compiling RdpHost.exe..." -ForegroundColor Cyan
-$cmd = "& `"$csc`" /target:winexe /out:`"$binDir\RdpHost.exe`" /reference:`"$srcDir\AxInterop.MSTSCLib.dll`" /reference:`"$srcDir\Interop.MSTSCLib.dll`" `"$srcDir\RdpHost.cs`""
-Invoke-Expression $cmd
+Write-Host "Compiling RdpHost.exe..." -ForegroundColor Cyan
+
+# Construct arguments array for cleaner execution
+$compilerArgs = @(
+    "/target:winexe",
+    "/out:$binDir\RdpHost.exe",
+    "/reference:$srcDir\AxInterop.MSTSCLib.dll",
+    "/reference:$srcDir\Interop.MSTSCLib.dll",
+    "$srcDir\RdpHost.cs"
+)
+
+# Execute compiler directly
+& $csc $compilerArgs
 
 if (Test-Path "$binDir\RdpHost.exe") {
     # Copy DLLs to bin
@@ -64,8 +74,8 @@ if (Test-Path "$binDir\RdpHost.exe") {
     Copy-Item "$srcDir\Interop.MSTSCLib.dll" "$binDir\" -Force
     
     Write-Host ""
-    Write-Host "✅ BUILD SUCCESS!" -ForegroundColor Green
+    Write-Host "BUILD SUCCESS!" -ForegroundColor Green
     Write-Host "Output: $binDir\RdpHost.exe"
 } else {
-    Write-Host "❌ Build failed." -ForegroundColor Red
+    Write-Host "Build failed." -ForegroundColor Red
 }

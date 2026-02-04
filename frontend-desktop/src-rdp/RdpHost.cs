@@ -199,7 +199,7 @@ namespace RdpHost
                                     // Only show error after 10 failed attempts (1 second)
                                     if (attempts > 10) {
                                         embedTimer.Stop();
-                                        MessageBox.Show($"Embedding Failed (Error {err}). Running detached.");
+                                        MessageBox.Show("Embedding Failed (Error " + err + "). Running detached.");
                                     }
                                 }
                             }

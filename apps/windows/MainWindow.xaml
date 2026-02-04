@@ -1,0 +1,34 @@
+<Window x:Class="AiSysadminDesktop.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
+        mc:Ignorable="d"
+        Title="AI Sysadmin Agent" Height="800" Width="1200"
+        WindowStartupLocation="CenterScreen"
+        BackgroundColor="#111111">
+
+    <Grid>
+        <!-- CAPA 1: La Interfaz React -->
+        <!-- Ocupa toda la ventana. El menú, sidebar, etc están aquí. -->
+        <wv2:WebView2 Name="MainWebView" 
+                      Source="http://localhost:5173" 
+                      DefaultBackgroundColor="#1a1b1e"/>
+
+        <!-- CAPA 2: El Host Nativo RDP -->
+        <!-- Inicialmente Colapsado. Se muestra cuando conectamos a un servidor. -->
+        <!-- Usamos un Grid contenedor para poder manejar márgenes dinámicos -->
+        <Grid Name="RdpContainer" Visibility="Collapsed" Background="Black">
+            <!-- WindowsFormsHost permite incrustar controles ActiveX viejos en WPF moderno -->
+            <WindowsFormsHost Name="RdpHost" />
+            
+            <!-- Botón flotante nativo de "Cerrar" por seguridad (backup del botón React) -->
+            <Button Content="❌ Desconectar (Nativo)" 
+                    HorizontalAlignment="Right" VerticalAlignment="Top" 
+                    Margin="0,10,10,0" Padding="10,5"
+                    Click="NativeDisconnect_Click"
+                    Opacity="0.8"/>
+        </Grid>
+    </Grid>
+</Window>

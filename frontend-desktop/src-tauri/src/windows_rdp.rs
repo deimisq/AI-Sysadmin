@@ -74,7 +74,16 @@ fn start_sync_thread<R: Runtime>(window: Window<R>, rdp_pid: u32, offset_x: i32,
     thread::spawn(move || {
         let mut last_tauri_x = 0i32;
         let mut last_tauri_y = 0i32;
+        let mut last_tauri_w = 0u32;
+        let mut last_tauri_h = 0u32;
         let mut iteration = 0u32;
+        
+        // Capture initial window metrics for delta calculation
+        let initial_win_size = window.inner_size().unwrap_or_default();
+        let initial_rdp_width = width;
+        let initial_rdp_height = height;
+        
+        println!("[RDP Sync] Initial Window Size: {}x{}", initial_win_size.width, initial_win_size.height);
         
         loop {
             // Check if we should continue
@@ -93,82 +102,81 @@ fn start_sync_thread<R: Runtime>(window: Window<R>, rdp_pid: u32, offset_x: i32,
             
             iteration += 1;
             
-            if iteration <= 5 || iteration % 10 == 0 {
+            if iteration <= 5 || iteration % 60 == 0 {
                 println!("[RDP Sync] Loop iteration {}", iteration);
             }
             
-            // Get current Tauri window position
-            match window.outer_position() {
-                Ok(pos) => {
-                    // Calculate absolute RDP position: window position + offset
-                    let tauri_x = pos.x + offset_x;
-                    let tauri_y = pos.y + offset_y;
-                    
-                    let window_changed = tauri_x != last_tauri_x || tauri_y != last_tauri_y;
-                    
-                    // AGGRESSIVE MODE: Force position for the first 50 iterations (5 seconds)
-                    let force_update = iteration <= 50;
-                    
-                    if force_update || window_changed {
-                        unsafe {
-                            // DYNAMIC SEARCH: Find RDP window by PID each iteration
-                            // This handles MSTSC creating multiple windows over time
-                            let mut rdp_window = HWND(std::ptr::null_mut());
-                            let mut current_hwnd = HWND(std::ptr::null_mut());
-                            
-                            loop {
-                                match FindWindowExW(None, Some(current_hwnd), None, None) {
-                                    Ok(hwnd) => {
-                                        current_hwnd = hwnd;
-                                        if current_hwnd.0.is_null() {
-                                            break;
-                                        }
-                                    },
-                                    Err(_) => break,
-                                }
-                                
-                                if !IsWindowVisible(current_hwnd).as_bool() {
-                                    continue;
-                                }
-                                
-                                let mut window_pid = 0u32;
-                                GetWindowThreadProcessId(current_hwnd, Some(&mut window_pid));
-                                
-                                if window_pid == rdp_pid {
-                                    rdp_window = current_hwnd;
-                                    break;
-                                }
+            // Get current Tauri window position AND size
+            let current_pos_res = window.outer_position();
+            let current_size_res = window.inner_size();
+            
+            if let (Ok(pos), Ok(size)) = (current_pos_res, current_size_res) {
+                 // Calculate absolute RDP position: window position + offset
+                let tauri_x = pos.x + offset_x;
+                let tauri_y = pos.y + offset_y;
+                
+                // Calculate Dynamic Size based on Delta
+                // Delta = Current - Initial
+                // NewRDP = InitialRDP + Delta
+                let delta_w = (size.width as i32) - (initial_win_size.width as i32);
+                let delta_h = (size.height as i32) - (initial_win_size.height as i32);
+                
+                let target_w = initial_rdp_width + delta_w;
+                let target_h = initial_rdp_height + delta_h;
+                
+                let window_changed = tauri_x != last_tauri_x || tauri_y != last_tauri_y || size.width != last_tauri_w || size.height != last_tauri_h;
+                
+                // AGGRESSIVE MODE: Force position for the first 50 iterations (5 seconds)
+                let force_update = iteration <= 50;
+                
+                if force_update || window_changed {
+                    unsafe {
+                        // Find RDP window by PID each iteration (in case handle changes)
+                        let mut rdp_window = HWND(std::ptr::null_mut());
+                        let mut current_hwnd = HWND(std::ptr::null_mut());
+                        
+                        loop {
+                            match FindWindowExW(None, Some(current_hwnd), None, None) {
+                                Ok(hwnd) => {
+                                    current_hwnd = hwnd;
+                                    if current_hwnd.0.is_null() { break; }
+                                },
+                                Err(_) => break,
                             }
                             
-                            if !rdp_window.0.is_null() {
-                                // Position using ABSOLUTE screen coordinates (floating window)
-                                let _ = SetWindowPos(
-                                    rdp_window,
-                                    Some(windows::Win32::UI::WindowsAndMessaging::HWND_TOPMOST),
-                                    tauri_x,
-                                    tauri_y,
-                                    width,
-                                    height,
-                                    SWP_SHOWWINDOW
-                                );
-                                
-                                if force_update && (iteration <= 5 || iteration % 10 == 0) {
-                                    println!("[RDP Sync] FORCE position to ({}, {}) size ({}, {}) [iter {}]", tauri_x, tauri_y, width, height, iteration);
-                                }
-                            } else {
-                                if iteration <= 5 || iteration % 20 == 0 {
-                                    println!("[RDP Sync] No RDP window found for PID {} at iteration {}", rdp_pid, iteration);
-                                }
+                            if !IsWindowVisible(current_hwnd).as_bool() { continue; }
+                            
+                            let mut window_pid = 0u32;
+                            GetWindowThreadProcessId(current_hwnd, Some(&mut window_pid));
+                            
+                            if window_pid == rdp_pid {
+                                rdp_window = current_hwnd;
+                                break;
                             }
                         }
                         
-                        last_tauri_x = tauri_x;
-                        last_tauri_y = tauri_y;
+                        if !rdp_window.0.is_null() {
+                            // Position using calculated target size
+                            let _ = SetWindowPos(
+                                rdp_window,
+                                Some(windows::Win32::UI::WindowsAndMessaging::HWND_TOPMOST),
+                                tauri_x,
+                                tauri_y,
+                                target_w,
+                                target_h,
+                                SWP_SHOWWINDOW
+                            );
+                            
+                            if force_update && (iteration <= 5 || iteration % 10 == 0) {
+                                println!("[RDP Sync] UPDATE: Pos({}, {}) Size({}x{})", tauri_x, tauri_y, target_w, target_h);
+                            }
+                        }
                     }
-                },
-                Err(e) => {
-                    println!("[RDP Sync] ERROR getting window position: {:?}", e);
-                    // Don't break, just continue trying
+                    
+                    last_tauri_x = tauri_x;
+                    last_tauri_y = tauri_y;
+                    last_tauri_w = size.width;
+                    last_tauri_h = size.height;
                 }
             }
             

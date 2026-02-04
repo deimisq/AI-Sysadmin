@@ -17,30 +17,22 @@ mod windows_rdp_killer;
 
 // Windows RDP Commands Imports
 #[cfg(target_os = "windows")]
-use windows_rdp::{start_native_rdp, stop_native_rdp, update_native_rdp_bounds};
+use windows_rdp::update_native_rdp_bounds;
 
-// Linux Stubs for Windows RDP Commands (to allow cross-platform compile)
-#[cfg(not(target_os = "windows"))]
-#[tauri::command]
-fn start_native_rdp(_host: String, _username: String, _password: String) -> Result<String, String> {
-    Err("Windows only".to_string())
-}
-#[cfg(not(target_os = "windows"))]
-#[tauri::command]
-fn stop_native_rdp() -> Result<String, String> {
-    Err("Windows only".to_string())
-}
+// Linux Stub for update_native_rdp_bounds
 #[cfg(not(target_os = "windows"))]
 #[tauri::command]
 fn update_native_rdp_bounds(_x: i32, _y: i32, _width: i32, _height: i32) {}
 
 // SSH Imports
-use ssh_manager::{SSHManager, SSHCredentials, SSHSessionInfo, FileEntry, start_ssh_session};
+use ssh_manager::{SSHManager, SSHCredentials, SSHSessionInfo, FileEntry};
 use rdp_manager::RDPManager;
 use rdp_frame_capture::RdpFrame;
 use guacamole_manager::GuacamoleManager;
 use std::sync::Mutex;
 use tauri::{State, AppHandle, Window};
+
+// (Duplicate main removed)
 
 // Global app state (shared across the app)
 struct AppState {
@@ -321,26 +313,22 @@ fn main() {
             test_ssh_manual,
             ssh_connect,
             ssh_execute,
-            list_servers,
-            ping_host,
-            test_ssh,
-            save_connection,
-            get_connections,
-            delete_connection,
-            terminal_write,
-            terminal_resize,
+            ssh_disconnect,
+            ssh_list_sessions,
             pty_create,
+            pty_write,
+            pty_resize,
             pty_close,
             sftp_list_files,
             rdp_connect,
-            start_native_rdp,
-            stop_native_rdp,
+            launch_native_rdp,
+            rdp_get_frame,
+            start_embedded_rdp_command,
+            stop_embedded_rdp_command,
             update_native_rdp_bounds,
-            start_ssh_session,
+            guacamole_start,
             guacamole_stop,
-            guacamole_get_url,
-            start_embedded_rdp_command,// Legacy/Wrapper
-            stop_embedded_rdp_command // Legacy
+            guacamole_get_url
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

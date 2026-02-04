@@ -111,9 +111,15 @@ namespace RdpHost
                         rdpClient = new NativeRdpClient(clsid);
                         rdpClient.BeginInit(); 
                         this.Controls.Add(rdpClient);
+                        // FORCE LAYOUT: Dock AND Explicit Size
                         rdpClient.Dock = DockStyle.Fill;
+                        rdpClient.Size = new Size(w, h); 
                         rdpClient.EndInit();
                         rdpClient.CreateControl();
+                        
+                        // Validar nuevamente tamaño
+                        rdpClient.Width = w;
+                        rdpClient.Height = h;
 
                         // Try getting the OCX interface
                         ocx = rdpClient.GetOcx();

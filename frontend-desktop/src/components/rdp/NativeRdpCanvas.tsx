@@ -61,27 +61,34 @@ export function NativeRdpCanvas({
 
                 const rect = containerRef.current!.getBoundingClientRect();
 
+                const scale = window.devicePixelRatio || 1;
+
                 // Ensure valid dimensions
-                if (rect.width < 100 || rect.height < 100) {
-                    console.warn('[RDP] Container too small, retrying in 500ms...', { w: rect.width, h: rect.height });
-                    setTimeout(launchRdp, 500);
+                if (rect.width < 50 || rect.height < 50) {
+                    console.warn('[RDP] Container too small, retrying...');
+                    setTimeout(launchRdp, 200);
                     return;
                 }
 
                 const windowPos = await getCurrentWindow().innerPosition();
 
-                // Absolute Screen Coordinates calculation
-                const screenX = windowPos.x + Math.round(rect.left);
-                const screenY = windowPos.y + Math.round(rect.top);
+                // Absolute Screen Coordinates calculation (Physical Pixels)
+                // rect.left/top are Logical (CSS) pixels. transform to Physical.
+                // windowPos is already Physical (Tauri default).
+
+                const physX = windowPos.x + Math.round(rect.left * scale);
+                const physY = windowPos.y + Math.round(rect.top * scale);
+                const physW = Math.round(rect.width * scale);
+                const physH = Math.round(rect.height * scale);
 
                 const params = {
                     host,
                     username,
                     password,
-                    width: Math.round(rect.width),
-                    height: Math.round(rect.height),
-                    x: screenX,
-                    y: screenY
+                    width: physW,
+                    height: physH,
+                    x: physX,
+                    y: physY
                 };
 
                 // Invoke Rust command
@@ -120,14 +127,14 @@ export function NativeRdpCanvas({
 
         const updateBounds = () => {
             if (containerRef.current) {
+                const scale = window.devicePixelRatio || 1;
                 const rect = containerRef.current.getBoundingClientRect();
-                // rust needs integer coords
-                // x/y are relative to the viewport (client area) because Rust adds them to window position
+                // rust needs integer coords in Physical Pixels
                 invoke('update_native_rdp_bounds', {
-                    x: Math.round(rect.x),
-                    y: Math.round(rect.y),
-                    width: Math.round(rect.width),
-                    height: Math.round(rect.height)
+                    x: Math.round(rect.x * scale),
+                    y: Math.round(rect.y * scale),
+                    width: Math.round(rect.width * scale),
+                    height: Math.round(rect.height * scale)
                 }).catch(e => console.error("Failed to update RDP bounds:", e));
             }
         };

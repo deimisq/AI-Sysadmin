@@ -240,6 +240,13 @@ pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) 
     if needs_compile {
         println!("⚠️ Attempting AUTO-COMPILE of RdpHost.exe from {:?}...", rdp_source_path);
         
+        // KILL existing processes to free the file lock
+        let _ = Command::new("taskkill")
+            .args(&["/F", "/IM", "RdpHost.exe"])
+            .output();
+        // Give OS a moment to release the file handle
+        std::thread::sleep(std::time::Duration::from_millis(500));
+        
         // Output to where source is parent -> binaries
         let output_dir = rdp_source_path.parent().unwrap().parent().unwrap().join("binaries");
         if !output_dir.exists() { let _ = std::fs::create_dir_all(&output_dir); }

@@ -168,10 +168,18 @@ namespace RdpHost
                 // Force initial position
                 this.Location = new Point(x, y);
                 
-                // Ensure visible and top
-                this.TopMost = true; 
+                // Z-ORDER & OWNERSHIP FIX
+                // Instead of TopMost=true (which covers everything), we set the Owner.
+                // This makes this window sit always on top of the Owner, but below other apps.
+                if (parentHwnd != IntPtr.Zero) {
+                    try {
+                        // Set Owner (GWL_HWNDPARENT)
+                        SetWindowLong(this.Handle, -8, parentHwnd); // GWL_HWNDPARENT = -8
+                    } catch {}
+                }
+                
                 this.Show();
-                this.BringToFront();
+                // this.BringToFront(); // Let the Owner relationship handle z-order
 
                 // SUICIDE PACT: Monitor Parent Process
                 // If parent argument was passed, we watch it.

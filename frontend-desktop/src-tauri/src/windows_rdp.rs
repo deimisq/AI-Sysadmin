@@ -85,6 +85,16 @@ fn start_sync_thread<R: Runtime>(window: Window<R>, rdp_pid: u32, offset_x: i32,
         
         println!("[RDP Sync] Initial Window Size: {}x{}", initial_win_size.width, initial_win_size.height);
         
+        // Monitor Margins instead of Delta
+        // This ensures Sidebar/Header sizes remain fixed while content expands
+        let margin_left = offset_x;
+        let margin_top = offset_y;
+        
+        // Calculate Right/Bottom margins based on initial state
+        // WinW = MarginL + RdpW + MarginR  =>  MarginR = WinW - MarginL - RdpW
+        let margin_right = (initial_win_size.width as i32) - margin_left - (initial_rdp_width as i32);
+        let margin_bottom = (initial_win_size.height as i32) - margin_top - (initial_rdp_height as i32);
+        
         loop {
             // Check if we should continue
             let should_continue = {
@@ -115,14 +125,14 @@ fn start_sync_thread<R: Runtime>(window: Window<R>, rdp_pid: u32, offset_x: i32,
                 let tauri_x = pos.x + offset_x;
                 let tauri_y = pos.y + offset_y;
                 
-                // Calculate Dynamic Size based on Delta
-                // Delta = Current - Initial
-                // NewRDP = InitialRDP + Delta
-                let delta_w = (size.width as i32) - (initial_win_size.width as i32);
-                let delta_h = (size.height as i32) - (initial_win_size.height as i32);
+                // Calculate Dynamic Size based on Margins
+                // NewW = CurrentWinW - MarginL - MarginR
+                let target_w = (size.width as i32) - margin_left - margin_right;
+                let target_h = (size.height as i32) - margin_top - margin_bottom;
                 
-                let target_w = initial_rdp_width + delta_w;
-                let target_h = initial_rdp_height + delta_h;
+                // Safety clamp
+                let target_w = if target_w < 100 { 100 } else { target_w };
+                let target_h = if target_h < 100 { 100 } else { target_h };
                 
                 let window_changed = tauri_x != last_tauri_x || tauri_y != last_tauri_y || size.width != last_tauri_w || size.height != last_tauri_h;
                 
@@ -332,7 +342,8 @@ pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) 
             .arg(format!("/y:{}", config.y)) 
             // Pass Parent PID for "Suicide Pact" (Auto-Close if parent dies)
             .arg(format!("/parent_pid:{}", std::process::id()))
-            //.arg(format!("/parent:{}", hwnd_val)) // NO PARENT - Overlay Mode!
+            // Pass Parent HWND for Owner Relationship (Z-Order syncing)
+            .arg(format!("/parent:{}", hwnd_val))      
             .spawn()
             .map_err(|e| format!("Failed to launch RdpHost: {}", e))?;
             

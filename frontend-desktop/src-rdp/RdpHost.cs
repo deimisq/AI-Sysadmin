@@ -115,27 +115,48 @@ namespace RdpHost
 
                 // NO RESIZER LOGIC (Use SmartSizing via Config)
                 this.Resize += (s, e) => {
-                     // Maybe future use
+                     // FIX WHITE SCREEN: Force control to fill client area manually
+                     if (ocx != null && rdpClient != null) {
+                        rdpClient.Bounds = this.ClientRectangle;
+                        rdpClient.Refresh();
+                     }
                 };
 
-                // Configure RDP
+                // Configure RDP connection details
                 ocx.Server = host;
                 ocx.UserName = user;
                 
-                // Advanced settings handling (try/catch for individual props as they vary by version)
+                // --- SMART SIZING CONFIGURATION ---
+                // We set this BEFORE connecting to ensure it applies.
+                bool smartSizingSet = false;
+                
+                // Try AdvancedSettings7 (Newer)
                 try {
                     var advanced = ocx.AdvancedSettings7;
                     if (advanced != null) {
                         advanced.ClearTextPassword = pass;
                         advanced.EnableCredSspSupport = true;
                         advanced.PublicMode = false;
-                        advanced.SmartSizing = true;
+                        advanced.SmartSizing = true; // Critical for resizing
+                        smartSizingSet = true;
                     }
-                } catch {
-                     // Try older interface if AdvancedSettings7 fails
-                     try { ocx.AdvancedSettings2.ClearTextPassword = pass; } catch {}
+                } catch {}
+
+                // Try AdvancedSettings2 (Old fallback)
+                if (!smartSizingSet) {
+                    try {
+                        var advanced = ocx.AdvancedSettings2;
+                        if (advanced != null) {
+                            advanced.ClearTextPassword = pass;
+                            advanced.SmartSizing = true; 
+                        }
+                    } catch {}
                 }
                 
+                // Also setting properties directly on OCX if exposed (some wrappers do this)
+                try { ocx.SmartSizing = true; } catch {}
+
+                // CONNECT
                 ocx.Connect();
                 
                 // OVERLAY MODE (No SetParent)

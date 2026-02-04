@@ -67,72 +67,14 @@ namespace RdpHost
         {
             try
             {
-                // Init Resize Timer
-                resizeTimer = new System.Windows.Forms.Timer();
-                resizeTimer.Interval = 1000; // Wait 1s after resize ends (Debounce)
-                resizeTimer.Tick += (s, e) => {
-                    resizeTimer.Stop();
-                    // RECONNECT STRATEGY (Like mRemoteNG)
-                    // This is the only checks-and-balances way to guarantee native resolution update
-                    try {
-                        if (ocx != null && this.Width > 100 && this.Height > 100) {
-                             // Check if size actually changed significantly to avoid loops
-                             // Can't easily check current desktop width without casting, so we just do it.
-                             
-                             // 1. Disconnect
-                             try { 
-                                if (ocx.Connected == 1) ocx.Disconnect(); 
-                             } catch {}
-                             
-                             // 2. Update Resolution
-                             try {
-                                 ocx.DesktopWidth = this.Width;
-                                 ocx.DesktopHeight = this.Height;
-                             } catch {}
-                             
-                             // 3. Reconnect
-                             ocx.Connect();
-                        }
-                    } catch {}
-                };
-
-                this.Resize += (s, e) => {
-                    resizeTimer.Stop();
-                    resizeTimer.Start();
-                };
-
-                // Parse arguments
-                string host = "", user = "", pass = "";
-                int width = 800, height = 600;
-                int x = 0, y = 0; // Default to 0,0
-                IntPtr parentHwnd = IntPtr.Zero;
-
-                for (int i = 0; i < args.Length; i++)
-                {
-                    if (args[i].StartsWith("/parent:")) {
-                        try { parentHwnd = new IntPtr(long.Parse(args[i].Substring(8))); } catch {}
-                    }
-                    if (args[i].StartsWith("/v:")) host = args[i].Substring(3);
-                    if (args[i].StartsWith("/u:")) user = args[i].Substring(3);
-                    if (args[i].StartsWith("/p:")) pass = args[i].Substring(3);
-                    if (args[i].StartsWith("/w:")) try { width = int.Parse(args[i].Substring(3)); } catch {}
-                    if (args[i].StartsWith("/h:")) try { height = int.Parse(args[i].Substring(3)); } catch {}
-                    if (args[i].StartsWith("/x:")) try { x = int.Parse(args[i].Substring(3)); } catch {}
-                    if (args[i].StartsWith("/y:")) try { y = int.Parse(args[i].Substring(3)); } catch {}
-                }
-
-                // Window Setup
-                this.FormBorderStyle = FormBorderStyle.None;
-                this.StartPosition = FormStartPosition.Manual; // Essential for manual positioning
-                this.Location = new Point(x, y);
-                this.Width = width;
-                this.Height = height;
-                this.BackColor = Color.Black;
-                this.ShowInTaskbar = false;
-                
                 // --- SMART INIT LOOP ---
                 bool success = false;
                 // dynamic ocx = null; // MOVED TO CLASS FIELD
+
+                // State for resize-reconnect
+                bool pendingReconnect = false;
+                int targetWidth = 0;
+                int targetHeight = 0;
 
                 foreach (var clsid in RDP_CLSIDS)
                 {
@@ -146,7 +88,7 @@ namespace RdpHost
 
                         // Try initializing
                         rdpClient = new NativeRdpClient(clsid);
-                        rdpClient.BeginInit(); // AxHost lifecycle
+                        rdpClient.BeginInit(); 
                         this.Controls.Add(rdpClient);
                         rdpClient.Dock = DockStyle.Fill;
                         rdpClient.EndInit();
@@ -158,16 +100,27 @@ namespace RdpHost
                         // Validate
                         if (ocx != null) 
                         {
-                            // Try accessing a property to ensure binding works
                             var test = ocx.Server; 
                             success = true;
-                            // Console.WriteLine("Initialized with CLSID: " + clsid);
+                            
+                            // Bind OnDisconnected Event for Safe Reconnection
+                            rdpClient.OnDisconnected += new AxHost.DisconnectEventHandler((s, e) => {
+                                if (pendingReconnect) {
+                                    pendingReconnect = false;
+                                    try {
+                                        // NOW it is safe to update and reconnect
+                                        ocx.DesktopWidth = targetWidth;
+                                        ocx.DesktopHeight = targetHeight;
+                                        ocx.Connect();
+                                    } catch {}
+                                }
+                            });
+                            
                             break; 
                         }
                     }
                     catch 
                     {
-                        // Failed, try next
                         continue;
                     }
                 }
@@ -178,6 +131,35 @@ namespace RdpHost
                     Application.Exit();
                     return;
                 }
+
+                // SETUP RESIZER LOGIC
+                // Init Resize Timer
+                resizeTimer = new System.Windows.Forms.Timer();
+                resizeTimer.Interval = 1000; // Wait 1s after resize ends (Debounce)
+                resizeTimer.Tick += (s, e) => {
+                    resizeTimer.Stop();
+                    // TRIGGER RECONNECT
+                    try {
+                        if (ocx != null && this.Width > 100 && this.Height > 100) {
+                             if (ocx.Connected == 1) {
+                                 pendingReconnect = true;
+                                 targetWidth = this.Width;
+                                 targetHeight = this.Height;
+                                 ocx.Disconnect(); // This triggers OnDisconnected
+                             } else {
+                                 // Not connected? Just try connecting.
+                                 ocx.DesktopWidth = this.Width;
+                                 ocx.DesktopHeight = this.Height;
+                                 ocx.Connect();
+                             }
+                        }
+                    } catch {}
+                };
+
+                this.Resize += (s, e) => {
+                    resizeTimer.Stop();
+                    resizeTimer.Start();
+                };
 
                 // Configure RDP
                 ocx.Server = host;
@@ -207,17 +189,21 @@ namespace RdpHost
                 this.Location = new Point(x, y);
                 
                 // Z-ORDER & OWNERSHIP FIX
-                // Instead of TopMost=true (which covers everything), we set the Owner.
-                // This makes this window sit always on top of the Owner, but below other apps.
+                // We use a timer to enforce Owner AFTER the window is fully shown/loaded.
+                // This prevents WinForms from resetting the parent.
                 if (parentHwnd != IntPtr.Zero) {
-                    try {
-                        // Set Owner (GWL_HWNDPARENT)
-                        SetWindowLong(this.Handle, -8, parentHwnd); // GWL_HWNDPARENT = -8
-                    } catch {}
+                    System.Windows.Forms.Timer ownerTimer = new System.Windows.Forms.Timer();
+                    ownerTimer.Interval = 100;
+                    ownerTimer.Tick += (s, e) => {
+                        ownerTimer.Stop();
+                        try {
+                            SetWindowLong(this.Handle, -8, parentHwnd); // GWL_HWNDPARENT
+                        } catch {}
+                    };
+                    ownerTimer.Start();
                 }
                 
                 this.Show();
-                // this.BringToFront(); // Let the Owner relationship handle z-order
 
                 // SUICIDE PACT: Monitor Parent Process
                 // If parent argument was passed, we watch it.

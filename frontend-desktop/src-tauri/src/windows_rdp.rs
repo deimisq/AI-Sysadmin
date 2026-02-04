@@ -166,18 +166,20 @@ fn start_sync_thread<R: Runtime>(window: Window<R>, rdp_pid: u32, offset_x: i32,
                         }
                         
                         if !rdp_window.0.is_null() {
-                            // Position using calculated target size
-                            let _ = SetWindowPos(
-                                rdp_window,
-                                Some(windows::Win32::UI::WindowsAndMessaging::HWND_TOPMOST),
-                                tauri_x,
-                                tauri_y,
-                                target_w,
-                                target_h,
-                                SWP_SHOWWINDOW
-                            );
-                            
-                            if force_update && (iteration <= 5 || iteration % 10 == 0) {
+                                // Position using ABSOLUTE screen coordinates (floating window)
+                                // DO NOT USE HWND_TOPMOST! It breaks Z-Order with other apps.
+                                // We use HWND_TOP (0) which just puts it in Z-order stack relative to owner.
+                                let _ = SetWindowPos(
+                                    rdp_window,
+                                    Some(windows::Win32::UI::WindowsAndMessaging::HWND(0 as isize)), // HWND_TOP = 0
+                                    tauri_x,
+                                    tauri_y,
+                                    target_w,
+                                    target_h,
+                                    SWP_SHOWWINDOW
+                                );
+                                
+                                if force_update && (iteration <= 5 || iteration % 10 == 0) {
                                 println!("[RDP Sync] UPDATE: Pos({}, {}) Size({}x{})", tauri_x, tauri_y, target_w, target_h);
                             }
                         }

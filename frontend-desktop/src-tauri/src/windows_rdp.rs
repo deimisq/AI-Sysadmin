@@ -4,11 +4,11 @@ use std::time::Duration;
 use std::sync::{Arc, Mutex};
 use tauri::{Window, Runtime};
 use windows::core::PCWSTR;
-use windows::Win32::Foundation::{HWND, RECT};
+use windows::Win32::Foundation::{HWND};
 use windows::Win32::UI::WindowsAndMessaging::{
     SetWindowPos, GetWindowLongPtrW, SetWindowLongPtrW, GetWindowThreadProcessId,
-    FindWindowExW, IsWindowVisible, GetWindowRect,
-    SWP_SHOWWINDOW, SWP_NOZORDER, GWL_STYLE, GWL_EXSTYLE,
+    FindWindowExW, IsWindowVisible,
+    SWP_SHOWWINDOW, GWL_STYLE, GWL_EXSTYLE,
     WS_CAPTION, WS_THICKFRAME, WS_CHILD, WS_POPUP,
     WS_MAXIMIZEBOX, WS_MINIMIZEBOX, WS_SYSMENU, WS_VISIBLE,
 };
@@ -170,7 +170,7 @@ fn start_sync_thread<R: Runtime>(window: Window<R>, rdp_pid: u32, offset_x: i32,
                                 // We use HWND(0) which corresponds to HWND_TOP (top of z-order but not topmost)
                                 let _ = SetWindowPos(
                                     rdp_window,
-                                    Some(HWND(0)), // Correct usage of imported HWND
+                                    Some(HWND(std::ptr::null_mut())), // Correct usage of imported HWND with null pointer
                                     tauri_x,
                                     tauri_y,
                                     target_w,
@@ -276,7 +276,7 @@ pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) 
              r"C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe",
         ];
         
-        let mut compile_success = false;
+        // let mut compile_success = false; // Unused
         
         for csc in csc_paths {
             if Path::new(csc).exists() {
@@ -299,7 +299,7 @@ pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) 
                         if out.status.success() {
                             println!("✅ Compilation SUCCESS! Created: {:?}", output_exe);
                             rdp_host_path = output_exe;
-                            compile_success = true;
+                            // compile_success = true;
                             found_binary = true; // Now we have it
                             break;
                         } else {
@@ -324,8 +324,8 @@ pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) 
         // Calculate Relative Position (Offset) for Child Window
         // Input config.x/y are SCREEN coordinates. We need CLIENT coordinates relative to parent.
         let window_pos = window.outer_position().unwrap_or_default();
-        let rel_x = config.x - window_pos.x; 
-        let rel_y = config.y - window_pos.y;
+        // let rel_x = config.x - window_pos.x; 
+        // let rel_y = config.y - window_pos.y;
         
         // Adjust for titlebar/borders if necessary (usually outer_position includes them)
         // For now, simple diff is a good starting point.

@@ -30,6 +30,8 @@ Write-Host "Found compiler: $csc" -ForegroundColor Green
 # Compile - No references needed! dynamic handles it.
 $compilerArgs = @(
     "/target:winexe",
+    "/platform:x64",
+    "/optimize",
     "/out:$binDir\RdpHost.exe",
     "/reference:System.Windows.Forms.dll",
     "/reference:System.Drawing.dll",

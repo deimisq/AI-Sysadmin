@@ -9,12 +9,13 @@ namespace RdpHost
     // Custom wrapper to avoid external DLL dependencies (Zero-Dependency AxHost)
     public class NativeRdpClient : AxHost
     {
-        // CLSID for MsRdpClient9NotSafeForScripting
-        public NativeRdpClient() : base("54d38bf7-b1ef-4479-9674-1bd6ea465258") 
+        // CLSID for MsRdpClient9NotSafeForScripting or generic MsRdpClient
+        // Using generic MsRdpClient7 CLSID: 9059f30f-4eb1-4bd2-9fdc-36f43a218f4a
+        // Or if that fails, try the newer one: 54d38bf7-b1ef-4479-9674-1bd6ea465258
+        public NativeRdpClient() : base("9059f30f-4eb1-4bd2-9fdc-36f43a218f4a") 
         {
         }
 
-        // Fix for "ActiveX control cannot be instantiated"
         protected override void AttachInterfaces()
         {
             base.AttachInterfaces();
@@ -25,19 +26,39 @@ namespace RdpHost
     {
         private NativeRdpClient rdpClient;
         
-        // P/Invoke for embedding
-        [DllImport("user32.dll")]
+        // P/Invoke - Using EntryPoint alias to handle 32/64 bit differences if needed
+        [DllImport("user32.dll", SetLastError = true)]
         static extern IntPtr SetParent(IntPtr hWndChild, IntPtr hWndNewParent);
         
-        [DllImport("user32.dll")]
-        static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
+        // Correct 64-bit signature
+        [DllImport("user32.dll", EntryPoint="GetWindowLong")]
+        private static extern IntPtr GetWindowLongPtr32(IntPtr hWnd, int nIndex);
+        
+        [DllImport("user32.dll", EntryPoint="GetWindowLongPtr")]
+        private static extern IntPtr GetWindowLongPtr64(IntPtr hWnd, int nIndex);
+        
+        [DllImport("user32.dll", EntryPoint="SetWindowLong")]
+        private static extern IntPtr SetWindowLongPtr32(IntPtr hWnd, int nIndex, IntPtr dwNewLong);
+        
+        [DllImport("user32.dll", EntryPoint="SetWindowLongPtr")]
+        private static extern IntPtr SetWindowLongPtr64(IntPtr hWnd, int nIndex, IntPtr dwNewLong);
 
-        [DllImport("user32.dll")]
-        static extern int GetWindowLong(IntPtr hWnd, int nIndex);
+        // Wrapper to auto-select 32/64
+        public static IntPtr GetWindowLong(IntPtr hWnd, int nIndex)
+        {
+            if (IntPtr.Size == 8) return GetWindowLongPtr64(hWnd, nIndex);
+            else return GetWindowLongPtr32(hWnd, nIndex);
+        }
+
+        public static IntPtr SetWindowLong(IntPtr hWnd, int nIndex, IntPtr dwNewLong)
+        {
+             if (IntPtr.Size == 8) return SetWindowLongPtr64(hWnd, nIndex, dwNewLong);
+             else return SetWindowLongPtr32(hWnd, nIndex, dwNewLong);
+        }
         
         const int GWL_STYLE = -16;
-        const int WS_CHILD = 0x40000000;
-        const int WS_POPUP = unchecked((int)0x80000000);
+        const long WS_CHILD = 0x40000000;
+        const long WS_POPUP = 0x80000000;
 
         public RdpForm(string[] args)
         {
@@ -50,7 +71,10 @@ namespace RdpHost
 
                 for (int i = 0; i < args.Length; i++)
                 {
-                    if (args[i].StartsWith("/parent:")) parentHwnd = new IntPtr(long.Parse(args[i].Substring(8)));
+                    if (args[i].StartsWith("/parent:")) {
+                        long val = long.Parse(args[i].Substring(8));
+                        parentHwnd = new IntPtr(val);
+                    }
                     if (args[i].StartsWith("/v:")) host = args[i].Substring(3);
                     if (args[i].StartsWith("/u:")) user = args[i].Substring(3);
                     if (args[i].StartsWith("/p:")) pass = args[i].Substring(3);
@@ -64,45 +88,54 @@ namespace RdpHost
                 this.Height = height;
                 this.BackColor = Color.Black;
                 this.ShowInTaskbar = false;
+                this.WindowState = FormWindowState.Normal;
 
                 // Initialize RDP Control dynamically
                 rdpClient = new NativeRdpClient();
                 this.Controls.Add(rdpClient);
                 rdpClient.Dock = DockStyle.Fill;
                 
-                // We need to wait for Handle creation to use OCX methods
+                // OCX Access
                 rdpClient.CreateControl();
-                
-                // Use dynamic to access properties without typed DLLs
                 dynamic ocx = rdpClient.GetOcx();
 
                 ocx.Server = host;
                 ocx.UserName = user;
-                
-                // AdvancedSettings7 property
                 var advanced = ocx.AdvancedSettings7;
                 advanced.ClearTextPassword = pass;
                 advanced.EnableCredSspSupport = true;
                 advanced.PublicMode = false;
-                advanced.SmartSizing = true;
+                advanced.SmartSizing = true; // IMPORTANT for resize
                 
-                // Connect
                 ocx.Connect();
                 
-                // Embed if parent provided
+                // EMBEDDING LOGIC
                 if (parentHwnd != IntPtr.Zero)
                 {
                     this.Load += (s, e) => {
-                        // Change style to Child
-                        int style = GetWindowLong(this.Handle, GWL_STYLE);
-                        SetWindowLong(this.Handle, GWL_STYLE, (style & ~WS_POPUP) | WS_CHILD);
-                        SetParent(this.Handle, parentHwnd);
+                        // 1. Remove Popup style, Add Child style
+                        IntPtr currentStylePtr = GetWindowLong(this.Handle, GWL_STYLE);
+                        long currentStyle = currentStylePtr.ToInt64();
+                        long newStyle = (currentStyle & ~WS_POPUP) | WS_CHILD;
+                        
+                        SetWindowLong(this.Handle, GWL_STYLE, new IntPtr(newStyle));
+                        
+                        // 2. Set Parent
+                        IntPtr result = SetParent(this.Handle, parentHwnd);
+                        
+                        if (result == IntPtr.Zero) {
+                            // If embedding fails, try to act as a synced overlay at least
+                            // MessageBox.Show("Failed to embed window. Running detached.");
+                        }
                     };
+                    
+                    // Force resize on load to fill parent? No, listener needed.
+                    // But SmartSizing=true handles internal resize.
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error: " + ex.Message + "\n" + ex.StackTrace);
+                MessageBox.Show("RDP Error: " + ex.Message);
                 Application.Exit();
             }
         }

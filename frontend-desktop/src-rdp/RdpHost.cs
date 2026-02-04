@@ -211,13 +211,6 @@ namespace RdpHost
 
                 // SUICIDE PACT: Monitor Parent Process
                 // If parent argument was passed, we watch it.
-                int parentPid = 0;
-                foreach(string a in args) {
-                     if (a.StartsWith("/parent_pid:")) {
-                         try { parentPid = int.Parse(a.Substring(12)); } catch {}
-                     }
-                }
-
                 if (parentPid > 0) {
                      System.Windows.Forms.Timer stayAliveTimer = new System.Windows.Forms.Timer();
                      stayAliveTimer.Interval = 500;

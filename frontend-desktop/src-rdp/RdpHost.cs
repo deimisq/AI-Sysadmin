@@ -65,6 +65,32 @@ namespace RdpHost
 
         public RdpForm(string[] args)
         {
+            // --- ARGUMENT PARSING ---
+            string host = "";
+            string user = "";
+            string pass = "";
+            int w = 800; int h = 600;
+            int x = 0; int y = 0;
+            IntPtr parentHwnd = IntPtr.Zero;
+            int parentPid = 0;
+
+            foreach (var a in args) {
+                try {
+                    if(a.StartsWith("/v:")) host = a.Substring(3);
+                    if(a.StartsWith("/u:")) user = a.Substring(3);
+                    if(a.StartsWith("/p:")) pass = a.Substring(3);
+                    if(a.StartsWith("/w:")) int.TryParse(a.Substring(3), out w);
+                    if(a.StartsWith("/h:")) int.TryParse(a.Substring(3), out h);
+                    if(a.StartsWith("/x:")) int.TryParse(a.Substring(3), out x);
+                    if(a.StartsWith("/y:")) int.TryParse(a.Substring(3), out y);
+                    if(a.StartsWith("/parent:")) {
+                         long val;
+                         if (long.TryParse(a.Substring(8), out val)) parentHwnd = (IntPtr)val;
+                    }
+                    if(a.StartsWith("/parent_pid:")) int.TryParse(a.Substring(12), out parentPid);
+                } catch {}
+            }
+
             try
             {
                 // --- SMART INIT LOOP ---

@@ -189,19 +189,93 @@ pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) 
     let app_dir = current_exe.parent().unwrap_or(std::path::Path::new("."));
 
     // CHECK: 1. Custom RdpHost.exe (C# Sidecar, ActiveX Native) - BEST EXPERIENCE
-    let rdp_host_path = app_dir.join("binaries").join("RdpHost.exe");
-    let dev_rdp_host_path = current_dir.join("frontend-desktop").join("binaries").join("RdpHost.exe");
-    let dev_rdp_host_path_2 = current_dir.join("binaries").join("RdpHost.exe");
-    
-    let use_rdp_host = rdp_host_path.exists() || dev_rdp_host_path.exists() || dev_rdp_host_path_2.exists();
+    // Auto-detect paths relative to CWD
+    let possible_roots = vec![
+        current_dir.clone(),
+        current_dir.join("frontend-desktop"),
+        current_dir.parent().unwrap_or(Path::new(".")).to_path_buf(),
+        app_dir.to_path_buf(),
+    ];
+
+    let mut rdp_host_path = PathBuf::new();
+    let mut rdp_source_path = PathBuf::new();
+    let mut found_binary = false;
+    let mut found_source = false;
+
+    // Search for Binary
+    for root in &possible_roots {
+        let p = root.join("binaries").join("RdpHost.exe");
+        if p.exists() {
+            rdp_host_path = p;
+            found_binary = true;
+            break;
+        }
+    }
+
+    // Search for Source (for auto-compile)
+    for root in &possible_roots {
+        let p = root.join("src-rdp").join("RdpHost.cs");
+        if p.exists() {
+            rdp_source_path = p;
+            found_source = true;
+            break;
+        }
+    }
+
+    // AUTO-COMPILE if binary missing but source exists
+    if !found_binary && found_source {
+        println!("⚠️ RdpHost.exe not found, but source found at {:?}. Attempting AUTO-COMPILE...", rdp_source_path);
+        
+        // Output to where source is parent -> binaries
+        let output_dir = rdp_source_path.parent().unwrap().parent().unwrap().join("binaries");
+        if !output_dir.exists() { let _ = std::fs::create_dir_all(&output_dir); }
+        let output_exe = output_dir.join("RdpHost.exe");
+        
+        let csc_paths = vec![
+             r"C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe",
+             r"C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe",
+        ];
+        
+        for csc in csc_paths {
+            if Path::new(csc).exists() {
+                println!("🔨 Compiling with {}", csc);
+                let status = Command::new(csc)
+                    .args(&[
+                        "/target:winexe",
+                        "/platform:x64", 
+                        "/optimize",
+                        &format!("/out:{}", output_exe.to_string_lossy()),
+                        "/reference:System.Windows.Forms.dll",
+                        "/reference:System.Drawing.dll",
+                        "/reference:Microsoft.CSharp.dll",
+                        &rdp_source_path.to_string_lossy()
+                    ])
+                    .output();
+                    
+                match status {
+                    Ok(out) => {
+                        if out.status.success() {
+                            println!("✅ Compilation SUCCESS! Created: {:?}", output_exe);
+                            rdp_host_path = output_exe;
+                            found_binary = true;
+                            break;
+                        } else {
+                            println!("❌ Compilation FAILED: {}", String::from_utf8_lossy(&out.stdout));
+                        }
+                    },
+                    Err(e) => println!("❌ Failed to run csc: {}", e),
+                }
+            }
+        }
+    }
+
+    let use_rdp_host = found_binary;
 
     if use_rdp_host {
-        let exe_path = if rdp_host_path.exists() { rdp_host_path } 
-                      else if dev_rdp_host_path.exists() { dev_rdp_host_path }
-                      else { dev_rdp_host_path_2 };
-                      
+        let exe_path = rdp_host_path;
         println!("🚀 Launching Native Sidecar (RdpHost.exe) from: {:?}", exe_path);
         
+        // Ensure we have a valid parent HWND
         let hwnd = window.hwnd().map(|h| h.0 as isize).unwrap_or(0);
 
         // RdpHost manages its own embedding via /parent. 

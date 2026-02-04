@@ -311,8 +311,7 @@ pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) 
         // Adjust for titlebar/borders if necessary (usually outer_position includes them)
         // For now, simple diff is a good starting point.
         
-        println!("📍 RDP Positioning: Screen({},{}) Window({},{}) -> Relative({},{})", 
-            config.x, config.y, window_pos.x, window_pos.y, rel_x, rel_y);
+        println!("📍 RDP Positioning: Screen({},{})", config.x, config.y);
 
         let child = Command::new(exe_path)
             .arg(format!("/v:{}", config.host))
@@ -320,14 +319,34 @@ pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) 
             .arg(format!("/p:{}", config.password))
             .arg(format!("/w:{}", config.width))
             .arg(format!("/h:{}", config.height))
-            .arg(format!("/x:{}", rel_x)) // Pass relative X
-            .arg(format!("/y:{}", rel_y)) // Pass relative Y
-            .arg(format!("/parent:{}", hwnd_val))
+            // Pass absolute coords for initial placement
+            .arg(format!("/x:{}", config.x)) 
+            .arg(format!("/y:{}", config.y)) 
+            //.arg(format!("/parent:{}", hwnd_val)) // NO PARENT - Overlay Mode!
             .spawn()
             .map_err(|e| format!("Failed to launch RdpHost: {}", e))?;
             
         let pid = child.id();
         println!("✅ RdpHost launched. PID: {}", pid);
+        
+        // ENABLE SYNC THREAD (Overlay Bonding)
+        // We treated RdpHost like MSTSC now: Find window -> Bond position loop
+        let window_clone = window.clone();
+        let rdp_width = config.width;
+        let rdp_height = config.height;
+        
+        // RECALCULATE OFFSET for Sync Thread (It needs relative offset from Window Top-Left)
+        // Since config.x/y are the TARGET SCREEN COORDS, and window_pos is CURRENT WINDOW SCREEN COORDS
+        // Offset = Target - Window
+        let win_pos = window.outer_position().unwrap_or_default();
+        let offset_x = config.x - win_pos.x;
+        let offset_y = config.y - win_pos.y;
+        
+        // Reuse the logic we had for finding MSTSC windows, but applied to RdpHost PID
+        thread::spawn(move || {
+             spawn_sync_thread(window_clone, pid, offset_x, offset_y, rdp_width, rdp_height, true);
+        });
+
         return Ok(("Native Sidecar Launched".to_string(), pid));
     }
 

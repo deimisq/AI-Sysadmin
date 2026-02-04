@@ -161,60 +161,17 @@ namespace RdpHost
                 
                 ocx.Connect();
                 
-                // EMBEDDING (SetParent) - Robust approach with Timer
-                if (parentHwnd != IntPtr.Zero)
-                {
-                    System.Windows.Forms.Timer embedTimer = new System.Windows.Forms.Timer();
-                    embedTimer.Interval = 100; // Check every 100ms
-                    int attempts = 0;
-                    bool isEmbedded = false;
-
-                    embedTimer.Tick += (s, e) => {
-                         try {
-                            if (!isEmbedded || GetParent(this.Handle) != parentHwnd)
-                            {
-                                // 1. Set Parent FIRST
-                                IntPtr result = SetParent(this.Handle, parentHwnd);
-                                
-                                if (result != IntPtr.Zero) {
-                                    isEmbedded = true;
-                                    
-                                    // 2. Adjust Styles for Child Window
-                                    IntPtr currentStylePtr = GetWindowLong(this.Handle, GWL_STYLE);
-                                    long currentStyle = currentStylePtr.ToInt64();
-                                    
-                                    // Remove POPUP/CAPTION, Add CHILD/VISIBLE/CLIPSIBLINGS
-                                    long newStyle = (currentStyle & ~(WS_POPUP | 0x00C00000)) | WS_CHILD | 0x10000000 | 0x04000000; 
-                                    SetWindowLong(this.Handle, GWL_STYLE, new IntPtr(newStyle));
-                                    
-                                    // 3. Move to Correct Position (Again, to be sure)
-                                    this.Location = new Point(x, y);
-                                    
-                                    // 4. Force Z-Order (Top of Parent)
-                                    SetWindowPos(this.Handle, (IntPtr)0, 0, 0, 0, 0, 0x0001 | 0x0002); // SWP_NOSIZE | SWP_NOMOVE (just Z-order if needed)
-                                }
-                                else
-                                {
-                                    int err = Marshal.GetLastWin32Error();
-                                    // Only show error after 10 failed attempts (1 second)
-                                    if (attempts > 10) {
-                                        embedTimer.Stop();
-                                        MessageBox.Show("Embedding Failed (Error " + err + "). Running detached.");
-                                    }
-                                }
-                            }
-                            
-                            attempts++;
-                            if (attempts > 50) embedTimer.Stop(); // Stop checking after 5 seconds to save resources
-                            
-                         } catch (Exception ex) {
-                             embedTimer.Stop();
-                             MessageBox.Show("Embedding Error: " + ex.Message);
-                         }
-                    };
-                    
-                    embedTimer.Start();
-                }
+                // OVERLAY MODE (No SetParent)
+                // The main Rust app will handle positioning via SetWindowPos in a sync loop.
+                // We just need to ensure we are a clean, borderless window.
+                
+                // Force initial position
+                this.Location = new Point(x, y);
+                
+                // Ensure visible and top
+                this.TopMost = true; 
+                this.Show();
+                this.BringToFront();
             }
             catch (Exception ex)
             {
@@ -222,12 +179,6 @@ namespace RdpHost
                 Application.Exit();
             }
         }
-        
-        [DllImport("user32.dll", ExactSpelling=true, CharSet=CharSet.Auto)]
-        public static extern IntPtr GetParent(IntPtr hWnd);
-        
-        [DllImport("user32.dll", SetLastError=true)]
-        static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
     }
 
     static class Program
@@ -239,7 +190,7 @@ namespace RdpHost
         static void Main(string[] args)
         {
             try {
-                SetProcessDPIAware(); // CRITICAL for multi-monitor/high-DPI embedding
+                SetProcessDPIAware(); 
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
                 Application.Run(new RdpForm(args));

@@ -232,12 +232,20 @@ namespace RdpHost
 
     static class Program
     {
+        [DllImport("user32.dll")]
+        private static extern bool SetProcessDPIAware();
+
         [STAThread]
         static void Main(string[] args)
         {
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new RdpForm(args));
+            try {
+                SetProcessDPIAware(); // CRITICAL for multi-monitor/high-DPI embedding
+                Application.EnableVisualStyles();
+                Application.SetCompatibleTextRenderingDefault(false);
+                Application.Run(new RdpForm(args));
+            } catch (Exception ex) {
+                MessageBox.Show("FATAL ERROR: " + ex.ToString());
+            }
         }
     }
 }

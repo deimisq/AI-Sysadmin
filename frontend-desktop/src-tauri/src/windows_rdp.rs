@@ -330,6 +330,8 @@ pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) 
             // Pass absolute coords for initial placement
             .arg(format!("/x:{}", config.x)) 
             .arg(format!("/y:{}", config.y)) 
+            // Pass Parent PID for "Suicide Pact" (Auto-Close if parent dies)
+            .arg(format!("/parent_pid:{}", std::process::id()))
             //.arg(format!("/parent:{}", hwnd_val)) // NO PARENT - Overlay Mode!
             .spawn()
             .map_err(|e| format!("Failed to launch RdpHost: {}", e))?;

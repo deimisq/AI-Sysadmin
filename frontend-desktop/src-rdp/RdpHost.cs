@@ -172,6 +172,32 @@ namespace RdpHost
                 this.TopMost = true; 
                 this.Show();
                 this.BringToFront();
+
+                // SUICIDE PACT: Monitor Parent Process
+                // If parent argument was passed, we watch it.
+                int parentPid = 0;
+                foreach(string a in args) {
+                     if (a.StartsWith("/parent_pid:")) {
+                         try { parentPid = int.Parse(a.Substring(12)); } catch {}
+                     }
+                }
+
+                if (parentPid > 0) {
+                     System.Windows.Forms.Timer stayAliveTimer = new System.Windows.Forms.Timer();
+                     stayAliveTimer.Interval = 500;
+                     stayAliveTimer.Tick += (s, e) => {
+                         try {
+                             System.Diagnostics.Process p = System.Diagnostics.Process.GetProcessById(parentPid);
+                             if (p == null || p.HasExited) {
+                                 Application.Exit(); // Die if parent is gone
+                             }
+                         } catch {
+                             // If GetProcessById throws, process is likely gone or inaccessible
+                             Application.Exit();
+                         }
+                     };
+                     stayAliveTimer.Start();
+                }
             }
             catch (Exception ex)
             {

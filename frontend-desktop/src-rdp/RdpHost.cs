@@ -189,8 +189,12 @@ namespace RdpHost
                 // The main Rust app will handle positioning via SetWindowPos in a sync loop.
                 // We just need to ensure we are a clean, borderless window.
                 
-                // Force initial position
+                // FORCE BORDERLESS & SIZE
+                this.FormBorderStyle = FormBorderStyle.None;
+                this.BackColor = Color.Black;
+                this.StartPosition = FormStartPosition.Manual;
                 this.Location = new Point(x, y);
+                this.Size = new Size(w, h);
                 
                 // Z-ORDER & OWNERSHIP FIX
                 // We use a timer to enforce Owner AFTER the window is fully shown/loaded.

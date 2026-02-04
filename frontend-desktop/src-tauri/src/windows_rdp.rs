@@ -344,7 +344,7 @@ pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) 
         
         // Reuse the logic we had for finding MSTSC windows, but applied to RdpHost PID
         thread::spawn(move || {
-             spawn_sync_thread(window_clone, pid, offset_x, offset_y, rdp_width, rdp_height, true);
+             start_sync_thread(window_clone, pid, offset_x, offset_y, rdp_width, rdp_height);
         });
 
         return Ok(("Native Sidecar Launched".to_string(), pid));

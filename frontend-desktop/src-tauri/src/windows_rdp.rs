@@ -296,7 +296,7 @@ pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) 
         
         // Calculate Relative Position (Offset) for Child Window
         // Input config.x/y are SCREEN coordinates. We need CLIENT coordinates relative to parent.
-        let window_pos = window.outer_position().unwrap_or_default();
+        // let window_pos = window.outer_position().unwrap_or_default(); // Unused
         // let rel_x = config.x - window_pos.x; 
         // let rel_y = config.y - window_pos.y;
         

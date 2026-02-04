@@ -8,12 +8,34 @@ mod rdp_manager;
 mod rdp_sidecar;
 mod rdp_frame_capture;
 mod guacamole_manager;
+
+// Windows RDP Module
 #[cfg(target_os = "windows")]
 mod windows_rdp;
 #[cfg(target_os = "windows")]
 mod windows_rdp_killer;
 
-use ssh_manager::{SSHManager, SSHCredentials, SSHSessionInfo, FileEntry};
+// Windows RDP Commands Imports
+#[cfg(target_os = "windows")]
+use windows_rdp::{start_native_rdp, stop_native_rdp, update_native_rdp_bounds};
+
+// Linux Stubs for Windows RDP Commands (to allow cross-platform compile)
+#[cfg(not(target_os = "windows"))]
+#[tauri::command]
+fn start_native_rdp(_host: String, _username: String, _password: String) -> Result<String, String> {
+    Err("Windows only".to_string())
+}
+#[cfg(not(target_os = "windows"))]
+#[tauri::command]
+fn stop_native_rdp() -> Result<String, String> {
+    Err("Windows only".to_string())
+}
+#[cfg(not(target_os = "windows"))]
+#[tauri::command]
+fn update_native_rdp_bounds(_x: i32, _y: i32, _width: i32, _height: i32) {}
+
+// SSH Imports
+use ssh_manager::{SSHManager, SSHCredentials, SSHSessionInfo, FileEntry, start_ssh_session};
 use rdp_manager::RDPManager;
 use rdp_frame_capture::RdpFrame;
 use guacamole_manager::GuacamoleManager;
@@ -299,22 +321,26 @@ fn main() {
             test_ssh_manual,
             ssh_connect,
             ssh_execute,
-            ssh_disconnect,
-            ssh_list_sessions,
+            list_servers,
+            ping_host,
+            test_ssh,
+            save_connection,
+            get_connections,
+            delete_connection,
+            terminal_write,
+            terminal_resize,
             pty_create,
-            pty_write,
-            pty_resize,
             pty_close,
             sftp_list_files,
             rdp_connect,
-            windows_rdp::start_native_rdp,
-            windows_rdp::stop_native_rdp,
-            windows_rdp::update_native_rdp_bounds,
-            ssh_manager::start_ssh_session,
+            start_native_rdp,
+            stop_native_rdp,
+            update_native_rdp_bounds,
+            start_ssh_session,
             guacamole_stop,
             guacamole_get_url,
-            start_embedded_rdp_command,
-            stop_embedded_rdp_command,
+            start_embedded_rdp_command,// Legacy/Wrapper
+            stop_embedded_rdp_command // Legacy
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

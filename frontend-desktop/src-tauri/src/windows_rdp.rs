@@ -222,9 +222,23 @@ pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) 
         }
     }
 
-    // AUTO-COMPILE if binary missing but source exists
-    if !found_binary && found_source {
-        println!("⚠️ RdpHost.exe not found, but source found at {:?}. Attempting AUTO-COMPILE...", rdp_source_path);
+    // AUTO-COMPILE logic enhanced: Check generic existence OR if source is newer
+    let mut needs_compile = !found_binary && found_source;
+    
+    if found_binary && found_source {
+        // Check timestamps
+        if let (Ok(meta_bin), Ok(meta_src)) = (std::fs::metadata(&rdp_host_path), std::fs::metadata(&rdp_source_path)) {
+            if let (Ok(time_bin), Ok(time_src)) = (meta_bin.modified(), meta_src.modified()) {
+                if time_src > time_bin {
+                    println!("♻️ Source (RdpHost.cs) is newer than Binary. Recompiling...");
+                    needs_compile = true;
+                }
+            }
+        }
+    }
+
+    if needs_compile {
+        println!("⚠️ Attempting AUTO-COMPILE of RdpHost.exe from {:?}...", rdp_source_path);
         
         // Output to where source is parent -> binaries
         let output_dir = rdp_source_path.parent().unwrap().parent().unwrap().join("binaries");
@@ -235,6 +249,8 @@ pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) 
              r"C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe",
              r"C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe",
         ];
+        
+        let mut compile_success = false;
         
         for csc in csc_paths {
             if Path::new(csc).exists() {
@@ -257,7 +273,8 @@ pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) 
                         if out.status.success() {
                             println!("✅ Compilation SUCCESS! Created: {:?}", output_exe);
                             rdp_host_path = output_exe;
-                            found_binary = true;
+                            compile_success = true;
+                            found_binary = true; // Now we have it
                             break;
                         } else {
                             println!("❌ Compilation FAILED: {}", String::from_utf8_lossy(&out.stdout));

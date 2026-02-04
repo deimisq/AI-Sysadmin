@@ -2,23 +2,15 @@ using System;
 using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
-using System.Reflection;
+using System.Collections.Generic;
 
 namespace RdpHost
 {
-    // Custom wrapper to avoid external DLL dependencies (Zero-Dependency AxHost)
+    // RDP Client wraper expecting a specific CLSID
     public class NativeRdpClient : AxHost
     {
-        // CLSID for MsRdpClient9NotSafeForScripting or generic MsRdpClient
-        // Using generic MsRdpClient7 CLSID: 9059f30f-4eb1-4bd2-9fdc-36f43a218f4a
-        // Or if that fails, try the newer one: 54d38bf7-b1ef-4479-9674-1bd6ea465258
-        public NativeRdpClient() : base("9059f30f-4eb1-4bd2-9fdc-36f43a218f4a") 
+        public NativeRdpClient(string clsid) : base(clsid) 
         {
-        }
-
-        protected override void AttachInterfaces()
-        {
-            base.AttachInterfaces();
         }
     }
 
@@ -26,11 +18,9 @@ namespace RdpHost
     {
         private NativeRdpClient rdpClient;
         
-        // P/Invoke - Using EntryPoint alias to handle 32/64 bit differences if needed
         [DllImport("user32.dll", SetLastError = true)]
         static extern IntPtr SetParent(IntPtr hWndChild, IntPtr hWndNewParent);
         
-        // Correct 64-bit signature
         [DllImport("user32.dll", EntryPoint="GetWindowLong")]
         private static extern IntPtr GetWindowLongPtr32(IntPtr hWnd, int nIndex);
         
@@ -43,7 +33,6 @@ namespace RdpHost
         [DllImport("user32.dll", EntryPoint="SetWindowLongPtr")]
         private static extern IntPtr SetWindowLongPtr64(IntPtr hWnd, int nIndex, IntPtr dwNewLong);
 
-        // Wrapper to auto-select 32/64
         public static IntPtr GetWindowLong(IntPtr hWnd, int nIndex)
         {
             if (IntPtr.Size == 8) return GetWindowLongPtr64(hWnd, nIndex);
@@ -60,6 +49,16 @@ namespace RdpHost
         const long WS_CHILD = 0x40000000;
         const long WS_POPUP = 0x80000000;
 
+        // List of CLSIDs to try (Newest -> Oldest)
+        static readonly string[] RDP_CLSIDS = new string[] {
+            // MsRdpClient9NotSafeForScripting (Windows 10/11 standard)
+            "54d38bf7-b1ef-4479-9674-1bd6ea465258", 
+            // MsRdpClient7
+            "9059f30f-4eb1-4bd2-9fdc-36f43a218f4a",
+            // MsTscAx Generic (Old reliable fallback)
+            "7cacbd7b-0d99-468f-ac33-22e495c0afe5" 
+        };
+
         public RdpForm(string[] args)
         {
             try
@@ -72,14 +71,13 @@ namespace RdpHost
                 for (int i = 0; i < args.Length; i++)
                 {
                     if (args[i].StartsWith("/parent:")) {
-                        long val = long.Parse(args[i].Substring(8));
-                        parentHwnd = new IntPtr(val);
+                        try { parentHwnd = new IntPtr(long.Parse(args[i].Substring(8))); } catch {}
                     }
                     if (args[i].StartsWith("/v:")) host = args[i].Substring(3);
                     if (args[i].StartsWith("/u:")) user = args[i].Substring(3);
                     if (args[i].StartsWith("/p:")) pass = args[i].Substring(3);
-                    if (args[i].StartsWith("/w:")) width = int.Parse(args[i].Substring(3));
-                    if (args[i].StartsWith("/h:")) height = int.Parse(args[i].Substring(3));
+                    if (args[i].StartsWith("/w:")) try { width = int.Parse(args[i].Substring(3)); } catch {}
+                    if (args[i].StartsWith("/h:")) try { height = int.Parse(args[i].Substring(3)); } catch {}
                 }
 
                 // Window Setup
@@ -88,54 +86,96 @@ namespace RdpHost
                 this.Height = height;
                 this.BackColor = Color.Black;
                 this.ShowInTaskbar = false;
-                this.WindowState = FormWindowState.Normal;
-
-                // Initialize RDP Control dynamically
-                rdpClient = new NativeRdpClient();
-                this.Controls.Add(rdpClient);
-                rdpClient.Dock = DockStyle.Fill;
                 
-                // OCX Access
-                rdpClient.CreateControl();
-                dynamic ocx = rdpClient.GetOcx();
+                // --- SMART INIT LOOP ---
+                bool success = false;
+                dynamic ocx = null;
 
+                foreach (var clsid in RDP_CLSIDS)
+                {
+                    try 
+                    {
+                        // Dispose previous attempt if any
+                        if (rdpClient != null) {
+                            this.Controls.Remove(rdpClient);
+                            rdpClient.Dispose();
+                        }
+
+                        // Try initializing
+                        rdpClient = new NativeRdpClient(clsid);
+                        rdpClient.BeginInit(); // AxHost lifecycle
+                        this.Controls.Add(rdpClient);
+                        rdpClient.Dock = DockStyle.Fill;
+                        rdpClient.EndInit();
+                        rdpClient.CreateControl();
+
+                        // Try getting the OCX interface
+                        ocx = rdpClient.GetOcx();
+                        
+                        // Validate
+                        if (ocx != null) 
+                        {
+                            // Try accessing a property to ensure binding works
+                            var test = ocx.Server; 
+                            success = true;
+                            // Console.WriteLine("Initialized with CLSID: " + clsid);
+                            break; 
+                        }
+                    }
+                    catch 
+                    {
+                        // Failed, try next
+                        continue;
+                    }
+                }
+
+                if (!success || ocx == null)
+                {
+                    MessageBox.Show("Error: No compatible RDP Client found (ActiveX). Please update Windows.");
+                    Application.Exit();
+                    return;
+                }
+
+                // Configure RDP
                 ocx.Server = host;
                 ocx.UserName = user;
-                var advanced = ocx.AdvancedSettings7;
-                advanced.ClearTextPassword = pass;
-                advanced.EnableCredSspSupport = true;
-                advanced.PublicMode = false;
-                advanced.SmartSizing = true; // IMPORTANT for resize
+                
+                // Advanced settings handling (try/catch for individual props as they vary by version)
+                try {
+                    var advanced = ocx.AdvancedSettings7;
+                    if (advanced != null) {
+                        advanced.ClearTextPassword = pass;
+                        advanced.EnableCredSspSupport = true;
+                        advanced.PublicMode = false;
+                        advanced.SmartSizing = true;
+                    }
+                } catch {
+                     // Try older interface if AdvancedSettings7 fails
+                     try { ocx.AdvancedSettings2.ClearTextPassword = pass; } catch {}
+                }
                 
                 ocx.Connect();
                 
-                // EMBEDDING LOGIC
+                // EMBEDDING (SetParent)
                 if (parentHwnd != IntPtr.Zero)
                 {
                     this.Load += (s, e) => {
-                        // 1. Remove Popup style, Add Child style
-                        IntPtr currentStylePtr = GetWindowLong(this.Handle, GWL_STYLE);
-                        long currentStyle = currentStylePtr.ToInt64();
-                        long newStyle = (currentStyle & ~WS_POPUP) | WS_CHILD;
-                        
-                        SetWindowLong(this.Handle, GWL_STYLE, new IntPtr(newStyle));
-                        
-                        // 2. Set Parent
-                        IntPtr result = SetParent(this.Handle, parentHwnd);
-                        
-                        if (result == IntPtr.Zero) {
-                            // If embedding fails, try to act as a synced overlay at least
-                            // MessageBox.Show("Failed to embed window. Running detached.");
+                        try {
+                            IntPtr currentStylePtr = GetWindowLong(this.Handle, GWL_STYLE);
+                            long currentStyle = currentStylePtr.ToInt64();
+                            long newStyle = (currentStyle & ~WS_POPUP) | WS_CHILD;
+                            
+                            SetWindowLong(this.Handle, GWL_STYLE, new IntPtr(newStyle));
+                            SetParent(this.Handle, parentHwnd);
+                        } catch (Exception ex) {
+                            MessageBox.Show("Embedding Error: " + ex.Message);
                         }
                     };
-                    
-                    // Force resize on load to fill parent? No, listener needed.
-                    // But SmartSizing=true handles internal resize.
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show("RDP Error: " + ex.Message);
+                MessageBox.Show("Critical RDP Error: " + ex.Message);
                 Application.Exit();
             }
         }

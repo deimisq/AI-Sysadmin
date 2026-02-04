@@ -22,12 +22,14 @@ export function NativeRdpCanvas({
     const containerRef = useRef<HTMLDivElement>(null);
     const [status, setStatus] = useState<'init' | 'launching' | 'active' | 'error'>('init');
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
+    const [processId, setProcessId] = useState<number | null>(null);
 
     const hasLaunched = useRef(false);
 
     // DEBUG: Log component mount
     console.log('[NativeRdpCanvas] Component rendered/mounted', { host, username });
 
+    // --- LAUNCH LOGIC ---
     useEffect(() => {
         console.log('[NativeRdpCanvas] useEffect triggered', {
             hasContainer: !!containerRef.current,
@@ -37,7 +39,6 @@ export function NativeRdpCanvas({
         });
 
         // CRITICAL: Check and set hasLaunched BEFORE any async operations
-        // to prevent React StrictMode double-execution
         if (hasLaunched.current) {
             console.log('[NativeRdpCanvas] Skipping - already launched');
             return;
@@ -48,24 +49,17 @@ export function NativeRdpCanvas({
             return;
         }
 
-        // Mark as launched IMMEDIATELY to block second StrictMode execution
+        // Mark as launched IMMEDIATELY
         hasLaunched.current = true;
-        console.log('[NativeRdpCanvas] Marked as launched, proceeding...');
 
         let isMounted = true;
 
         const launchRdp = async () => {
             try {
-                console.log('[RDP] Starting launch sequence...', { isMounted });
-                if (!isMounted) {
-                    console.warn('[RDP] Aborted - component unmounted');
-                    return;
-                }
-
+                if (!isMounted) return;
                 setStatus('launching');
 
                 const rect = containerRef.current!.getBoundingClientRect();
-                console.log('[RDP] Container rect:', rect);
 
                 // Ensure valid dimensions
                 if (rect.width < 100 || rect.height < 100) {
@@ -74,12 +68,9 @@ export function NativeRdpCanvas({
                     return;
                 }
 
-                // Calculate Absolute Screen Coordinates
-                console.log('[RDP] Getting window position...');
                 const windowPos = await getCurrentWindow().innerPosition();
-                console.log('[RDP] Window position:', windowPos);
 
-                // 2. Add element offset
+                // Absolute Screen Coordinates calculation
                 const screenX = windowPos.x + Math.round(rect.left);
                 const screenY = windowPos.y + Math.round(rect.top);
 
@@ -93,62 +84,95 @@ export function NativeRdpCanvas({
                     y: screenY
                 };
 
-                console.log('[RDP] Invoking Tauri command with params:', params);
-
-                // Invoke Rust command with ABSOLUTE coordinates
-                const result = await invoke('start_embedded_rdp_command', params);
+                // Invoke Rust command
+                const result = await invoke('start_embedded_rdp_command', params) as [string, number];
+                // Rust returns [message, pid] tuple
 
                 console.log('[RDP] Command returned:', result);
 
-                if (isMounted) setStatus('active');
+                if (isMounted) {
+                    const pid = result[1];
+                    setProcessId(pid);
+                    setStatus('active');
+                }
 
             } catch (err: any) {
                 console.error("[RDP] FATAL ERROR:", err);
-                console.error("[RDP] Error stack:", err.stack);
-                console.error("[RDP] Error details:", JSON.stringify(err, null, 2));
-
                 if (isMounted) {
-                    setErrorMsg(`RDP Launch Failed: ${err.toString()}`);
+                    setErrorMsg(`Launch Failed: ${err.toString()}`);
                     setStatus('error');
                 }
             }
         };
 
-        // Launch immediately - hasLaunched flag protects against double execution
-        console.log('[RDP] Calling launchRdp() immediately');
         launchRdp();
 
         return () => {
-            console.log('[RDP] Cleanup called');
             isMounted = false;
+            // Note: We rely on the Rust "Suicide Pact" (parent_pid monitor) to kill the process on app exit.
+            // Explicit kill here is tricky because React StrictMode triggers unmount/remount
         };
-    }, [host, username, password]);
+    }, [host, username, password]); // Removed processId dependency to avoid re-triggering
+
+    // --- RESIZE OBSERVER LOGIC ---
+    useEffect(() => {
+        if (!processId || !containerRef.current) return;
+
+        const updateBounds = () => {
+            if (containerRef.current) {
+                const rect = containerRef.current.getBoundingClientRect();
+                // rust needs integer coords
+                // x/y are relative to the viewport (client area) because Rust adds them to window position
+                invoke('update_native_rdp_bounds', {
+                    x: Math.round(rect.x),
+                    y: Math.round(rect.y),
+                    width: Math.round(rect.width),
+                    height: Math.round(rect.height)
+                }).catch(e => console.error("Failed to update RDP bounds:", e));
+            }
+        };
+
+        const observer = new ResizeObserver(() => {
+            updateBounds();
+            // Debounce / delay updates to catch animations
+            setTimeout(updateBounds, 100);
+            setTimeout(updateBounds, 300);
+        });
+
+        observer.observe(containerRef.current);
+        window.addEventListener('resize', updateBounds);
+
+        // Initial update
+        updateBounds();
+
+        return () => {
+            observer.disconnect();
+            window.removeEventListener('resize', updateBounds);
+        };
+    }, [processId]); // Only activate watcher when Process ID is known
 
     return (
         <div
             ref={containerRef}
-            className="w-full h-full bg-black relative flex items-center justify-center overflow-hidden"
+            id="rdp-native-container"
+            className="w-full h-full bg-black relative overflow-hidden flex items-center justify-center"
+            style={{ minHeight: '400px' }}
         >
             {status === 'launching' && (
-                <div className="text-white flex flex-col items-center">
+                <div className="text-white flex flex-col items-center z-10">
                     <div className="animate-spin text-4xl mb-4">⚙️</div>
-                    <p>Launching Native Windows RDP...</p>
+                    <p>Launching Native Sidecar...</p>
                 </div>
             )}
 
             {status === 'active' && (
-                <div className="text-gray-500 flex flex-col items-center p-8 bg-gray-900/80 rounded-lg border border-gray-700 pointer-events-none">
-                    <div className="text-4xl mb-4">🖥️</div>
-                    <p className="font-bold text-white mb-2">RDP Session Active</p>
-                    <p className="text-sm max-w-md text-center">
-                        The native RDP window is floating above this area.
-                        Mode: Overlay (WS_POPUP)
-                    </p>
+                <div className="absolute top-2 right-2 text-xs text-gray-500 opacity-50 pointer-events-none z-10 hover:opacity-100 transition-opacity">
+                    Native RDP Active (PID: {processId})
                 </div>
             )}
 
             {status === 'error' && (
-                <div className="text-red-400 p-4 border border-red-500 rounded bg-red-900/20">
+                <div className="text-red-400 p-4 border border-red-500 rounded bg-red-900/20 z-10">
                     <p className="font-bold">Failed to launch RDP</p>
                     <pre className="text-xs mt-2">{errorMsg}</pre>
                 </div>
@@ -156,3 +180,5 @@ export function NativeRdpCanvas({
         </div>
     );
 }
+
+export default NativeRdpCanvas;

@@ -53,6 +53,20 @@ pub fn stop_rdp_sync() {
     }
 }
 
+// Update bounds command
+#[tauri::command]
+pub fn update_native_rdp_bounds(x: i32, y: i32, width: i32, height: i32) {
+    if let Ok(mut state) = RDP_WINDOW_STATE.lock() {
+        if let Some(s) = state.as_mut() {
+            s.offset_x = x; // These will now interpret as "Offset from window" or "Absolute" depending on frontend logic
+            s.offset_y = y; // Frontend sends RELATIVE coord to window (offsetLeft/Top)
+            s.width = width;
+            s.height = height;
+            // println!("[RDP Sync] Updated bounds: x={} y={} w={} h={}", x, y, width, height);
+        }
+    }
+}
+
 // Start synchronization thread
 fn start_sync_thread<R: Runtime>(window: Window<R>, rdp_pid: u32, offset_x: i32, offset_y: i32, width: i32, height: i32) {
     
@@ -69,77 +83,43 @@ fn start_sync_thread<R: Runtime>(window: Window<R>, rdp_pid: u32, offset_x: i32,
         });
     }
     
-    println!("[RDP Sync] Starting position sync thread with PID {} and offset ({}, {})", rdp_pid, offset_x, offset_y);
+    println!("[RDP Sync] Starting thread PID {}", rdp_pid);
     
     thread::spawn(move || {
         let mut last_tauri_x = 0i32;
         let mut last_tauri_y = 0i32;
-        let mut last_tauri_w = 0u32;
-        let mut last_tauri_h = 0u32;
-        let mut iteration = 0u32;
-        
-        // Capture initial window metrics for delta calculation
-        let initial_win_size = window.inner_size().unwrap_or_default();
-        let initial_rdp_width = width;
-        let initial_rdp_height = height;
-        
-        println!("[RDP Sync] Initial Window Size: {}x{}", initial_win_size.width, initial_win_size.height);
-        
-        // Monitor Margins instead of Delta
-        // This ensures Sidebar/Header sizes remain fixed while content expands
-        let margin_left = offset_x;
-        let margin_top = offset_y;
-        
-        // Calculate Right/Bottom margins based on initial state
-        // WinW = MarginL + RdpW + MarginR  =>  MarginR = WinW - MarginL - RdpW
-        let margin_right = (initial_win_size.width as i32) - margin_left - (initial_rdp_width as i32);
-        let margin_bottom = (initial_win_size.height as i32) - margin_top - (initial_rdp_height as i32);
+        let mut last_tauri_w = 0i32;
+        let mut last_tauri_h = 0i32;
         
         loop {
-            // Check if we should continue
-            let should_continue = {
+            // Read latest target bounds from State (updated by Frontend)
+            let (should_continue, off_x, off_y, target_w, target_h) = {
                 if let Ok(state) = RDP_WINDOW_STATE.lock() {
-                    state.as_ref().map(|s| s.should_sync).unwrap_or(false)
+                    if let Some(s) = state.as_ref() {
+                        (s.should_sync, s.offset_x, s.offset_y, s.width, s.height)
+                    } else {
+                        (false, 0, 0, 0, 0)
+                    }
                 } else {
-                    false
+                    (false, 0, 0, 0, 0)
                 }
             };
             
             if !should_continue {
-                println!("[RDP Sync] Thread stopped");
                 break;
             }
             
-            iteration += 1;
-            
-            if iteration <= 5 || iteration % 60 == 0 {
-                println!("[RDP Sync] Loop iteration {}", iteration);
-            }
-            
-            // Get current Tauri window position AND size
-            let current_pos_res = window.outer_position();
-            let current_size_res = window.inner_size();
-            
-            if let (Ok(pos), Ok(size)) = (current_pos_res, current_size_res) {
-                 // Calculate absolute RDP position: window position + offset
-                let tauri_x = pos.x + offset_x;
-                let tauri_y = pos.y + offset_y;
-                
-                // Calculate Dynamic Size based on Margins
-                // NewW = CurrentWinW - MarginL - MarginR
-                let target_w = (size.width as i32) - margin_left - margin_right;
-                let target_h = (size.height as i32) - margin_top - margin_bottom;
-                
-                // Safety clamp
-                let target_w = if target_w < 100 { 100 } else { target_w };
-                let target_h = if target_h < 100 { 100 } else { target_h };
-                
-                let window_changed = tauri_x != last_tauri_x || tauri_y != last_tauri_y || size.width != last_tauri_w || size.height != last_tauri_h;
-                
-                // AGGRESSIVE MODE: Force position for the first 50 iterations (5 seconds)
-                let force_update = iteration <= 50;
-                
-                if force_update || window_changed {
+            // Get current Tauri window position
+            if let Ok(pos) = window.outer_position() {
+                 
+                 // ABSOLUTE SCREEN COORDS = WindowPos + ElementOffset
+                 let tauri_x = pos.x + off_x;
+                 let tauri_y = pos.y + off_y;
+                 
+                 // Check if ANYTHING changed (Window moved OR Element resized)
+                 let changed = tauri_x != last_tauri_x || tauri_y != last_tauri_y || target_w != last_tauri_w || target_h != last_tauri_h;
+                 
+                 if changed {
                     unsafe {
                         // Find RDP window by PID each iteration (in case handle changes)
                         let mut rdp_window = HWND(std::ptr::null_mut());
@@ -164,34 +144,27 @@ fn start_sync_thread<R: Runtime>(window: Window<R>, rdp_pid: u32, offset_x: i32,
                                 break;
                             }
                         }
+                        
                         if !rdp_window.0.is_null() {
-                                // Position using ABSOLUTE screen coordinates (floating window)
-                                // DO NOT USE HWND_TOPMOST! It breaks Z-Order with other apps.
-                                // We use HWND(0) which corresponds to HWND_TOP (top of z-order but not topmost)
-                                let _ = SetWindowPos(
-                                    rdp_window,
-                                    Some(HWND(std::ptr::null_mut())), // Correct usage of imported HWND with null pointer
-                                    tauri_x,
-                                    tauri_y,
-                                    target_w,
-                                    target_h,
-                                    SWP_SHOWWINDOW
-                                );
-                                
-                                if force_update && (iteration <= 5 || iteration % 10 == 0) {
-                                    println!("[RDP Sync] UPDATE: Pos({}, {}) Size({}x{})", tauri_x, tauri_y, target_w, target_h);
-                                }
-                            }
+                            let _ = SetWindowPos(
+                                rdp_window,
+                                Some(HWND(std::ptr::null_mut())), 
+                                tauri_x,
+                                tauri_y,
+                                target_w,
+                                target_h,
+                                SWP_SHOWWINDOW
+                            );
                         }
+                    }
                     
                     last_tauri_x = tauri_x;
                     last_tauri_y = tauri_y;
-                    last_tauri_w = size.width;
-                    last_tauri_h = size.height;
-                }
+                    last_tauri_w = target_w;
+                    last_tauri_h = target_h;
+                 }
             }
             
-            // Sync every 16ms (60 FPS) for smooth movement
             thread::sleep(Duration::from_millis(16));
         }
     });

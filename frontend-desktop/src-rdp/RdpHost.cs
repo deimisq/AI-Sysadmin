@@ -71,11 +71,6 @@ namespace RdpHost
                 bool success = false;
                 // dynamic ocx = null; // MOVED TO CLASS FIELD
 
-                // State for resize-reconnect
-                bool pendingReconnect = false;
-                int targetWidth = 0;
-                int targetHeight = 0;
-
                 foreach (var clsid in RDP_CLSIDS)
                 {
                     try 
@@ -102,20 +97,6 @@ namespace RdpHost
                         {
                             var test = ocx.Server; 
                             success = true;
-                            
-                            // Bind OnDisconnected Event for Safe Reconnection
-                            rdpClient.OnDisconnected += new AxHost.DisconnectEventHandler((s, e) => {
-                                if (pendingReconnect) {
-                                    pendingReconnect = false;
-                                    try {
-                                        // NOW it is safe to update and reconnect
-                                        ocx.DesktopWidth = targetWidth;
-                                        ocx.DesktopHeight = targetHeight;
-                                        ocx.Connect();
-                                    } catch {}
-                                }
-                            });
-                            
                             break; 
                         }
                     }
@@ -132,33 +113,9 @@ namespace RdpHost
                     return;
                 }
 
-                // SETUP RESIZER LOGIC
-                // Init Resize Timer
-                resizeTimer = new System.Windows.Forms.Timer();
-                resizeTimer.Interval = 1000; // Wait 1s after resize ends (Debounce)
-                resizeTimer.Tick += (s, e) => {
-                    resizeTimer.Stop();
-                    // TRIGGER RECONNECT
-                    try {
-                        if (ocx != null && this.Width > 100 && this.Height > 100) {
-                             if (ocx.Connected == 1) {
-                                 pendingReconnect = true;
-                                 targetWidth = this.Width;
-                                 targetHeight = this.Height;
-                                 ocx.Disconnect(); // This triggers OnDisconnected
-                             } else {
-                                 // Not connected? Just try connecting.
-                                 ocx.DesktopWidth = this.Width;
-                                 ocx.DesktopHeight = this.Height;
-                                 ocx.Connect();
-                             }
-                        }
-                    } catch {}
-                };
-
+                // NO RESIZER LOGIC (Use SmartSizing via Config)
                 this.Resize += (s, e) => {
-                    resizeTimer.Stop();
-                    resizeTimer.Start();
+                     // Maybe future use
                 };
 
                 // Configure RDP

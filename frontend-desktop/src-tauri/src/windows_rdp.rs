@@ -293,20 +293,29 @@ pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) 
         println!("🚀 Launching Native Sidecar (RdpHost.exe) from: {:?}", exe_path);
         
         // Ensure we have a valid parent HWND
-        let hwnd = window.hwnd().map(|h| h.0 as isize).unwrap_or(0);
-
-        // RdpHost manages its own embedding via /parent. 
-        // We do NOT start the sync thread because RdpHost is a true child window 
-        // and using SetWindowPos with screen coordinates (like the sync thread does) would break it.
-        // TODO: Add a resize listener thread if needed.
+        let hwnd_val = window.hwnd().map(|h| h.0 as isize).unwrap_or(0);
         
+        // Calculate Relative Position (Offset) for Child Window
+        // Input config.x/y are SCREEN coordinates. We need CLIENT coordinates relative to parent.
+        let window_pos = window.outer_position().unwrap_or_default();
+        let rel_x = config.x - window_pos.x; 
+        let rel_y = config.y - window_pos.y;
+        
+        // Adjust for titlebar/borders if necessary (usually outer_position includes them)
+        // For now, simple diff is a good starting point.
+        
+        println!("📍 RDP Positioning: Screen({},{}) Window({},{}) -> Relative({},{})", 
+            config.x, config.y, window_pos.x, window_pos.y, rel_x, rel_y);
+
         let child = Command::new(exe_path)
             .arg(format!("/v:{}", config.host))
             .arg(format!("/u:{}", config.username))
             .arg(format!("/p:{}", config.password))
             .arg(format!("/w:{}", config.width))
             .arg(format!("/h:{}", config.height))
-            .arg(format!("/parent:{}", hwnd))
+            .arg(format!("/x:{}", rel_x)) // Pass relative X
+            .arg(format!("/y:{}", rel_y)) // Pass relative Y
+            .arg(format!("/parent:{}", hwnd_val))
             .spawn()
             .map_err(|e| format!("Failed to launch RdpHost: {}", e))?;
             

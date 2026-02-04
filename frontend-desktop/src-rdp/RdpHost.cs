@@ -66,6 +66,7 @@ namespace RdpHost
                 // Parse arguments
                 string host = "", user = "", pass = "";
                 int width = 800, height = 600;
+                int x = 0, y = 0; // Default to 0,0
                 IntPtr parentHwnd = IntPtr.Zero;
 
                 for (int i = 0; i < args.Length; i++)
@@ -78,10 +79,14 @@ namespace RdpHost
                     if (args[i].StartsWith("/p:")) pass = args[i].Substring(3);
                     if (args[i].StartsWith("/w:")) try { width = int.Parse(args[i].Substring(3)); } catch {}
                     if (args[i].StartsWith("/h:")) try { height = int.Parse(args[i].Substring(3)); } catch {}
+                    if (args[i].StartsWith("/x:")) try { x = int.Parse(args[i].Substring(3)); } catch {}
+                    if (args[i].StartsWith("/y:")) try { y = int.Parse(args[i].Substring(3)); } catch {}
                 }
 
                 // Window Setup
                 this.FormBorderStyle = FormBorderStyle.None;
+                this.StartPosition = FormStartPosition.Manual; // Essential for manual positioning
+                this.Location = new Point(x, y);
                 this.Width = width;
                 this.Height = height;
                 this.BackColor = Color.Black;

@@ -69,21 +69,29 @@ namespace RdpHost
             {
                 // Init Resize Timer
                 resizeTimer = new System.Windows.Forms.Timer();
-                resizeTimer.Interval = 800; // Wait 800ms after resize ends
+                resizeTimer.Interval = 1000; // Wait 1s after resize ends (Debounce)
                 resizeTimer.Tick += (s, e) => {
                     resizeTimer.Stop();
-                    // Request Resolution Update
+                    // RECONNECT STRATEGY (Like mRemoteNG)
+                    // This is the only checks-and-balances way to guarantee native resolution update
                     try {
                         if (ocx != null && this.Width > 100 && this.Height > 100) {
-                            // UpdateSessionDisplaySettings(width, height, width, height, orientation, desktopScaleFactor, deviceScaleFactor)
-                            // Or simpler overload depending on interface version. Using generic call via dynamic.
-                            // Note: This requires RDP 8.1+ support on server.
-                            try {
-                                ocx.UpdateSessionDisplaySettings((uint)this.Width, (uint)this.Height, (uint)this.Width, (uint)this.Height, 0, 100, 100);
-                            } catch {
-                                // Fallback for older interfaces
-                                try { ocx.UpdateSessionDisplaySettings((uint)this.Width, (uint)this.Height); } catch {}
-                            }
+                             // Check if size actually changed significantly to avoid loops
+                             // Can't easily check current desktop width without casting, so we just do it.
+                             
+                             // 1. Disconnect
+                             try { 
+                                if (ocx.Connected == 1) ocx.Disconnect(); 
+                             } catch {}
+                             
+                             // 2. Update Resolution
+                             try {
+                                 ocx.DesktopWidth = this.Width;
+                                 ocx.DesktopHeight = this.Height;
+                             } catch {}
+                             
+                             // 3. Reconnect
+                             ocx.Connect();
                         }
                     } catch {}
                 };

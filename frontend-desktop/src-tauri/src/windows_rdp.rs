@@ -204,7 +204,7 @@ pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) 
 
     // Search for Binary
     for root in &possible_roots {
-        let p = root.join("binaries").join("RdpHost.exe");
+        let p = root.join("binaries").join("RdpHost_Native.exe");
         if p.exists() {
             rdp_host_path = p;
             found_binary = true;
@@ -238,11 +238,11 @@ pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) 
     }
 
     if needs_compile {
-        println!("⚠️ Attempting AUTO-COMPILE of RdpHost.exe from {:?}...", rdp_source_path);
+        println!("⚠️ Attempting AUTO-COMPILE of RdpHost_Native.exe from {:?}...", rdp_source_path);
         
         // KILL existing processes to free the file lock
         let _ = Command::new("taskkill")
-            .args(&["/F", "/IM", "RdpHost.exe"])
+            .args(&["/F", "/IM", "RdpHost_Native.exe"])
             .output();
         // Give OS a moment to release the file handle
         std::thread::sleep(std::time::Duration::from_millis(500));
@@ -250,7 +250,7 @@ pub fn start_embedded_rdp<R: Runtime>(window: Window<R>, mut config: RdpConfig) 
         // Output to where source is parent -> binaries
         let output_dir = rdp_source_path.parent().unwrap().parent().unwrap().join("binaries");
         if !output_dir.exists() { let _ = std::fs::create_dir_all(&output_dir); }
-        let output_exe = output_dir.join("RdpHost.exe");
+        let output_exe = output_dir.join("RdpHost_Native.exe");
         
         let csc_paths = vec![
              r"C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe",

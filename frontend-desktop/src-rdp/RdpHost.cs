@@ -59,10 +59,40 @@ namespace RdpHost
             "7cacbd7b-0d99-468f-ac33-22e495c0afe5" 
         };
 
+        // Class level OCX
+        private dynamic ocx;
+        private System.Windows.Forms.Timer resizeTimer;
+
         public RdpForm(string[] args)
         {
             try
             {
+                // Init Resize Timer
+                resizeTimer = new System.Windows.Forms.Timer();
+                resizeTimer.Interval = 800; // Wait 800ms after resize ends
+                resizeTimer.Tick += (s, e) => {
+                    resizeTimer.Stop();
+                    // Request Resolution Update
+                    try {
+                        if (ocx != null && this.Width > 100 && this.Height > 100) {
+                            // UpdateSessionDisplaySettings(width, height, width, height, orientation, desktopScaleFactor, deviceScaleFactor)
+                            // Or simpler overload depending on interface version. Using generic call via dynamic.
+                            // Note: This requires RDP 8.1+ support on server.
+                            try {
+                                ocx.UpdateSessionDisplaySettings((uint)this.Width, (uint)this.Height, (uint)this.Width, (uint)this.Height, 0, 100, 100);
+                            } catch {
+                                // Fallback for older interfaces
+                                try { ocx.UpdateSessionDisplaySettings((uint)this.Width, (uint)this.Height); } catch {}
+                            }
+                        }
+                    } catch {}
+                };
+
+                this.Resize += (s, e) => {
+                    resizeTimer.Stop();
+                    resizeTimer.Start();
+                };
+
                 // Parse arguments
                 string host = "", user = "", pass = "";
                 int width = 800, height = 600;
@@ -94,7 +124,7 @@ namespace RdpHost
                 
                 // --- SMART INIT LOOP ---
                 bool success = false;
-                dynamic ocx = null;
+                // dynamic ocx = null; // MOVED TO CLASS FIELD
 
                 foreach (var clsid in RDP_CLSIDS)
                 {

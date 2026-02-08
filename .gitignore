@@ -44,26 +44,29 @@ venv/
 .venv/
 env/
 
-# ----- Node.js -----
-node_modules/
+# ----- Node.js & Vite -----
+**/node_modules/
+**/dist/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
 # ----- Next.js -----
-.next/
-out/
-frontend/.next/
-frontend/out/
+**/.next/
+**/out/
 
 # ----- Tauri / Rust -----
-frontend/src-tauri/target/
-frontend/src-tauri/Cargo.lock
+**/src-tauri/target/
+**/src-tauri/Cargo.lock
 
-# ----- Vite Desktop Frontend -----
-frontend-desktop/node_modules/
-frontend-desktop/dist/
-!frontend-desktop/src/lib/
+# ----- Visual Studio -----
+**/.vs/
+**/[Bb]in/
+**/[Oo]bj/
+**/*.user
+**/*.suo
+**/*.userosscache
+**/*.sln.docstates
 
 
 # ----- Generated Files -----
@@ -98,12 +101,3 @@ nginx/ssl/*.key
 diff_output.txt
 downloaded_versions.html
 agent_website.html
-
-# ----- Visual Studio / C# -----
-[Bb]in/
-[Oo]bj/
-*.user
-*.suo
-*.userosscache
-*.sln.docstates
-.vs/

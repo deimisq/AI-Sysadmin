@@ -102,6 +102,7 @@ export function ServerExplorer() {
 
     // Handlers
     const handleConnect = (server: Server) => {
+        console.log('[ServerExplorer] handleConnect triggered for:', server.hostname);
         openTab({
             type: 'terminal',
             title: server.hostname,

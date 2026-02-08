@@ -35,7 +35,7 @@ namespace AiSysadminDesktop
                 _listener.Start();
                 _isRunning = true;
 
-                Debug.WriteLine($"✅ API Proxy running on http://localhost:{port}");
+                Console.WriteLine($"✅ API Proxy running on http://localhost:{port}");
                 
                 Task.Run(() => ListenAsync());
             }
@@ -89,7 +89,7 @@ namespace AiSysadminDesktop
 
                 // Build target URL
                 string targetUrl = _backendUrl + request.Url.PathAndQuery;
-                Debug.WriteLine($"🔷 Proxy: {request.HttpMethod} {targetUrl}");
+                Console.WriteLine($"🔷 Proxy: {request.HttpMethod} {targetUrl}");
 
                 // Create initial proxy request
                 var proxyRequest = new HttpRequestMessage
@@ -148,7 +148,7 @@ namespace AiSysadminDesktop
                             ? currentResponse.Headers.Location.ToString()
                             : _backendUrl + currentResponse.Headers.Location.ToString();
                             
-                        Debug.WriteLine($"🔄 Redirecting ({statusCode}) [{redirectCount}/{MaxRedirects}] to: {redirectUrl}");
+                        Console.WriteLine($"🔄 Redirecting ({statusCode}) [{redirectCount}/{MaxRedirects}] to: {redirectUrl}");
                         
                         // Dispose previous response
                         if (redirectCount > 0) currentResponse.Dispose(); 
@@ -243,7 +243,7 @@ namespace AiSysadminDesktop
                 response.Headers.Remove("Content-Encoding");
                 response.Headers.Remove("Transfer-Encoding");
 
-                Debug.WriteLine($"✅ Proxy Response: {response.StatusCode} | Type: {contentType} | Size: {response.ContentLength64} bytes");
+                Console.WriteLine($"✅ Proxy Response: {response.StatusCode} | Type: {contentType} | Size: {response.ContentLength64} bytes");
 
                 // Write body
                 await response.OutputStream.WriteAsync(responseBytes, 0, responseBytes.Length);

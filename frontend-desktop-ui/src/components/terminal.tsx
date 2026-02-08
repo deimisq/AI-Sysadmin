@@ -29,7 +29,7 @@ export default function TerminalComponent(props: TerminalComponentProps) {
     // Detect Environment Capabilities
     useEffect(() => {
         setIsNativeRdpAvailable(isTauri() || isWebView2());
-        setIsNativeSshAvailable(isTauri()); // Only Tauri supports native SSH for now
+        setIsNativeSshAvailable(isTauri() || isWebView2()); // Both support native SSH via Bridge
     }, []);
 
     // Auto-connect in Desktop mode for ALL servers (SSH)
@@ -41,21 +41,35 @@ export default function TerminalComponent(props: TerminalComponentProps) {
 
     const autoConnect = async () => {
         if (!props.serverData) return;
+        console.log('[Terminal] autoConnect started for:', props.serverData.hostname);
 
         // Skip SSH autoconnect for Windows servers (handled by RDP component)
         if (props.serverData.os_type?.toLowerCase().includes('windows')) {
+            console.log('[Terminal] Skipping autoConnect (Windows detected)');
             return;
         }
 
-        // ... (rest of logic same) ...
         setConnecting(true);
         setError(null);
 
         try {
+            console.log('[Terminal] Fetching credentials...');
             const { fetchServerCredentials } = await import('@/lib/api');
             const creds = await fetchServerCredentials(props.serverData.id);
 
+            console.log('[Terminal] Credentials fetched, sending ssh_connect...');
             setServerInfo({ host: creds.ip_address, username: creds.ssh_username });
+
+            // Add console logs for debugging connection flow.
+            console.log(`[Bridge] Sending command: ssh_connect`, {
+                host: creds.ip_address,
+                port: creds.ssh_port,
+                username: creds.ssh_username,
+                password: creds.ssh_password ? '********' : null, // Mask password for logs
+                privateKeyPath: creds.ssh_key_path || null
+            });
+            const env = isWebView2() ? 'WebView2' : (isTauri() ? 'Tauri' : 'Browser');
+            console.log(`[Bridge] Environment detected: ${env}`);
 
             const sid = await sendCommand('ssh_connect', {
                 host: creds.ip_address,
@@ -68,6 +82,7 @@ export default function TerminalComponent(props: TerminalComponentProps) {
             if (sid) {
                 setSessionId(sid);
                 setRetryCount(0);
+                console.log(`[Bridge] Received session ID: ${sid}`);
             } else {
                 throw new Error("Failed to get session ID");
             }
@@ -85,7 +100,9 @@ export default function TerminalComponent(props: TerminalComponentProps) {
     const handleDisconnect = async () => {
         if (sessionId) {
             try {
+                console.log(`[Bridge] Sending command: ssh_disconnect`, { sessionId });
                 await sendCommand('ssh_disconnect', { sessionId });
+                console.log(`[Bridge] Disconnect command sent for session: ${sessionId}`);
             } catch (e) {
                 console.error(e);
             }

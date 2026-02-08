@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
-import { isWebView2, sendCommand } from '../../lib/bridge';
-import { listen } from '@tauri-apps/api/event';
+import { isTauri, isWebView2, sendCommand } from '../../lib/bridge';
+import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 import '@xterm/xterm/css/xterm.css';
 
 interface InteractiveTerminalProps {
@@ -15,9 +15,11 @@ export function InteractiveTerminal({ sessionId, onClose: _onClose }: Interactiv
     const xtermRef = useRef<Terminal | null>(null);
     const fitAddonRef = useRef<FitAddon | null>(null);
     const ptyIdRef = useRef<string | null>(null);
+    const unlistenRef = useRef<UnlistenFn | null>(null);
+    const wv2HandlerRef = useRef<((event: any) => void) | null>(null);
+    const resizeObserverRef = useRef<ResizeObserver | null>(null);
+    const isMounted = useRef(true);
     const [error, setError] = useState<string | null>(null);
-    const isMounted = useRef(false);
-    const unlistenRef = useRef<(() => void) | null>(null);
 
     useEffect(() => {
         isMounted.current = true;
@@ -47,7 +49,7 @@ export function InteractiveTerminal({ sessionId, onClose: _onClose }: Interactiv
             xtermRef.current = term;
             fitAddonRef.current = fitAddon;
 
-            term.write('\r\n🔌 Initializing PTY session...\r\n');
+            // term.write('\r\n🔌 Initializing PTY session...\r\n'); // REMOVED FOR NATIVE LOOK
 
             try {
                 // Determine dimensions
@@ -60,46 +62,54 @@ export function InteractiveTerminal({ sessionId, onClose: _onClose }: Interactiv
                 ptyIdRef.current = currentPtyId;
 
                 // Set up event listener for PTY data
-                const unlisten = await listen<number[]>(`pty-data:${currentPtyId}`, (event) => {
-                    const data = event.payload;
-                    if (data && data.length > 0) {
-                        const uint8 = new Uint8Array(data);
-                        term.write(uint8);
-                    }
-                });
-                unlistenRef.current = unlisten;
+                if (isTauri()) {
+                    const unlisten = await listen<number[]>(`pty-data:${currentPtyId}`, (event) => {
+                        const data = event.payload;
+                        if (data && data.length > 0) {
+                            const uint8 = new Uint8Array(data);
+                            term.write(uint8);
+                        }
+                    });
+                    unlistenRef.current = unlisten;
+                }
 
-                // Create PTY session in backend (this triggers the SSH connection and functionality)
-                // Now that we are listening, we will capture the initial MOTD/Welcome message.
+                // Handle incoming events from WebView2 if applicable
+                if (isWebView2()) {
+                    const messageHandler = (event: any) => {
+                        const msg = event.data;
+                        if (msg.type === 'PTY_DATA' && msg.ptyId === sessionId) {
+                            let data = msg.payload;
+                            if (data) {
+                                // C# byte[] becomes Base64 string in JSON
+                                if (typeof data === 'string') {
+                                    const binaryString = atob(data);
+                                    const bytes = new Uint8Array(binaryString.length);
+                                    for (let i = 0; i < binaryString.length; i++) {
+                                        bytes[i] = binaryString.charCodeAt(i);
+                                    }
+                                    term.write(bytes);
+                                } else if (Array.isArray(data)) {
+                                    term.write(new Uint8Array(data));
+                                }
+                            }
+                        }
+                    };
+                    wv2HandlerRef.current = messageHandler;
+                    (window as any).chrome.webview.addEventListener('message', messageHandler);
+                }
 
                 if (!isMounted.current) {
                     console.log('Component unmounted before pty_create, aborting');
                     return;
                 }
 
+                // Create PTY session in backend (this triggers the SSH connection and functionality)
+                // Now that we are listening, we will capture the initial MOTD/Welcome message.
                 await sendCommand('pty_create', {
                     sessionId,
                     rows,
                     cols
                 });
-
-                term.write(`\r\n✅ Connected to session: ${currentPtyId}\r\n`);
-                term.write('---------------------------------------------------\r\n');
-
-                // Handle incoming events from WebView2 if applicable
-                if (isWebView2()) {
-                    const messageHandler = (event: any) => {
-                        const msg = event.data;
-                        if (msg.type === 'PTY_DATA' && msg.sessionId === sessionId) {
-                            const data = msg.payload;
-                            if (data && data.length > 0) {
-                                const uint8 = new Uint8Array(data);
-                                term.write(uint8);
-                            }
-                        }
-                    };
-                    (window as any).chrome.webview.addEventListener('message', messageHandler);
-                }
 
                 // Handle input (user typing)
                 term.onData(async (data) => {
@@ -120,20 +130,29 @@ export function InteractiveTerminal({ sessionId, onClose: _onClose }: Interactiv
                     }
                 });
 
-                // Handle resize
-                const handleResize = () => {
-                    if (!fitAddonRef.current || !ptyIdRef.current) return;
-                    fitAddonRef.current.fit();
-                    const { cols, rows } = xtermRef.current!;
+                // Handle resize with ResizeObserver for better accuracy
+                const resizeObserver = new ResizeObserver(() => {
+                    if (!fitAddonRef.current || !ptyIdRef.current || !isMounted.current) return;
 
-                    sendCommand('pty_resize', {
-                        ptyId: ptyIdRef.current,
-                        rows,
-                        cols
-                    }).catch(console.error);
-                };
+                    // Small delay to ensure container has settled
+                    setTimeout(() => {
+                        if (!fitAddonRef.current || !xtermRef.current) return;
+                        fitAddonRef.current.fit();
+                        const { cols, rows } = xtermRef.current;
 
-                window.addEventListener('resize', handleResize);
+                        console.log(`[Terminal] Resizing PTY to ${cols}x${rows}`);
+                        sendCommand('pty_resize', {
+                            ptyId: ptyIdRef.current!,
+                            rows,
+                            cols
+                        }).catch(err => console.error('Resize failed:', err));
+                    }, 50);
+                });
+
+                if (terminalRef.current) {
+                    resizeObserver.observe(terminalRef.current);
+                }
+                resizeObserverRef.current = resizeObserver;
 
                 // No more readLoop!
 
@@ -151,6 +170,14 @@ export function InteractiveTerminal({ sessionId, onClose: _onClose }: Interactiv
             if (unlistenRef.current) {
                 unlistenRef.current();
                 unlistenRef.current = null;
+            }
+            if (wv2HandlerRef.current && (window as any).chrome?.webview) {
+                (window as any).chrome.webview.removeEventListener('message', wv2HandlerRef.current);
+                wv2HandlerRef.current = null;
+            }
+            if (resizeObserverRef.current) {
+                resizeObserverRef.current.disconnect();
+                resizeObserverRef.current = null;
             }
             // Remove resize listener - requires moving handleResize out or keeping ref?
             // Since handleResize was defined inside, we can't remove it easily unless we store it.

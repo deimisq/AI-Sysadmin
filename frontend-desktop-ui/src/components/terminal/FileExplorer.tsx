@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { invoke } from '@tauri-apps/api/core';
+import { sendCommand } from '../../lib/bridge';
 import { Folder, File, ChevronUp, RefreshCw, X, Download } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { toast } from 'sonner';
@@ -34,7 +34,7 @@ export function FileExplorer({ sessionId, initialPath = "/root", onClose, classN
             if (p.length > 1 && p.endsWith('/')) p = p.slice(0, -1);
             if (!p) p = "/";
 
-            const entries = await invoke<FileEntry[]>('sftp_list_files', { sessionId, path: p });
+            const entries = await sendCommand('sftp_list_files', { sessionId, path: p }) || [];
 
             // Sort: Directories first, then alphabetical
             entries.sort((a, b) => {

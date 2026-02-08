@@ -7,9 +7,11 @@ import { AIChatPanel } from '../ai/AIChatPanel';
 import { useWorkspaceStore } from '../../stores/workspaceStore';
 import { OverlayContainer } from './OverlayContainer';
 import { CommandPalette } from '../CommandPalette';
+import { isWebView2 } from '../../lib/bridge';
 
 export function DesktopLayout() {
     const { sidebarVisible, aiPanelVisible } = useWorkspaceStore();
+    const isNative = isWebView2();
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -26,7 +28,7 @@ export function DesktopLayout() {
     return (
         <div className="flex flex-col h-screen w-screen bg-[#1e1e1e] text-[#cccccc] overflow-hidden font-sans">
             {/* Top Bar Navigation */}
-            <TopBar />
+            <TopBar isNative={isNative} />
 
             {/* Main Content Split */}
             <div className="flex-1 flex overflow-hidden relative">

@@ -16,7 +16,7 @@ const MENU_ITEMS = [
     { label: 'Ayuda', type: 'help' }
 ];
 
-export function TopBar() {
+export function TopBar({ isNative }: { isNative?: boolean }) {
     const { setActiveOverlay, activeOverlay } = useWorkspaceStore();
 
     // TODO: Read real user from Auth Context or LocalStorage
@@ -49,6 +49,16 @@ export function TopBar() {
                         <path d="M12 12v.01" />
                     </svg>
                     <span className="text-sm tracking-tight">AI Sysadmin Agent</span>
+                    {isNative && (
+                        <span className="ml-2 px-1.5 py-0.5 rounded text-[10px] font-mono bg-blue-900/50 text-blue-200 border border-blue-800">
+                            NATIVE
+                        </span>
+                    )}
+                    {!isNative && (
+                        <span className="ml-2 px-1.5 py-0.5 rounded text-[10px] font-mono bg-yellow-900/50 text-yellow-200 border border-yellow-800" title="Running in Browser Mode">
+                            WEB
+                        </span>
+                    )}
                 </div>
 
                 <div className="flex items-center gap-5 text-xs text-[#cccccc]">

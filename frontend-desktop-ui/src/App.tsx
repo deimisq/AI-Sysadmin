@@ -1,6 +1,7 @@
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './routes/login';
 import AcceptInvitation from './routes/accept-invitation';
+import RdpDev from './routes/rdp-dev';
 import { DesktopLayout } from './components/layout/DesktopLayout';
 import { isAuthenticated } from './lib/api';
 import { Toaster } from 'sonner';
@@ -18,6 +19,7 @@ export default function App() {
           {/* Public routes - must be before catch-all */}
           <Route path="/login" element={<Login />} />
           <Route path="/accept-invitation" element={<AcceptInvitation />} />
+          <Route path="/rdp-dev" element={<RdpDev />} />
 
           {/* Default route - redirect to dashboard if authenticated, login otherwise */}
           <Route path="/" element={

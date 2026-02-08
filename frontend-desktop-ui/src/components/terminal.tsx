@@ -1,12 +1,11 @@
 import { useState, useEffect } from 'react';
 import LegacyTerminal from './LegacyTerminal';
 import { InteractiveTerminal } from './terminal/InteractiveTerminal';
-import { invoke } from '@tauri-apps/api/core';
+import { sendCommand, isTauri, isWebView2 } from '../lib/bridge';
 import { Button } from './ui/button';
-// import { Folder } from 'lucide-react';
 import { FileExplorer } from './terminal/FileExplorer';
 import { RDPComponent } from './rdp/RDPComponent';
-import { type Server } from '../lib/api';
+import { type Server } from '@/lib/api';
 
 interface TerminalComponentProps {
     onCommand?: (command: string) => Promise<string>;
@@ -18,7 +17,8 @@ interface TerminalComponentProps {
 }
 
 export default function TerminalComponent(props: TerminalComponentProps) {
-    const [isDesktop, setIsDesktop] = useState(false);
+    const [isNativeRdpAvailable, setIsNativeRdpAvailable] = useState(false);
+    const [isNativeSshAvailable, setIsNativeSshAvailable] = useState(false);
     const [sessionId, setSessionId] = useState<string | null>(null);
     const [connecting, setConnecting] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -26,38 +26,38 @@ export default function TerminalComponent(props: TerminalComponentProps) {
     const [serverInfo, setServerInfo] = useState<{ host: string; username: string } | null>(null);
     const [showFiles, setShowFiles] = useState(false);
 
-    // Detect Tauri
+    // Detect Environment Capabilities
     useEffect(() => {
-        const isTauri = typeof window !== 'undefined' &&
-            ('__TAURI__' in window || '__TAURI_INTERNALS__' in window);
-        setIsDesktop(isTauri);
+        setIsNativeRdpAvailable(isTauri() || isWebView2());
+        setIsNativeSshAvailable(isTauri()); // Only Tauri supports native SSH for now
     }, []);
 
-    // Auto-connect in Desktop mode for ALL servers
+    // Auto-connect in Desktop mode for ALL servers (SSH)
     useEffect(() => {
-        if (isDesktop && props.serverData && !sessionId && !connecting && retryCount === 0) {
+        if (isNativeSshAvailable && props.serverData && !sessionId && !connecting && retryCount === 0) {
             autoConnect();
         }
-    }, [isDesktop, props.serverData, sessionId, connecting, retryCount]);
+    }, [isNativeSshAvailable, props.serverData, sessionId, connecting, retryCount]);
 
     const autoConnect = async () => {
         if (!props.serverData) return;
 
         // Skip SSH autoconnect for Windows servers (handled by RDP component)
-        if (props.serverData.os_info?.toLowerCase().includes('windows')) {
+        if (props.serverData.os_type?.toLowerCase().includes('windows')) {
             return;
         }
 
+        // ... (rest of logic same) ...
         setConnecting(true);
         setError(null);
 
         try {
-            const { fetchServerCredentials } = await import('../lib/api');
+            const { fetchServerCredentials } = await import('@/lib/api');
             const creds = await fetchServerCredentials(props.serverData.id);
 
             setServerInfo({ host: creds.ip_address, username: creds.ssh_username });
 
-            const sid = await invoke<string>('ssh_connect', {
+            const sid = await sendCommand('ssh_connect', {
                 host: creds.ip_address,
                 port: creds.ssh_port,
                 username: creds.ssh_username,
@@ -65,8 +65,12 @@ export default function TerminalComponent(props: TerminalComponentProps) {
                 privateKeyPath: creds.ssh_key_path || null
             });
 
-            setSessionId(sid);
-            setRetryCount(0);
+            if (sid) {
+                setSessionId(sid);
+                setRetryCount(0);
+            } else {
+                throw new Error("Failed to get session ID");
+            }
         } catch (e: any) {
             console.error("SSH connection failed:", e);
             setError(e.message || "Error de conexión");
@@ -76,10 +80,12 @@ export default function TerminalComponent(props: TerminalComponentProps) {
         }
     };
 
+    // ... (handleDisconnect same) ...
+
     const handleDisconnect = async () => {
         if (sessionId) {
             try {
-                await invoke('ssh_disconnect', { sessionId });
+                await sendCommand('ssh_disconnect', { sessionId });
             } catch (e) {
                 console.error(e);
             }
@@ -90,10 +96,11 @@ export default function TerminalComponent(props: TerminalComponentProps) {
     // State to force SSH mode even for Windows servers
     const [forceSSH, setForceSSH] = useState(false);
 
-    const isWindows = props.serverData?.os_info?.toLowerCase().includes('windows');
+    const isWindows = props.serverData?.os_type?.toLowerCase().includes('windows');
 
     // Show RDP component for Windows servers (unless forceSSH is set)
-    if (isWindows && isDesktop && props.serverData && !forceSSH) {
+    // Use isNativeRdpAvailable check here
+    if (isWindows && isNativeRdpAvailable && props.serverData && !forceSSH) {
         return (
             <RDPComponent
                 serverData={props.serverData}
@@ -108,8 +115,8 @@ export default function TerminalComponent(props: TerminalComponentProps) {
         );
     }
 
-    // Use Legacy terminal ONLY if failed 3+ times OR not desktop
-    if (!isDesktop || retryCount >= 3) {
+    // Use Legacy terminal ONLY if failed 3+ times OR not native SSH available
+    if (!isNativeSshAvailable || retryCount >= 3) {
         return <LegacyTerminal {...props} />;
     }
 

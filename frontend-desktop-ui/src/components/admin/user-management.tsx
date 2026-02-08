@@ -4,10 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Users, Edit2, Trash2, Shield, FolderOpen, Plus, X, Mail } from "lucide-react";
 import { toast } from "sonner";
-import { fetch } from '@tauri-apps/plugin-http';
 import { fetchOrganizations } from "@/lib/api";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api/v1";
 
 interface UserManagementProps {
     currentUser?: any;

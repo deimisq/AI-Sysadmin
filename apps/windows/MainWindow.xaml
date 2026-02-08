@@ -7,13 +7,13 @@
         mc:Ignorable="d"
         Title="AI Sysadmin Agent" Height="800" Width="1200"
         WindowStartupLocation="CenterScreen"
-        BackgroundColor="#111111">
+        Background="#111111">
 
     <Grid>
         <!-- CAPA 1: La Interfaz React -->
         <!-- Ocupa toda la ventana. El menú, sidebar, etc están aquí. -->
         <wv2:WebView2 Name="MainWebView" 
-                      Source="http://localhost:5173" 
+                      Source="http://localhost:5176" 
                       DefaultBackgroundColor="#1a1b1e"/>
 
         <!-- CAPA 2: El Host Nativo RDP -->

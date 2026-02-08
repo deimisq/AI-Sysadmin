@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { setAuthToken, register } from '../lib/api';
-import { fetch } from '@tauri-apps/plugin-http';
+import { login, register } from '../lib/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,25 +26,8 @@ export default function Login() {
 
         try {
             if (isLogin) {
-                const formBody = new URLSearchParams();
-                formBody.append('username', formData.username);
-                formBody.append('password', formData.password);
-
-                const response = await fetch('https://testing.sentrait.com.uy/api/v1/auth/login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: formBody.toString()
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({}));
-                    throw new Error(errorData.detail || `Server error: ${response.status}`);
-                }
-
-                const data = await response.json() as { access_token: string };
-                setAuthToken(data.access_token);
+                // Use the login function from api.ts
+                await login(formData.username, formData.password);
                 toast.success("Welcome back!");
                 navigate('/');
             } else {

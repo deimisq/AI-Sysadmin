@@ -3,9 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Upload, Download, FileSpreadsheet, CheckCircle, XCircle, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
-import { fetch } from "@tauri-apps/plugin-http";
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://testing.sentrait.com.uy/api/v1';
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api/v1";
 
 interface ImportResult {
     message: string;
@@ -60,43 +59,18 @@ export function CSVImport({ onImportComplete, onCancel }: CSVImportProps) {
             const csvContent = await response.text();
             console.log('CSV content received, length:', csvContent.length);
 
-            // Use Tauri dialog to save file
-            const { save } = await import('@tauri-apps/plugin-dialog');
-            const { writeTextFile } = await import('@tauri-apps/plugin-fs');
+            // Standard web download
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'servers_template.csv';
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
 
-            const filePath = await save({
-                filters: [{
-                    name: 'CSV',
-                    extensions: ['csv']
-                }],
-                defaultPath: 'servers_template.csv',
-                title: 'Guardar plantilla CSV'
-            });
-
-            if (filePath) {
-                // Write the file
-                await writeTextFile(filePath, csvContent);
-                toast.success(`Plantilla guardada en: ${filePath}`);
-
-                // Optional: Open the folder containing the file
-                const { Command } = await import('@tauri-apps/plugin-shell');
-                const folder = filePath.substring(0, filePath.lastIndexOf('\\') || filePath.lastIndexOf('/'));
-
-                try {
-                    // Windows
-                    if (filePath.includes('\\')) {
-                        await Command.create('explorer', [folder]).execute();
-                    }
-                    // Linux/Mac
-                    else {
-                        await Command.create('xdg-open', [folder]).execute();
-                    }
-                } catch (e) {
-                    console.log('Could not open folder:', e);
-                }
-            } else {
-                toast.info('Descarga cancelada');
-            }
+            toast.success("Plantilla descargada correctamente");
         } catch (error: any) {
             console.error("Error downloading template:", error);
             toast.error(error.message || "Error al descargar plantilla");

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { invoke } from '@tauri-apps/api/core';
+import { sendCommand } from '../../lib/bridge';
 import { InteractiveTerminal } from '../terminal/InteractiveTerminal';
 
 interface SSHTestProps { }
@@ -27,7 +27,7 @@ export function SSHTest({ }: SSHTestProps) {
         try {
             console.log('Attempting SSH connection to:', { host, port, username, authMethod });
 
-            const newSessionId = await invoke<string>('ssh_connect', {
+            const newSessionId = await sendCommand('ssh_connect', {
                 host,
                 port,
                 username,
@@ -61,7 +61,7 @@ export function SSHTest({ }: SSHTestProps) {
 
         try {
             console.log('Executing command:', command);
-            const result = await invoke<string>('ssh_execute', {
+            const result = await sendCommand('ssh_execute', {
                 sessionId,
                 command,
             });
@@ -82,7 +82,7 @@ export function SSHTest({ }: SSHTestProps) {
         setLoading(true);
 
         try {
-            await invoke('ssh_disconnect', { sessionId });
+            await sendCommand('ssh_disconnect', { sessionId });
             setOutput((prev) => `${prev}Disconnected.\n`);
             setSessionId(null);
             setMode('command');
@@ -95,7 +95,7 @@ export function SSHTest({ }: SSHTestProps) {
 
     const testGreet = async () => {
         try {
-            const message = await invoke<string>('greet', { name: 'Developer' });
+            const message = await sendCommand('greet', { name: 'Developer' });
             setOutput(`${message}\n`);
         } catch (err) {
             setError(`Greet failed: ${err}`);

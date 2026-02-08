@@ -4,9 +4,8 @@ import { Loader2, Send, X, Image as ImageIcon, Server as ServerIcon, Play } from
 import ReactMarkdown from 'react-markdown';
 import { fetchServers, type Server } from "@/lib/api";
 import { useParams } from "react-router-dom";
-import { fetch } from '@tauri-apps/plugin-http';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api/v1";
 
 interface Message {
     role: "user" | "assistant" | "system";

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { invoke } from '@tauri-apps/api/core';
-import { getCurrentWindow } from '@tauri-apps/api/window';
+import { sendCommand, isWebView2 } from '../../lib/bridge';
+// import { invoke } from '@tauri-apps/api/core';
+// import { getCurrentWindow } from '@tauri-apps/api/window';
 
 interface NativeRdpCanvasProps {
     host: string;
@@ -60,7 +61,6 @@ export function NativeRdpCanvas({
                 setStatus('launching');
 
                 const rect = containerRef.current!.getBoundingClientRect();
-
                 const scale = window.devicePixelRatio || 1;
 
                 // Ensure valid dimensions
@@ -70,14 +70,30 @@ export function NativeRdpCanvas({
                     return;
                 }
 
-                const windowPos = await getCurrentWindow().innerPosition();
+                let physX, physY;
 
-                // Absolute Screen Coordinates calculation (Physical Pixels)
-                // rect.left/top are Logical (CSS) pixels. transform to Physical.
-                // windowPos is already Physical (Tauri default).
+                // Coordinate calculation varies by platform
+                if (isWebView2()) {
+                    // In WebView2, 0,0 is usually the WebView's 0,0.
+                    // But strictly speaking, if using 'update_native_rdp_bounds', we pass relative coords?
+                    // Depends on .NET implementation. Assuming simpler relative coords for now.
+                    // But we can still send the absolute screen coords if .NET needs them.
+                    // For now, let's send rect.left/top relative to viewport.
+                    physX = Math.round(rect.left * scale);
+                    physY = Math.round(rect.top * scale);
+                } else {
+                    // Tauri Logic
+                    try {
+                        const { getCurrentWindow } = await import('@tauri-apps/api/window');
+                        const windowPos = await getCurrentWindow().innerPosition();
+                        physX = windowPos.x + Math.round(rect.left * scale);
+                        physY = windowPos.y + Math.round(rect.top * scale);
+                    } catch (e) {
+                        console.warn("Could not get window position (not in Tauri?)", e);
+                        physX = 0; physY = 0;
+                    }
+                }
 
-                const physX = windowPos.x + Math.round(rect.left * scale);
-                const physY = windowPos.y + Math.round(rect.top * scale);
                 const physW = Math.round(rect.width * scale);
                 const physH = Math.round(rect.height * scale);
 
@@ -91,14 +107,14 @@ export function NativeRdpCanvas({
                     y: physY
                 };
 
-                // Invoke Rust command
-                const result = await invoke('start_embedded_rdp_command', params) as [string, number];
-                // Rust returns [message, pid] tuple
+                // Invoke Bridge command
+                const result = await sendCommand('start_embedded_rdp_command', params);
+                // Rust returns [message, pid] tuple. .NET returns dummy.
 
                 console.log('[RDP] Command returned:', result);
 
                 if (isMounted) {
-                    const pid = result[1];
+                    const pid = Array.isArray(result) ? result[1] : 0;
                     setProcessId(pid);
                     setStatus('active');
                 }
@@ -116,10 +132,8 @@ export function NativeRdpCanvas({
 
         return () => {
             isMounted = false;
-            // Note: We rely on the Rust "Suicide Pact" (parent_pid monitor) to kill the process on app exit.
-            // Explicit kill here is tricky because React StrictMode triggers unmount/remount
         };
-    }, [host, username, password]); // Removed processId dependency to avoid re-triggering
+    }, [host, username, password]);
 
     // --- RESIZE OBSERVER LOGIC ---
     useEffect(() => {
@@ -129,8 +143,8 @@ export function NativeRdpCanvas({
             if (containerRef.current) {
                 const scale = window.devicePixelRatio || 1;
                 const rect = containerRef.current.getBoundingClientRect();
-                // rust needs integer coords in Physical Pixels
-                invoke('update_native_rdp_bounds', {
+
+                sendCommand('update_native_rdp_bounds', {
                     x: Math.round(rect.x * scale),
                     y: Math.round(rect.y * scale),
                     width: Math.round(rect.width * scale),

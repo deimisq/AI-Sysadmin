@@ -4,9 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Brain, Save, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
-import { fetch } from '@tauri-apps/plugin-http';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api/v1";
 
 export function AIParameters() {
     const [config, setConfig] = useState({

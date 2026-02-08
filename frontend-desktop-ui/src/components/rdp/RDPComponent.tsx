@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { invoke } from '@tauri-apps/api/core';
+import { sendCommand } from '../../lib/bridge';
+// import { invoke } from '@tauri-apps/api/core';
 import { Button } from '../ui/button';
-import type { Server } from '../../lib/api';
-import { fetchServerCredentials } from '../../lib/api';
+import type { Server } from '@/lib/api';
+import { fetchServerCredentials } from '@/lib/api';
 // import { GuacamoleCanvas } from './GuacamoleCanvas';
 import { NativeRdpCanvas } from './NativeRdpCanvas';
 import GuacamoleRdpCanvas from './GuacamoleRdpCanvas';
@@ -75,7 +76,7 @@ export function RDPComponent({ serverData, onDisconnect, onSwitchToSSH }: RDPCom
     const handleDisconnect = async () => {
         try {
             console.log('[RDPComponent] Stopping RDP process...');
-            await invoke('stop_embedded_rdp_command');
+            await sendCommand('stop_embedded_rdp_command');
             console.log('[RDPComponent] RDP process stopped successfully');
         } catch (err) {
             console.error('[RDPComponent] Failed to stop RDP:', err);

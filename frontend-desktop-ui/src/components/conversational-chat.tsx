@@ -3,9 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Loader2, Play, Send, X, Image as ImageIcon } from "lucide-react";
 import ReactMarkdown from 'react-markdown';
-import { fetch } from '@tauri-apps/plugin-http';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api/v1";
 
 interface Message {
     role: "user" | "assistant" | "system";

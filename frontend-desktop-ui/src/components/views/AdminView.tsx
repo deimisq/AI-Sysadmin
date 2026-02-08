@@ -15,9 +15,8 @@ import { BackendParameters } from "@/components/admin/backend-parameters";
 import { AuditLogs } from "@/components/admin/audit-logs";
 import { OrganizationManagement } from "@/components/admin/organization-management";
 import { fetchCurrentUser } from "@/lib/api";
-import { fetch } from '@tauri-apps/plugin-http';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api/v1";
 
 export function AdminView() {
     const [activeTab, setActiveTab] = useState("users");

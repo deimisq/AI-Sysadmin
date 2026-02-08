@@ -6,7 +6,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Settings, Save, Loader2, Database, RefreshCw, AlertTriangle, Download } from "lucide-react";
 import { toast } from "sonner";
-import { fetch } from '@tauri-apps/plugin-http';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -18,7 +17,7 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api/v1";
 
 interface AdvancedConfig {
     maintenance_mode: boolean;

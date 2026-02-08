@@ -11,6 +11,16 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'https://testing.sentrait.com.uy',
+        changeOrigin: true,
+        secure: true,
+        rewrite: (path) => path
+      }
+    }
+  },
   build: {
     outDir: "dist",
     emptyOutDir: true,

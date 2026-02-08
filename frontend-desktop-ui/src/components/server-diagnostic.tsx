@@ -3,9 +3,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button";
 import { Server, Activity, HardDrive, Cpu, MemoryStick, Clock, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { fetch } from '@tauri-apps/plugin-http';
 
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api/v1";
 
 interface Server {
     id: number;
@@ -259,8 +258,8 @@ export function ServerDiagnostic({ server, onClose }: ServerDiagnosticProps) {
                                                             <td className="px-3 py-2">{part.available}</td>
                                                             <td className="px-3 py-2">
                                                                 <span className={`px-1.5 py-0.5 rounded text-xs ${parseInt(part.use_percentage) > 85 ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' :
-                                                                        parseInt(part.use_percentage) > 60 ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
-                                                                            'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                                                    parseInt(part.use_percentage) > 60 ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
+                                                                        'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
                                                                     }`}>
                                                                     {part.use_percentage}
                                                                 </span>

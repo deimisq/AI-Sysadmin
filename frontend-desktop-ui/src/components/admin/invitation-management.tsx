@@ -194,7 +194,7 @@ export function InvitationManagement({ currentUser }: InvitationManagementProps)
                                     </div>
                                     <div className="text-xs text-muted-foreground mt-1 flex gap-4">
                                         <span>Expira: {new Date(invite.expires_at).toLocaleDateString()}</span>
-                                        <span className="font-mono bg-muted px-1 rounded select-all" title="Token">{invite.token.substring(0, 8)}...</span>
+                                        <span className="font-mono bg-muted px-1 rounded select-all" title="Token">{invite.token?.substring(0, 8) || 'N/A'}...</span>
                                     </div>
                                 </div>
                                 <div className="flex gap-2">

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
-import { invoke } from '@tauri-apps/api/core';
+import { isWebView2, sendCommand } from '../../lib/bridge';
 import { listen } from '@tauri-apps/api/event';
 import '@xterm/xterm/css/xterm.css';
 
@@ -77,7 +77,7 @@ export function InteractiveTerminal({ sessionId, onClose: _onClose }: Interactiv
                     return;
                 }
 
-                await invoke<string>('pty_create', {
+                await sendCommand('pty_create', {
                     sessionId,
                     rows,
                     cols
@@ -85,6 +85,21 @@ export function InteractiveTerminal({ sessionId, onClose: _onClose }: Interactiv
 
                 term.write(`\r\n✅ Connected to session: ${currentPtyId}\r\n`);
                 term.write('---------------------------------------------------\r\n');
+
+                // Handle incoming events from WebView2 if applicable
+                if (isWebView2()) {
+                    const messageHandler = (event: any) => {
+                        const msg = event.data;
+                        if (msg.type === 'PTY_DATA' && msg.sessionId === sessionId) {
+                            const data = msg.payload;
+                            if (data && data.length > 0) {
+                                const uint8 = new Uint8Array(data);
+                                term.write(uint8);
+                            }
+                        }
+                    };
+                    (window as any).chrome.webview.addEventListener('message', messageHandler);
+                }
 
                 // Handle input (user typing)
                 term.onData(async (data) => {
@@ -95,7 +110,7 @@ export function InteractiveTerminal({ sessionId, onClose: _onClose }: Interactiv
                     const bytes = Array.from(encoder.encode(data));
 
                     try {
-                        await invoke('pty_write', {
+                        await sendCommand('pty_write', {
                             ptyId: ptyIdRef.current,
                             data: bytes
                         });
@@ -111,7 +126,7 @@ export function InteractiveTerminal({ sessionId, onClose: _onClose }: Interactiv
                     fitAddonRef.current.fit();
                     const { cols, rows } = xtermRef.current!;
 
-                    invoke('pty_resize', {
+                    sendCommand('pty_resize', {
                         ptyId: ptyIdRef.current,
                         rows,
                         cols
@@ -143,7 +158,7 @@ export function InteractiveTerminal({ sessionId, onClose: _onClose }: Interactiv
             // Ideally should refactor handleResize to use ref or be outside.
 
             if (ptyIdRef.current) {
-                invoke('pty_close', { ptyId: ptyIdRef.current }).catch(console.error);
+                sendCommand('pty_close', { ptyId: ptyIdRef.current }).catch(console.error);
                 ptyIdRef.current = null;
             }
             if (xtermRef.current) {

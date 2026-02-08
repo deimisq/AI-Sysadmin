@@ -5,9 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Calendar, Clock, Mail, Server, FolderOpen, Play, Trash2, Edit, Plus, Download, History, CheckCircle, XCircle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 // import DashboardLayout from "@/components/dashboard-layout";
-import { fetch } from '@tauri-apps/plugin-http';
+import { API_BASE_URL } from "@/lib/api";
 
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = API_BASE_URL;
 
 interface ScheduledCheck {
     id: number;
@@ -92,6 +92,22 @@ export function ReportsView() {
 
     const loadData = async () => {
         try {
+            if (API_URL === 'MOCK') {
+                // Mock data
+                setChecks([
+                    {
+                        id: 1, name: "Daily Health Check", server_id: 1, group_id: null, server_name: "Production-DB", group_name: null,
+                        schedule_type: "daily", cron_expression: null, schedule_hour: 8, schedule_minute: 0,
+                        schedule_day_of_week: null, schedule_day_of_month: null, email_recipients: "admin@example.com",
+                        is_active: true, last_run: new Date().toISOString(), next_run: new Date(Date.now() + 86400000).toISOString(),
+                        last_status: "success", created_at: new Date().toISOString()
+                    }
+                ]);
+                setServers([{ id: 1, hostname: "Production-DB" }, { id: 2, hostname: "Web-Server-01" }]);
+                setGroups([{ id: 1, name: "Production" }, { id: 2, name: "Staging" }]);
+                return;
+            }
+
             // Load scheduled checks
             const checksRes = await fetch(`${API_URL}/scheduled-reports`, {
                 headers: getAuthHeaders()

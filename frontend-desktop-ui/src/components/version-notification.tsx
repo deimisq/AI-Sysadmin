@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import { Bell, X, Download, ExternalLink } from "lucide-react";
-import { fetch } from '@tauri-apps/plugin-http';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api/v1";
 
 interface VersionInfo {
     current_version: string;

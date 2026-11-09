@@ -16,6 +16,7 @@ backend/*.spec
 # ----- Environment Files -----
 .env
 .env.local
+.env.*
 *.env
 !.env.prod.template
 !.env.example
@@ -25,13 +26,14 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
+*.tsbuildinfo
 .Python
 build/
 develop-eggs/
 downloads/
 eggs/
 .eggs/
-lib/
+/lib/
 lib64/
 parts/
 sdist/
@@ -99,5 +101,6 @@ nginx/ssl/*.key
 *.tmp
 *.bak
 diff_output.txt
+.preview-tools/
 downloaded_versions.html
 agent_website.html

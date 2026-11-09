@@ -4,6 +4,7 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.backends import default_backend
 import base64
 import os
+from settings import settings
 
 # In production, this should be stored in environment variables or a secrets manager
 # For now, we'll use a fixed salt and derive the key from settings
@@ -15,7 +16,7 @@ def get_encryption_key() -> bytes:
     In production, use a proper secret from environment variables.
     """
     # This should come from environment variable in production
-    password = os.getenv('ENCRYPTION_KEY', 'default-encryption-key-change-in-production').encode()
+    password = settings.ENCRYPTION_KEY.encode()
     
     kdf = PBKDF2HMAC(
         algorithm=hashes.SHA256(),

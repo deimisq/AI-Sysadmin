@@ -7,16 +7,22 @@ import { ProfileView } from '../views/ProfileView';
 import { AdminView } from '../views/AdminView';
 import { SettingsView } from '../views/SettingsView';
 import { HelpView } from '../views/HelpView';
+import { ConnectionCatalog } from './ConnectionCatalog';
 
 export function OverlayContainer() {
     const { activeOverlay, setActiveOverlay } = useWorkspaceStore();
 
     if (!activeOverlay) return null;
+    if (activeOverlay === 'settings') return <div className="absolute inset-0 z-[100] bg-[#202020]"><SettingsView /></div>;
 
     let Content: React.ReactNode = null;
     let title = "";
 
     switch (activeOverlay) {
+        case 'catalog':
+            Content = <div className="h-full"><ConnectionCatalog /></div>;
+            title = 'Catálogo de conexiones';
+            break;
         case 'dashboard':
             Content = <div className="h-full"><DashboardView /></div>;
             title = "Dashboard";
@@ -37,10 +43,6 @@ export function OverlayContainer() {
             Content = <div className="h-full"><AdminView /></div>;
             title = "Administración";
             break;
-        case 'settings':
-            Content = <div className="h-full"><SettingsView /></div>;
-            title = "Ajustes";
-            break;
         case 'help':
             Content = <div className="h-full"><HelpView /></div>;
             title = "Ayuda";
@@ -50,9 +52,9 @@ export function OverlayContainer() {
     }
 
     return (
-        <div className="absolute inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 md:p-8 animate-in fade-in duration-200">
+        <div className="absolute inset-0 z-[100] bg-[#1c1f26] flex animate-in fade-in duration-150">
             {/* Modal Window */}
-            <div className="bg-[#1e1e1e] border border-[#333] w-full h-full max-w-7xl max-h-[95vh] shadow-2xl rounded-lg flex flex-col overflow-hidden">
+            <div className="bg-[#1c1f26] w-full h-full flex flex-col overflow-hidden">
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 border-b border-[#333] bg-[#252526] shrink-0">
                     <div className="flex items-center gap-2">
@@ -62,7 +64,8 @@ export function OverlayContainer() {
                     <button
                         onClick={() => setActiveOverlay(null)}
                         className="p-1.5 hover:bg-[#c42b1c] rounded text-gray-400 hover:text-white transition-colors"
-                        title="Close (Esc)"
+                        title="Volver al espacio de conexiones"
+                        aria-label={`Cerrar ${title} y volver a las sesiones`}
                     >
                         <X className="w-5 h-5" />
                     </button>
@@ -71,7 +74,7 @@ export function OverlayContainer() {
                 {/* Body */}
                 <div className="flex-1 overflow-auto bg-[#1e1e1e] relative">
                     {/* Add a specific class to scope Dashboard CSS if needed */}
-                    <div className="min-h-full dashboard-overlay-wrapper">
+                    <div className="h-full dashboard-overlay-wrapper">
                         {Content}
                     </div>
                 </div>

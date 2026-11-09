@@ -1,205 +1,122 @@
 import { useEffect, useRef, useState } from 'react';
 import { sendCommand, isWebView2 } from '../../lib/bridge';
-// import { invoke } from '@tauri-apps/api/core';
-// import { getCurrentWindow } from '@tauri-apps/api/window';
 
 interface NativeRdpCanvasProps {
     host: string;
     username: string;
     password: string;
-    width?: number;
-    height?: number;
+    port?: number;
+    active?: boolean;
+    temporaryServerId?: number;
     onDisconnect?: () => void;
 }
 
-export function NativeRdpCanvas({
-    host,
-    username,
-    password,
-    width = 1200,
-    height = 800,
-    onDisconnect
-}: NativeRdpCanvasProps) {
+export function NativeRdpCanvas({ host, username, password, port = 3389, active = true, temporaryServerId }: NativeRdpCanvasProps) {
     const containerRef = useRef<HTMLDivElement>(null);
-    const [status, setStatus] = useState<'init' | 'launching' | 'active' | 'error'>('init');
-    const [errorMsg, setErrorMsg] = useState<string | null>(null);
-    const [processId, setProcessId] = useState<number | null>(null);
+    const sessionRef = useRef<string | null>(null);
+    const activeRef = useRef(active);
+    activeRef.current = active;
+    const [status, setStatus] = useState<'launching' | 'active' | 'error'>('launching');
+    const [error, setError] = useState('');
+    const [started, setStarted] = useState(false);
+    const [retry, setRetry] = useState(0);
 
-    const hasLaunched = useRef(false);
-
-    // DEBUG: Log component mount
-    console.log('[NativeRdpCanvas] Component rendered/mounted', { host, username });
-
-    // --- LAUNCH LOGIC ---
     useEffect(() => {
-        console.log('[NativeRdpCanvas] useEffect triggered', {
-            hasContainer: !!containerRef.current,
-            hasLaunched: hasLaunched.current,
-            host,
-            username
-        });
+        if (!isWebView2()) return;
+        const bridge = (window as any).chrome.webview;
+        const handler = (event: MessageEvent) => {
+            const message = event.data;
+            if (message.type !== 'RDP_STATUS' || message.sessionId !== sessionRef.current) return;
+            if (message.state === 'ready') setStatus('active');
+            if (message.state === 'error' || message.state === 'disconnected') {
+                setStatus('error');
+                setError(`RDP: ${message.state}, c\u00f3digo ${message.code}. Comprueba usuario, red y permisos de escritorio remoto.`);
+            }
+        };
+        bridge.addEventListener('message', handler);
+        return () => bridge.removeEventListener('message', handler);
+    }, []);
 
-        // CRITICAL: Check and set hasLaunched BEFORE any async operations
-        if (hasLaunched.current) {
-            console.log('[NativeRdpCanvas] Skipping - already launched');
-            return;
-        }
-
-        if (!containerRef.current) {
-            console.log('[NativeRdpCanvas] Skipping - no container');
-            return;
-        }
-
-        // Mark as launched IMMEDIATELY
-        hasLaunched.current = true;
-
-        let isMounted = true;
-
-        const launchRdp = async () => {
+    useEffect(() => {
+        const sessionId = crypto.randomUUID();
+        sessionRef.current = sessionId;
+        let disposed = false;
+        let requested = false;
+        let timer: ReturnType<typeof setTimeout>;
+        setStatus('launching'); setError(''); setStarted(false);
+        const launch = async () => {
+            const rect = containerRef.current?.getBoundingClientRect();
+            if (disposed) return;
+            if (!activeRef.current || !rect || rect.width < 50 || rect.height < 50) {
+                timer = setTimeout(launch, 200); return;
+            }
             try {
-                if (!isMounted) return;
-                setStatus('launching');
-
-                const rect = containerRef.current!.getBoundingClientRect();
                 const scale = window.devicePixelRatio || 1;
-
-                // Ensure valid dimensions
-                if (rect.width < 50 || rect.height < 50) {
-                    console.warn('[RDP] Container too small, retrying...');
-                    setTimeout(launchRdp, 200);
+                let x = Math.round(rect.x * scale), y = Math.round(rect.y * scale);
+                if (!isWebView2()) {
+                    const { getCurrentWindow } = await import('@tauri-apps/api/window');
+                    const position = await getCurrentWindow().innerPosition();
+                    x += position.x; y += position.y;
+                }
+                if (disposed) return;
+                requested = true;
+                await sendCommand('start_embedded_rdp_command', {
+                    ...(temporaryServerId !== undefined ? { temporaryServerId } : {}),
+                    sessionId, host, username, password, port, visible: activeRef.current,
+                    x, y,
+                    width: Math.round(rect.width * scale), height: Math.round(rect.height * scale),
+                });
+                if (disposed) {
+                    await sendCommand('stop_embedded_rdp_command', { sessionId });
                     return;
                 }
-
-                let physX, physY;
-
-                // Coordinate calculation varies by platform
-                if (isWebView2()) {
-                    // In WebView2, 0,0 is usually the WebView's 0,0.
-                    // But strictly speaking, if using 'update_native_rdp_bounds', we pass relative coords?
-                    // Depends on .NET implementation. Assuming simpler relative coords for now.
-                    // But we can still send the absolute screen coords if .NET needs them.
-                    // For now, let's send rect.left/top relative to viewport.
-                    physX = Math.round(rect.left * scale);
-                    physY = Math.round(rect.top * scale);
-                } else {
-                    // Tauri Logic
-                    try {
-                        const { getCurrentWindow } = await import('@tauri-apps/api/window');
-                        const windowPos = await getCurrentWindow().innerPosition();
-                        physX = windowPos.x + Math.round(rect.left * scale);
-                        physY = windowPos.y + Math.round(rect.top * scale);
-                    } catch (e) {
-                        console.warn("Could not get window position (not in Tauri?)", e);
-                        physX = 0; physY = 0;
-                    }
-                }
-
-                const physW = Math.round(rect.width * scale);
-                const physH = Math.round(rect.height * scale);
-
-                const params = {
-                    host,
-                    username,
-                    password,
-                    width: physW,
-                    height: physH,
-                    x: physX,
-                    y: physY
-                };
-
-                // Invoke Bridge command
-                const result = await sendCommand('start_embedded_rdp_command', params);
-                // Rust returns [message, pid] tuple. .NET returns dummy.
-
-                console.log('[RDP] Command returned:', result);
-
-                if (isMounted) {
-                    const pid = Array.isArray(result) ? result[1] : 0;
-                    setProcessId(pid);
-                    setStatus('active');
-                }
-
-            } catch (err: any) {
-                console.error("[RDP] FATAL ERROR:", err);
-                if (isMounted) {
-                    setErrorMsg(`Launch Failed: ${err.toString()}`);
-                    setStatus('error');
-                }
+                setStarted(true);
+                if (temporaryServerId !== undefined) window.dispatchEvent(new CustomEvent('local-temporary-target-changed', { detail: { serverId: temporaryServerId } }));
+                if (!isWebView2()) setStatus('active');
+            } catch (error) {
+                if (!disposed) { setStatus('error'); setError(String(error)); }
             }
         };
-
-        launchRdp();
-
+        timer = setTimeout(launch, 0);
         return () => {
-            isMounted = false;
+            disposed = true;
+            clearTimeout(timer);
+            if (sessionRef.current === sessionId) sessionRef.current = null;
+            if (requested) void sendCommand('stop_embedded_rdp_command', { sessionId }).catch(console.error);
+            if (temporaryServerId !== undefined) window.dispatchEvent(new CustomEvent('local-temporary-target-changed', { detail: { serverId: temporaryServerId } }));
         };
-    }, [host, username, password]);
+    }, [host, username, password, port, retry, temporaryServerId]);
 
-    // --- RESIZE OBSERVER LOGIC ---
     useEffect(() => {
-        if (!processId || !containerRef.current) return;
-
-        const updateBounds = () => {
-            if (containerRef.current) {
-                const scale = window.devicePixelRatio || 1;
-                const rect = containerRef.current.getBoundingClientRect();
-
-                sendCommand('update_native_rdp_bounds', {
-                    x: Math.round(rect.x * scale),
-                    y: Math.round(rect.y * scale),
-                    width: Math.round(rect.width * scale),
-                    height: Math.round(rect.height * scale)
-                }).catch(e => console.error("Failed to update RDP bounds:", e));
-            }
+        if (!started || !sessionRef.current || !containerRef.current) return;
+        const sessionId = sessionRef.current;
+        let disposed = false;
+        let frame = 0;
+        const update = () => {
+            if (disposed) return;
+            const rect = containerRef.current?.getBoundingClientRect();
+            if (!rect) return;
+            const scale = window.devicePixelRatio || 1;
+            void sendCommand('update_native_rdp_bounds', {
+                sessionId, visible: activeRef.current,
+                x: Math.round(rect.x * scale), y: Math.round(rect.y * scale),
+                width: Math.round(rect.width * scale), height: Math.round(rect.height * scale),
+            }).catch(console.error);
         };
-
-        const observer = new ResizeObserver(() => {
-            updateBounds();
-            // Debounce / delay updates to catch animations
-            setTimeout(updateBounds, 100);
-            setTimeout(updateBounds, 300);
-        });
-
+        const schedule = () => { cancelAnimationFrame(frame); frame = requestAnimationFrame(update); };
+        const observer = new ResizeObserver(schedule);
         observer.observe(containerRef.current);
-        window.addEventListener('resize', updateBounds);
+        window.addEventListener('resize', schedule);
+        update(); schedule();
+        return () => { disposed = true; cancelAnimationFrame(frame); observer.disconnect(); window.removeEventListener('resize', schedule); };
+    }, [started, active]);
 
-        // Initial update
-        updateBounds();
-
-        return () => {
-            observer.disconnect();
-            window.removeEventListener('resize', updateBounds);
-        };
-    }, [processId]); // Only activate watcher when Process ID is known
-
-    return (
-        <div
-            ref={containerRef}
-            id="rdp-native-container"
-            className="w-full h-full bg-black relative overflow-hidden flex items-center justify-center"
-            style={{ minHeight: '400px' }}
-        >
-            {status === 'launching' && (
-                <div className="text-white flex flex-col items-center z-10">
-                    <div className="animate-spin text-4xl mb-4">⚙️</div>
-                    <p>Launching Native Sidecar...</p>
-                </div>
-            )}
-
-            {status === 'active' && (
-                <div className="absolute top-2 right-2 text-xs text-gray-500 opacity-50 pointer-events-none z-10 hover:opacity-100 transition-opacity">
-                    Native RDP Active (PID: {processId})
-                </div>
-            )}
-
-            {status === 'error' && (
-                <div className="text-red-400 p-4 border border-red-500 rounded bg-red-900/20 z-10">
-                    <p className="font-bold">Failed to launch RDP</p>
-                    <pre className="text-xs mt-2">{errorMsg}</pre>
-                </div>
-            )}
-        </div>
-    );
+    return <div ref={containerRef} className="w-full h-full bg-black relative overflow-hidden flex items-center justify-center">
+        {status === 'launching' && <div className="text-gray-300 text-sm">Conectando al escritorio remoto...</div>}
+        {status === 'error' && <div role="alert" className="text-red-300 p-4 max-w-lg text-sm space-y-3">
+            <p>No se pudo establecer la sesión RDP</p><p className="text-xs break-words">{error}</p>
+            <button onClick={() => setRetry(value => value + 1)} className="px-3 py-1 border border-gray-600 rounded text-gray-200">Reconectar esta sesión</button>
+        </div>}
+    </div>;
 }
-
 export default NativeRdpCanvas;

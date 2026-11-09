@@ -10,6 +10,8 @@ from models import Server, User
 from utils.auth import decode_access_token
 from services.ssh_service import SSHService
 from utils.encryption import decrypt_data
+from utils.access import require_server_access
+from settings import settings
 
 # Logger setup
 logger = logging.getLogger("console_ws")
@@ -35,7 +37,7 @@ async def ssh_websocket_endpoint(websocket: WebSocket, server_id: int, token: st
     
     # 1. Authenticate
     user = await get_current_user_ws(token, db)
-    if not user:
+    if not user or not user.is_active:
         await websocket.send_text("Error: Unauthorized")
         await websocket.close()
         return
@@ -45,6 +47,12 @@ async def ssh_websocket_endpoint(websocket: WebSocket, server_id: int, token: st
     if not server:
         await websocket.send_text("Error: Server not found")
         await websocket.close()
+        return
+
+    try:
+        require_server_access(user, server, db)
+    except HTTPException:
+        await websocket.close(code=1008, reason="Access denied")
         return
 
     # 3. Prepare SSH Connection
@@ -78,7 +86,7 @@ async def ssh_websocket_endpoint(websocket: WebSocket, server_id: int, token: st
             username=server.ssh_username,
             password=ssh_password,
             client_keys=client_keys,
-            known_hosts=None
+            known_hosts=settings.SSH_KNOWN_HOSTS or ()
         ) as conn:
             
             # 5. Open Interactive Shell

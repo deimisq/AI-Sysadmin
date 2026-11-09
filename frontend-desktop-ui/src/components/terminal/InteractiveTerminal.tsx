@@ -7,6 +7,7 @@ import '@xterm/xterm/css/xterm.css';
 
 interface InteractiveTerminalProps {
     sessionId: string;
+    serverId?: number;
     onClose?: () => void;
 }
 
@@ -110,6 +111,10 @@ export function InteractiveTerminal({ sessionId, onClose: _onClose }: Interactiv
                     rows,
                     cols
                 });
+                if (!isMounted.current) {
+                    await sendCommand('pty_close', { ptyId: sessionId });
+                    return;
+                }
 
                 // Handle input (user typing)
                 term.onData(async (data) => {
@@ -163,10 +168,11 @@ export function InteractiveTerminal({ sessionId, onClose: _onClose }: Interactiv
             }
         };
 
-        initTerminal();
+        const initializationTimer = setTimeout(initTerminal, 0);
 
         return () => {
             isMounted.current = false;
+            clearTimeout(initializationTimer);
             if (unlistenRef.current) {
                 unlistenRef.current();
                 unlistenRef.current = null;

@@ -1,0 +1,71 @@
+# Distribución Windows — 0.10.0-preview.9
+
+El cliente local usa .NET 10 LTS. Esta entrega produce dos artefactos **de prueba**, sin firma comercial:
+
+- `AI-Sysadmin-Agent-0.10.0-preview.9-win-x64-setup.exe`: instalación por usuario, accesos directos y desinstalador.
+- `AI-Sysadmin-Agent-0.10.0-preview.9-win-x64-portable.zip`: extraer todo el contenido y abrir `AiSysadmin.exe`.
+
+Ambos incluyen el runtime .NET; no requieren que el técnico instale un SDK o runtime .NET por separado. Requieren **WebView2 Evergreen Runtime** instalado. El instalador comprueba sus entradas de registro y, si falta, indica la descarga oficial; no lo descarga ni instala de manera oculta.
+
+El instalador limita esta compilación a Windows x64 y build 19045 o posterior. Esto no constituye certificación para todas las ediciones/versiones: debe usarse un Windows con soporte y completarse la matriz de compatibilidad. ARM64 nativo y Windows de 32 bits no se distribuyen en esta entrega.
+
+## Datos y actualizaciones
+
+La instalación predeterminada reside en `%LOCALAPPDATA%/Programs/AI Sysadmin Agent/versions/<version>`. Los accesos directos apuntan a la versión instalada más recientemente. No hay actualización automática ni rollback automático; las carpetas separadas no garantizan compatibilidad de un cliente antiguo con datos nuevos.
+
+Inventario, credenciales, configuración IA, registros y perfil WebView2 permanecen en `%LOCALAPPDATA%/AiSysadmin`. Desinstalar conserva ese directorio. El ZIP portable tampoco vuelve portable el vault: la protección DPAPI sigue ligada a la cuenta de Windows. Para migrar conexiones/carpetas a otra cuenta o equipo, usar la copia cifrada portable de Ajustes.
+
+El instalador no inicia conexiones SSH/RDP ni solicita una cuenta o clave IA. Abrir el programa permite trabajar en modo local; la configuración cloud requiere el consentimiento correspondiente. Enterprise conserva su implementación actual y no incluye todavía enrolamiento/gateway nuevo.
+
+El runtime incluido debe actualizarse mediante una nueva compilación y distribución de la aplicación cuando Microsoft publique correcciones. No se debe asumir que una actualización del runtime global actualiza estas copias autocontenidas.
+
+## Archivos por SFTP
+
+### Espacio de trabajo IDE
+
+Preview.9 incluye menús Archivo/Conexiones/Ver/Herramientas/Ayuda y panel inferior redimensionable. En **Ver** se pueden alternar explorador, acompañante y panel inferior. Este último ofrece Sesiones, seguimiento de Tareas IA y la última Transferencia SFTP de la instancia. Cerrar un monitor no cancela su operación; la cancelación se solicita desde su botón. El catálogo se abre desde **Conexiones → Catálogo de conexiones**. Configuración mantiene su ventana independiente en Windows. Esta entrega no incluye división de terminales en mosaico.
+
+1. Abrir una conexión SSH y pulsar **Archivos** en la barra de la sesión.
+2. Navegar hasta la carpeta remota. El icono de subida permite elegir un archivo local con el diálogo de Windows.
+3. Para descargar, usar el icono de descarga del archivo, doble clic o Enter y elegir el destino local.
+4. Consultar el nombre, bytes y estado en el pie del panel. **Cancelar transferencia** solicita detenerla; cerrar el panel permite continuar y recuperar su estado al reabrirlo en la misma sesión.
+
+Solo se transfiere un archivo a la vez por instancia. Las subidas no reemplazan archivos remotos existentes. Para reemplazar un destino local durante una descarga, Windows pide confirmación. Se usan temporales y comprobación de tamaño antes de publicar el nombre final. Si la conexión impide retirar un temporal remoto, se informa su ruta. No hay reanudación ni transferencias de carpetas completas; desconectar SSH solicita cancelación. El contenido transferido no se adjunta al acompañante IA.
+
+## Compilar
+
+Requisitos de desarrollo: SDK indicado en [global.json](../global.json), Node 22, dependencias del frontend (`npm ci` en el cliente) e Inno Setup 6.7.3 o compatible. Las herramientas descargadas en `.preview-tools` son locales del entorno y no se distribuyen.
+
+Desde PowerShell en la raíz:
+
+```powershell
+./scripts/package-windows.ps1 -Iscc 'C:/ruta/Inno Setup 6/ISCC.exe'
+```
+
+Si el SDK/Node no están en PATH, usar los parámetros `-Dotnet` y `-Node` con sus ejecutables. La política local de ejecución de scripts debe permitir ejecutar el script revisado; no hace falta cambiar una política global para usar el instalador compilado.
+
+La versión de escritorio se define en [AiSysadmin.csproj](../apps/windows/AiSysadmin.csproj), separada del versionado legacy del backend. La salida reside en `dist/windows/<version>/`; el script no reemplaza un ZIP/instalador existente de esa versión. Los directorios intermedios de publicación quedan en `dist/windows/staging/` y están excluidos de Git.
+
+Se valida la presencia del ejecutable, runtime, loader WebView2 y bundle. Se rechazan archivos de inventario, contexto, tareas y `.env` dentro del paquete. Se incorporan los avisos/metadata de licencias disponibles en las dependencias NuGet, además de la licencia actual del repositorio. `package-manifest.json` enumera hashes de los archivos; `SHA256SUMS.txt` permite comprobar los artefactos. Los hashes no reemplazan una firma de autenticidad del publicador.
+
+## Verificar
+
+```powershell
+./scripts/test-windows-package.ps1 -PackageDirectory ./dist/windows/0.10.0-preview.9
+```
+
+La prueba extrae el ZIP en un directorio nuevo dentro de `.preview-tools/package-tests`, comprueba los hashes y valida el contenido. Para probar instalación/desinstalación:
+
+```powershell
+./scripts/test-windows-package.ps1 -PackageDirectory ./dist/windows/0.10.0-preview.9 -ExerciseInstaller
+```
+
+La segunda opción se niega a usar una instalación ya registrada. Instala en una carpeta aislada, sin iniciar la aplicación ni crear iconos, verifica archivos, ejecuta su desinstalador y comprueba que el inventario/los accesos directos previos no cambiaron. No prueba todavía la interfaz de la aplicación instalada, una actualización sobre una instalación anterior o una cuenta Windows diferente.
+
+El flujo manual [windows-package.yml](../.github/workflows/windows-package.yml) ejecuta pruebas, genera y verifica los paquetes, y los adjunta como artefactos de Actions. No publica automáticamente una release pública. El flujo de CI general ya valida el cliente sobre .NET 10.
+
+## Antes de distribuir comercialmente
+
+Faltan firma de código y timestamp, revisión de licencias y titular del producto —la licencia actual del repositorio todavía contiene el marcador `[Your Company Name]`—, matriz de sistemas soportados, pruebas de actualización/recuperación e instalador en equipos limpios. Tampoco se anuncia una verificación real de IA, RDP y SSH contra infraestructura del cliente a partir de las pruebas simuladas.
+
+Referencias: [soporte de .NET](https://dotnet.microsoft.com/en-us/platform/support/policy), [publicación .NET](https://learn.microsoft.com/en-us/dotnet/core/deploying/), [distribución WebView2](https://learn.microsoft.com/en-us/microsoft-edge/webview2/concepts/distribution), [Inno Setup](https://jrsoftware.org/isdl.php).

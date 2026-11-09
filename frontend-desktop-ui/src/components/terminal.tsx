@@ -1,4 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
+import { FolderOpen } from 'lucide-react';
 import LegacyTerminal from './LegacyTerminal';
 import { InteractiveTerminal } from './terminal/InteractiveTerminal';
 import { sendCommand, isTauri, isWebView2 } from '../lib/bridge';
@@ -6,8 +8,11 @@ import { Button } from './ui/button';
 import { FileExplorer } from './terminal/FileExplorer';
 import { RDPComponent } from './rdp/RDPComponent';
 import { type Server } from '@/lib/api';
+import { isLocalWorkspace } from '../lib/workspace-mode';
+import { useWorkspaceStore } from '../stores/workspaceStore';
 
 interface TerminalComponentProps {
+    active?: boolean;
     onCommand?: (command: string) => Promise<string>;
     externalCommand?: string;
     hostname?: string;
@@ -17,6 +22,7 @@ interface TerminalComponentProps {
 }
 
 export default function TerminalComponent(props: TerminalComponentProps) {
+    const local = isLocalWorkspace();
     const [isNativeRdpAvailable, setIsNativeRdpAvailable] = useState(false);
     const [isNativeSshAvailable, setIsNativeSshAvailable] = useState(false);
     const [sessionId, setSessionId] = useState<string | null>(null);
@@ -25,6 +31,18 @@ export default function TerminalComponent(props: TerminalComponentProps) {
     const [retryCount, setRetryCount] = useState(0);
     const [serverInfo, setServerInfo] = useState<{ host: string; username: string } | null>(null);
     const [showFiles, setShowFiles] = useState(false);
+    const connectionGeneration = useRef(0);
+
+    useEffect(() => () => { connectionGeneration.current++; }, []);
+    useEffect(() => () => {
+        if (sessionId) sendCommand('ssh_disconnect', { sessionId }).catch(console.error);
+    }, [sessionId]);
+    useEffect(() => {
+        const serverId = props.serverData?.id;
+        if (!isLocalWorkspace() || serverId === undefined || !sessionId) return;
+        useWorkspaceStore.getState().registerNativeSession(serverId, sessionId);
+        return () => useWorkspaceStore.getState().clearNativeSession(serverId, sessionId);
+    }, [props.serverData?.id, sessionId]);
 
     // Detect Environment Capabilities
     useEffect(() => {
@@ -41,10 +59,11 @@ export default function TerminalComponent(props: TerminalComponentProps) {
 
     const autoConnect = async () => {
         if (!props.serverData) return;
+        const attempt = ++connectionGeneration.current;
         console.log('[Terminal] autoConnect started for:', props.serverData.hostname);
 
         // Skip SSH autoconnect for Windows servers (handled by RDP component)
-        if (props.serverData.os_type?.toLowerCase().includes('windows')) {
+        if (props.serverData.connection_protocol === 'rdp' || (!props.serverData.connection_protocol && (props.serverData.os_type || props.serverData.os_info)?.toLowerCase().includes('windows'))) {
             console.log('[Terminal] Skipping autoConnect (Windows detected)');
             return;
         }
@@ -55,7 +74,7 @@ export default function TerminalComponent(props: TerminalComponentProps) {
         try {
             console.log('[Terminal] Fetching credentials...');
             const { fetchServerCredentials } = await import('@/lib/api');
-            const creds = await fetchServerCredentials(props.serverData.id);
+            const creds = props.serverData.quick_protocol ? { ...props.serverData, ssh_username: props.serverData.ssh_username || '', ssh_port: props.serverData.ssh_port || 22 } : await fetchServerCredentials(props.serverData.id);
 
             console.log('[Terminal] Credentials fetched, sending ssh_connect...');
             setServerInfo({ host: creds.ip_address, username: creds.ssh_username });
@@ -66,18 +85,24 @@ export default function TerminalComponent(props: TerminalComponentProps) {
                 port: creds.ssh_port,
                 username: creds.ssh_username,
                 password: creds.ssh_password ? '********' : null, // Mask password for logs
-                privateKeyPath: creds.ssh_key_path || null
+                privateKeyPath: creds.ssh_key_path ? '[REDACTED]' : null
             });
             const env = isWebView2() ? 'WebView2' : (isTauri() ? 'Tauri' : 'Browser');
             console.log(`[Bridge] Environment detected: ${env}`);
 
             const sid = await sendCommand('ssh_connect', {
+                ...(props.serverData.quick_protocol ? { temporaryServerId: props.serverData.id } : {}),
+                ...(isLocalWorkspace() && !props.serverData.quick_protocol ? { localServerId: props.serverData.id } : {}),
                 host: creds.ip_address,
                 port: creds.ssh_port,
                 username: creds.ssh_username,
                 password: creds.ssh_password || null,
                 privateKeyPath: creds.ssh_key_path || null
             });
+            if (attempt !== connectionGeneration.current) {
+                if (sid) await sendCommand('ssh_disconnect', { sessionId: sid });
+                return;
+            }
 
             if (sid) {
                 setSessionId(sid);
@@ -87,42 +112,31 @@ export default function TerminalComponent(props: TerminalComponentProps) {
                 throw new Error("Failed to get session ID");
             }
         } catch (e: any) {
+            if (attempt !== connectionGeneration.current) return;
             console.error("SSH connection failed:", e);
             setError(e.message || "Error de conexión");
             setRetryCount(prev => prev + 1);
         } finally {
-            setConnecting(false);
-        }
-    };
-
-    // ... (handleDisconnect same) ...
-
-    const handleDisconnect = async () => {
-        if (sessionId) {
-            try {
-                console.log(`[Bridge] Sending command: ssh_disconnect`, { sessionId });
-                await sendCommand('ssh_disconnect', { sessionId });
-                console.log(`[Bridge] Disconnect command sent for session: ${sessionId}`);
-            } catch (e) {
-                console.error(e);
-            }
-            setSessionId(null);
+            if (attempt === connectionGeneration.current) setConnecting(false);
         }
     };
 
     // State to force SSH mode even for Windows servers
     const [forceSSH, setForceSSH] = useState(false);
 
-    const isWindows = props.serverData?.os_type?.toLowerCase().includes('windows');
+    const isWindows = props.serverData?.connection_protocol === 'rdp' || (!props.serverData?.connection_protocol && (props.serverData?.os_type || props.serverData?.os_info)?.toLowerCase().includes('windows'));
 
     // Show RDP component for Windows servers (unless forceSSH is set)
     // Use isNativeRdpAvailable check here
     if (isWindows && isNativeRdpAvailable && props.serverData && !forceSSH) {
         return (
             <RDPComponent
+                active={props.active}
                 serverData={props.serverData}
                 onDisconnect={() => {
-                    window.location.reload();
+                    const state = useWorkspaceStore.getState();
+                    const tab = state.tabs.find(tab => tab.server === props.serverData);
+                    if (tab) state.closeTab(tab.id);
                 }}
                 onSwitchToSSH={() => {
                     // Switch to SSH terminal mode for this Windows server
@@ -133,7 +147,7 @@ export default function TerminalComponent(props: TerminalComponentProps) {
     }
 
     // Use Legacy terminal ONLY if failed 3+ times OR not native SSH available
-    if (!isNativeSshAvailable || retryCount >= 3) {
+    if (!local && !props.serverData?.quick_protocol && (!isNativeSshAvailable || retryCount >= 3)) {
         return <LegacyTerminal {...props} />;
     }
 
@@ -141,40 +155,22 @@ export default function TerminalComponent(props: TerminalComponentProps) {
     if (sessionId && serverInfo) {
         return (
             <div className="h-full flex flex-col">
-                <div className="bg-gray-900 border-b border-gray-700 p-2 flex justify-between items-center text-xs shrink-0 z-20 relative">
-                    <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                        <span className="text-gray-300 font-mono">
-                            {serverInfo.username}@{serverInfo.host}
-                        </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        {/* SFTP disabled for now
-                        <button
-                            onClick={() => setShowFiles(!showFiles)}
-                             ...
-                        >
-                        </button>
-                        <div className="w-px h-4 bg-gray-700 mx-1"></div>
-                        */}
-                        <div className="w-px h-4 bg-gray-700 mx-1"></div>
-                        <button
-                            onClick={handleDisconnect}
-                            className="text-red-400 hover:text-red-300 px-2 py-1 rounded hover:bg-red-900/20 transition-colors"
-                        >
-                            Desconectar
-                        </button>
-                    </div>
-                </div>
+                {props.serverData?.quick_protocol !== 'sftp' && props.active !== false && document.getElementById('session-actions') && createPortal(
+                    <button onClick={() => setShowFiles(value => !value)} aria-pressed={showFiles}
+                        title="Mostrar u ocultar archivos SFTP"
+                        className="flex items-center gap-1 px-2 h-7 text-[11px] text-gray-400 hover:text-white hover:bg-white/5 rounded-sm focus-visible:outline focus-visible:outline-1 focus-visible:outline-blue-400">
+                        <FolderOpen size={13} /> Archivos
+                    </button>, document.getElementById('session-actions')!
+                )}
                 <div className="flex-grow flex overflow-hidden relative">
-                    <div className="flex-1 bg-black min-w-0">
-                        <InteractiveTerminal sessionId={sessionId} />
-                    </div>
-                    {showFiles && (
+                    {props.serverData?.quick_protocol !== 'sftp' && <div className="flex-1 bg-black min-w-0">
+                        <InteractiveTerminal sessionId={sessionId} serverId={props.serverData?.quick_protocol ? undefined : props.serverData?.id} />
+                    </div>}
+                    { (showFiles || props.serverData?.quick_protocol === 'sftp') && (
                         <FileExplorer
                             sessionId={sessionId}
-                            onClose={() => setShowFiles(false)}
-                            className="w-72 flex-shrink-0 border-l border-[#333] shadow-xl z-10"
+                            onClose={props.serverData?.quick_protocol === 'sftp' ? undefined : () => setShowFiles(false)}
+                            className={props.serverData?.quick_protocol === 'sftp' ? "flex-1 min-w-0" : "w-72 flex-shrink-0 border-l border-[#333] shadow-xl z-10"}
                         />
                     )}
                 </div>
@@ -207,19 +203,19 @@ export default function TerminalComponent(props: TerminalComponentProps) {
                     {props.serverData && (
                         <div className="text-xs text-gray-500 space-y-1">
                             <p>{props.serverData.hostname} ({props.serverData.ip_address})</p>
-                            <p>Intento {retryCount} de 3</p>
+                            <p>Intento {retryCount}</p>
                         </div>
                     )}
                     <div className="space-y-2">
                         <Button onClick={autoConnect} className="w-full">
                             🔄 Reintentar
                         </Button>
-                        <button
+                        {!local && <button
                             onClick={() => setRetryCount(3)}
                             className="text-xs text-gray-500 hover:text-gray-300 underline"
                         >
                             Usar terminal web (proxy)
-                        </button>
+                        </button>}
                     </div>
                 </div>
             </div>

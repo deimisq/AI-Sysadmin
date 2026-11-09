@@ -5,23 +5,27 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using System.Diagnostics;
+using System.Text.Json;
 
 namespace AiSysadminDesktop
 {
     public class ApiProxyServer
     {
-        private HttpListener _listener;
-        private readonly string _backendUrl = "https://testing.sentrait.com.uy";
+        private HttpListener _listener = new();
+        private readonly string _backendUrl = (Environment.GetEnvironmentVariable("AI_AGENT_BACKEND_URL") ?? "http://127.0.0.1:8000").TrimEnd('/');
         private readonly HttpClient _httpClient;
         private bool _isRunning;
 
         public ApiProxyServer()
         {
+            var backend = new Uri(_backendUrl);
+            if (backend.Scheme != "https" && !(backend.Scheme == "http" && backend.IsLoopback))
+                throw new ArgumentException("Remote backends must use HTTPS.");
             var handler = new HttpClientHandler
             {
                 AllowAutoRedirect = false, // We'll handle redirects manually to preserve POST body
                 AutomaticDecompression = DecompressionMethods.All,
-                ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
+                UseCookies = false
             };
             _httpClient = new HttpClient(handler);
         }
@@ -42,6 +46,7 @@ namespace AiSysadminDesktop
             catch (Exception ex)
             {
                 Debug.WriteLine($"❌ Failed to start proxy: {ex.Message}");
+                throw new InvalidOperationException("The local API proxy could not start. Check whether port 8080 is already in use.", ex);
             }
         }
 
@@ -68,13 +73,21 @@ namespace AiSysadminDesktop
         {
             var request = context.Request;
             var response = context.Response;
-            MemoryStream bodyStream = null;
-            HttpResponseMessage currentResponse = null;
+            MemoryStream? bodyStream = null;
+            HttpResponseMessage? currentResponse = null;
 
             try
             {
                 // Enable CORS
-                response.AddHeader("Access-Control-Allow-Origin", "*");
+                var origin = request.Headers["Origin"];
+                if (origin != null && origin != "https://appassets.local" && origin != "http://127.0.0.1:5173" && origin != "http://localhost:5173")
+                {
+                    response.StatusCode = 403;
+                    response.Close();
+                    return;
+                }
+                if (origin != null) response.AddHeader("Access-Control-Allow-Origin", origin);
+                response.AddHeader("Vary", "Origin");
                 response.AddHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH");
                 response.AddHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, Accept");
                 response.AddHeader("Access-Control-Max-Age", "86400");
@@ -88,6 +101,12 @@ namespace AiSysadminDesktop
                 }
 
                 // Build target URL
+                if (request.Url == null || !request.Url.AbsolutePath.StartsWith("/api/", StringComparison.Ordinal))
+                {
+                    response.StatusCode = 404;
+                    response.Close();
+                    return;
+                }
                 string targetUrl = _backendUrl + request.Url.PathAndQuery;
                 Console.WriteLine($"🔷 Proxy: {request.HttpMethod} {targetUrl}");
 
@@ -99,8 +118,9 @@ namespace AiSysadminDesktop
                 };
 
                 // Copy headers
-                foreach (string headerName in request.Headers.AllKeys)
+                foreach (string? headerName in request.Headers.AllKeys)
                 {
+                    if (headerName == null) continue;
                     if (headerName.Equals("Host", StringComparison.OrdinalIgnoreCase) ||
                         headerName.Equals("Connection", StringComparison.OrdinalIgnoreCase) ||
                         headerName.Equals("Origin", StringComparison.OrdinalIgnoreCase))
@@ -126,7 +146,7 @@ namespace AiSysadminDesktop
                     await request.InputStream.CopyToAsync(bodyStream);
                     bodyStream.Position = 0;
                     
-                    proxyRequest.Content = new StreamContent(bodyStream);
+                    proxyRequest.Content = new ByteArrayContent(bodyStream.ToArray());
                     proxyRequest.Content.Headers.TryAddWithoutValidation("Content-Type", contentType);
                 }
 
@@ -144,9 +164,13 @@ namespace AiSysadminDesktop
                     if (statusCode >= 300 && statusCode <= 399 && currentResponse.Headers.Location != null)
                     {
                         redirectCount++;
-                        var redirectUrl = currentResponse.Headers.Location.IsAbsoluteUri 
-                            ? currentResponse.Headers.Location.ToString()
-                            : _backendUrl + currentResponse.Headers.Location.ToString();
+                        var redirectUri = new Uri(currentRequest.RequestUri!, currentResponse.Headers.Location);
+                        var backendUri = new Uri(_backendUrl);
+                        if (redirectUri.Scheme != backendUri.Scheme || redirectUri.Authority != backendUri.Authority)
+                            throw new HttpRequestException("Cross-origin backend redirects are not allowed");
+                        var redirectUrl = redirectUri.ToString();
+                        if (redirectCount == MaxRedirects)
+                            throw new HttpRequestException("Too many backend redirects");
                             
                         Console.WriteLine($"🔄 Redirecting ({statusCode}) [{redirectCount}/{MaxRedirects}] to: {redirectUrl}");
                         
@@ -156,15 +180,16 @@ namespace AiSysadminDesktop
                         // Create new request
                         var nextRequest = new HttpRequestMessage
                         {
-                            Method = new HttpMethod(request.HttpMethod), // Maintain original method
+                            Method = statusCode == 303 || ((statusCode == 301 || statusCode == 302) && currentRequest.Method == HttpMethod.Post)
+                                ? HttpMethod.Get : currentRequest.Method,
                             RequestUri = new Uri(redirectUrl)
                         };
 
                         // Reuse Body
-                        if (bodyStream != null && bodyStream.Length > 0)
+                        if (bodyStream != null && bodyStream.Length > 0 && nextRequest.Method != HttpMethod.Get)
                         {
                             bodyStream.Position = 0; // REWIND STREAM
-                            nextRequest.Content = new StreamContent(bodyStream);
+                            nextRequest.Content = new ByteArrayContent(bodyStream.ToArray());
                             nextRequest.Content.Headers.TryAddWithoutValidation("Content-Type", contentType);
                         }
                         
@@ -182,13 +207,14 @@ namespace AiSysadminDesktop
                     break;
                 }
 
+                if (currentResponse == null) throw new HttpRequestException("No backend response");
                 await WriteResponse(response, currentResponse);
             }
             catch (HttpRequestException hex)
             {
                 Debug.WriteLine($"❌ HTTP Error: {hex.Message}");
                 response.StatusCode = 502;
-                byte[] buffer = Encoding.UTF8.GetBytes($"{{\"error\": \"Backend connection failed: {hex.Message}\"}}");
+                byte[] buffer = JsonSerializer.SerializeToUtf8Bytes(new { detail = "Backend connection failed" });
                 response.ContentType = "application/json";
                 try { await response.OutputStream.WriteAsync(buffer, 0, buffer.Length); response.Close(); } catch {}
             }
@@ -196,12 +222,14 @@ namespace AiSysadminDesktop
             {
                 Debug.WriteLine($"❌ Proxy error: {ex.Message}");
                 response.StatusCode = 500;
-                byte[] buffer = Encoding.UTF8.GetBytes($"{{\"error\": \"{ex.Message}\"}}");
+                byte[] buffer = JsonSerializer.SerializeToUtf8Bytes(new { detail = "Proxy request failed" });
                 response.ContentType = "application/json";
                 try { await response.OutputStream.WriteAsync(buffer, 0, buffer.Length); response.Close(); } catch {}
             }
             finally
             {
+                currentResponse?.Dispose();
+                bodyStream?.Dispose();
                 if (currentResponse != null) currentResponse.Dispose();
                 if (bodyStream != null) bodyStream.Dispose();
             }
@@ -259,7 +287,8 @@ namespace AiSysadminDesktop
         public void Stop()
         {
             _isRunning = false;
-            _listener?.Stop();
+            try { _listener?.Stop(); }
+            catch (ObjectDisposedException) { }
             _listener?.Close();
             _httpClient?.Dispose();
         }

@@ -2,10 +2,12 @@
     "name": "ai-agent-root",
     "private": true,
     "scripts": {
-        "tauri": "cd frontend && npm run tauri",
-        "tauri:build": "cd frontend && npm run tauri build",
-        "tauri-build": "cd frontend && npm run tauri build",
-        "desktop:dev": "cd frontend-desktop && npm run dev",
-        "desktop:build": "cd frontend-desktop && npm run build"
+        "web:dev": "npm --prefix frontend-web run dev",
+        "web:build": "npm --prefix frontend-web run build",
+        "desktop:dev": "npm --prefix frontend-desktop-ui run dev",
+        "desktop:build": "npm --prefix frontend-desktop-ui run build",
+        "windows:dev": "dotnet run --project apps/windows/AiSysadmin.csproj",
+        "windows:build": "npm run desktop:build && dotnet build apps/windows/AiSysadmin.csproj -c Release",
+        "windows:package": "powershell -NoProfile -File scripts/package-windows.ps1"
     }
 }

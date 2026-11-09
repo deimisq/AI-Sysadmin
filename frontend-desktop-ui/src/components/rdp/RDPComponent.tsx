@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { sendCommand } from '../../lib/bridge';
 // import { invoke } from '@tauri-apps/api/core';
 import { Button } from '../ui/button';
 import type { Server } from '@/lib/api';
@@ -7,30 +6,36 @@ import { fetchServerCredentials } from '@/lib/api';
 // import { GuacamoleCanvas } from './GuacamoleCanvas';
 import { NativeRdpCanvas } from './NativeRdpCanvas';
 import GuacamoleRdpCanvas from './GuacamoleRdpCanvas';
+import { isLocalWorkspace } from '../../lib/workspace-mode';
 
 interface RDPComponentProps {
     serverData: Server;
+    active?: boolean;
     onDisconnect: () => void;
     onSwitchToSSH?: () => void; // Optional callback to switch to SSH terminal mode
 }
 
-export function RDPComponent({ serverData, onDisconnect, onSwitchToSSH }: RDPComponentProps) {
+export function RDPComponent({ serverData, onDisconnect, active = true }: RDPComponentProps) {
+    const local = isLocalWorkspace();
+    const [retry, setRetry] = useState(0);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [credentials, setCredentials] = useState<{
         ip: string;
         username: string;
         password: string;
+        port: number;
     } | null>(null);
 
     // Toggle between Native RDP and Guacamole
     // Default to Native (FreeRDP) since we want the native integration experience
-    const [useGuacamole, setUseGuacamole] = useState<boolean>(false);
+    const useGuacamole = false;
 
 
     // Fetch credentials only
     useEffect(() => {
         let isMounted = true;
+        setLoading(true); setError(null);
 
         const initialize = async () => {
             try {
@@ -38,7 +43,7 @@ export function RDPComponent({ serverData, onDisconnect, onSwitchToSSH }: RDPCom
 
                 // Fetch credentials
                 console.log('[RDPComponent] Fetching credentials for server:', serverData.id);
-                const creds = await fetchServerCredentials(serverData.id);
+                const creds = serverData.quick_protocol ? serverData : await fetchServerCredentials(serverData.id);
                 console.log('[RDPComponent] Credentials fetched:', {
                     ip: creds.ip_address,
                     username: creds.ssh_username
@@ -48,9 +53,10 @@ export function RDPComponent({ serverData, onDisconnect, onSwitchToSSH }: RDPCom
                     const credData = {
                         ip: creds.ip_address,
                         username: creds.ssh_username || 'Administrator',
-                        password: creds.ssh_password || ''
+                        password: creds.ssh_password || '',
+                        port: creds.rdp_port || 3389,
                     };
-                    console.log('[RDPComponent] Setting credentials:', credData);
+                    // Do not log passwords or private keys.
                     setCredentials(credData);
                     setLoading(false);
                     console.log('[RDPComponent] Initialization complete, rendering NativeRdpCanvas');
@@ -70,20 +76,7 @@ export function RDPComponent({ serverData, onDisconnect, onSwitchToSSH }: RDPCom
         return () => {
             isMounted = false;
         };
-    }, [serverData.id]);
-
-    // Handle RDP disconnect with cleanup
-    const handleDisconnect = async () => {
-        try {
-            console.log('[RDPComponent] Stopping RDP process...');
-            await sendCommand('stop_embedded_rdp_command');
-            console.log('[RDPComponent] RDP process stopped successfully');
-        } catch (err) {
-            console.error('[RDPComponent] Failed to stop RDP:', err);
-            // Still proceed with disconnect even if kill fails
-        }
-        onDisconnect();
-    };
+    }, [serverData.id, retry]);
 
     // Render error state
     if (error) {
@@ -95,7 +88,7 @@ export function RDPComponent({ serverData, onDisconnect, onSwitchToSSH }: RDPCom
                 </div>
                 <div className="flex gap-4">
                     <Button
-                        onClick={() => window.location.reload()}
+                        onClick={() => setRetry(value => value + 1)}
                         variant="default"
                         className="bg-blue-600 hover:bg-blue-700"
                     >
@@ -103,7 +96,7 @@ export function RDPComponent({ serverData, onDisconnect, onSwitchToSSH }: RDPCom
                     </Button>
                     <Button
                         variant="outline"
-                        onClick={handleDisconnect}
+                        onClick={onDisconnect}
                         className="bg-transparent border-gray-600 hover:bg-gray-800 text-gray-300"
                     >
                         Volver
@@ -128,50 +121,9 @@ export function RDPComponent({ serverData, onDisconnect, onSwitchToSSH }: RDPCom
 
     return (
         <div className="h-full flex flex-col bg-[#0a0a0a] relative overflow-hidden">
-            {/* RDP Toolbar */}
-            <div className="bg-gradient-to-r from-[#0078d7] to-[#005a9e] px-4 py-2 flex justify-between items-center text-white shrink-0 shadow-lg z-10">
-                <div className="flex items-center gap-3">
-                    <div className="w-2.5 h-2.5 bg-green-400 rounded-full shadow-[0_0_10px_rgba(74,222,128,0.9)] animate-pulse"></div>
-                    <span className="font-semibold">{serverData.hostname}</span>
-                    <span className="text-xs opacity-60 font-mono bg-black/20 px-2 py-0.5 rounded">
-                        {serverData.ip_address}
-                    </span>
-                </div>
-
-                <div className="flex gap-2 items-center">
-                    <button
-                        onClick={handleDisconnect}
-                        className="bg-red-600/90 hover:bg-red-600 text-white px-4 py-1.5 rounded text-sm font-medium shadow-sm transition-all hover:shadow-md"
-                    >
-                        Desconectar
-                    </button>
-
-                    {/* Toggle Guacamole/Native */}
-                    <button
-                        onClick={() => setUseGuacamole(!useGuacamole)}
-                        className="flex items-center gap-2 px-3 py-1.5 bg-blue-600/80 hover:bg-blue-600 border border-white/20 text-white rounded text-xs font-medium"
-                        title={useGuacamole ? "Cambiar a RDP Nativo" : "Cambiar a Guacamole (mejor integración)"}
-                    >
-                        <span className="text-lg">{useGuacamole ? '🌐' : '🖥️'}</span>
-                        {useGuacamole ? 'Guacamole' : 'Nativo'}
-                    </button>
-
-                    {onSwitchToSSH && (
-                        <button
-                            onClick={onSwitchToSSH}
-                            className="flex items-center gap-2 px-3 py-1.5 bg-black/20 hover:bg-black/40 border border-white/20 text-white rounded text-xs font-medium"
-                        >
-                            <span className="text-lg">⚡</span>
-                            SSH
-                        </button>
-                    )}
-                </div>
-            </div>
-
-
             {/* Main Content Area - RDP Canvas (Guacamole or Native) */}
             <div className="flex-1 flex flex-col bg-black relative overflow-hidden">
-                {useGuacamole ? (
+                {useGuacamole && !local ? (
                     <GuacamoleRdpCanvas
                         host={credentials.ip}
                         username={credentials.username}
@@ -182,6 +134,9 @@ export function RDPComponent({ serverData, onDisconnect, onSwitchToSSH }: RDPCom
                     />
                 ) : (
                     <NativeRdpCanvas
+                        temporaryServerId={serverData.quick_protocol ? serverData.id : undefined}
+                        active={active}
+                        port={credentials.port}
                         host={credentials.ip}
                         username={credentials.username}
                         password={credentials.password}

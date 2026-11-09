@@ -37,7 +37,7 @@ RUN chmod +x /app/backend/start.sh
 RUN python -m compileall -b /app/backend && \
     find /app/backend -type f -name "*.py" \
     -not -path "/app/backend/alembic/*" \
-    -not -name "init_license.py" \
+    -not -path "/app/backend/scripts/*" \
     -delete
 
 

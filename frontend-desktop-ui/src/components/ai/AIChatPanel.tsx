@@ -1,41 +1,105 @@
 import { useState, useEffect, useRef } from 'react';
-import { Send, Sparkles, Loader2, Play } from 'lucide-react';
+import { Send, Sparkles, Loader2, Copy } from 'lucide-react';
 import { useWorkspaceStore } from '../../stores/workspaceStore';
-import { diagnoseProblem } from '../../lib/api';
+import { api, diagnoseProblem } from '../../lib/api';
+import { notifyAiConfiguration, type LocalAiConfiguration } from './LocalAiSettings';
+import { type Server } from '../../lib/api';
+import { toast } from 'sonner';
+import { isLocalWorkspace } from '../../lib/workspace-mode';
+import { type AiEvidence, type AiHistoryTurn } from '../../lib/ai-evidence';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '../ui/dialog';
+import { AgentTaskPanel } from './AgentTaskPanel';
+import { AssistantTextarea } from './AssistantTextarea';
 
 export function AIChatPanel() {
     const { tabs, activeTabId } = useWorkspaceStore();
     // Get current context server
     const activeTab = tabs.find(t => t.id === activeTabId);
-    const server = (activeTab?.type === 'terminal' && activeTab.server) ? activeTab.server : null;
+    const server = activeTab?.server || null;
+    if (server?.quick_protocol && !isLocalWorkspace()) return <p className="p-3 text-xs text-gray-400">La IA de conexiones temporales requiere el espacio local de Windows.</p>;
+    return <ServerAssistant key={server?.id ?? 'none'} server={server} />;
+}
 
-    const [messages, setMessages] = useState<{ role: 'user' | 'ai', content: string, command?: string }[]>([]);
+function ServerAssistant({ server }: { server: Server | null }) {
+    const local = isLocalWorkspace();
+    const temporarySshSession = useWorkspaceStore(state => server?.quick_protocol && server.quick_protocol !== 'rdp' ? state.nativeSessions[server.id] : undefined);
+    const waitingForTemporarySsh = !!server?.quick_protocol && server.quick_protocol !== 'rdp' && !temporarySshSession;
+    const [mode, setMode] = useState<'chat' | 'task'>('chat');
+    const [taskRunning, setTaskRunning] = useState(false);
+    const [historyLoading, setHistoryLoading] = useState(local && !!server);
+    const [historyError, setHistoryError] = useState(false);
+    const [historyRefresh, setHistoryRefresh] = useState(0);
+    const [showClearHistory, setShowClearHistory] = useState(false);
+    const [clearingHistory, setClearingHistory] = useState(false);
+    const [consent, setConsent] = useState(false);
+    const [accepted, setAccepted] = useState(false);
+    const [configuration, setConfiguration] = useState<LocalAiConfiguration | null>(null);
+    useEffect(() => {
+        if (!local) return;
+        let active = true;
+        let configurationVersion = 0;
+        const refresh = () => {
+            const version = ++configurationVersion;
+            requestVersion.current += 1;
+            setAccepted(false); setLoading(false);
+            api.get<LocalAiConfiguration>('/ai/settings').then(data => { if (active && version === configurationVersion) { setConfiguration(data); setAccepted(data.consent_accepted); } }).catch(() => { if (active && version === configurationVersion) { setConfiguration(null); setAccepted(false); } });
+        };
+        refresh(); window.addEventListener('local-ai-settings-changed', refresh);
+        return () => { active = false; window.removeEventListener('local-ai-settings-changed', refresh); };
+    }, [local]);
+    const requestVersion = useRef(0);
+    useEffect(() => () => { requestVersion.current += 1; }, []);
+
+    const [messages, setMessages] = useState<{ role: 'user' | 'ai', content: string, command?: string, evidence?: AiEvidence | null, date?: string, target?: string, provider?: string }[]>([]);
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
-    const messagesEndRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        if (!server?.quick_protocol) return;
+        requestVersion.current += 1;
+        setLoading(false);
+        const changed = (event: Event) => {
+            if ((event as CustomEvent).detail?.serverId !== server.id) return;
+            requestVersion.current += 1;
+            setMessages([]); setLoading(false); setHistoryRefresh(value => value + 1);
+        };
+        window.addEventListener('local-temporary-target-changed', changed);
+        return () => window.removeEventListener('local-temporary-target-changed', changed);
+    }, [server?.id, temporarySshSession]);
+    const messagesRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        if (!local || !server) return;
+        let active = true;
+        setHistoryLoading(true); setHistoryError(false);
+        api.get<AiHistoryTurn[]>(`/servers/${server.id}/history`).then(turns => {
+            if (!active) return;
+            setMessages(turns.flatMap(turn => [
+                { role: 'user' as const, content: turn.query, evidence: turn.evidence, date: turn.created_at, target: `${turn.hostname} · ${turn.address}` },
+                { role: 'ai' as const, content: turn.analysis, command: turn.command || undefined, date: turn.created_at, provider: `${turn.provider} · ${turn.model}`, target: `${turn.hostname} · ${turn.address}` },
+            ]));
+        }).catch(() => { if (active) setHistoryError(true); }).finally(() => { if (active) setHistoryLoading(false); });
+        return () => { active = false; };
+    }, [local, server?.id, historyRefresh, temporarySshSession]);
 
     // Scroll to bottom on new message
     useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [messages]);
-
-    // Clear messages when server context changes? Maybe not, context switching conversation is complex.
-    // For now, let's keep conversation persistent or clear?
-    // Let's keep it persistent but warn about context change if server changes?
-    // User might want to carry over context.
+        const container = messagesRef.current;
+        container?.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
+    }, [messages, mode]);
 
     const handleSend = async () => {
-        if (!input.trim()) return;
+        if (!input.trim() || loading || historyLoading || clearingHistory || !server || !accepted || waitingForTemporarySsh) return;
+        const version = ++requestVersion.current;
 
         const userMsg = input;
         setInput('');
-        setMessages(prev => [...prev, { role: 'user', content: userMsg }]);
+        setMessages(prev => [...prev, { role: 'user', content: userMsg, target: `${server.hostname} · ${server.ip_address}` }]);
         setLoading(true);
 
         try {
             if (server) {
                 // Server context mode
-                const res = await diagnoseProblem(server.id, userMsg);
+                const res = await diagnoseProblem(server.id, userMsg, 'es', '2026-10-25', undefined, local ? server : undefined, local ? useWorkspaceStore.getState().nativeSessions[server.id] : undefined);
+                if (version !== requestVersion.current) return;
 
                 // Parse response
                 let analysis = "No analysis received";
@@ -50,43 +114,37 @@ export function AIChatPanel() {
                     }
                 }
 
-                setMessages(prev => [...prev, { role: 'ai', content: analysis, command }]);
-            } else {
-                // General Assistant Mode (No Server Context)
-                // TODO: Wire up a different endpoint for general chat
-                setTimeout(() => {
-                    setMessages(prev => [...prev, {
-                        role: 'ai',
-                        content: "Active terminal required. Please open a server terminal to use AI diagnostics."
-                    }]);
-                    setLoading(false);
-                }, 800);
+                setMessages(prev => [...prev, { role: 'ai', content: analysis, command, target: `${server.hostname} · ${server.ip_address}` }]);
+                if (local) {
+                    if (res.context_truncated) toast.info('La IA recibió la ventana reciente configurada. El comienzo de la sesión no fue incluido.');
+                    if (res.history_saved === false) toast.warning('La respuesta llegó, pero no se guardó en el historial. El destino pudo cambiar o el almacenamiento no está disponible.');
+                }
             }
         } catch (e: any) {
+            if (version !== requestVersion.current) return;
             console.error(e);
             setMessages(prev => [...prev, { role: 'ai', content: `Error: ${e.message || "Failed to contact AI"}` }]);
         } finally {
-            setLoading(false);
+            if (version === requestVersion.current) setLoading(false);
         }
     };
 
-    const handleRunCommand = (cmd: string) => {
-        // We need to inject this command into the active terminal
-        // But active terminal is inside WorkspaceArea -> TabContent -> TerminalComponent
-        // We can emit an event or use Store to "send_input" to active tab
-        // For now, let's just copy to clipboard and notify
-        navigator.clipboard.writeText(cmd);
-        // Toast?
-        // Ideally: useWorkspaceStore().sendToActiveTerminal(cmd)
+    const handleRunCommand = async (cmd: string) => {
+        try {
+            await navigator.clipboard.writeText(cmd);
+            toast.success('Comando copiado. Revisalo antes de ejecutarlo.');
+        } catch {
+            toast.error('No se pudo copiar el comando. Podés seleccionarlo manualmente.');
+        }
     };
 
     return (
-        <div className="flex flex-col h-full bg-[#1e1e1e] border-l border-[#333]">
+        <div className="assistant-panel flex flex-col h-full min-h-0 min-w-0 overflow-hidden bg-[#1e1e1e] border-l border-[#333]">
             {/* Header */}
             <div className="p-2 border-b border-[#333] flex items-center justify-between text-xs font-bold text-gray-400 uppercase tracking-wider bg-[#252526] select-none">
                 <div className="flex items-center gap-2">
                     <Sparkles className="w-3.5 h-3.5 text-purple-400" />
-                    <span>AI Assistant</span>
+                    <span>Acompañante IA</span>
                 </div>
 
                 {server ? (
@@ -94,39 +152,73 @@ export function AIChatPanel() {
                         {server.hostname}
                     </span>
                 ) : (
-                    <span className="text-gray-600 ml-2">No Context</span>
+                    <span className="text-gray-400 ml-2">Sin servidor</span>
                 )}
             </div>
 
+            {server?.quick_protocol && <p className="px-2 py-1 text-[11px] text-gray-400 border-b border-[#333]">Conexión temporal: conversación en memoria hasta cerrar la sesión.{server.quick_protocol === 'rdp' ? ' Sin captura de pantalla ni control de RDP.' : ' El registro cifrado de terminal y las auditorías conservan su retención local.'}</p>}
+            {waitingForTemporarySsh && <p className="p-2 text-xs text-gray-400">Esperando la conexión SSH para habilitar su contexto.</p>}
+            {local && <section className="assistant-context space-y-1.5" aria-label="Contexto del acompañante IA">
+                <div className="flex items-center justify-between gap-2">
+                    <span className="text-gray-400">Modelo</span>
+                    <span className="truncate text-blue-200" title={configuration?.base_url}>{configuration?.consent_accepted ? configuration.model : 'Sin configurar'}</span>
+                </div>
+
+                                <details className="text-[11px] text-gray-400"><summary className="cursor-pointer">Contexto y privacidad</summary><p className="pt-2 leading-relaxed">La salida SSH se registra cifrada en este equipo. Al pedir ayuda se comparte el contexto disponible y la conversación reciente con tu proveedor. No hay envío continuo.</p><button className="text-blue-300 hover:underline" onClick={() => useWorkspaceStore.getState().openPreferences('ai')}>Configurar proveedor y privacidad</button></details>
+                <div className="flex gap-2"><button aria-pressed={mode === 'chat'} className="border border-[#444] rounded px-2 py-1" onClick={() => setMode('chat')}>Conversar</button><button aria-pressed={mode === 'task'} className="border border-[#444] rounded px-2 py-1" onClick={() => setMode('task')}>Ejecutar tarea</button></div>
+            </section>}
+            {local && taskRunning && mode === 'chat' && <button className="p-2 text-xs text-amber-300 border-b border-[#444]" onClick={() => setMode('task')}>Hay una tarea en ejecución · Ver progreso o cancelar</button>}
+            {local && <div className={mode === 'task' ? 'flex flex-col flex-1 min-h-0' : 'hidden'}><AgentTaskPanel server={server} enabled={accepted} onRunningChange={setTaskRunning} /></div>}
+            {(!local || mode === 'chat') && <>
+            {server && !accepted && !local && (
+                <section className="p-4 border-b border-[#444] text-xs text-gray-200 space-y-3" aria-label="Permiso para compartir contexto con IA">
+                    <h3 className="font-semibold">Antes de usar el diagnóstico</h3>
+                    <p>Esta integración usa el proveedor configurado en el backend. Puede recopilar datos del servidor y enviar nombres, direcciones, comandos y registros a un proveedor de IA en la nube. Todavía no ofrece conexión directa con tu propia clave ni un modo local verificado.</p>
+                    <label className="flex items-start gap-2">
+                        <input type="checkbox" checked={consent} onChange={e => setConsent(e.target.checked)} />
+                        <span>Entiendo el envío de contexto, tengo autorización para compartirlo y acepto las condiciones del proveedor configurado, incluidos posibles cargos.</span>
+                    </label>
+                    <button className="px-3 py-2 bg-blue-600 rounded disabled:opacity-40" disabled={!consent} onClick={() => setAccepted(true)}>Aceptar y habilitar para esta sesión</button>
+                </section>
+            )}
+            {accepted && server && <div className="px-3 py-2 text-xs text-gray-300 border-b border-[#333] flex flex-wrap gap-2 justify-between"><span>Contexto de {server.hostname} · {local ? 'Proveedor propio' : 'Backend configurado'}</span><button className="underline" onClick={async () => {
+                requestVersion.current += 1; setAccepted(false); setConsent(false); setLoading(false);
+                if (local) { try { await api.delete('/ai/settings'); notifyAiConfiguration(); } catch { toast.error('No se pudo desconectar la configuración. Reintentá desde Ajustes.'); } }
+            }}>Detener nuevos envíos</button></div>}
+
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 font-sans">
+            <div ref={messagesRef} className="assistant-messages flex flex-col flex-1 min-h-0 min-w-0 overflow-y-auto overflow-x-hidden p-3 gap-4 font-sans">
+                {local && server && <div className="flex flex-wrap gap-2 justify-between text-xs text-gray-400"><span>{historyLoading ? 'Cargando historial protegido…' : 'Historial · Hasta 20 consultas por destino'}</span><button disabled={loading || historyLoading || clearingHistory} className="underline disabled:opacity-40" onClick={() => setShowClearHistory(true)}>Borrar historial</button></div>}
+                {historyError && <p role="alert" className="text-xs text-amber-300">No se pudo cargar el historial. <button className="underline" onClick={() => setHistoryRefresh(value => value + 1)}>Reintentar</button></p>}
                 {messages.length === 0 && (
-                    <div className="flex flex-col items-center justify-center h-full text-center text-gray-500 opacity-60">
+                    <div className="flex flex-col flex-1 items-center justify-center py-4 text-center text-gray-500 opacity-60">
                         <Sparkles className="w-12 h-12 mb-4" />
-                        <p className="text-sm font-medium">How can I help you today?</p>
-                        <p className="text-xs mt-2 max-w-[200px]">Open a terminal to analyze logs, processes, or run commands automatically.</p>
+                        <p className="text-sm font-medium">Tu acompañante en la terminal</p>
+                        <p className="text-xs mt-2 max-w-[260px]">Trabajá normalmente. Cuando necesites ayuda, preguntá por ejemplo: «¿Por qué falló lo último?» o «¿Qué probarías ahora?».</p>
                     </div>
                 )}
                 {messages.map((m, i) => (
                     <div key={i} className={`flex flex-col ${m.role === 'user' ? 'items-end' : 'items-start'}`}>
                         <div className={`
-                           max-w-[95%] rounded-lg p-3 text-xs leading-relaxed whitespace-pre-wrap shadow-sm
+                           max-w-full min-w-0 rounded-lg p-3 text-xs leading-relaxed whitespace-pre-wrap [overflow-wrap:anywhere] shadow-sm
                            ${m.role === 'user' ? 'bg-[#007acc] text-white' : 'bg-[#2d2d2d] text-gray-200 border border-[#3e3e3e]'}
                        `}>
                             {m.content}
                         </div>
+                        {m.date && <p className="text-[11px] text-gray-400 mt-1 break-all">{new Date(m.date).toLocaleString()} · {m.target || m.provider}</p>}
+                        {m.evidence && <details className="text-xs text-gray-300 mt-2 max-w-full"><summary>Evidencia compartida · {m.evidence.source === 'terminal-selection' ? 'Selección de terminal' : m.evidence.source === 'diagnostic' ? 'Consulta local' : 'Pegada por el técnico'}</summary><pre className="whitespace-pre-wrap break-all mt-2 p-2 bg-[#252526] rounded">{m.evidence.content}</pre></details>}
                         {m.command && (
                             <div className="mt-2 w-full max-w-[95%] bg-[#000000] border border-[#3e3e3e] rounded p-2">
                                 <div className="flex justify-between items-center mb-2 border-b border-[#333] pb-1">
-                                    <span className="text-[10px] text-gray-500 uppercase font-bold">Proposed Command</span>
+                                    <span className="text-[10px] text-gray-400 uppercase font-bold">Propuesta · No ejecutada</span>
                                 </div>
                                 <code className="text-xs text-green-400 font-mono block mb-3 break-all">{m.command}</code>
                                 <button
                                     onClick={() => handleRunCommand(m.command!)}
                                     className="w-full flex items-center justify-center gap-2 bg-[#2d2d2d] hover:bg-[#3d3d3d] text-xs text-white py-1.5 rounded transition-colors border border-[#444]"
-                                    title="Copy to Clipboard (Auto-run coming soon)"
+                                    title="Copiar sin ejecutar"
                                 >
-                                    <Play className="w-3 h-3 text-green-500" /> Copy Command
+                                    <Copy className="w-3 h-3 text-green-500" /> Copiar comando
                                 </button>
                             </div>
                         )}
@@ -139,17 +231,17 @@ export function AIChatPanel() {
                         </div>
                     </div>
                 )}
-                <div ref={messagesEndRef} />
             </div>
 
             {/* Input */}
-            <div className="p-3 border-t border-[#333] bg-[#252526]">
+            <div className="shrink-0 p-3 border-t border-[#333] bg-[#252526]">
                 <div className="relative">
-                    <textarea
+                    <AssistantTextarea
                         className="w-full bg-[#1e1e1e] border border-[#333] text-white text-xs rounded p-2 pr-10 resize-none focus:border-blue-500 focus:ring-0 outline-none placeholder-gray-600"
-                        rows={1} // Auto-grow ideally
                         style={{ minHeight: '40px' }}
-                        placeholder={server ? "Analyze logs, check load..." : "Select a server first..."}
+                        placeholder={server ? "Preguntá sobre lo que está pasando en la terminal…" : "Seleccioná un servidor…"}
+                        disabled={!server || !accepted || loading || historyLoading || clearingHistory || waitingForTemporarySsh}
+                        maxLength={16000}
                         value={input}
                         onChange={e => setInput(e.target.value)}
                         onKeyDown={e => {
@@ -165,15 +257,30 @@ export function AIChatPanel() {
                            ${input.trim() ? 'bg-blue-600 text-white hover:bg-blue-500' : 'bg-[#333] text-gray-500 cursor-not-allowed'}
                        `}
                         onClick={handleSend}
-                        disabled={loading || !input.trim()}
+                        disabled={loading || historyLoading || clearingHistory || !input.trim() || !server || !accepted || waitingForTemporarySsh}
+                        aria-label="Enviar consulta a la IA"
                     >
                         <Send className="w-3.5 h-3.5" />
                     </button>
                 </div>
                 <div className="text-[10px] text-gray-600 mt-1 text-center">
-                    AI can make mistakes. Verify commands before running.
+                    La IA puede equivocarse. Revisá cada comando antes de ejecutarlo.
                 </div>
             </div>
+            <Dialog open={showClearHistory} onOpenChange={setShowClearHistory}>
+                <DialogContent className="bg-card text-card-foreground">
+                    <DialogTitle>Borrar historial de {server?.hostname}</DialogTitle>
+                    <DialogDescription>Se quita del historial activo de este equipo. No borra lo recibido por el proveedor ni las copias cifradas anteriores.</DialogDescription>
+                    <div className="flex gap-2 justify-end"><button disabled={clearingHistory} onClick={() => setShowClearHistory(false)} className="p-2 border border-border rounded">Cancelar</button><button disabled={clearingHistory} className="p-2 rounded bg-red-700 text-white" onClick={async () => {
+                        if (!server) return;
+                        setClearingHistory(true);
+                        try { await api.delete(`/servers/${server.id}/history`); setMessages([]); setShowClearHistory(false); }
+                        catch { toast.error('No se pudo borrar el historial.'); }
+                        finally { setClearingHistory(false); }
+                    }}>Borrar historial local</button></div>
+                </DialogContent>
+            </Dialog>
+            </>}
         </div>
     );
 }

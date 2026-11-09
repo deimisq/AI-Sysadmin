@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 from pydantic import BaseModel
 import database, models, schemas, dependencies
 from services.ssh_service import ssh_service
@@ -13,6 +13,7 @@ from utils.encryption import encrypt_data, decrypt_data
 import csv
 import io
 import logging
+from utils.access import require_server_access, require_group_access, server_query, is_global_admin
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +21,8 @@ router = APIRouter()
 
 
 @router.post("/clients/", response_model=schemas.Client)
-def create_client(client: schemas.ClientCreate, db: Session = Depends(dependencies.get_db)):
+def create_client(client: schemas.ClientCreate, db: Session = Depends(dependencies.get_db),
+                  current_user: models.User = Depends(dependencies.get_current_superuser)):
     db_client = models.Client(**client.dict())
     db.add(db_client)
     db.commit()
@@ -28,7 +30,8 @@ def create_client(client: schemas.ClientCreate, db: Session = Depends(dependenci
     return db_client
 
 @router.get("/clients/", response_model=List[schemas.Client])
-def read_clients(skip: int = 0, limit: int = 100, db: Session = Depends(dependencies.get_db)):
+def read_clients(skip: int = 0, limit: int = 100, db: Session = Depends(dependencies.get_db),
+                 current_user: models.User = Depends(dependencies.get_current_superuser)):
     clients = db.query(models.Client).offset(skip).limit(limit).all()
     return clients
 
@@ -77,8 +80,7 @@ def read_groups(
     
     # Base query filtered by organization
     query = db.query(models.ServerGroup)
-    if current_user.organization_id:
-        query = query.filter(models.ServerGroup.organization_id == current_user.organization_id)
+    query = query.filter(models.ServerGroup.organization_id == current_user.organization_id)
         
     # Org Admins see all groups in their org
     if current_user.role == models.RoleType.ADMIN.value:
@@ -90,7 +92,7 @@ def read_groups(
     if not user_group_ids:
         return []
         
-    groups = db.query(models.ServerGroup).filter(
+    groups = query.filter(
         models.ServerGroup.id.in_(user_group_ids)
     ).offset(skip).limit(limit).all()
     
@@ -179,6 +181,7 @@ def create_server(
 ):
     """Create a new server - all authenticated users can create servers"""
     server_data = server.dict()
+    require_group_access(current_user, server_data.get("group_id"), db)
     
     # Validation removed to allow raw private keys
     # if server_data.get('ssh_key_path'): ...
@@ -278,6 +281,7 @@ def get_server(
     server = db.query(models.Server).filter(models.Server.id == server_id).first()
     if not server:
         raise HTTPException(status_code=404, detail="Server not found")
+    require_server_access(current_user, server, db)
     
     # Org check - allow if both are None or if they match
     if not current_user.is_superuser:
@@ -305,45 +309,8 @@ def read_servers(
     db: Session = Depends(dependencies.get_db),
     current_user: models.User = Depends(dependencies.get_current_active_user)
 ):
-    """
-    Get servers based on user permissions:
-    - Admins: See ALL servers
-    - Users: See servers they created + servers in their assigned groups
-    """
-    # Superadmins can see all servers
-    if current_user.is_superuser:
-        servers = db.query(models.Server).offset(skip).limit(limit).all()
-        return servers
-        
-    query = db.query(models.Server)
-    
-    # Filter by Organization
-    if current_user.organization_id:
-        query = query.filter(models.Server.organization_id == current_user.organization_id)
-    
-    # Org Admins see all servers in their org
-    if current_user.role == models.RoleType.ADMIN.value:
-        return query.offset(skip).limit(limit).all()
-    
-    #Regular users see:
-    # 1. Servers they created
-    # 2. Servers in groups they belong to
-    
-    # Get IDs of groups the user belongs to
-    user_group_ids = [perm.group_id for perm in current_user.group_permissions_detail]
-    
-    # Build query: servers created by user OR in their groups
-    from sqlalchemy import or_
-    
-    query = db.query(models.Server).filter(
-        or_(
-            models.Server.created_by == current_user.id,  # Own servers
-            models.Server.group_id.in_(user_group_ids) if user_group_ids else False  # Group servers
-        )
-    )
-    
-    servers = query.offset(skip).limit(limit).all()
-    return servers
+    """List only servers visible under the shared tenant policy."""
+    return server_query(current_user, db).offset(skip).limit(limit).all()
 
 @router.delete("/servers/{server_id}")
 def delete_server(
@@ -355,6 +322,7 @@ def delete_server(
     server = db.query(models.Server).filter(models.Server.id == server_id).first()
     if not server:
         raise HTTPException(status_code=404, detail="Server not found")
+    require_server_access(current_user, server, db)
     
     # Org check
     if not current_user.is_superuser:
@@ -398,6 +366,7 @@ def update_server(
     db_server = db.query(models.Server).filter(models.Server.id == server_id).first()
     if not db_server:
         raise HTTPException(status_code=404, detail="Server not found")
+    require_server_access(current_user, db_server, db)
         
     # Org check
     if not current_user.is_superuser:
@@ -415,6 +384,8 @@ def update_server(
         )
     
     update_data = server_update.dict(exclude_unset=True)
+    if "group_id" in update_data:
+        require_group_access(current_user, update_data["group_id"], db)
     
     # Validation removed to allow raw private keys
     # if update_data.get('ssh_key_path'): ...
@@ -454,6 +425,7 @@ def get_server_credentials(
     db_server = db.query(models.Server).filter(models.Server.id == server_id).first()
     if not db_server:
         raise HTTPException(status_code=404, detail="Server not found")
+    require_server_access(current_user, db_server, db)
     
     # Org check
     if not current_user.is_superuser:
@@ -490,6 +462,7 @@ async def execute_command(
     server = db.query(models.Server).filter(models.Server.id == request.server_id).first()
     if not server:
         raise HTTPException(status_code=404, detail="Server not found")
+    require_server_access(current_user, server, db)
     
     # Org check
     if not current_user.is_superuser:
@@ -506,7 +479,7 @@ async def execute_command(
     # Decrypt SSH key path if available
     if server.ssh_key_path:
         ssh_key_path = decrypt_data(server.ssh_key_path)
-        auth_method = f"SSH Key: {ssh_key_path}"
+        auth_method = "SSH Key"
     
     # Decrypt password if available
     if server.ssh_password:
@@ -610,7 +583,8 @@ async def import_servers_from_csv(
             if group_name:
                 # Check if group exists
                 group = db.query(models.ServerGroup).filter(
-                    models.ServerGroup.name == group_name
+                    models.ServerGroup.name == group_name,
+                    models.ServerGroup.organization_id == current_user.organization_id
                 ).first()
                 
                 if not group:
@@ -637,6 +611,7 @@ async def import_servers_from_csv(
                         db.add(permission)
                         db.commit()
                 
+                require_group_access(current_user, group.id, db)
                 group_id = group.id
             
             # Prepare server data
@@ -648,7 +623,8 @@ async def import_servers_from_csv(
                 "os_info": row.get('os_info', '').strip() or None,
                 "client_id": default_client.id,
                 "group_id": group_id,
-                "organization_id": current_user.organization_id
+                "organization_id": current_user.organization_id,
+                "created_by": current_user.id
             }
             
             # Encrypt sensitive data
@@ -695,7 +671,7 @@ async def import_servers_from_csv(
 async def get_server_diagnostic(
     server_id: int,
     db: Session = Depends(dependencies.get_db),
-    current_user: models.User = Depends(dependencies.get_current_user)
+    current_user: models.User = Depends(dependencies.get_current_active_user)
 ):
     """Get real-time diagnostic information from a server via SSH"""
     from datetime import datetime
@@ -704,6 +680,7 @@ async def get_server_diagnostic(
     server = db.query(models.Server).filter(models.Server.id == server_id).first()
     if not server:
         raise HTTPException(status_code=404, detail="Server not found")
+    require_server_access(current_user, server, db)
         
     # Org check
     if not current_user.is_superuser:
@@ -831,6 +808,7 @@ class ChatDiagnoseRequest(BaseModel):
     description: str
     locale: str = "es"
     history: list[ChatMessage] = []
+    context_consent_version: Optional[str] = None
 
 class ChatExecuteRequest(BaseModel):
     command: str
@@ -845,6 +823,9 @@ async def diagnose_server_problem_chat(
     server = db.query(models.Server).filter(models.Server.id == server_id).first()
     if not server:
         raise HTTPException(status_code=404, detail="Server not found")
+    require_server_access(current_user, server, db)
+    if request.context_consent_version != "2026-10-25":
+        raise HTTPException(status_code=428, detail="Accept the infrastructure AI context notice before diagnosing")
 
     # Org check
     if not current_user.is_superuser:
@@ -906,11 +887,12 @@ async def execute_server_command_chat(
     server_id: int,
     request: ChatExecuteRequest,
     db: Session = Depends(dependencies.get_db),
-    current_user: models.User = Depends(dependencies.get_current_user)
+    current_user: models.User = Depends(dependencies.get_current_active_user)
 ):
     server = db.query(models.Server).filter(models.Server.id == server_id).first()
     if not server:
         raise HTTPException(status_code=404, detail="Server not found")
+    require_server_access(current_user, server, db)
 
     # Decrypt credentials
     ssh_password = decrypt_data(server.ssh_password) if server.ssh_password else None

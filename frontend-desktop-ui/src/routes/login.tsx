@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Shield } from "lucide-react";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { toast } from "sonner";
+import { isWebView2 } from '../lib/bridge';
+import { selectWorkspaceMode } from '../lib/workspace-mode';
 
 export default function Login() {
     const navigate = useNavigate();
@@ -31,6 +33,7 @@ export default function Login() {
                 toast.success("Welcome back!");
                 navigate('/');
             } else {
+                selectWorkspaceMode('enterprise');
                 // Register
                 await register({
                     username: formData.username,
@@ -70,6 +73,10 @@ export default function Login() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
+                    {isWebView2() && <div className="mb-5 space-y-2">
+                        <Button className="w-full" variant="outline" onClick={() => { selectWorkspaceMode('local'); window.location.hash = '#/'; window.location.reload(); }}>Trabajar en este equipo sin cuenta</Button>
+                        <p className="text-xs text-muted-foreground text-center">Conexiones y credenciales protegidas con tu cuenta de Windows.</p>
+                    </div>}
                     <form onSubmit={handleSubmit} className="space-y-4">
                         {!isLogin && (
                             <>

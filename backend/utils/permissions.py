@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import and_
 import models
 from models import RoleType, PermissionType
+from utils.access import require_server_access, require_group_access, server_query, is_global_admin
 
 def has_permission(user: models.User, permission: PermissionType, resource_id: int = None, db: Session = None) -> bool:
     """Check if user has a specific permission"""
@@ -44,42 +45,18 @@ def has_permission(user: models.User, permission: PermissionType, resource_id: i
     return False
 
 def can_access_server(user: models.User, server: models.Server, db: Session) -> bool:
-    """Check if user can access a specific server"""
-    
-    # Superusers and admins can access all servers
-    if user.is_superuser or user.role in [RoleType.SUPERADMIN.value, RoleType.ADMIN.value]:
+    try:
+        require_server_access(user, server, db)
         return True
-    
-    # If server has no group, only admins can access
-    if not server.group_id:
+    except HTTPException:
         return False
-    
-    # Check if user has permission for this server's group
-    user_group = db.query(models.UserGroupPermission).filter(
-        and_(
-            models.UserGroupPermission.user_id == user.id,
-            models.UserGroupPermission.group_id == server.group_id
-        )
-    ).first()
-    
-    return user_group is not None
 
 def can_access_group(user: models.User, group_id: int, db: Session) -> bool:
-    """Check if user can access a specific group"""
-    
-    # Superusers and admins can access all groups
-    if user.is_superuser or user.role in [RoleType.SUPERADMIN.value, RoleType.ADMIN.value]:
+    try:
+        require_group_access(user, group_id, db)
         return True
-    
-    # Check if user has permission for this group
-    user_group = db.query(models.UserGroupPermission).filter(
-        and_(
-            models.UserGroupPermission.user_id == user.id,
-            models.UserGroupPermission.group_id == group_id
-        )
-    ).first()
-    
-    return user_group is not None
+    except HTTPException:
+        return False
 
 def require_permission(permission: PermissionType):
     """Decorator to require a specific permission"""
@@ -122,36 +99,13 @@ def require_role(required_role: RoleType):
     return decorator
 
 def get_user_accessible_groups(user: models.User, db: Session) -> list:
-    """Get all groups a user has access to"""
-    
-    # Superusers and admins can access all groups
-    if user.is_superuser or user.role in [RoleType.SUPERADMIN.value, RoleType.ADMIN.value]:
-        return db.query(models.ServerGroup).all()
-    
-    # Get groups user has explicit permission for
-    user_groups = db.query(models.ServerGroup).join(
-        models.UserGroupPermission,
-        models.ServerGroup.id == models.UserGroupPermission.group_id
-    ).filter(
-        models.UserGroupPermission.user_id == user.id
-    ).all()
-    
-    return user_groups
+    query = db.query(models.ServerGroup)
+    if is_global_admin(user):
+        return query.all()
+    query = query.filter(models.ServerGroup.organization_id == user.organization_id)
+    if user.role == RoleType.ADMIN.value:
+        return query.all()
+    return query.join(models.UserGroupPermission).filter(models.UserGroupPermission.user_id == user.id).all()
 
 def get_user_accessible_servers(user: models.User, db: Session) -> list:
-    """Get all servers a user has access to"""
-    
-    # Superusers and admins can access all servers
-    if user.is_superuser or user.role in [RoleType.SUPERADMIN.value, RoleType.ADMIN.value]:
-        return db.query(models.Server).all()
-    
-    # Get accessible groups
-    accessible_groups = get_user_accessible_groups(user, db)
-    group_ids = [g.id for g in accessible_groups]
-    
-    # Get servers in those groups
-    servers = db.query(models.Server).filter(
-        models.Server.group_id.in_(group_ids)
-    ).all()
-    
-    return servers
+    return server_query(user, db).all()

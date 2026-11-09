@@ -1,6 +1,9 @@
 # Git
 .git
 .gitignore
+.preview-tools/
+apps/windows/bin/
+apps/windows/obj/
 
 # Environment variables
 .env

@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { Suspense, useEffect, useState, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, XCircle, Loader2, Mail } from "lucide-react";
 import { toast } from "sonner";
 
-export default function VerifyEmailPage() {
+function VerifyEmailPageContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const token = searchParams.get("token");
@@ -88,4 +88,8 @@ export default function VerifyEmailPage() {
             </Card>
         </div>
     );
+}
+
+export default function VerifyEmailPage() {
+    return <Suspense fallback={<div role="status">Cargando...</div>}><VerifyEmailPageContent /></Suspense>;
 }

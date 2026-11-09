@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,7 @@ import { toast } from "sonner";
 // We might not need full update of i18n context just for login, but let's keep it simple for now or use hardcoded strings to match new distribution style?
 // Let's stick to hardcoded spanish for consistency with Landing/Subscribe pages which are in Spanish.
 
-export default function LoginPage() {
+function LoginPageContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const [loading, setLoading] = useState(false);
@@ -180,4 +180,8 @@ export default function LoginPage() {
             </Card>
         </div>
     );
+}
+
+export default function LoginPage() {
+    return <Suspense fallback={<div role="status">Cargando...</div>}><LoginPageContent /></Suspense>;
 }

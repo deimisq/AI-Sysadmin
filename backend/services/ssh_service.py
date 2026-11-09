@@ -1,10 +1,47 @@
 import asyncssh
 import logging
+import stat
+from datetime import datetime, timezone
+from fastapi import HTTPException
+from settings import settings
 from typing import Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
 class SSHService:
+    @staticmethod
+    async def list_directory(hostname: str, username: str, path: str,
+                             private_key: Optional[str] = None,
+                             password: Optional[str] = None, port: int = 22):
+        """Use SFTP, so filenames and paths never enter a remote shell."""
+        try:
+            async with asyncssh.connect(
+                hostname, port=port, username=username, password=password,
+                client_keys=SSHService.get_client_keys(private_key) if private_key else None,
+                known_hosts=settings.SSH_KNOWN_HOSTS or (), login_timeout=20,
+            ) as conn:
+                async with conn.start_sftp_client() as sftp:
+                    files = []
+                    async for entry in sftp.scandir(path):
+                        if entry.filename in ('.', '..'):
+                            continue
+                        attrs = entry.attrs
+                        mode = attrs.permissions
+                        files.append({
+                            "name": entry.filename,
+                            "is_dir": stat.S_ISDIR(mode) if mode is not None else False,
+                            "size": str(attrs.size) if attrs.size is not None else "",
+                            "date": datetime.fromtimestamp(attrs.mtime, timezone.utc).isoformat() if attrs.mtime is not None else "",
+                            "permissions": stat.filemode(mode) if mode is not None else "",
+                        })
+                    return sorted(files, key=lambda item: (not item["is_dir"], item["name"].casefold()))
+        except asyncssh.SFTPNoSuchFile:
+            raise HTTPException(status_code=404, detail="Directory not found")
+        except asyncssh.SFTPPermissionDenied:
+            raise HTTPException(status_code=403, detail="Directory access denied")
+        except (asyncssh.Error, OSError):
+            raise HTTPException(status_code=502, detail="Unable to list remote directory")
+
     @staticmethod
     def get_client_keys(private_key: str):
         """Helper to process private key string into asyncssh usable keys"""
@@ -49,7 +86,7 @@ class SSHService:
         # Build diagnostic info
         auth_method = []
         if private_key:
-            auth_method.append(f"SSH Key: {private_key[:20]}...")
+            auth_method.append("SSH Key: [REDACTED]")
         if password:
             auth_method.append("Password: [REDACTED]")
         if not auth_method:
@@ -70,7 +107,7 @@ class SSHService:
                 username=username, 
                 password=password,
                 client_keys=client_keys,
-                known_hosts=None # Security warning: disabling known_hosts for MVP ease
+                known_hosts=settings.SSH_KNOWN_HOSTS or ()
             ) as conn:
                 logger.info(f"SSH connection established to {hostname}")
                 result = await conn.run(command)

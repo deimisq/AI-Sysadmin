@@ -5,9 +5,13 @@
 [![License](https://img.shields.io/badge/license-Proprietary-blue.svg)](LICENSE)
 [![Version](https://img.shields.io/badge/version-1.0.0--RC-green.svg)](VERSION.json)
 [![Docker](https://img.shields.io/badge/docker-ready-blue.svg)](docker-compose.yml)
-[![Status](https://img.shields.io/badge/status-stable-green.svg)](docs/planning/ROADMAP.md)
+[![Status](https://img.shields.io/badge/status-validaci%C3%B3n_V2-orange.svg)](docs/REPARACIONES_V2.md)
 
-> 🚀 **v1.0.0 Release Candidate** - Complete Feature Parity achieved between Desktop and Web.
+> **Cliente Windows 0.10.0-preview.9:** actualizado a .NET 10, con instalador por usuario y ZIP portable que incluyen el runtime. Consultá [compilación, instalación y límites de distribución](docs/WINDOWS_DISTRIBUTION.md). Es una compilación de prueba sin firma comercial; requiere WebView2.
+
+> Arquitectura V2: web, interfaz de escritorio y shell Windows separados. Consulta [las reparaciones y validaciones actuales](docs/REPARACIONES_V2.md) antes de desplegar.
+
+> **Evolución V3 en desarrollo:** el cliente Windows incluye espacio local sin cuenta, inventario cifrado con DPAPI, conexiones SSH/RDP nativas e IA como acompañante: registra localmente la salida de SSH y comparte su contexto cuando el técnico pide ayuda. Consultá [el estado, uso y límites de la implementación](docs/IMPLEMENTACION_V3.md). Enterprise con gateway sigue en planificación; la vista previa del navegador no reemplaza pruebas de conexiones reales.
 
 ## 🌟 Overview
 
@@ -16,7 +20,7 @@ AI Sysadmin Agent is an advanced platform for intelligent server management, dia
 ### 🖥️ Deployment Modes
 
 - **☁️ SaaS / Cloud (Docker)**: Deploy continuously using Docker. Ideal for teams.
-- **💻 Desktop Application**: Native Windows/Linux/Mac app (Tauri).
+- **💻 Desktop Application**: Windows con .NET 10, WPF y WebView2. La implementación Tauri anterior se conserva como legado.
   - Connects to your Cloud Backend or runs locally.
   - Native experience with system notifications.
 
@@ -32,7 +36,9 @@ AI Sysadmin Agent is an advanced platform for intelligent server management, dia
 ## 📦 Repository Structure
 
 - `backend/`: **FastAPI (Python)** application. Handles logic, DB, and AI.
-- `frontend/`: **Next.js** Web Application & **Tauri** Desktop Core.
+- `frontend-web/`: aplicación web **Next.js**.
+- `frontend-desktop-ui/`: interfaz de escritorio **React/Vite**.
+- `apps/windows/`: shell nativo **.NET 8 / WPF / WebView2**.
 - `docs/`: Complete project documentation.
 
 ## 📚 Documentation Index
@@ -100,10 +106,10 @@ We have organized our documentation to help you find what you need quickly.
 To run the full stack locally:
 
 ```bash
-docker-compose -f docker-compose.prod.yml up -d
+docker compose --env-file .env.prod -f docker-compose.prod.yml up -d --build
 ```
 
-Access the application at `http://localhost:3000`.
+Configura primero `.env.prod` a partir de `.env.prod.template`, con secretos propios. El acceso pasa por Nginx en los puertos HTTP/HTTPS configurados; no se publica el puerto 3000. Consulta [las instrucciones V2](docs/REPARACIONES_V2.md).
 
 ## ⚖️ License
 

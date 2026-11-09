@@ -4,14 +4,16 @@ from typing import List, Optional
 import database, models, schemas, dependencies
 from services.ssh_service import ssh_service
 from utils.encryption import decrypt_data
+from utils.access import require_server_access
 import re
 
 router = APIRouter()
 
-async def get_server_connection_details(server_id: int, db: Session):
+async def get_server_connection_details(server_id: int, db: Session, current_user: models.User):
     server = db.query(models.Server).filter(models.Server.id == server_id).first()
     if not server:
         raise HTTPException(status_code=404, detail="Server not found")
+    require_server_access(current_user, server, db)
     
     ssh_key_path = None
     password = None
@@ -31,13 +33,13 @@ async def get_server_stats(
     current_user: models.User = Depends(dependencies.get_current_active_user)
 ):
     """Get real-time server statistics (CPU, RAM, Disk)"""
-    server, ssh_key_path, password = await get_server_connection_details(server_id, db)
+    server, ssh_key_path, password = await get_server_connection_details(server_id, db, current_user)
     
     # Command to get all stats in one go to minimize latency
     # 1. CPU: top -bn1 | grep "Cpu(s)"
     # 2. RAM: free -m | grep Mem
     # 3. Disk: df -h / | tail -1
-    cmd = 'top -bn1 | grep "Cpu(s)" && free -m | grep Mem && df -h / | tail -1'
+    cmd = 'export LC_ALL=C; top -bn1 | grep "Cpu(s)" && free -m | grep Mem && df -h / | tail -1'
     
     stdout, stderr, exit_code = await ssh_service.execute_command(
         hostname=server.ip_address,
@@ -53,9 +55,9 @@ async def get_server_stats(
     
     lines = stdout.strip().split('\n')
     stats = {
-        "cpu": 0,
-        "memory": 0,
-        "disk": 0
+        "cpu": None,
+        "memory": None,
+        "disk": None
     }
     
     try:
@@ -63,7 +65,7 @@ async def get_server_stats(
         # Example: %Cpu(s):  0.0 us,  0.0 sy,  0.0 ni, 100.0 id, ...
         # We want 100 - id (idle)
         cpu_line = lines[0]
-        idle_match = re.search(r'(\d+\.\d+)\s+id', cpu_line)
+        idle_match = re.search(r'(\d+(?:\.\d+)?)\s+id', cpu_line)
         if idle_match:
             idle = float(idle_match.group(1))
             stats["cpu"] = round(100 - idle, 1)
@@ -85,10 +87,11 @@ async def get_server_stats(
         use_pct = disk_parts[4].replace('%', '')
         stats["disk"] = int(use_pct)
         
-    except Exception as e:
-        print(f"Error parsing stats: {e}")
-        # Return partial stats or zeros if parsing fails
-        pass
+    except (ValueError, IndexError, ZeroDivisionError):
+        raise HTTPException(status_code=502, detail="Server returned unreadable statistics")
+
+    if any(value is None or not 0 <= value <= 100 for value in stats.values()):
+        raise HTTPException(status_code=502, detail="Server returned unreadable statistics")
         
     return stats
 
@@ -100,52 +103,18 @@ async def list_files(
     current_user: models.User = Depends(dependencies.get_current_active_user)
 ):
     """List files in a directory"""
-    server, ssh_key_path, password = await get_server_connection_details(server_id, db)
+    server, ssh_key_path, password = await get_server_connection_details(server_id, db, current_user)
     
-    # ls -la --group-directories-first --time-style=long-iso
-    # We need to sanitize path to prevent injection, though paramiko handles some
-    # Simple check:
-    if ';' in path or '|' in path:
-         raise HTTPException(status_code=400, detail="Invalid path")
-         
-    cmd = f'ls -la --group-directories-first --time-style=long-iso "{path}"'
-    
-    stdout, stderr, exit_code = await ssh_service.execute_command(
+    if not path or '\x00' in path or len(path) > 4096:
+        raise HTTPException(status_code=400, detail="Invalid path")
+
+    files = await ssh_service.list_directory(
         hostname=server.ip_address,
         username=server.ssh_username,
-        command=cmd,
+        path=path,
         private_key=ssh_key_path,
         password=password,
         port=server.ssh_port
     )
     
-    if exit_code != 0:
-        raise HTTPException(status_code=500, detail=f"Failed to list files: {stderr}")
-        
-    files = []
-    lines = stdout.strip().split('\n')
-    # Skip first line (total)
-    for line in lines[1:]:
-        parts = line.split()
-        if len(parts) < 8:
-            continue
-            
-        # drwxr-xr-x 2 root root 4096 2023-01-01 12:00 .
-        permissions = parts[0]
-        is_dir = permissions.startswith('d')
-        size = parts[4]
-        date = f"{parts[5]} {parts[6]}"
-        name = " ".join(parts[7:])
-        
-        if name == '.' or name == '..':
-            continue
-            
-        files.append({
-            "name": name,
-            "is_dir": is_dir,
-            "size": size,
-            "date": date,
-            "permissions": permissions
-        })
-        
     return {"path": path, "files": files}

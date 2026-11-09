@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,6 +13,8 @@ import {
 } from '@/components/ui/dialog';
 import { type Server, createServer, updateServer } from '@/lib/api';
 import { toast } from 'sonner';
+import { isLocalWorkspace } from '@/lib/workspace-mode';
+import { validateConnectionForm } from '@/lib/connection-form';
 
 const OS_OPTIONS = [
     "Ubuntu 24.04",
@@ -32,13 +34,21 @@ interface ServerFormDialogProps {
     onOpenChange: (open: boolean) => void;
     serverToEdit?: Server | null;
     groups: any[];
-    onSuccess: () => void;
+    onSuccess: (server: Server) => void | Promise<void>;
+    destination?: string;
 }
 
-export function ServerFormDialog({ open, onOpenChange, serverToEdit, groups, onSuccess }: ServerFormDialogProps) {
+export function ServerFormDialog({ open, onOpenChange, serverToEdit, groups, onSuccess, destination }: ServerFormDialogProps) {
+    const local = isLocalWorkspace();
+    const [protocol, setProtocol] = useState<'ssh' | 'rdp'>('ssh');
+    const [port, setPort] = useState(22);
     const isEditing = !!serverToEdit;
     const [loading, setLoading] = useState(false);
     const [isCustomOS, setIsCustomOS] = useState(false);
+    const [errors, setErrors] = useState<Record<string, string>>({});
+    const saving = useRef(false);
+    const formRef = useRef<HTMLFormElement>(null);
+    const changeOpen = (next: boolean) => { if (!saving.current) onOpenChange(next); };
 
     // Form State
     const [formData, setFormData] = useState({
@@ -55,6 +65,10 @@ export function ServerFormDialog({ open, onOpenChange, serverToEdit, groups, onS
     // Load data when dialog opens
     useEffect(() => {
         if (open) {
+            setErrors({});
+            const connectionProtocol = serverToEdit?.connection_protocol || ((serverToEdit?.os_info || '').toLowerCase().includes('windows') ? 'rdp' : 'ssh');
+            setProtocol(connectionProtocol);
+            setPort(connectionProtocol === 'rdp' ? serverToEdit?.rdp_port || 3389 : serverToEdit?.ssh_port || 22);
             if (serverToEdit) {
                 const os = serverToEdit.os_info || '';
                 // If OS is present and NOT in options, it's custom
@@ -88,15 +102,23 @@ export function ServerFormDialog({ open, onOpenChange, serverToEdit, groups, onS
     }, [open, serverToEdit]);
 
     const handleSubmit = async () => {
-        if (!formData.hostname || !formData.ip_address) {
-            toast.error("Nombre y Dirección IP son obligatorios");
+        if (saving.current) return;
+        const nextErrors = validateConnectionForm(formData, local, port);
+        setErrors(nextErrors);
+        if (Object.keys(nextErrors).length) {
+            requestAnimationFrame(() => formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus());
             return;
         }
 
+        saving.current = true;
         setLoading(true);
         try {
             const payload = {
                 ...formData,
+                hostname: formData.hostname.trim(),
+                ip_address: formData.ip_address.trim(),
+                ssh_username: formData.ssh_username.trim(),
+                ...(local ? { connection_protocol: protocol, ...(protocol === 'ssh' ? { ssh_port: port } : { rdp_port: port }) } : {}),
                 group_id: formData.group_id ?? undefined
             };
 
@@ -104,29 +126,34 @@ export function ServerFormDialog({ open, onOpenChange, serverToEdit, groups, onS
             if (!payload.ssh_password) delete (payload as any).ssh_password;
             if (!payload.ssh_key_path) delete (payload as any).ssh_key_path;
 
+            let saved: Server;
             if (isEditing && serverToEdit) {
-                await updateServer(serverToEdit.id, payload);
+                saved = await updateServer(serverToEdit.id, payload);
                 toast.success('Servidor actualizado exitosamente');
             } else {
-                await createServer(payload);
+                saved = await createServer(payload);
                 toast.success('Servidor creado exitosamente');
             }
-            onSuccess();
+            // Persistence already succeeded: a follow-up presentation failure must not invite another create.
+            try { await onSuccess(saved); }
+            catch { toast.warning('La conexión se guardó, pero no se pudo actualizar su organización. Revisa el inventario antes de volver a crearla.'); }
             onOpenChange(false);
         } catch (err: any) {
-            console.error(err);
+
             toast.error(err.message || 'Error al guardar el servidor');
         } finally {
+            saving.current = false;
             setLoading(false);
         }
     };
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-[#1e1e1e] border-[#333] text-[#cccccc]">
-                <DialogHeader>
-                    <DialogTitle className="text-2xl font-semibold text-white">
-                        {isEditing ? 'Editar Servidor' : 'Agregar Nuevo Servidor'}
+        <Dialog open={open} onOpenChange={changeOpen}>
+            <DialogContent onPointerDownOutside={event => event.preventDefault()} className="connection-properties max-w-2xl max-h-[90vh] overflow-hidden bg-[#202020] border-[#444] text-[#eeeeee] p-0 gap-0">
+              <form ref={formRef} noValidate onSubmit={event => { event.preventDefault(); void handleSubmit(); }} className="flex flex-col max-h-[90vh]">
+                <DialogHeader className="px-5 py-4 border-b border-[#383838] shrink-0">
+                    <DialogTitle className="text-base font-semibold text-white">
+                        {isEditing ? 'Propiedades de la conexión' : 'Nueva conexión'}
                     </DialogTitle>
                     <DialogDescription className="text-gray-400">
                         {isEditing
@@ -135,25 +162,39 @@ export function ServerFormDialog({ open, onOpenChange, serverToEdit, groups, onS
                     </DialogDescription>
                 </DialogHeader>
 
-                <div className="space-y-4 py-4">
+                <fieldset disabled={loading} className="connection-fields space-y-4 px-5 py-4 overflow-y-auto min-h-0">
+                    <legend className="sr-only">Propiedades de conexión</legend>
+                    {destination && <p className="text-xs text-gray-300 border-b border-[#383838] pb-3 break-words"><span className="text-gray-400">Carpeta de destino: </span>{destination}</p>}
+                    {local && <div className="space-y-3">
+                        <p className="text-xs text-gray-400">Se guarda cifrado en este equipo con tu cuenta de Windows. La conexión sale directamente desde aquí.</p>
+                        <div className="grid grid-cols-2 gap-4">
+                            <label className="text-sm">Protocolo<select aria-label="Protocolo" value={protocol} onChange={e => { const next = e.target.value as 'ssh' | 'rdp'; setProtocol(next); setPort(next === 'ssh' ? 22 : 3389); }} className="mt-2 w-full rounded border border-[#444] bg-[#2d2d2d] p-2"><option value="ssh">SSH</option><option value="rdp">RDP</option></select></label>
+                            <label className="text-sm">Puerto<Input aria-invalid={!!errors.port} aria-describedby={errors.port ? "error-port" : undefined} aria-label="Puerto" type="number" min={1} max={65535} value={Number.isNaN(port) ? '' : port} onChange={e => setPort(e.target.value === '' ? NaN : Number(e.target.value))} className="mt-2 bg-[#2d2d2d] border-[#444]" /></label>
+                        </div>
+                        {errors.port && <p id="error-port" role="alert" className="text-xs text-red-300">{errors.port}</p>}
+                    </div>}
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                            <Label className="text-gray-300">Nombre *</Label>
+                            <Label htmlFor="connection-hostname" className="text-gray-300">Nombre *</Label>
                             <Input
+                                id="connection-hostname" aria-invalid={!!errors.hostname} aria-describedby={errors.hostname ? "error-hostname" : undefined}
                                 value={formData.hostname}
                                 onChange={(e) => setFormData({ ...formData, hostname: e.target.value })}
                                 placeholder="ej., servidor-web-01"
                                 className="bg-[#2d2d2d] border-[#444] text-white placeholder:text-gray-500"
                             />
+                            {errors.hostname && <p id="error-hostname" role="alert" className="text-xs text-red-300">{errors.hostname}</p>}
                         </div>
                         <div className="space-y-2">
-                            <Label className="text-gray-300">Dirección IP *</Label>
+                            <Label htmlFor="connection-ip_address" className="text-gray-300">Dirección IP o DNS *</Label>
                             <Input
+                                id="connection-ip_address" aria-invalid={!!errors.ip_address} aria-describedby={errors.ip_address ? "error-ip_address" : undefined}
                                 value={formData.ip_address}
                                 onChange={(e) => setFormData({ ...formData, ip_address: e.target.value })}
                                 placeholder="ej., 192.168.1.100"
                                 className="bg-[#2d2d2d] border-[#444] text-white placeholder:text-gray-500"
                             />
+                            {errors.ip_address && <p id="error-ip_address" role="alert" className="text-xs text-red-300">{errors.ip_address}</p>}
                         </div>
                     </div>
 
@@ -191,7 +232,7 @@ export function ServerFormDialog({ open, onOpenChange, serverToEdit, groups, onS
                         )}
                     </div>
 
-                    <div className="space-y-2">
+                    {!local && <div className="space-y-2">
                         <Label className="text-gray-300">Grupo</Label>
                         <select
                             className="flex h-10 w-full rounded-md border border-[#444] bg-[#2d2d2d] px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -203,20 +244,22 @@ export function ServerFormDialog({ open, onOpenChange, serverToEdit, groups, onS
                                 <option key={g.id} value={g.id}>{g.name}</option>
                             ))}
                         </select>
-                    </div>
+                    </div>}
 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                            <Label className="text-gray-300">Usuario SSH</Label>
+                            <Label htmlFor="connection-ssh_username" className="text-gray-300">Usuario {local && protocol === 'rdp' ? 'RDP' : 'SSH'}</Label>
                             <Input
+                                id="connection-ssh_username" aria-invalid={!!errors.ssh_username} aria-describedby={errors.ssh_username ? "error-ssh_username" : undefined}
                                 value={formData.ssh_username}
                                 onChange={(e) => setFormData({ ...formData, ssh_username: e.target.value })}
                                 placeholder="root"
                                 className="bg-[#2d2d2d] border-[#444] text-white placeholder:text-gray-500"
                             />
+                            {errors.ssh_username && <p id="error-ssh_username" role="alert" className="text-xs text-red-300">{errors.ssh_username}</p>}
                         </div>
                         <div className="space-y-2">
-                            <Label className="text-gray-300">Contraseña SSH {isEditing && '(Opcional)'}</Label>
+                            <Label className="text-gray-300">Contraseña {isEditing && '(vacío conserva la actual)'}</Label>
                             <Input
                                 type="password"
                                 value={formData.ssh_password}
@@ -227,8 +270,8 @@ export function ServerFormDialog({ open, onOpenChange, serverToEdit, groups, onS
                         </div>
                     </div>
 
-                    <div className="space-y-2">
-                        <Label className="text-gray-300">Ruta de Clave Privada SSH {isEditing && '(Opcional)'}</Label>
+                    {(!local || protocol === 'ssh') && <div className="space-y-2">
+                        <Label className="text-gray-300">Clave privada SSH: contenido o ruta {isEditing && '(vacío conserva la actual)'}</Label>
                         <Textarea
                             className="min-h-[100px] font-mono text-xs bg-[#2d2d2d] border-[#444] text-white placeholder:text-gray-500"
                             value={formData.ssh_key_path}
@@ -238,7 +281,7 @@ export function ServerFormDialog({ open, onOpenChange, serverToEdit, groups, onS
                         <p className="text-xs text-gray-500">
                             Proporciona contraseña SSH o ruta de clave privada (prioridad a clave).
                         </p>
-                    </div>
+                    </div>}
 
                     <div className="space-y-2">
                         <Label className="text-gray-300">Descripción (Opcional)</Label>
@@ -249,16 +292,17 @@ export function ServerFormDialog({ open, onOpenChange, serverToEdit, groups, onS
                             className="bg-[#2d2d2d] border-[#444] text-white placeholder:text-gray-500"
                         />
                     </div>
-                </div>
+                </fieldset>
 
-                <DialogFooter className="gap-2 sm:gap-0">
-                    <Button variant="outline" onClick={() => onOpenChange(false)} className="border-[#444] text-gray-300 hover:bg-[#333] hover:text-white">
+                <DialogFooter className="px-5 py-3 border-t border-[#383838] bg-[#252525] shrink-0 gap-2 sm:gap-0">
+                    <Button type="button" disabled={loading} variant="outline" onClick={() => changeOpen(false)} className="border-[#444] text-gray-300 hover:bg-[#333] hover:text-white">
                         Cancelar
                     </Button>
-                    <Button onClick={handleSubmit} disabled={loading} className="bg-blue-600 hover:bg-blue-700 text-white">
-                        {loading ? 'Guardando...' : (isEditing ? 'Guardar Cambios' : 'Crear Servidor')}
+                    <Button type="submit" disabled={loading} className="bg-blue-600 hover:bg-blue-700 text-white">
+                        {loading ? 'Guardando...' : 'Guardar conexión'}
                     </Button>
                 </DialogFooter>
+              </form>
             </DialogContent>
         </Dialog>
     );

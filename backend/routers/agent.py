@@ -8,6 +8,7 @@ from services.ansible_service import ansible_service
 from services.diagnostic_service import diagnostic_service
 from utils.encryption import decrypt_data
 import logging
+from utils.permissions import require_server_access
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -16,6 +17,7 @@ class AgentQuery(BaseModel):
     server_id: int
     problem_description: str
     language: Optional[str] = "en"  # "en" or "es"
+    context_consent_version: Optional[str] = None
 
 class AgentResponse(BaseModel):
     analysis: Dict[str, Any]
@@ -24,14 +26,18 @@ class AgentResponse(BaseModel):
 class ExecuteRequest(BaseModel):
     server_id: int
     command: str
-    approved_by: str
+    approved_by: Optional[str] = None  # Accepted for compatibility; identity comes from JWT.
 
 
 @router.post("/agent/diagnose", response_model=AgentResponse)
-def diagnose_problem(query: AgentQuery, db: Session = Depends(dependencies.get_db)):
+def diagnose_problem(query: AgentQuery, db: Session = Depends(dependencies.get_db),
+                     current_user: models.User = Depends(dependencies.get_current_active_user)):
     server = db.query(models.Server).filter(models.Server.id == query.server_id).first()
     if not server:
         raise HTTPException(status_code=404, detail="Server not found")
+    require_server_access(current_user, server, db)
+    if query.context_consent_version != "2026-10-25":
+        raise HTTPException(status_code=428, detail="Accept the infrastructure AI context notice before diagnosing")
     
     try:
         # Step 1: Gather real diagnostic information from the server
@@ -104,17 +110,19 @@ DIAGNOSTIC RESULTS:
         raise HTTPException(status_code=500, detail=f"Diagnosis failed: {str(e)}")
 
 @router.post("/agent/execute")
-def execute_solution(request: ExecuteRequest, db: Session = Depends(dependencies.get_db)):
+def execute_solution(request: ExecuteRequest, db: Session = Depends(dependencies.get_db),
+                     current_user: models.User = Depends(dependencies.get_current_active_user)):
     server = db.query(models.Server).filter(models.Server.id == request.server_id).first()
     if not server:
         raise HTTPException(status_code=404, detail="Server not found")
+    require_server_access(current_user, server, db)
 
     # Log the attempt
     log = models.OperationLog(
         server_id=server.id,
         action=request.command,
         status="pending",
-        approved_by=request.approved_by
+        approved_by=current_user.username
     )
     db.add(log)
     db.commit()

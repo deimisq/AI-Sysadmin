@@ -5,13 +5,14 @@ from typing import Dict, Any
 from database import get_db
 from models import SystemConfig, User, RoleType
 from dependencies import get_current_active_user
+from utils.access import is_global_admin
 import json
 
 router = APIRouter(tags=["configuration"])
 
 def check_admin_role(user: User):
     """Check if user has admin or superadmin role"""
-    if user.role not in [RoleType.SUPERADMIN.value, RoleType.ADMIN.value]:
+    if not is_global_admin(user):
         raise HTTPException(status_code=403, detail="Insufficient permissions")
 
 @router.get("/{category}")

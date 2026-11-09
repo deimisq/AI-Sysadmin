@@ -117,8 +117,8 @@ export const GuacamoleRdpCanvas: React.FC<GuacamoleRdpCanvasProps> = ({
             // Cleanup
             return () => {
                 console.log('[Guacamole] Cleaning up connection');
-                keyboard.onkeydown = null;
-                keyboard.onkeyup = null;
+                keyboard.onkeydown = undefined;
+                keyboard.onkeyup = undefined;
                 client.disconnect();
             };
 

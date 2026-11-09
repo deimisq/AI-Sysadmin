@@ -245,7 +245,7 @@ export function AddServerForm({ onServerAdded, initialData, onCancel }: ServerFo
                     <div className="col-span-2">
                         <div className="col-span-2">
                             <label className="text-sm font-medium mb-1 block">
-                                {t.addServer.os || "Operating System"}
+                                {t.addServer.osInfo || "Operating System"}
                             </label>
                             <div className="flex gap-2">
                                 <select

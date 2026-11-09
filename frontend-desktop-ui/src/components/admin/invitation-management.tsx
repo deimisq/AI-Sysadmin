@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { fetchInvitations, createInvitation, deleteInvitation, fetchOrganizations } from "@/lib/api";
-import { Mail, Trash2, Plus, Copy, Check } from "lucide-react";
+import { Mail, Trash2, Plus, Copy } from "lucide-react";
 import { toast } from "sonner";
 import type { Organization } from "@/lib/api";
 
@@ -13,7 +13,7 @@ interface InvitationManagementProps {
 
 export function InvitationManagement({ currentUser }: InvitationManagementProps) {
     const [invitations, setInvitations] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [, setLoading] = useState(true);
     const [creating, setCreating] = useState(false);
     const [newInvite, setNewInvite] = useState<any>({
         email: "",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Check, Loader2, Shield, Building2, CreditCard } from "lucide-react";
 import { toast } from "sonner";
 
-export default function SubscribePage() {
+function SubscribePageContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const preselectedPlan = searchParams.get("plan") || "starter";
@@ -244,4 +244,8 @@ export default function SubscribePage() {
             </div>
         </div>
     );
+}
+
+export default function SubscribePage() {
+    return <Suspense fallback={<div role="status">Cargando...</div>}><SubscribePageContent /></Suspense>;
 }

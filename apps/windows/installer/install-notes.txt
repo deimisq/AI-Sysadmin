@@ -1,0 +1,21 @@
+AI Sysadmin Agent - Vista previa para Windows x64
+
+Incluye el runtime .NET. Requiere Microsoft Edge WebView2 Runtime Evergreen.
+No necesita un backend ni una cuenta para las conexiones locales.
+
+Se instala para el usuario actual, sin solicitar privilegios de administrador.
+Las versiones se conservan en carpetas separadas. El acceso directo apunta a
+la version instalada mas recientemente. No hay actualizacion automatica.
+
+El inventario, credenciales, configuracion IA y registros permanecen en
+%LOCALAPPDATA%\AiSysadmin y se conservan al desinstalar.
+Creá una copia cifrada desde Ajustes antes de cambiar de equipo o usuario.
+El inventario protegido DPAPI requiere la misma cuenta Windows; la copia
+portable cifrada permite migrar conexiones y carpetas con su contraseña.
+
+La conexion con un proveedor IA se configura en Ajustes y requiere aceptar
+el aviso de envio de datos. El instalador no configura ni consulta una IA.
+
+Esta compilacion de prueba no esta firmada con un certificado comercial.
+Windows puede mostrar una advertencia de publicador desconocido.
+No se ofrece rollback automatico de cambios realizados por el agente.

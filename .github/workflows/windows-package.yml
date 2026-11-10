@@ -1,5 +1,7 @@
-name: Package Windows desktop preview
+name: Build and release Windows installers
 on:
+  push:
+    branches: ['**']
   workflow_dispatch:
 
 permissions:
@@ -8,8 +10,21 @@ permissions:
 jobs:
   package:
     runs-on: windows-latest
+    timeout-minutes: 45
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
     steps:
       - uses: actions/checkout@v4
+      - name: Identify this build
+        id: version
+        shell: pwsh
+        run: |
+          $base = ([xml](Get-Content apps/windows/AiSysadmin.csproj -Raw)).Project.PropertyGroup.Version | Where-Object { $_ } | Select-Object -First 1
+          $separator = if ($base.Contains('-')) { '.' } else { '-' }
+          $version = "$base${separator}ci.$env:GITHUB_RUN_NUMBER.$env:GITHUB_RUN_ATTEMPT"
+          "version=$version" >> $env:GITHUB_OUTPUT
+          "tag=windows-$version" >> $env:GITHUB_OUTPUT
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -43,17 +58,56 @@ jobs:
           "INNO_COMPILER=$compilerDir\ISCC.exe" >> $env:GITHUB_ENV
       - name: Build portable ZIP and per-user installer
         shell: pwsh
-        run: ./scripts/package-windows.ps1 -Iscc $env:INNO_COMPILER
+        env:
+          PACKAGE_VERSION: ${{ steps.version.outputs.version }}
+        run: ./scripts/package-windows.ps1 -Iscc $env:INNO_COMPILER -PackageVersion $env:PACKAGE_VERSION
       - name: Verify package and isolated installation
         shell: pwsh
+        env:
+          PACKAGE_VERSION: ${{ steps.version.outputs.version }}
         run: |
-          $version = ([xml](Get-Content apps/windows/AiSysadmin.csproj -Raw)).Project.PropertyGroup.Version | Where-Object { $_ } | Select-Object -First 1
-          ./scripts/test-windows-package.ps1 -PackageDirectory "dist/windows/$version" -ExerciseInstaller
+          ./scripts/test-windows-package.ps1 -PackageDirectory "dist/windows/$env:PACKAGE_VERSION" -ExerciseInstaller
+      - name: Verify closing an older version on upgrade
+        shell: powershell
+        run: ./scripts/test-installer-upgrade.ps1 -Iscc $env:INNO_COMPILER
       - uses: actions/upload-artifact@v4
         with:
-          name: windows-desktop-preview
+          name: windows-installers
           path: |
             dist/windows/*/*.zip
             dist/windows/*/*.exe
             dist/windows/*/SHA256SUMS.txt
           if-no-files-found: error
+          retention-days: 14
+
+  release:
+    needs: package
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: windows-installers
+          path: release-assets
+      - name: Publish verified installers
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_VERSION: ${{ needs.package.outputs.version }}
+          RELEASE_TAG: ${{ needs.package.outputs.tag }}
+          SOURCE_SHA: ${{ github.sha }}
+          SOURCE_REF: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -d '' checksum_files < <(find release-assets -name SHA256SUMS.txt -print0)
+          test "${#checksum_files[@]}" -eq 1
+          asset_dir="$(dirname "${checksum_files[0]}")"
+          (cd "$asset_dir" && sha256sum --check SHA256SUMS.txt)
+          printf 'Compilación automática de Windows x64.\n\nRama: `%s`\nCommit: `%s`\n\nDescargá el instalador `*-setup.exe` o el ZIP portable. Incluye el runtime .NET y requiere WebView2 Runtime. Esta compilación de prueba no está firmada.\n' "$SOURCE_REF" "$SOURCE_SHA" > release-notes.md
+          gh release create "$RELEASE_TAG" "$asset_dir"/*.exe "$asset_dir"/*.zip "$asset_dir"/SHA256SUMS.txt \
+            --target "$SOURCE_SHA" --title "Windows $RELEASE_VERSION" \
+            --notes-file release-notes.md --prerelease --latest=false
+          printf '### Descargas\n\n[Windows %s](https://github.com/%s/releases/tag/%s)\n' "$RELEASE_VERSION" "$GH_REPO" "$RELEASE_TAG" >> "$GITHUB_STEP_SUMMARY"

@@ -62,7 +62,11 @@ La prueba extrae el ZIP en un directorio nuevo dentro de `.preview-tools/package
 
 La segunda opción se niega a usar una instalación ya registrada. Instala en una carpeta aislada, sin iniciar la aplicación ni crear iconos, verifica archivos, ejecuta su desinstalador y comprueba que el inventario/los accesos directos previos no cambiaron. No prueba todavía la interfaz de la aplicación instalada, una actualización sobre una instalación anterior o una cuenta Windows diferente.
 
-El flujo manual [windows-package.yml](../.github/workflows/windows-package.yml) ejecuta pruebas, genera y verifica los paquetes, y los adjunta como artefactos de Actions. No publica automáticamente una release pública. El flujo de CI general ya valida el cliente sobre .NET 10.
+El flujo [windows-package.yml](../.github/workflows/windows-package.yml) se ejecuta con cada push a una rama y también permite ejecución manual. Ejecuta las pruebas del cliente, genera los paquetes y verifica la instalación, desinstalación y cierre de la versión anterior durante una actualización. Solo publica si todos los controles terminan correctamente.
+
+Cada ejecución publica una prerelease en [GitHub Releases](https://github.com/deimisq/AI-Sysadmin/releases), con el instalador Windows x64 `*-setup.exe`, el ZIP portable y `SHA256SUMS.txt`. La versión añade `ci.<número de ejecución>.<intento>` a la versión base del proyecto, evitando colisiones entre pushes y reintentos sin modificar archivos de versión. Las notas identifican la rama y el commit exacto. Los paquetes también se conservan como artefactos de Actions durante 14 días; los adjuntos del release permanecen disponibles.
+
+La publicación usa el token automático de GitHub con permiso de escritura limitado al job de release; no requiere configurar un token personal. Al ser privado el repositorio, las descargas requieren acceso al repositorio. Las compilaciones actuales son de prueba y no están firmadas. Si falla una ejecución, revisar Actions y volver a ejecutarla después de corregir el problema. Los antiguos flujos del servidor y de sincronización pública no publican automáticamente desde este repositorio.
 
 ## Antes de distribuir comercialmente
 

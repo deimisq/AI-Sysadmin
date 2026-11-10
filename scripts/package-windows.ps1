@@ -3,6 +3,7 @@ param(
     [string]$Dotnet = 'dotnet',
     [string]$Node = 'node',
     [string]$Iscc = 'ISCC.exe',
+    [string]$PackageVersion = '',
     [switch]$SkipFrontend,
     [switch]$SkipInstaller
 )
@@ -11,6 +12,7 @@ $projectRoot = Split-Path -Parent $PSScriptRoot
 & (Join-Path $PSScriptRoot 'prepare-brand.ps1')
 $project = Join-Path $projectRoot 'apps/windows/AiSysadmin.csproj'
 $desktopVersion = ([xml](Get-Content -LiteralPath $project -Raw)).Project.PropertyGroup.Version | Where-Object { $_ } | Select-Object -First 1
+if ($PackageVersion) { $desktopVersion = $PackageVersion }
 if ($desktopVersion -notmatch '^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$') { throw 'Version de escritorio invalida.' }
 $buildId = [Guid]::NewGuid().ToString('N')
 $stage = Join-Path $projectRoot "dist/windows/staging/$buildId"
@@ -33,7 +35,7 @@ if (-not (Test-Path (Join-Path $projectRoot 'frontend-desktop-ui/dist/index.html
 if (-not (Test-Path (Join-Path $projectRoot 'frontend-desktop-ui/dist/preferences.html'))) { throw 'Falta la interfaz de configuracion.' }
 Push-Location $projectRoot
 try {
-    & $Dotnet publish $project '-c' 'Release' '-p:PublishProfile=WindowsX64' '-o' $publish
+    & $Dotnet publish $project '-c' 'Release' '-p:PublishProfile=WindowsX64' "-p:Version=$desktopVersion" '-o' $publish
     if ($LASTEXITCODE -ne 0) { throw 'dotnet publish fallo.' }
 } finally { Pop-Location }
 foreach ($required in @('AiSysadmin.exe','AiSysadmin.dll','coreclr.dll','hostfxr.dll','wwwroot/index.html','wwwroot/preferences.html','wwwroot/brand/icon.png','wwwroot/brand/logo.png')) {

@@ -80,7 +80,10 @@ jobs:
         if: failure()
         shell: pwsh
         run: |
-          Get-ChildItem .preview-tools/package-tests -Filter install.log -Recurse -ErrorAction SilentlyContinue | ForEach-Object { Get-Content -LiteralPath $_.FullName -Tail 80 }
+          Get-ChildItem .preview-tools/package-tests -Filter install.log -Recurse -ErrorAction SilentlyContinue | ForEach-Object {
+            Select-String -LiteralPath $_.FullName -Pattern 'error|exception|failed|abort|cancel|Unable' -Context 3,5
+            Get-Content -LiteralPath $_.FullName -Tail 5
+          }
       - name: Verify closing an older version on upgrade
         shell: powershell
         run: ./scripts/test-installer-upgrade.ps1 -Iscc $env:INNO_COMPILER

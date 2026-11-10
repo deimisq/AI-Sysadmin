@@ -12,6 +12,14 @@ Estas instrucciones aplican a todo el repositorio. Mantener este documento actua
 - Cada push a una rama que contenga el workflow de Windows inicia pruebas, compilación y publicación de una prerelease con instalador x64, ZIP portable y hashes SHA256. Comprobar que se inició y comunicar su estado real; si se informa éxito de compilación o publicación, verificarlo primero. Corregir los fallos introducidos por la tarea.
 - En la respuesta final indicar qué cambió, qué se verificó y el commit o enlace de GitHub pertinente. Si no hubo cambios, no crear commits vacíos.
 
+## Documentación, versionado y coherencia del proyecto
+
+- Mantener siempre actualizada toda la documentación del proyecto conforme a su comportamiento real. En cada tarea, revisar y actualizar los documentos afectados: README, guías de uso y desarrollo, configuración, arquitectura, instalación, migración, pruebas y distribución. Eliminar o corregir instrucciones obsoletas, enlaces rotos y ejemplos que ya no funcionen.
+- Mantener actualizado el versionado y sus referencias. Cuando cambie la aplicación o se prepare una distribución, incrementar la versión correspondiente y sincronizar los valores relacionados del proyecto, ensamblado, instalador, manifiestos y documentación. Respetar los componentes con versionado independiente; no igualar versiones legacy sin motivo ni aumentar versiones de producto por cambios exclusivamente documentales.
+- Mantener las notas de versión o el registro de cambios aplicable al día con las funcionalidades, correcciones, cambios de compatibilidad y pasos de migración que correspondan. Distinguir lo implementado, lo verificado y lo pendiente; no documentar resultados o publicaciones que no se hayan comprobado.
+- Revisar también los metadatos, scripts, ejemplos de configuración, dependencias y workflows afectados para que código, documentación y distribución sean coherentes. Actualizar archivos de bloqueo cuando se modifiquen dependencias.
+- La documentación y el versionado forman parte de la entrega: verificar su coherencia antes del commit y subir sus cambios junto con la tarea. No dejar estas actualizaciones para una tarea posterior.
+
 ## Arquitectura y compilación
 
 - La aplicación Windows vigente es WPF con WebView2 en [apps/windows](apps/windows), con interfaz React/TypeScript/Vite en [frontend-desktop-ui](frontend-desktop-ui). Evitar confundirla con implementaciones legacy del repositorio.

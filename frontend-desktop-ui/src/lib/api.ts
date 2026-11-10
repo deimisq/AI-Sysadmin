@@ -142,6 +142,7 @@ export const deleteServer = (id: number) => api.delete(`/servers/${id}`);
 
 // Diagnosis Response Type
 export interface DiagnosisResponse {
+    proposal_id?: string | null;
     context_truncated?: boolean;
     context_characters?: number;
     history_saved?: boolean;
@@ -151,13 +152,14 @@ export interface DiagnosisResponse {
     };
 }
 
-export const diagnoseProblem = (serverId: number | string, problem: string, language: string = "es", contextConsentVersion?: string, selectedEvidence?: import('./ai-evidence').AiEvidence, expectedServer?: Server, terminalSessionId?: string) => {
+export const diagnoseProblem = (serverId: number | string, problem: string, language: string = "es", contextConsentVersion?: string, selectedEvidence?: import('./ai-evidence').AiEvidence, expectedServer?: Server, terminalSessionId?: string, continuation = false) => {
     const protocol = expectedServer?.connection_protocol || (expectedServer?.os_info.toLowerCase().includes('windows') ? 'rdp' : 'ssh');
     return api.post<DiagnosisResponse>('/agent/diagnose', {
         server_id: Number(serverId),
         problem_description: problem,
         language,
         context_consent_version: contextConsentVersion,
+        ...(continuation ? { continuation: true } : {}),
         ...(selectedEvidence ? { evidence: selectedEvidence, evidence_reviewed: true } : {}),
         ...(terminalSessionId ? { terminal_session_id: terminalSessionId } : {}),
         ...(expectedServer ? { expected_target: { address: expectedServer.ip_address, protocol, port: protocol === 'rdp' ? expectedServer.rdp_port || 3389 : expectedServer.ssh_port || 22 } } : {}),

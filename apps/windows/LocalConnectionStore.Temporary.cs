@@ -47,18 +47,18 @@ public sealed partial class LocalConnectionStore
             var target = temporary.Target;
             if (expected != null && (expected.Address != target.IpAddress || expected.Protocol != target.ConnectionProtocol || expected.Port != (target.ConnectionProtocol == "rdp" ? target.RdpPort : target.SshPort)))
                 throw new InvalidOperationException("El destino temporal no coincide con la sesión autenticada.");
-            var conversation = temporary.History.TakeLast(10).Select(turn => new { turn.CreatedAt, turn.Query, turn.Analysis }).ToArray();
+            var conversation = temporary.History.TakeLast(16).Select(turn => new { turn.CreatedAt, turn.Query, turn.Analysis, turn.Command, turn.Kind }).ToArray();
             var context = JsonSerializer.Serialize(new { server = new { target.Hostname, target.IpAddress, target.ConnectionProtocol }, query, evidence, conversation }, Json);
             return new(inventory.Ai.BaseUrl, inventory.Ai.Model, inventory.Ai.ApiKey, context, id, temporary.Fingerprint, target.HistoryEpoch, target.Hostname, target.IpAddress, query, evidence, AiProviders.Infer(inventory.Ai.Provider, inventory.Ai.BaseUrl), inventory.Ai.Username, inventory.Ai.Organization, inventory.Ai.Project, inventory.Ai.Workspace);
         }
     }
 
-    private bool SaveTemporaryTurn(AiInvocation invocation, string analysis, string? command)
+    private bool SaveTemporaryTurn(AiInvocation invocation, string analysis, string? command, string kind = "conversation")
     {
         lock (_temporaryGate) {
             if (!_temporaryTargets.TryGetValue(invocation.ServerId, out var target) || target.Fingerprint != invocation.Fingerprint || target.Target.HistoryEpoch != invocation.HistoryEpoch) return false;
             target.History.Add(new AiTurn(Guid.NewGuid().ToString(), invocation.ServerId, invocation.Hostname, invocation.Address, DateTimeOffset.UtcNow,
-                invocation.BaseUrl, invocation.Model, invocation.Query, invocation.Evidence, analysis, command, invocation.Fingerprint));
+                invocation.BaseUrl, invocation.Model, invocation.Query, invocation.Evidence, analysis, command, invocation.Fingerprint, kind));
             if (target.History.Count > 20) target.History.RemoveRange(0, target.History.Count - 20);
             return true;
         }

@@ -15,6 +15,65 @@ public sealed class AiProviderTests : IDisposable
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken token) => respond(request);
     }
     private static HttpResponseMessage Response(object body) => new(HttpStatusCode.OK) { Content = new StringContent(JsonSerializer.Serialize(body)) };
+
+    [Theory]
+    [InlineData("openai", "https://api.openai.com/v1/models")]
+    [InlineData("deepseek", "https://api.deepseek.com/models")]
+    public async Task CloudDiscoveryUsesOfficialCatalogAndBearer(string provider, string address)
+    {
+        var handler = new Handler(request => {
+            Assert.Equal(address, request.RequestUri!.AbsoluteUri);
+            Assert.Equal("Bearer", request.Headers.Authorization!.Scheme);
+            Assert.Equal("synthetic", request.Headers.Authorization.Parameter);
+            Assert.Null(request.Content);
+            return Task.FromResult(Response(new { data = new[] { new { id = "new-model" } } }));
+        });
+        var result = await AiProviderTransport.DiscoverAsync(provider, "synthetic", handler, "https://untrusted.invalid");
+        Assert.Equal("new-model", result.GetProperty("models")[0].GetProperty("id").GetString());
+    }
+
+    [Fact]
+    public async Task GeminiDiscoveryPaginatesAndExcludesEmbeddingModels()
+    {
+        var calls = 0;
+        var handler = new Handler(request => {
+            Assert.Equal("synthetic", request.Headers.GetValues("x-goog-api-key").Single());
+            Assert.DoesNotContain("synthetic", request.RequestUri!.AbsoluteUri);
+            if (++calls == 1) return Task.FromResult(Response(new { models = new[] {
+                new { name = "models/chat-new", supportedGenerationMethods = new[] { "generateContent" } },
+                new { name = "models/embedding", supportedGenerationMethods = new[] { "embedContent" } }
+            }, nextPageToken = "next/+" }));
+            Assert.Contains("pageToken=next%2F%2B", request.RequestUri.AbsoluteUri);
+            return Task.FromResult(Response(new { models = new[] { new { name = "models/chat-next", supportedGenerationMethods = new[] { "generateContent" } } } }));
+        });
+        var result = await AiProviderTransport.DiscoverAsync("gemini", "synthetic", handler);
+        Assert.Equal(2, calls); Assert.Equal(2, result.GetProperty("models").GetArrayLength());
+        Assert.DoesNotContain("models/", result.GetRawText());
+    }
+
+    [Fact]
+    public async Task ClaudeDiscoveryPaginatesWithAccountHeadersAndDeduplicates()
+    {
+        var calls = 0;
+        var handler = new Handler(request => {
+            Assert.Equal("synthetic", request.Headers.GetValues("x-api-key").Single());
+            Assert.Equal("workspace", request.Headers.GetValues("anthropic-workspace-id").Single());
+            var more = ++calls == 1;
+            if (!more) Assert.Contains("after_id=cursor", request.RequestUri!.Query);
+            return Task.FromResult(Response(new { data = new[] { new { id = "claude-new", display_name = "Claude New" } }, has_more = more, last_id = "cursor" }));
+        });
+        var result = await AiProviderTransport.DiscoverAsync("claude", "synthetic", handler, workspace: "workspace");
+        Assert.Equal(2, calls); Assert.Single(result.GetProperty("models").EnumerateArray());
+    }
+
+    [Fact]
+    public async Task CloudDiscoveryRejectsMissingKeysAndDoesNotSubstituteDefaultsOnError()
+    {
+        await Assert.ThrowsAsync<ArgumentException>(() => AiProviderTransport.DiscoverAsync("openai"));
+        var handler = new Handler(_ => Task.FromResult(new HttpResponseMessage(HttpStatusCode.Unauthorized)));
+        var error = await Assert.ThrowsAsync<InvalidOperationException>(() => AiProviderTransport.DiscoverAsync("openai", "synthetic", handler));
+        Assert.Contains("401", error.Message); Assert.DoesNotContain("synthetic", error.Message);
+    }
     private LocalConnectionStore.AiInvocation Configure(string provider, string model, string? key = null)
     {
         Store.Handle("POST", "/servers/", Body(new { hostname = "Test host", ip_address = "192.0.2.10" }));

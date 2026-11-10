@@ -111,7 +111,10 @@ public sealed class LocalTaskAgentTests : IDisposable
     {
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request,CancellationToken token) => callback(request);
     }
-    [Fact] public async Task ProductionTransportParsesStepJsonAndSendsOnlyContextWithBearerAuthorization()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ProductionTransportParsesStepJsonAndSendsOnlyContextWithBearerAuthorization(bool fenced)
     {
         using (var setup = Agent((_,_,_) => throw new Exception("Setup only"))) { }
         int calls = 0;
@@ -122,7 +125,9 @@ public sealed class LocalTaskAgentTests : IDisposable
             Assert.DoesNotContain("vault-secret",payload);
             Assert.Contains("remaining_commands",payload);
             var decision = ++calls == 1 ? new LocalTaskAgent.Decision("execute","Read example","inspect-example") : new LocalTaskAgent.Decision("complete","Verified example");
-            return new(System.Net.HttpStatusCode.OK) { Content = new StringContent(JsonSerializer.Serialize(new { choices = new[] { new { message = new { content = JsonSerializer.Serialize(decision) } } } })) };
+            var content = JsonSerializer.Serialize(decision);
+            if (fenced) content = "```json\r\n" + content + "\r\n```";
+            return new(System.Net.HttpStatusCode.OK) { Content = new StringContent(JsonSerializer.Serialize(new { choices = new[] { new { message = new { content } } } })) };
         });
         using var agent = new LocalTaskAgent(Store,(_,_,_) => true,(_,command,_) => Task.FromResult(new LocalTaskAgent.Observation(command,"observed",0)),
             (_,_,_) => Task.FromResult(new TerminalContextStore.Snapshot("session","echo",DateTimeOffset.UtcNow,4,false)),Path.Combine(_path,"tasks"),handler:handler);

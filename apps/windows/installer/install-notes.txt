@@ -6,6 +6,9 @@ No necesita un backend ni una cuenta para las conexiones locales.
 Se instala para el usuario actual, sin solicitar privilegios de administrador.
 Las versiones se conservan en carpetas separadas. El acceso directo apunta a
 la version instalada mas recientemente. No hay actualizacion automatica.
+Antes de actualizar, el instalador detecta las versiones abiertas de esta
+instalacion y permite cerrarlas mediante Windows. Al finalizar solo se abre
+la version nueva, si se elige abrir la app. El cierre desconecta las sesiones.
 
 El inventario, credenciales, configuracion IA y registros permanecen en
 %LOCALAPPDATA%\AiSysadmin y se conservan al desinstalar.

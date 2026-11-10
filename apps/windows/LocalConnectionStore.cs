@@ -26,6 +26,7 @@ public sealed partial class LocalConnectionStore
         public int FolderRevision { get; set; }
         public int ContextMaxCharacters { get; set; }
         public Dictionary<string, RestoreReceipt> Restores { get; set; } = new();
+        public HashSet<string> AiExecutionGrants { get; set; } = new();
     }
     public sealed class AiConfiguration
     {
@@ -62,7 +63,7 @@ public sealed partial class LocalConnectionStore
     }
     public sealed record AiEvidence(string Content, string Source, DateTimeOffset CapturedAt);
     public sealed record AiTurn(string Id, int ServerId, string Hostname, string Address, DateTimeOffset CreatedAt,
-        string Provider, string Model, string Query, AiEvidence? Evidence, string Analysis, string? Command, string? TargetIdentity = null);
+        string Provider, string Model, string Query, AiEvidence? Evidence, string Analysis, string? Command, string? TargetIdentity = null, string Kind = "conversation");
     private static object Metadata(Connection item) => new {
         item.Id, item.Hostname, item.IpAddress, item.Description, item.OsInfo,
         item.ConnectionProtocol, item.SshPort, item.RdpPort, item.SshUsername,
@@ -199,20 +200,20 @@ public sealed partial class LocalConnectionStore
         // Deliberately exclude credentials, descriptions and every other server.
         var identity = ContextIdentity(server);
         var conversation = data.AiHistory.Where(turn => turn.ServerId == server.Id && turn.TargetIdentity == identity)
-            .TakeLast(10).Select(turn => new { turn.CreatedAt, turn.Query, turn.Analysis }).ToArray();
+            .TakeLast(16).Select(turn => new { turn.CreatedAt, turn.Query, turn.Analysis, turn.Command, turn.Kind }).ToArray();
         var context = JsonSerializer.Serialize(new { server = new { server.Hostname, server.IpAddress, server.OsInfo, server.ConnectionProtocol }, query, evidence, conversation }, Json);
         return new AiInvocation(data.Ai.BaseUrl, data.Ai.Model, data.Ai.ApiKey, context, serverId, Fingerprint(server), server.HistoryEpoch, server.Hostname, server.IpAddress, query, evidence, AiProviders.Infer(data.Ai.Provider, data.Ai.BaseUrl), data.Ai.Username, data.Ai.Organization, data.Ai.Project, data.Ai.Workspace);
     });
 
-    public bool SaveAiTurn(AiInvocation invocation, string analysis, string? command) => WithInventory(data =>
+    public bool SaveAiTurn(AiInvocation invocation, string analysis, string? command, string kind = "conversation") => WithInventory(data =>
     {
         if (analysis.Length > 24000 || command?.Length > 4000) return false;
-        if (invocation.ServerId < 0) return SaveTemporaryTurn(invocation, analysis, command);
+        if (invocation.ServerId < 0) return SaveTemporaryTurn(invocation, analysis, command, kind);
         var server = data.Servers.SingleOrDefault(s => s.Id == invocation.ServerId);
         if (server == null || Fingerprint(server) != invocation.Fingerprint || server.HistoryEpoch != invocation.HistoryEpoch) return false;
         if (analysis.Length > 24000 || command?.Length > 4000) return false;
         data.AiHistory.Add(new AiTurn(Guid.NewGuid().ToString(), server.Id, invocation.Hostname, invocation.Address,
-            DateTimeOffset.UtcNow, invocation.BaseUrl, invocation.Model, invocation.Query, invocation.Evidence, analysis, command, ContextIdentity(server)));
+            DateTimeOffset.UtcNow, invocation.BaseUrl, invocation.Model, invocation.Query, invocation.Evidence, analysis, command, ContextIdentity(server), kind));
         var expired = data.AiHistory.Where(turn => turn.ServerId == server.Id).Reverse().Skip(20).Select(turn => turn.Id).ToHashSet();
         data.AiHistory.RemoveAll(turn => expired.Contains(turn.Id));
         if (data.AiHistory.Count > 100) data.AiHistory.RemoveRange(0, data.AiHistory.Count - 100);

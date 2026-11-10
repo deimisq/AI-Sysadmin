@@ -32,6 +32,8 @@ namespace AiSysadminDesktop
         private readonly TerminalContextStore _terminalContexts = new();
         private readonly ConcurrentDictionary<string, (int Id, string Fingerprint)> _localSessions = new();
         private readonly LocalTaskAgent _taskAgent;
+        private readonly ChatCommandService _chatCommands;
+        private readonly InteractiveChatExecutor _interactiveChat = new();
         private readonly DispatcherTimer _startupTimeout = new() { Interval = TimeSpan.FromSeconds(20) };
         private bool _initializing;
         private bool _uiReady;
@@ -40,6 +42,14 @@ namespace AiSysadminDesktop
         public MainWindow()
         {
             _localAi = new LocalAiService(_localConnections, contextReader: ReadTerminalContextAsync);
+            _chatCommands = new ChatCommandService(_localConnections,
+                (session, id, fingerprint) => _localSessions.TryGetValue(session, out var target) && target.Id == id && target.Fingerprint == fingerprint && _sshClients.TryGetValue(session, out var client) && client.IsConnected,
+                (session, command, token) => {
+                    if (!_shellStreams.TryGetValue(session, out var stream)) throw new InvalidOperationException("La terminal todavía no está disponible.");
+                    return _interactiveChat.ExecuteAsync(session, command, text => { stream.Write(text); stream.Flush(); }, token);
+                });
+            _localAi.RegisterCommand = _chatCommands.Register;
+            _localAi.BeginUserTurn = _chatCommands.InvalidateProposals;
             _taskAgent = new LocalTaskAgent(_localConnections,
                 (session, id, fingerprint) => _localSessions.TryGetValue(session, out var target) && target.Id == id && target.Fingerprint == fingerprint && _sshClients.TryGetValue(session, out var client) && client.IsConnected,
                 async (session, command, token) => {
@@ -293,8 +303,27 @@ namespace AiSysadminDesktop
                             if (!_closing) MainWebView.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(new { requestId, result }));
                             return;
                         }
+                        if (type is "LOCAL_CHAT_EXECUTE" or "LOCAL_CHAT_PERMISSION" or "LOCAL_CHAT_REVOKE" or "LOCAL_CHAT_CANCEL")
+                        {
+                            var payload = root.GetProperty("payload").Clone();
+                            object result;
+                            if (type == "LOCAL_CHAT_CANCEL") { _chatCommands.Cancel(); result = true; }
+                            else if (type == "LOCAL_CHAT_EXECUTE") {
+                                if (_taskAgent.Status()?.Status == "running") throw new InvalidOperationException("Esperá o cancelá la tarea activa antes de ejecutar desde el chat.");
+                                result = await _chatCommands.ExecuteAsync(payload);
+                            }
+                            else {
+                                var serverId = payload.GetProperty("server_id").GetInt32();
+                                var session = payload.GetProperty("session_id").GetString() ?? "";
+                                if (type == "LOCAL_CHAT_REVOKE") _chatCommands.Revoke(serverId, session);
+                                result = new { scope = _chatCommands.Permission(serverId, session) };
+                            }
+                            if (!_closing) MainWebView.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(new { requestId, result }));
+                            return;
+                        }
                         if (type is "LOCAL_TASK_START" or "LOCAL_TASK_STATUS" or "LOCAL_TASK_CANCEL")
                         {
+                            if (type == "LOCAL_TASK_START" && _chatCommands.IsExecuting) throw new InvalidOperationException("Hay un comando del chat en ejecución.");
                             var payload = root.GetProperty("payload").Clone();
                             var result = await Task.Run(() => type == "LOCAL_TASK_START" ? _taskAgent.Start(payload) : type == "LOCAL_TASK_CANCEL" ? _taskAgent.Cancel(payload.GetProperty("id").GetString()!) : _taskAgent.Status());
                             if (!_closing) MainWebView.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(new { requestId, result }));
@@ -320,6 +349,8 @@ namespace AiSysadminDesktop
                             var endpoint = payload.GetProperty("endpoint").GetString() ?? "";
                             var body = payload.TryGetProperty("body", out var data) ? data.Clone() : default;
                             var result = await Task.Run(() => _localConnections.Handle(method, endpoint, body));
+                            var route = endpoint.Trim('/').Split('/');
+                            if (method == "DELETE" && route.Length == 3 && route[0] == "servers" && route[2] == "history" && int.TryParse(route[1], out var clearedServer)) _localAi.CancelForServer(clearedServer);
                             if (!_closing) MainWebView.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(new { requestId, result }));
                             return;
                         }
@@ -477,6 +508,7 @@ namespace AiSysadminDesktop
                                                 int read = stream.Read(buffer, 0, buffer.Length);
                                                 if (read > 0) {
                                                     var dataArray = buffer.Take(read).ToArray();
+                                                    _interactiveChat.Observe(sessionId, dataArray);
                                                     _terminalContexts.Append(sessionId, dataArray);
                                                     var jsonMsg = JsonSerializer.Serialize(new {
                                                         type = "PTY_DATA",
@@ -493,6 +525,7 @@ namespace AiSysadminDesktop
                                         } catch (Exception ex) {
                                             Console.WriteLine("[PTY] Read Error: " + ex.Message);
                                         }
+                                        _interactiveChat.Close(sessionId);
                                         Console.WriteLine($"[PTY] Reading loop ended for: {sessionId}");
                                     });
 
@@ -528,6 +561,7 @@ namespace AiSysadminDesktop
                                 string ptyId = payload.GetProperty("ptyId").GetString() ?? "";
                                 if (payload.TryGetProperty("data", out JsonElement dataElement) && dataElement.ValueKind == JsonValueKind.Array) {
                                     byte[] data = dataElement.EnumerateArray().Select(x => x.GetByte()).ToArray();
+                                    if (data.Contains((byte)3)) _interactiveChat.MarkInterrupted(ptyId);
                                     if (_shellStreams.TryGetValue(ptyId, out var stream)) {
                                         stream.Write(data, 0, data.Length);
                                         stream.Flush();
@@ -542,6 +576,7 @@ namespace AiSysadminDesktop
                                 string ptyId = payload.TryGetProperty("ptyId", out var p) ? p.GetString() ?? "" : "";
                                 if (!string.IsNullOrEmpty(ptyId)) {
                                     Console.WriteLine($"[PTY] Closing stream for: {ptyId}");
+                                    _interactiveChat.Close(ptyId);
                                     if (_shellStreams.TryRemove(ptyId, out var stream)) stream.Dispose();
                                 }
                             }
@@ -553,6 +588,7 @@ namespace AiSysadminDesktop
                                 string sessionId = payload.TryGetProperty("sessionId", out var p) ? p.GetString() ?? "" : "";
                                 if (!string.IsNullOrEmpty(sessionId)) {
                                     Console.WriteLine($"[SSH] Disconnecting session: {sessionId}");
+                                    _interactiveChat.Close(sessionId);
                                     _sftpTransfers.Cancel(sessionId);
                                     if (_shellStreams.TryRemove(sessionId, out var stream)) stream.Dispose();
                                     if (_sshClients.TryRemove(sessionId, out var client)) {
@@ -604,6 +640,7 @@ namespace AiSysadminDesktop
             DisconnectAllRdp();
             _apiClient.Dispose();
             _localAi.Dispose();
+            _chatCommands.Cancel();
             _terminalContexts.Dispose();
             MainWebView.Dispose();
             base.OnClosed(e);

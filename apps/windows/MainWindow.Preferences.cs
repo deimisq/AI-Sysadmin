@@ -59,10 +59,12 @@ public partial class MainWindow
     {
         var provider = payload.GetProperty("provider").GetString() ?? "";
         var password = payload.TryGetProperty("password", out var secret) ? secret.GetString() ?? "" : "";
-        var endpoint = AiProviders.NormalizeEndpoint(provider, payload.TryGetProperty("base_url", out var address) ? address.GetString() : null);
+        var endpoint = AiProviders.IsLocal(provider) ? AiProviders.NormalizeEndpoint(provider, payload.TryGetProperty("base_url", out var address) ? address.GetString() : null) : AiProviders.Get(provider).BaseUrl;
         var username = payload.TryGetProperty("username", out var user) ? user.GetString() ?? "opencode" : "opencode";
         if (username.Length > 200 || username.Contains(':') || username.Any(char.IsControl)) throw new ArgumentException("El usuario del servicio no es válido.");
         if (password.Length == 0) password = _localConnections.GetAiDiscoverySecret(provider, endpoint, username);
-        return AiProviderTransport.DiscoverAsync(provider, password, baseUrl: endpoint, username: username);
+        string Option(string name) => payload.TryGetProperty(name, out var value) ? value.GetString() ?? "" : "";
+        return AiProviderTransport.DiscoverAsync(provider, password, baseUrl: endpoint, username: username,
+            organization: Option("organization"), project: Option("project"), workspace: Option("workspace"));
     }
 }

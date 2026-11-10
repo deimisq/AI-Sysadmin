@@ -5,6 +5,7 @@ export interface AiEvidence {
 }
 export const EVIDENCE_LIMIT = 12000;
 export interface AiHistoryTurn {
+    kind?: 'conversation' | 'continuation' | 'command' | 'result';
     id: string;
     server_id: number;
     hostname: string;

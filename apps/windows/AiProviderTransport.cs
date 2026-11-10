@@ -11,6 +11,16 @@ public static class AiProviderTransport
     public sealed record Message(string role, string content);
     public sealed record Model(string Id, string Name);
 
+    internal static string StructuredContent(string content)
+    {
+        var text = content.Trim();
+        if (!text.StartsWith("```", StringComparison.Ordinal) || !text.EndsWith("```", StringComparison.Ordinal)) return text;
+        var newline = text.IndexOf('\n');
+        if (newline < 0) return text;
+        var language = text[3..newline].Trim();
+        return language.Length == 0 || language.Equals("json", StringComparison.OrdinalIgnoreCase) ? text[(newline + 1)..^3].Trim() : text;
+    }
+
     public static async Task<string> CompleteAsync(HttpClient client, LocalConnectionStore.AiInvocation invocation, Message[] messages, CancellationToken token)
     {
         var provider = AiProviders.Infer(invocation.Provider, invocation.BaseUrl);
@@ -56,9 +66,9 @@ public static class AiProviderTransport
         else if (provider == "ollama" && secret.Length > 0) request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secret);
     }
 
-    public static async Task<JsonElement> DiscoverAsync(string provider, string secret = "", HttpMessageHandler? handler = null, string? baseUrl = null, string username = "opencode")
+    public static async Task<JsonElement> DiscoverAsync(string provider, string secret = "", HttpMessageHandler? handler = null, string? baseUrl = null, string username = "opencode", string organization = "", string project = "", string workspace = "")
     {
-        if (!AiProviders.IsLocal(provider)) throw new ArgumentException("La detección es para Ollama u OpenCode.");
+        if (!AiProviders.IsLocal(provider)) return await DiscoverCloudAsync(provider, secret, handler, organization, project, workspace);
         var endpoint = AiProviders.NormalizeEndpoint(provider, baseUrl);
         AiProviders.ValidateCredentials(endpoint, secret);
         if (secret.Length > 8192 || secret.Contains('\r') || secret.Contains('\n')) throw new ArgumentException("La contraseña del servicio no es válida.");
@@ -88,6 +98,56 @@ public static class AiProviderTransport
         } catch (Exception ex) when (ex is HttpRequestException or OperationCanceledException) {
             throw new InvalidOperationException(provider == "ollama" ? "No se pudo conectar con Ollama. Revisá la URL y que el servicio sea accesible desde este equipo." :
                 "No se pudo conectar con OpenCode. Revisá la URL del servidor, el usuario y la contraseña si está protegido.");
+        }
+    }
+
+    private static async Task<JsonElement> DiscoverCloudAsync(string provider, string secret, HttpMessageHandler? handler, string organization, string project, string workspace)
+    {
+        var preset = AiProviders.Get(provider);
+        AiProviders.ValidateCredentials(preset.BaseUrl, secret);
+        if (string.IsNullOrWhiteSpace(secret)) throw new ArgumentException("Ingresá la clave API para consultar los modelos disponibles.");
+        foreach (var value in new[] { organization, project, workspace })
+            if (value.Length > 200 || value.Any(char.IsControl)) throw new ArgumentException("Los datos de la cuenta no son válidos.");
+        using var client = new HttpClient(handler ?? new HttpClientHandler { AllowAutoRedirect = false }) { Timeout = TimeSpan.FromSeconds(15) };
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        var models = new Dictionary<string, Model>(StringComparer.Ordinal);
+        var cursors = new HashSet<string>(StringComparer.Ordinal);
+        var cursor = "";
+        try {
+            for (var page = 0; page < 100; page++) {
+                var address = provider == "gemini" ? "https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000" : preset.BaseUrl + "/models";
+                if (provider == "claude") address += "?limit=1000";
+                if (cursor.Length > 0) address += (provider == "gemini" ? "&pageToken=" : "&after_id=") + Uri.EscapeDataString(cursor);
+                using var request = new HttpRequestMessage(HttpMethod.Get, address);
+                if (provider == "gemini") request.Headers.Add("x-goog-api-key", secret);
+                else if (provider == "claude") {
+                    request.Headers.Add("x-api-key", secret);
+                    request.Headers.Add("anthropic-version", "2023-06-01");
+                    if (workspace.Length > 0) request.Headers.Add("anthropic-workspace-id", workspace);
+                } else request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secret);
+                if (provider == "openai") {
+                    if (organization.Length > 0) request.Headers.Add("OpenAI-Organization", organization);
+                    if (project.Length > 0) request.Headers.Add("OpenAI-Project", project);
+                }
+                var response = await SendAsync(client, request, timeout.Token, 4 * 1024 * 1024);
+                var entries = provider == "gemini" && !response.TryGetProperty("models", out _) ? JsonSerializer.SerializeToElement(Array.Empty<object>()) : response.GetProperty(provider == "gemini" ? "models" : "data");
+                foreach (var entry in entries.EnumerateArray()) {
+                    if (provider == "gemini" && (!entry.TryGetProperty("supportedGenerationMethods", out var methods) || !methods.EnumerateArray().Any(method => method.GetString() == "generateContent"))) continue;
+                    if (entry.TryGetProperty("lifecycle", out var lifecycle) && lifecycle.ValueKind == JsonValueKind.String && lifecycle.GetString() == "retired") continue;
+                    var id = entry.GetProperty(provider == "gemini" ? "name" : "id").GetString() ?? "";
+                    if (provider == "gemini" && id.StartsWith("models/", StringComparison.Ordinal)) id = id[7..];
+                    if (id.Length == 0 || id.Length > 200 || id.Any(char.IsControl)) continue;
+                    var name = entry.TryGetProperty(provider == "gemini" ? "displayName" : "display_name", out var label) ? label.GetString() : null;
+                    models[id] = new Model(id, string.IsNullOrWhiteSpace(name) ? id : name + " · " + id);
+                }
+                cursor = provider == "gemini" && response.TryGetProperty("nextPageToken", out var next) ? next.GetString() ?? "" :
+                    provider == "claude" && response.TryGetProperty("has_more", out var more) && more.ValueKind == JsonValueKind.True ? response.GetProperty("last_id").GetString() ?? "" : "";
+                if (cursor.Length == 0) return JsonSerializer.SerializeToElement(new { models = models.Values.OrderBy(model => model.Name).Select(model => new { id = model.Id, name = model.Name }) });
+                if (!cursors.Add(cursor)) break;
+            }
+            throw new InvalidOperationException("El proveedor no permitió completar la lista de modelos. Reintentá la actualización.");
+        } catch (Exception ex) when (ex is HttpRequestException or OperationCanceledException) {
+            throw new InvalidOperationException("No se pudo consultar los modelos del proveedor. Revisá la conexión y reintentá.");
         }
     }
 

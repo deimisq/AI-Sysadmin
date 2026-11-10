@@ -41,16 +41,16 @@ export function LocalAiSettings() {
     const [discoveryError, setDiscoveryError] = useState('');
     const discoveryVersion = useRef(0);
     useEffect(() => () => { discoveryVersion.current++; }, []);
-    const discover = async (id: string, password = '', address = baseUrl, user = username) => {
+    const discover = async (id: string, password = '', address = baseUrl, user = username, account = { organization, project, workspace }) => {
         const version = ++discoveryVersion.current;
         setDiscovering(true); setDiscoveryError('');
         try {
-            const result = await sendCommand<{ models: { id: string; name: string }[] }>('local_ai_models', { provider: id, base_url: address, username: user, ...(password ? { password } : {}) });
+            const result = await sendCommand<{ models: { id: string; name: string }[] }>('local_ai_models', { provider: id, base_url: address, username: user, ...account, ...(password ? { password } : {}) });
             if (version !== discoveryVersion.current) return;
             setLocalModels(result.models);
             setModel(previous => result.models.some(item => item.id === previous) ? previous : result.models[0]?.id || previous);
             setAccepted(false);
-            if (!result.models.length) setDiscoveryError(id === 'ollama' ? 'Ollama está disponible, pero no tiene modelos locales descargados.' : 'OpenCode está disponible, pero no tiene proveedores conectados. Configuralos en OpenCode y actualizá la lista.');
+            if (!result.models.length) setDiscoveryError(!['ollama', 'opencode'].includes(id) ? 'El proveedor no devolvió modelos disponibles para esta clave.' : id === 'ollama' ? 'Ollama está disponible, pero no tiene modelos locales descargados.' : 'OpenCode está disponible, pero no tiene proveedores conectados. Configuralos en OpenCode y actualizá la lista.');
         } catch (error) {
             if (version === discoveryVersion.current) setDiscoveryError(error instanceof Error ? error.message : 'No se pudo detectar el servicio local.');
         } finally { if (version === discoveryVersion.current) setDiscovering(false); }
@@ -65,8 +65,8 @@ export function LocalAiSettings() {
             setProviders(catalog); setSettings(data); setProviderId(provider.id);
             setBaseUrl(existing ? data.base_url : provider.base_url); setUsername(data.username || 'opencode');
             setOrganization(data.organization || ''); setProject(data.project || ''); setWorkspace(data.workspace || '');
-            setModel(existing ? data.model || provider.default_model : provider.default_model); setKey(''); setAccepted(false);
-            if (provider.local) void discover(provider.id, '', data.base_url, data.username || 'opencode');
+            setModel(existing ? data.model : ''); setKey(''); setAccepted(false);
+            if (provider.local || (existing && data.has_api_key)) void discover(provider.id, '', data.base_url, data.username || 'opencode', { organization: data.organization || '', project: data.project || '', workspace: data.workspace || '' });
         } catch { setLoadError(true); toast.error('No se pudo leer la configuración IA protegida.'); }
         finally { setBusy(false); }
     };
@@ -94,10 +94,11 @@ export function LocalAiSettings() {
     const invalidateConnection = () => {
         discoveryVersion.current++; setLocalModels([]); setDiscoveryError(''); setDiscovering(false); setKey(''); setAccepted(false);
     };
+    const invalidateModels = () => { discoveryVersion.current++; setLocalModels([]); setDiscoveryError(''); setDiscovering(false); setAccepted(false); };
     const changeProvider = (id: string) => {
         const next = providers.find(item => item.id === id)!;
         discoveryVersion.current++; setLocalModels([]); setDiscoveryError(''); setDiscovering(false);
-        setProviderId(id); setModel(next.default_model); setKey(''); setAccepted(false);
+        setProviderId(id); setModel(''); setKey(''); setAccepted(false);
         setBaseUrl(next.base_url); setUsername('opencode'); setOrganization(''); setProject(''); setWorkspace('');
         if (next.local) void discover(id, '', next.base_url, 'opencode');
     };
@@ -119,33 +120,32 @@ export function LocalAiSettings() {
                 <Input aria-label="Usuario de OpenCode" value={username} required maxLength={200} disabled={busy} className="mt-2" onChange={event => { setUsername(event.target.value); invalidateConnection(); }} />
             </label>}
             <label className="block text-sm">{providerId === 'opencode' ? 'Contraseña de OpenCode (opcional)' : providerId === 'ollama' ? 'Token del proxy (opcional)' : 'Clave API'} {sameProvider && settings?.has_api_key && '· dejá vacío para conservar la guardada'}
-                <Input aria-label="Clave API de IA" type="password" autoComplete="off" value={key} onChange={e => { setKey(e.target.value); setAccepted(false); if (provider?.local) { discoveryVersion.current++; setDiscovering(false); setLocalModels([]); } }} disabled={busy} className="mt-2" />
+                <Input aria-label="Clave API de IA" type="password" autoComplete="off" value={key} onChange={e => { setKey(e.target.value); invalidateModels(); }} onBlur={() => { if (key || provider?.local || (sameProvider && settings?.has_api_key)) void discover(providerId, key); }} disabled={busy} className="mt-2" />
             </label>
             {providerId === 'openai' && <p className="text-xs text-muted-foreground">Usá una clave de la API de OpenAI. El inicio de sesión de ChatGPT no se utiliza en esta conexión.</p>}
             {providerId === 'ollama' && <p className="text-sm text-muted-foreground">Ollama nativo no requiere clave. La app acepta la URL del servidor terminada en /api, /v1 o sin sufijo y la adapta automáticamente. El token solo se usa si tu proxy lo exige; para enviar credenciales a otro equipo se necesita HTTPS.</p>}
             {providerId === 'opencode' && <p className="text-sm text-muted-foreground">Iniciá <code>opencode serve</code> en el servidor indicado. Usará sus proveedores configurados, locales o de nube. El usuario predeterminado es opencode; si configuraste OPENCODE_SERVER_USERNAME, usá ese valor. Para credenciales fuera de este equipo usá HTTPS.</p>}
             {providerId === 'openai' && <details className="text-sm"><summary className="cursor-pointer">Organización y proyecto (opcional)</summary><div className="mt-3 space-y-3">
-                <label className="block">Organización<Input aria-label="Organización de OpenAI" value={organization} maxLength={200} disabled={busy} onChange={event => { setOrganization(event.target.value); setAccepted(false); }} /></label>
-                <label className="block">Proyecto<Input aria-label="Proyecto de OpenAI" value={project} maxLength={200} disabled={busy} onChange={event => { setProject(event.target.value); setAccepted(false); }} /></label>
+                <label className="block">Organización<Input onBlur={() => { if (key || (sameProvider && settings?.has_api_key)) void discover(providerId, key); }} aria-label="Organización de OpenAI" value={organization} maxLength={200} disabled={busy} onChange={event => { setOrganization(event.target.value); invalidateModels(); }} /></label>
+                <label className="block">Proyecto<Input onBlur={() => { if (key || (sameProvider && settings?.has_api_key)) void discover(providerId, key); }} aria-label="Proyecto de OpenAI" value={project} maxLength={200} disabled={busy} onChange={event => { setProject(event.target.value); invalidateModels(); }} /></label>
             </div></details>}
             {providerId === 'claude' && <label className="block text-sm">Workspace de Anthropic (si tu clave lo requiere)
-                <Input aria-label="Workspace de Claude" value={workspace} maxLength={200} disabled={busy} className="mt-2" onChange={event => { setWorkspace(event.target.value); setAccepted(false); }} placeholder="wrkspc_…" />
+                <Input onBlur={() => { if (key || (sameProvider && settings?.has_api_key)) void discover(providerId, key); }} aria-label="Workspace de Claude" value={workspace} maxLength={200} disabled={busy} className="mt-2" onChange={event => { setWorkspace(event.target.value); invalidateModels(); }} placeholder="wrkspc_…" />
                 <span className="text-xs text-muted-foreground">Necesario para claves que no están limitadas a un workspace.</span>
             </label>}
-            <label className="block text-sm">Modelo
-                {provider?.models.length ? <select aria-label="Modelo IA" className="mt-2 w-full rounded border px-3" value={provider.models.includes(model) ? model : 'other'} disabled={busy} onChange={event => { setModel(event.target.value === 'other' ? '' : event.target.value); setAccepted(false); }}>
-                    {provider.models.map(item => <option key={item} value={item}>{item}</option>)}<option value="other">Otro modelo…</option>
-                </select> : null}
-                {provider?.local && localModels.length > 0 && <select aria-label="Modelo local" className="mt-2 w-full rounded border px-3" value={model} disabled={busy || discovering} onChange={event => { setModel(event.target.value); setAccepted(false); }}>
-                    {!localModels.some(item => item.id === model) && <option value={model}>{model || 'Seleccioná un modelo'}</option>}
+            <label className="block text-sm">Modelo disponible
+                <select aria-label={provider?.local ? 'Modelo local' : 'Modelo IA'} className="mt-2 w-full rounded border px-3" value={model} disabled={busy || discovering || !localModels.length} onChange={event => { setModel(event.target.value); setAccepted(false); }}>
+                    {!localModels.some(item => item.id === model) && <option value={model}>{discovering ? 'Consultando modelos…' : model ? model + ' · pendiente de verificar' : 'Cargá los modelos para seleccionar'}</option>}
                     {localModels.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}
-                </select>}
-                {((provider?.local && !localModels.length) || (!provider?.local && !provider?.models.includes(model))) && <Input aria-label="Identificador del modelo IA" required maxLength={200} value={model} onChange={event => { setModel(event.target.value); setAccepted(false); }} disabled={busy} className="mt-2" placeholder={providerId === 'opencode' ? 'proveedor/modelo configurado en OpenCode' : 'Nombre del modelo instalado'} />}
+                </select>
             </label>
-            {provider?.local && <div className="space-y-2"><Button type="button" variant="outline" disabled={busy || discovering} onClick={() => void discover(providerId, key)}>{discovering ? 'Buscando modelos…' : 'Actualizar modelos locales'}</Button>{discoveryError && <p role="status" className="text-sm text-amber-300">{discoveryError}</p>}</div>}
+            <div className="space-y-2"><Button type="button" variant="outline" disabled={busy || discovering || (!!provider?.requires_key && !key && !(sameProvider && settings?.has_api_key))} onClick={() => void discover(providerId, key)}>{discovering ? 'Consultando modelos…' : 'Actualizar modelos'}</Button>
+                <p className="text-xs text-muted-foreground">La lista se consulta al proveedor con tu conexión. No se envían conversaciones ni datos de servidores. Algunos modelos del catálogo pueden no admitir chat.</p>
+                {discoveryError && <p role="status" className="text-sm text-amber-300">{discoveryError}</p>}
+            </div>
             <details className="text-xs text-muted-foreground"><summary className="cursor-pointer">Contexto compartido y privacidad</summary><p className="mt-2 leading-relaxed">La salida SSH se registra cifrada en este equipo. Al pedir ayuda se comparten la consulta, los datos del servidor, la salida disponible y hasta diez intercambios recientes. Estos registros pueden contener información sensible. No se adjuntan credenciales del almacén ni se envía contexto continuamente. Guardar la configuración no envía consultas ni ejecuta tareas.</p></details>
             <label className="flex gap-3 items-start text-sm"><input type="checkbox" checked={accepted} onChange={e => setAccepted(e.target.checked)} disabled={busy} className="mt-1" /><span>Autorizo compartir mis consultas, datos del servidor y registros de terminal con {provider?.name || 'el proveedor seleccionado'}{provider?.local ? ` en ${baseUrl}` : ''} cuando pida ayuda o ejecute una tarea. {providerId === 'opencode' ? 'OpenCode puede reenviarlos al proveedor del modelo elegido y conservar registros.' : provider?.local ? 'El modelo se ejecuta mediante el servidor configurado.' : 'Acepto las condiciones de tratamiento, retención y posibles cargos del proveedor.'}</span></label>
-            <div className="flex flex-wrap gap-3"><Button type="submit" disabled={busy || discovering || !accepted || !model.trim() || (!!provider?.requires_key && !key && !(sameProvider && settings?.has_api_key))}>Guardar y habilitar IA</Button>{settings?.consent_accepted && <Button type="button" variant="outline" disabled={busy} onClick={disconnect}>Desconectar IA</Button>}</div>
+            <div className="flex flex-wrap gap-3"><Button type="submit" disabled={busy || discovering || !accepted || !!discoveryError || !localModels.some(item => item.id === model) || (!!provider?.requires_key && !key && !(sameProvider && settings?.has_api_key))}>Guardar y habilitar IA</Button>{settings?.consent_accepted && <Button type="button" variant="outline" disabled={busy} onClick={disconnect}>Desconectar IA</Button>}</div>
             {settings?.consent_accepted && <p className="text-xs text-muted-foreground">Configuración activa: {providers.find(item => item.id === settings.provider || item.base_url === settings.base_url)?.name || 'Proveedor existente'} · {settings.model}. Guardar no envía consultas ni ejecuta tareas.</p>}
         </form>}
     </section>;

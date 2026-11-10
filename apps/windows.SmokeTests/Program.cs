@@ -33,6 +33,8 @@ internal static class Program
                 await WaitForSection(preferences, view, "ai");
                 var firstOpenMs = elapsed.ElapsedMilliseconds;
                 var core = view.CoreWebView2;
+                await WaitForModels(core, "cloud/discovered");
+                if (await core.ExecuteScriptAsync("Boolean(document.querySelector('[aria-label=\"Identificador del modelo IA\"]'))") == "true") throw new Exception("El modelo no debe introducirse manualmente.");
                 // Use a fake value in memory only; never save settings or contact a provider.
                 await core.ExecuteScriptAsync("document.querySelector('#preferences-page-ai input[type=password]').value='smoke-only';");
                 preferences.Close();
@@ -56,6 +58,7 @@ internal static class Program
                     }
                     if (provider != "openai" && await core.ExecuteScriptAsync("Boolean(document.querySelector('#preferences-page-ai input[type=url]'))") != "true") throw new Exception("El servicio debe permitir configurar su URL.");
                     if (provider == "ollama" && await core.ExecuteScriptAsync("document.querySelector('#preferences-page-ai input[type=password]').required") == "true") throw new Exception("Ollama no debe exigir token.");
+                    if (provider != "openai") await WaitForModels(core, "ollama/installed");
                 }
                 Console.WriteLine(JsonSerializer.Serialize(new { success = true, firstOpenMs, reopenMs, sections = new[] { "ai", "context", "backups" }, reusedBrowser = true, clearedKey = true, source = core.Source }));
             } catch (Exception ex) {
@@ -72,14 +75,23 @@ internal static class Program
 
     private static Task<JsonElement> Respond(string type, JsonElement payload)
     {
-        if (type == "LOCAL_AI_MODELS") return Task.FromResult(JsonSerializer.SerializeToElement(new { models = new[] { new { id = "ollama/installed", name = "Modelo local de prueba" } } }));
+        if (type == "LOCAL_AI_MODELS") return Task.FromResult(JsonSerializer.SerializeToElement(new { models = new[] { new { id = AiProviders.IsLocal(payload.GetProperty("provider").GetString()!) ? "ollama/installed" : "cloud/discovered", name = "Modelo descubierto de prueba" } } }));
         if (type == "LOCAL_REQUEST" && payload.GetProperty("endpoint").GetString() == "/ai/providers")
             return Task.FromResult(JsonSerializer.SerializeToElement(AiProviders.Catalog, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower }));
         object result = type == "LOCAL_CONTEXT_LIST" ? Array.Empty<object>() :
             payload.GetProperty("endpoint").GetString() == "/ai/settings" ?
-                new { base_url = "https://example.invalid/v1", model = "smoke", has_api_key = false, consent_accepted = false } :
+                new { provider = "openai", base_url = "https://api.openai.com/v1", model = "cloud/discovered", has_api_key = true, consent_accepted = false } :
                 new { max_characters = 8000 };
         return Task.FromResult(JsonSerializer.SerializeToElement(result));
+    }
+
+    private static async Task WaitForModels(CoreWebView2 core, string model)
+    {
+        var timer = Stopwatch.StartNew();
+        while (await core.ExecuteScriptAsync("Array.from(document.querySelectorAll('#preferences-page-ai select option')).some(option => option.value === " + JsonSerializer.Serialize(model) + ")") != "true") {
+            if (timer.Elapsed > TimeSpan.FromSeconds(5)) throw new Exception("No se cargó el catálogo del proveedor.");
+            await Task.Delay(50);
+        }
     }
 
     private static async Task WaitForSection(PreferencesWindow window, WorkspaceWebView view, string section)

@@ -1,6 +1,9 @@
 #ifndef PublishDir
   #error PublishDir must point to the verified self-contained publish folder.
 #endif
+#ifndef InstallerAppId
+  #define InstallerAppId "{{4DFF87E7-6939-4591-910C-8BA873B15B32}"
+#endif
 #ifndef OutputDir
   #error OutputDir is required.
 #endif
@@ -9,7 +12,7 @@
 #endif
 
 [Setup]
-AppId={{4DFF87E7-6939-4591-910C-8BA873B15B32}
+AppId={#InstallerAppId}
 AppName=AI Sysadmin Agent
 AppVersion={#AppVersion}
 AppPublisher=AI Sysadmin Agent
@@ -51,6 +54,36 @@ Name: "{autodesktop}\AI Sysadmin Agent"; Filename: "{app}\versions\{#AppVersion}
 Filename: "{app}\versions\{#AppVersion}\AiSysadmin.exe"; Description: "Abrir AI Sysadmin Agent"; Flags: nowait postinstall skipifsilent
 
 [Code]
+procedure RegisterInstalledExecutable(const Filename: String);
+begin
+  if FileExists(Filename) then
+    if not RegisterExtraCloseApplicationsResource(False, Filename) then
+      RaiseException('No se pudo comprobar si la aplicación está abierta: ' + Filename + '. Cerrala y volvé a ejecutar el instalador.');
+end;
+
+procedure RegisterExtraCloseApplicationsResources;
+var
+  Versions: String;
+  Found: TFindRec;
+begin
+  { Updates use a new directory. Register older executables explicitly so
+    Restart Manager closes those instances before installing the next version. }
+  RegisterInstalledExecutable(ExpandConstant('{app}\AiSysadmin.exe'));
+  Versions := ExpandConstant('{app}\versions\');
+  if FindFirst(Versions + '*', Found) then
+  begin
+    try
+      repeat
+        if ((Found.Attributes and FILE_ATTRIBUTE_DIRECTORY) <> 0) and
+           (Found.Name <> '.') and (Found.Name <> '..') then
+          RegisterInstalledExecutable(Versions + Found.Name + '\AiSysadmin.exe');
+      until not FindNext(Found);
+    finally
+      FindClose(Found);
+    end;
+  end;
+end;
+
 function HasWebView2: Boolean;
 var
   Version: String;

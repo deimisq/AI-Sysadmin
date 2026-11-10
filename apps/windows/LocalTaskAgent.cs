@@ -10,7 +10,7 @@ namespace AiSysadminDesktop;
 /// <summary>One bounded, explicitly authorized SSH task at a time. Never retries a command.</summary>
 public sealed class LocalTaskAgent : IDisposable
 {
-    public sealed record Observation(string Command, string Output, int? ExitCode);
+    public sealed record Observation(string Command, string Output, int? ExitCode, string Status = "completed", bool Truncated = false);
     public sealed record Decision(string Action, string Explanation, string? Command = null);
     public sealed record Event(DateTimeOffset At, string Kind, string Text, int? ExitCode = null);
     public sealed record View(string Id, int ServerId, string Hostname, string Objective, string Status, Event[] Events);
@@ -167,7 +167,7 @@ public sealed class LocalTaskAgent : IDisposable
         };
         var content = await AiProviderTransport.CompleteAsync(_http, invocation,
             messages.Select(message => new AiProviderTransport.Message(message.role, message.content)).ToArray(), token);
-        return JsonSerializer.Deserialize<Decision>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? throw new InvalidOperationException("Paso vacío.");
+        return JsonSerializer.Deserialize<Decision>(AiProviderTransport.StructuredContent(content), new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? throw new InvalidOperationException("Paso vacío.");
     }
     public void Dispose()
     {

@@ -75,12 +75,12 @@ jobs:
         env:
           PACKAGE_VERSION: ${{ steps.version.outputs.version }}
         run: |
-          ./scripts/test-windows-package.ps1 -PackageDirectory "dist/windows/$env:PACKAGE_VERSION" -ExerciseInstaller
+          ./scripts/test-windows-package.ps1 -PackageDirectory "dist/windows/$env:PACKAGE_VERSION" -TestRoot "$env:RUNNER_TEMP/pkg" -ExerciseInstaller
       - name: Installation diagnostics
         if: failure()
         shell: pwsh
         run: |
-          Get-ChildItem .preview-tools/package-tests -Filter install.log -Recurse -ErrorAction SilentlyContinue | ForEach-Object {
+          Get-ChildItem "$env:RUNNER_TEMP/pkg" -Filter install.log -Recurse -ErrorAction SilentlyContinue | ForEach-Object {
             Select-String -LiteralPath $_.FullName -Pattern 'error|exception|failed|abort|cancel|Unable' -Context 3,5
             Get-Content -LiteralPath $_.FullName -Tail 5
           }

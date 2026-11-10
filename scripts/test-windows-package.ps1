@@ -1,7 +1,8 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory=$true)][string]$PackageDirectory,
-    [switch]$ExerciseInstaller
+    [switch]$ExerciseInstaller,
+    [string]$TestRoot = ''
 )
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
@@ -14,7 +15,8 @@ foreach ($line in Get-Content -LiteralPath $sums) {
 }
 $zip = @(Get-ChildItem $packages -Filter '*-portable.zip')
 if ($zip.Count -ne 1) { throw 'Se requiere un unico ZIP portable.' }
-$sandbox = Join-Path $projectRoot ('.preview-tools/package-tests/' + [Guid]::NewGuid().ToString('N'))
+if (-not $TestRoot) { $TestRoot = Join-Path $projectRoot '.preview-tools/package-tests' }
+$sandbox = Join-Path $TestRoot ([Guid]::NewGuid().ToString('N'))
 $portable = Join-Path $sandbox 'portable'
 New-Item -ItemType Directory -Path $portable -Force | Out-Null
 Expand-Archive -LiteralPath $zip[0].FullName -DestinationPath $portable

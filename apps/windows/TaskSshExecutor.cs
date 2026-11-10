@@ -13,7 +13,12 @@ public static class TaskSshExecutor
         using var command = client.CreateCommand(text);
         command.CommandTimeout = TimeSpan.FromSeconds(20);
         var execution = command.ExecuteAsync(timeout.Token);
-        using (command.CreateInputStream()) { } // No interactive prompts or password input.
+        try { using (command.CreateInputStream()) { } } // No interactive prompts or password input.
+        catch (InvalidOperationException) when (execution.IsCompleted || command.ExitStatus.HasValue || command.ExitSignal is not null)
+        {
+            // A fast remote command can close its channel before stdin is created.
+            // Its output and execution result must still be consumed below.
+        }
         var bytes = 0;
         async Task<string> Read(Stream stream)
         {

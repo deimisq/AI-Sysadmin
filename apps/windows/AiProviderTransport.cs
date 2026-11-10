@@ -8,7 +8,17 @@ namespace AiSysadminDesktop;
 
 public static class AiProviderTransport
 {
-    public sealed record Message(string role, string content);
+    public sealed record Message(string role, string content, string? Image = null);
+    private static object WireMessage(Message message, bool claude) => new {
+        message.role,
+        content = message.Image == null ? (object)message.content : claude ? new object[] {
+            new { type = "image", source = new { type = "base64", media_type = "image/png", data = message.Image[22..] } },
+            new { type = "text", text = message.content }
+        } : new object[] {
+            new { type = "text", text = message.content },
+            new { type = "image_url", image_url = new { url = message.Image } }
+        }
+    };
     public sealed record Model(string Id, string Name);
 
     internal static string StructuredContent(string content)
@@ -24,6 +34,8 @@ public static class AiProviderTransport
     public static async Task<string> CompleteAsync(HttpClient client, LocalConnectionStore.AiInvocation invocation, Message[] messages, CancellationToken token)
     {
         var provider = AiProviders.Infer(invocation.Provider, invocation.BaseUrl);
+        if (messages.Any(message => message.Image != null) && provider is "opencode" or "deepseek")
+            throw new InvalidOperationException("El envío de capturas no está habilitado para este proveedor. Elegí Gemini, OpenAI, Claude o un modelo de visión de Ollama/servidor compatible.");
         if (AiProviders.IsLocal(provider)) {
             AiProviders.NormalizeEndpoint(provider, invocation.BaseUrl);
             AiProviders.ValidateCredentials(invocation.BaseUrl, invocation.ApiKey);
@@ -38,7 +50,7 @@ public static class AiProviderTransport
             request.Content = Json(new {
                 model = invocation.Model, max_tokens = 4096,
                 system = string.Join("\n\n", messages.Where(message => message.role == "system").Select(message => message.content)),
-                messages = messages.Where(message => message.role != "system").ToArray(),
+                messages = messages.Where(message => message.role != "system").Select(message => WireMessage(message, true)).ToArray(),
             });
         } else {
             if (invocation.ApiKey.Length > 0) request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", invocation.ApiKey);
@@ -46,11 +58,15 @@ public static class AiProviderTransport
                 if (invocation.Organization.Length > 0) request.Headers.Add("OpenAI-Organization", invocation.Organization);
                 if (invocation.Project.Length > 0) request.Headers.Add("OpenAI-Project", invocation.Project);
             }
-            var body = new Dictionary<string, object> { ["model"] = invocation.Model, ["messages"] = messages, ["stream"] = false };
+            var body = new Dictionary<string, object> { ["model"] = invocation.Model, ["messages"] = messages.Select(message => WireMessage(message, false)).ToArray(), ["stream"] = false };
             body[provider == "openai" ? "max_completion_tokens" : "max_tokens"] = 4096;
             request.Content = Json(body);
         }
-        var response = await SendAsync(client, request, token);
+        JsonElement response;
+        try { response = await SendAsync(client, request, token); }
+        catch (InvalidOperationException error) when (messages.Any(message => message.Image != null) && error.Message.StartsWith("HTTP 400:", StringComparison.Ordinal)) {
+            throw new InvalidOperationException("El proveedor rechazó la consulta con imagen (HTTP 400). Elegí un modelo con visión compatible o enviá la pregunta sin captura. No se reintentó ni se modificó la clave guardada.");
+        }
         var text = claude ? string.Join("\n", response.GetProperty("content").EnumerateArray()
             .Where(part => part.GetProperty("type").GetString() == "text").Select(part => part.GetProperty("text").GetString())) :
             response.GetProperty("choices")[0].GetProperty("message").GetProperty("content").GetString();

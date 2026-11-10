@@ -42,7 +42,7 @@ Estas instrucciones aplican a todo el repositorio. Mantener este documento actua
 
 ## Datos, actualizaciones y portabilidad
 
-- La IA en RDP funciona como asesor por conversación y texto compartido explícitamente. No recibe pantalla, eventos ni salida PowerShell automáticamente, ni controla el escritorio. No mostrar permisos o tareas SSH en RDP ni reutilizar registros SSH como evidencia de ese escritorio. Probar conexiones guardadas y temporales sin acceder a equipos reales.
+- La IA en RDP funciona como asesor por conversación y texto compartido explícitamente. No recibe pantalla, eventos ni salida PowerShell automáticamente, ni controla el escritorio. Puede adjuntarse una captura del control RDP activo después de revisar su vista previa y autorizar cada imagen para una consulta concreta; nunca capturar ni enviar automáticamente, guardar la imagen en historial o usar una captura del monitor local como fallback. Requiere un modelo con visión. No mostrar permisos o tareas SSH en RDP ni reutilizar registros SSH como evidencia de ese escritorio. Probar conexiones guardadas y temporales sin acceder a equipos reales.
 
 - Preservar conexiones, credenciales, configuración IA y datos locales al actualizar. La instalación no debe dejar ejecutándose una versión anterior. Mantener identidad e iconos de Windows coherentes.
 - El almacén local protegido con DPAPI depende de la cuenta Windows; copiarlo directamente no permite migrar a otro equipo.

@@ -8,7 +8,7 @@ namespace AiSysadminDesktop;
 
 public partial class MainWindow
 {
-    private sealed record RdpSession(string Id, RdpActiveXHost Client, WindowsFormsHost Surface, int? TemporaryId)
+    private sealed record RdpSession(string Id, RdpActiveXHost Client, WindowsFormsHost Surface, int? TemporaryId, string Host, int Port)
     {
         public bool Failed { get; set; }
     }
@@ -33,7 +33,7 @@ public partial class MainWindow
         var client = new RdpActiveXHost { Dock = System.Windows.Forms.DockStyle.Fill };
         var surface = new WindowsFormsHost { Visibility = Visibility.Collapsed };
         int? temporaryId = payload.TryGetProperty("temporaryServerId", out var temporary) ? temporary.GetInt32() : null;
-        var session = new RdpSession(id, client, surface, temporaryId);
+        var session = new RdpSession(id, client, surface, temporaryId, host, port);
         _rdpSessions.Add(id, session);
         try {
             if (temporaryId is { } tempId) _localConnections.RegisterTemporaryTarget(tempId, id, host, port, user, "rdp");
@@ -117,5 +117,37 @@ public partial class MainWindow
         foreach (var id in _rdpSessions.Ids)
             try { CloseRdp(id); }
             catch (Exception error) { Console.WriteLine("RDP cleanup: " + error.GetType().Name); }
+    }
+
+    [System.Runtime.InteropServices.DllImport("user32.dll", SetLastError = true)]
+    [return: System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.Bool)]
+    private static extern bool PrintWindow(IntPtr window, IntPtr dc, uint flags);
+
+    private object CaptureRdp(JsonElement payload)
+    {
+        var id = _rdpSessions.ActiveId;
+        if (id == null || !_rdpSessions.TryGet(id, out var session) || session == null)
+            throw new InvalidOperationException("Activá la sesión RDP de este destino antes de capturar.");
+        if (session.Failed ||
+            session.Surface.Visibility != Visibility.Visible || WindowState == WindowState.Minimized ||
+            session.Host != payload.GetProperty("host").GetString() || session.Port != payload.GetProperty("port").GetInt32())
+            throw new InvalidOperationException("Activá la sesión RDP de este destino antes de capturar.");
+        if ((int)session.Client.Client.Connected == 0) throw new InvalidOperationException("La sesión RDP no está conectada.");
+        var client = session.Client;
+        if (client.Width is < 50 or > 4096 || client.Height is < 50 or > 4096 || (long)client.Width * client.Height > 10000000)
+            throw new InvalidOperationException("El tamaño del escritorio no permite una captura segura.");
+        // Render only the ActiveX window. Never fall back to capturing the local screen.
+        using var bitmap = new System.Drawing.Bitmap(client.Width, client.Height);
+        using (var graphics = System.Drawing.Graphics.FromImage(bitmap)) {
+            var dc = graphics.GetHdc();
+            try { if (!PrintWindow(client.Handle, dc, 2)) throw new InvalidOperationException("RDP no pudo renderizar la captura. Podés compartir el error como texto."); }
+            finally { graphics.ReleaseHdc(dc); }
+        }
+        var scale = Math.Min(1.0, 1920.0 / Math.Max(bitmap.Width, bitmap.Height));
+        using var resized = new System.Drawing.Bitmap(bitmap, Math.Max(1,(int)(bitmap.Width * scale)), Math.Max(1,(int)(bitmap.Height * scale)));
+        using var memory = new System.IO.MemoryStream();
+        resized.Save(memory, System.Drawing.Imaging.ImageFormat.Png);
+        if (memory.Length > 4 * 1024 * 1024) throw new InvalidOperationException("La captura supera 4 MiB. Reducí el tamaño del escritorio.");
+        return new { image = "data:image/png;base64," + Convert.ToBase64String(memory.ToArray()), captured_at = DateTimeOffset.UtcNow, session_id = id };
     }
 }

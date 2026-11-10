@@ -42,6 +42,10 @@ En RDP, el acompañante funciona como asesor: recibe los metadatos del destino y
 
 La IA no recibe capturas, cambios del escritorio ni salida de PowerShell/CMD automáticamente. No ejecuta comandos, controla el escritorio ni usa tareas o permisos SSH desde RDP. Los pasos sugeridos deben realizarse manualmente dentro del equipo remoto y sus resultados compartirse en el chat. Los registros SSH no se usan como evidencia de RDP.
 
+Desde `0.10.0-preview.40`, **Adjuntar captura del RDP** permite capturar el control de escritorio remoto activo del destino. Revisar la vista previa, descartar una imagen negra o incorrecta, marcar la autorización y escribir la pregunta. La imagen se envía una sola vez junto a esa consulta al proveedor configurado; no se escribe en disco ni se conserva en el historial. El análisis textual puede conservarse en la conversación. Para conocer cambios posteriores hace falta otra captura. No hay captura de pantalla local como alternativa si falla el renderizado de RDP.
+
+Requiere un modelo con visión: se implementaron formatos de imagen para Gemini/OpenAI y endpoints compatibles (incluido Ollama con un modelo visual), y Claude. El envío visual no está habilitado para OpenCode o DeepSeek en esta implementación. La compatibilidad depende del modelo seleccionado. La imagen se limita a PNG de 4 MiB y se reduce a 1920 píxeles en su lado mayor. No se adjuntan imágenes en consultas SSH. Las pruebas de payload usan imágenes sintéticas; la compatibilidad de captura del ActiveX con el escritorio remoto real sigue requiriendo comprobación manual en la vista previa.
+
 La cobertura automatizada usa destinos y respuestas sintéticos: comprueba aislamiento de contexto, historial y ausencia de propuestas ejecutables en RDP guardado y temporal. No sustituye una prueba real del escritorio, autenticación o diagnóstico sobre un servidor Windows.
 
 ## Trasladar conexiones a otro equipo

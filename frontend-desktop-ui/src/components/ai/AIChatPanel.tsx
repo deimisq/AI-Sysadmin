@@ -52,6 +52,9 @@ function ServerAssistant({ server }: { server: Server | null }) {
     const [consent, setConsent] = useState(false);
     const [accepted, setAccepted] = useState(false);
     const [configuration, setConfiguration] = useState<LocalAiConfiguration | null>(null);
+    const [capture, setCapture] = useState<{ image: string; captured_at: string } | null>(null);
+    const [captureReviewed, setCaptureReviewed] = useState(false);
+    const [capturing, setCapturing] = useState(false);
     useEffect(() => {
         if (!local) return;
         let active = true;
@@ -59,7 +62,7 @@ function ServerAssistant({ server }: { server: Server | null }) {
         const refresh = () => {
             const version = ++configurationVersion;
             requestVersion.current += 1;
-            setAccepted(false); setLoading(false);
+            setAccepted(false); setLoading(false); setCapture(null); setCaptureReviewed(false);
             api.get<LocalAiConfiguration>('/ai/settings').then(data => { if (active && version === configurationVersion) { setConfiguration(data); setAccepted(data.consent_accepted); } }).catch(() => { if (active && version === configurationVersion) { setConfiguration(null); setAccepted(false); } });
         };
         refresh(); window.addEventListener('local-ai-settings-changed', refresh);
@@ -107,11 +110,13 @@ function ServerAssistant({ server }: { server: Server | null }) {
     }, [messages, mode]);
 
     const handleSend = async () => {
-        if (!input.trim() || loading || executing || historyLoading || clearingHistory || !server || !accepted || waitingForTemporarySsh) return;
+        if (!input.trim() || loading || executing || historyLoading || clearingHistory || !server || !accepted || waitingForTemporarySsh || capturing || (capture && !captureReviewed)) return;
         automaticSteps.current = 0;
         const version = ++requestVersion.current;
 
-        const userMsg = input;
+        const userMsg = input + (capture ? `\n[Captura RDP revisada adjunta, tomada ${new Date(capture.captured_at).toLocaleString()}. Solo disponible para esta consulta.]` : '');
+        const image = capture?.image;
+        setCapture(null); setCaptureReviewed(false);
         setUsedProposals(previous => [...previous, ...messages.flatMap(message => message.proposalId ? [message.proposalId] : [])]);
         currentObjective.current = userMsg;
         setInput('');
@@ -121,7 +126,7 @@ function ServerAssistant({ server }: { server: Server | null }) {
         try {
             if (server) {
                 // Server context mode
-                const res = await diagnoseProblem(server.id, userMsg, 'es', '2026-10-25', undefined, local ? server : undefined, local && !rdp ? useWorkspaceStore.getState().nativeSessions[server.id] : undefined);
+                const res = await diagnoseProblem(server.id, userMsg, 'es', '2026-10-25', undefined, local ? server : undefined, local && !rdp ? useWorkspaceStore.getState().nativeSessions[server.id] : undefined, false, image);
                 if (version !== requestVersion.current) return;
 
                 // Parse response
@@ -224,14 +229,14 @@ function ServerAssistant({ server }: { server: Server | null }) {
                     <span className="truncate text-blue-200" title={configuration?.base_url}>{configuration?.consent_accepted ? configuration.model : 'Sin configurar'}</span>
                 </div>
 
-                                <details className="text-[11px] text-gray-400"><summary className="cursor-pointer">Contexto y privacidad</summary><p className="pt-2 leading-relaxed">{rdp ? 'En RDP se comparte la conversación y los datos del equipo. La IA no recibe capturas ni ve el escritorio o PowerShell. Podés pegar el error o la salida relevante en el chat.' : 'La salida SSH se registra cifrada en este equipo. Al pedir ayuda se comparte el contexto disponible y la conversación reciente con tu proveedor. No hay envío continuo.'}</p><button className="text-blue-300 hover:underline" onClick={() => useWorkspaceStore.getState().openPreferences('ai')}>Configurar proveedor y privacidad</button></details>
+                                <details className="text-[11px] text-gray-400"><summary className="cursor-pointer">Contexto y privacidad</summary><p className="pt-2 leading-relaxed">{rdp ? 'En RDP se comparte la conversación y los datos del equipo. Podés adjuntar una captura del RDP después de revisarla. Solo se envía con esa pregunta; no hay visión continua. También podés pegar errores o salidas como texto.' : 'La salida SSH se registra cifrada en este equipo. Al pedir ayuda se comparte el contexto disponible y la conversación reciente con tu proveedor. No hay envío continuo.'}</p><button className="text-blue-300 hover:underline" onClick={() => useWorkspaceStore.getState().openPreferences('ai')}>Configurar proveedor y privacidad</button></details>
                 <div className="flex gap-2"><button aria-pressed={mode === 'chat'} className="border border-[#444] rounded px-2 py-1" onClick={() => setMode('chat')}>Conversar con el agente</button>{!rdp && <button aria-pressed={mode === 'task'} className="border border-[#444] rounded px-2 py-1" onClick={() => setMode('task')}>Tarea avanzada</button>}</div>
             </section>}
             {local && taskRunning && mode === 'chat' && <button className="p-2 text-xs text-amber-300 border-b border-[#444]" onClick={() => setMode('task')}>Hay una tarea en ejecución · Ver progreso o cancelar</button>}
             {local && !rdp && <div className={mode === 'task' ? 'flex flex-col flex-1 min-h-0' : 'hidden'}><AgentTaskPanel server={server} enabled={accepted} onRunningChange={setTaskRunning} /></div>}
             {(!local || mode === 'chat') && <>
             {local && server && <div className="px-3 py-2 text-xs text-gray-400 border-b border-[#333]" role="note">
-                {rdp ? 'Asistente RDP: orientación sobre Windows a partir de lo que compartís. Pegá errores o resultados para analizarlos; los pasos y comandos se realizan manualmente en el equipo remoto.' : 'El agente propone comandos y solicita permiso antes de ejecutarlos por SSH.'}
+                {rdp ? 'Asistente RDP: orientación sobre Windows a partir de lo que compartís. Compartí texto o una captura revisada para analizar lo visible. Los pasos y comandos se realizan manualmente en el equipo remoto.' : 'El agente propone comandos y solicita permiso antes de ejecutarlos por SSH.'}
                 {!rdp && <p className="mt-1">Permiso: {permission === 'always' ? 'Automático para este destino' : permission === 'session' ? 'Automático en esta sesión SSH' : 'Preguntar por cada comando'}.</p>}
                 {!rdp && permission !== 'ask' && <button className="text-blue-300 underline" onClick={async () => {
                     setPermission('ask');
@@ -316,6 +321,24 @@ function ServerAssistant({ server }: { server: Server | null }) {
 
             {/* Input */}
             <div className="shrink-0 p-3 border-t border-[#333] bg-[#252526]">
+                {local && rdp && server && <div className="mb-2 space-y-2 text-xs">
+                    <button disabled={!accepted || loading || executing || capturing} className="text-blue-300 underline disabled:opacity-40" onClick={async () => {
+                        const version = requestVersion.current;
+                        setCapturing(true); setCapture(null); setCaptureReviewed(false);
+                        try {
+                            const result = await sendCommand<{ image: string; captured_at: string }>('capture_rdp', { host: server.ip_address, port: server.rdp_port || 3389 });
+                            if (version === requestVersion.current) setCapture(result);
+                        } catch (error) { toast.error(error instanceof Error ? error.message : 'No se pudo capturar RDP.'); }
+                        finally { setCapturing(false); }
+                    }}>{capturing ? 'Capturando escritorio…' : 'Adjuntar captura del RDP'}</button>
+                    <p className="text-gray-400">Requiere un modelo con visión. Cada captura se revisa antes del envío; no hay observación continua.</p>
+                    {capture && <div className="space-y-2 rounded border border-[#444] p-2">
+                        <img src={capture.image} alt="Vista previa de la captura RDP que se enviará" className="w-full max-h-48 object-contain" />
+                        <p>Captura de {new Date(capture.captured_at).toLocaleTimeString()}. Revisá que sea el escritorio correcto y no contenga información que no quieras compartir. Si aparece negra, descartala.</p>
+                        <label className="flex gap-2"><input type="checkbox" checked={captureReviewed} onChange={event => setCaptureReviewed(event.target.checked)} />Revisé la imagen y autorizo enviarla con mi próxima pregunta a {configuration?.provider || 'mi proveedor IA'}.</label>
+                        <button className="text-gray-300 underline" onClick={() => { setCapture(null); setCaptureReviewed(false); }}>Descartar captura</button>
+                    </div>}
+                </div>}
                 {executing && <button className="text-xs text-red-300 mb-2 underline" onClick={() => { setPermission('ask'); automaticSteps.current = 10; void sendCommand('local_chat_cancel').catch(() => toast.error('No se pudo confirmar la detención.')); if (server && sshSession) void sendCommand('local_chat_revoke', { server_id: server.id, session_id: sshSession }).catch(() => toast.error('No se pudo revocar el permiso.')); }}>Detener comando · los cambios no se revierten</button>}
                 {automaticSteps.current >= 10 && <p className="text-xs text-amber-300 mb-2">Límite de 10 pasos automáticos alcanzado. Revisá los resultados antes de continuar.</p>}
                 <div className="relative">
@@ -340,7 +363,7 @@ function ServerAssistant({ server }: { server: Server | null }) {
                            ${input.trim() ? 'bg-blue-600 text-white hover:bg-blue-500' : 'bg-[#333] text-gray-500 cursor-not-allowed'}
                        `}
                         onClick={handleSend}
-                        disabled={loading || historyLoading || clearingHistory || !input.trim() || !server || !accepted || waitingForTemporarySsh}
+                        disabled={loading || historyLoading || clearingHistory || !input.trim() || !server || !accepted || waitingForTemporarySsh || capturing || (!!capture && !captureReviewed)}
                         aria-label="Enviar consulta a la IA"
                     >
                         <Send className="w-3.5 h-3.5" />

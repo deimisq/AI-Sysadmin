@@ -354,6 +354,11 @@ namespace AiSysadminDesktop
                             if (!_closing) MainWebView.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(new { requestId, result }));
                             return;
                         }
+                        else if (type == "CAPTURE_RDP")
+                        {
+                            var result = CaptureRdp(root.GetProperty("payload"));
+                            MainWebView.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(new { requestId, result }));
+                        }
                         else if (type == "START_RDP")
                         {
                             StartRdp(root.GetProperty("payload"));

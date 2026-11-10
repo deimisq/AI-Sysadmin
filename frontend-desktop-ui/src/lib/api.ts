@@ -152,7 +152,7 @@ export interface DiagnosisResponse {
     };
 }
 
-export const diagnoseProblem = (serverId: number | string, problem: string, language: string = "es", contextConsentVersion?: string, selectedEvidence?: import('./ai-evidence').AiEvidence, expectedServer?: Server, terminalSessionId?: string, continuation = false) => {
+export const diagnoseProblem = (serverId: number | string, problem: string, language: string = "es", contextConsentVersion?: string, selectedEvidence?: import('./ai-evidence').AiEvidence, expectedServer?: Server, terminalSessionId?: string, continuation = false, reviewedRdpImage?: string) => {
     const protocol = expectedServer?.connection_protocol || (expectedServer?.os_info.toLowerCase().includes('windows') ? 'rdp' : 'ssh');
     return api.post<DiagnosisResponse>('/agent/diagnose', {
         server_id: Number(serverId),
@@ -160,6 +160,7 @@ export const diagnoseProblem = (serverId: number | string, problem: string, lang
         language,
         context_consent_version: contextConsentVersion,
         ...(continuation ? { continuation: true } : {}),
+        ...(reviewedRdpImage ? { rdp_image: reviewedRdpImage, image_reviewed: true } : {}),
         ...(selectedEvidence ? { evidence: selectedEvidence, evidence_reviewed: true } : {}),
         ...(terminalSessionId ? { terminal_session_id: terminalSessionId } : {}),
         ...(expectedServer ? { expected_target: { address: expectedServer.ip_address, protocol, port: protocol === 'rdp' ? expectedServer.rdp_port || 3389 : expectedServer.ssh_port || 22 } } : {}),

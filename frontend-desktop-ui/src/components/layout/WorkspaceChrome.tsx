@@ -1,6 +1,7 @@
 import { FolderTree, Sparkles, Settings, HelpCircle, Network, Terminal } from 'lucide-react';
 import { useWorkspaceStore } from '../../stores/workspaceStore';
 import { isLocalWorkspace } from '../../lib/workspace-mode';
+import { AppVersionBadge } from '../settings/AppUpdates';
 
 export function ActivityRail() {
     const { sidebarVisible, aiPanelVisible, activeOverlay, toggleSidebar, toggleAIPanel, setActiveOverlay } = useWorkspaceStore();
@@ -20,6 +21,7 @@ export function WorkspaceStatusBar() {
     const local = isLocalWorkspace();
     return <footer className="h-7 shrink-0 px-3 bg-[#191c23] border-t border-[#30333b] text-[11px] text-gray-400 flex items-center gap-4 select-none">
         <span className="flex items-center gap-1.5"><Network size={12} />{local ? 'Desde este equipo' : 'Empresa'}</span>
+        <AppVersionBadge />
         {local && <span title="Sesiones SSH registradas; no incluye conexiones RDP">{sshCount} SSH</span>}
         <span className="truncate min-w-0 flex items-center gap-1.5"><Terminal size={12} className="shrink-0" />{active?.server ? `${active.server.hostname} · ${active.server.ip_address}` : 'Sin conexión seleccionada'}</span>
         <button onClick={toggleAIPanel} aria-pressed={aiPanelVisible} className="ml-auto whitespace-nowrap hover:text-blue-300 flex items-center gap-1.5"><Sparkles size={12} />Acompañante IA</button>

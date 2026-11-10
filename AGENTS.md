@@ -9,13 +9,13 @@ Estas instrucciones aplican a todo el repositorio. Mantener este documento actua
 - Revisar `git status` y el diff antes de añadir archivos. Incluir todo el trabajo autorizado, sin incorporar cambios ajenos que no se comprendan. No subir claves API, contraseñas, claves privadas, archivos de usuario, copias de seguridad ni archivos `.env`.
 - No versionar instaladores, ZIP, dependencias o herramientas locales: se generan y distribuyen mediante Actions/Releases. Respetar los archivos excluidos por Git.
 - No reescribir el historial ni usar force push para cerrar una tarea. Si el push falla, conservar el trabajo y explicar el bloqueo; no afirmar que se publicó.
-- Cada push a una rama que contenga el workflow de Windows inicia pruebas, compilación y publicación de una prerelease con instalador x64, ZIP portable y hashes SHA256. Comprobar que se inició y comunicar su estado real; si se informa éxito de compilación o publicación, verificarlo primero. Corregir los fallos introducidos por la tarea.
+- Cada push a una rama que contenga el workflow de Windows inicia pruebas, compilación y publicación con instalador x64, ZIP portable y hashes SHA256. `testing` publica el canal que consulta el actualizador; otras ramas publican prereleases. Comprobar que se inició y comunicar su estado real; si se informa éxito de compilación o publicación, verificarlo primero. Corregir los fallos introducidos por la tarea.
 - En la respuesta final indicar qué cambió, qué se verificó y el commit o enlace de GitHub pertinente. Si no hubo cambios, no crear commits vacíos.
 
 ## Documentación, versionado y coherencia del proyecto
 
 - Mantener siempre actualizada toda la documentación del proyecto conforme a su comportamiento real. En cada tarea, revisar y actualizar los documentos afectados: README, guías de uso y desarrollo, configuración, arquitectura, instalación, migración, pruebas y distribución. Eliminar o corregir instrucciones obsoletas, enlaces rotos y ejemplos que ya no funcionen.
-- Mantener actualizado el versionado y sus referencias. Cuando cambie la aplicación o se prepare una distribución, incrementar la versión correspondiente y sincronizar los valores relacionados del proyecto, ensamblado, instalador, manifiestos y documentación. Respetar los componentes con versionado independiente; no igualar versiones legacy sin motivo ni aumentar versiones de producto por cambios exclusivamente documentales.
+- Mantener actualizado el versionado y sus referencias según la política de Windows de esta guía: CI asigna automáticamente una compilación nueva por ejecución; no aumentar manualmente varios números para cada tarea. Sincronizar instalador, manifiestos y documentación desde esa versión única. Respetar componentes con versionado independiente y no igualar versiones legacy sin motivo.
 - Mantener las notas de versión o el registro de cambios aplicable al día con las funcionalidades, correcciones, cambios de compatibilidad y pasos de migración que correspondan. Distinguir lo implementado, lo verificado y lo pendiente; no documentar resultados o publicaciones que no se hayan comprobado.
 - Revisar también los metadatos, scripts, ejemplos de configuración, dependencias y workflows afectados para que código, documentación y distribución sean coherentes. Actualizar archivos de bloqueo cuando se modifiquen dependencias.
 - La documentación y el versionado forman parte de la entrega: verificar su coherencia antes del commit y subir sus cambios junto con la tarea. No dejar estas actualizaciones para una tarea posterior.
@@ -25,9 +25,17 @@ Estas instrucciones aplican a todo el repositorio. Mantener este documento actua
 - La aplicación Windows vigente es WPF con WebView2 en [apps/windows](apps/windows), con interfaz React/TypeScript/Vite en [frontend-desktop-ui](frontend-desktop-ui). Evitar confundirla con implementaciones legacy del repositorio.
 - Usar el SDK fijado en [global.json](global.json) y Node 22 para el frontend. Las herramientas de `.preview-tools` son específicas del entorno y no deben versionarse.
 - Empaquetado: [scripts/package-windows.ps1](scripts/package-windows.ps1). Validación: [scripts/test-windows-package.ps1](scripts/test-windows-package.ps1). El proceso completo se documenta en [docs/WINDOWS_DISTRIBUTION.md](docs/WINDOWS_DISTRIBUTION.md).
-- Mantener una versión nueva y coherente al generar una nueva distribución de escritorio. El empaquetador rechaza sobrescribir una versión ya generada; CI añade un sufijo único por ejecución.
+- Mantener una versión nueva y coherente al generar una nueva distribución de escritorio. El empaquetador rechaza sobrescribir una versión ya generada; CI asigna el número de compilación según la política de versiones cortas indicada abajo.
 - Usar pruebas proporcionales a los cambios. Las pruebas Windows están en [apps/windows.Tests](apps/windows.Tests); el frontend ofrece `npm test` y `npm run build`.
 - Algunas pruebas requieren DPAPI con el perfil real de Windows; las de integración SSH/SFTP requieren `AI_AGENT_SSH_LAB_PYTHON` con asyncssh. Distinguir pruebas omitidas de pruebas ejecutadas. Nunca usar equipos reales del usuario como fixtures sin autorización.
+
+## Versionado de Windows y actualizaciones
+
+- Usar versiones visibles cortas `MAYOR.MENOR.COMPILACIÓN` (ejemplo `0.11.12`). La fuente de la línea es `<Version>0.11.0</Version>` en el proyecto Windows. CI toma MAYOR.MENOR y asigna `GITHUB_RUN_NUMBER` a COMPILACIÓN; MSBuild deriva AssemblyVersion/FileVersion sin duplicarlas en el proyecto. No agregar sufijos preview/ci/intento/hash al número visible.
+- Mostrar el commit por separado en Ayuda y las notas de release. No resetear el contador/recrear el workflow sin incrementar la línea MAYOR.MENOR. Los reintentos conservan versión; no sobrescribir releases ni assets publicados. Las builds locales usan la versión base o un `-PackageVersion` explícito para validación aislada.
+- Mantener [docs/releases/WINDOWS_0.11.md](docs/releases/WINDOWS_0.11.md) actualizado con los cambios de la línea; esas notas se incluyen en los paquetes y releases. Consultar [docs/WINDOWS_UPDATES.md](docs/WINDOWS_UPDATES.md) para el proceso completo.
+- El actualizador consulta metadatos al iniciar y permite buscar manualmente. Descargar, instalar y reiniciar requieren aprobación del usuario por separado. Verificar tamaño y SHA256 del asset de GitHub antes de ejecutarlo, rechazar downgrades y mantener la app abierta hasta aprobar el reinicio. No reiniciar Windows automáticamente.
+- Para releases privados, usar un token GitHub de lectura guardado con DPAPI, separado de credenciales IA. No incrustar tokens en binarios, logs o repositorio ni reenviarlos a hosts de descarga después de redirecciones. Probar siempre con datos y aplicaciones sintéticos.
 
 ## Terminal y acompañante IA
 

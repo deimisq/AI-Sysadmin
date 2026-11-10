@@ -84,3 +84,6 @@ Get-ChildItem $output -File | Where-Object { $_.Extension -in '.zip','.exe' } | 
     "{0}  {1}" -f (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant(),$_.Name
 } | Set-Content (Join-Path $output 'SHA256SUMS.txt') -Encoding ASCII
 Write-Output "Paquetes generados en $output"
+if (Test-Path (Join-Path $projectRoot 'docs/releases/WINDOWS_0.11.md')) {
+    Copy-Item -LiteralPath (Join-Path $projectRoot 'docs/releases/WINDOWS_0.11.md') -Destination (Join-Path $output 'RELEASE_NOTES.md')
+}

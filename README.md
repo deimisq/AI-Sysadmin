@@ -7,7 +7,7 @@
 [![Docker](https://img.shields.io/badge/docker-ready-blue.svg)](docker-compose.yml)
 [![Status](https://img.shields.io/badge/status-validaci%C3%B3n_V2-orange.svg)](docs/REPARACIONES_V2.md)
 
-> **Cliente Windows 0.10.0-preview.9:** actualizado a .NET 10, con instalador por usuario y ZIP portable que incluyen el runtime. Consultá [compilación, instalación y límites de distribución](docs/WINDOWS_DISTRIBUTION.md). Es una compilación de prueba sin firma comercial; requiere WebView2.
+> **Cliente Windows 0.11.N:** versiones cortas, versión visible en la app y Ayuda, comprobación de releases y actualización integrada con aprobación para descargar, instalar y reiniciar. Instalador por usuario y ZIP portable con .NET 10 incluido. Consultá [versionado y actualizaciones](docs/WINDOWS_UPDATES.md). Consultá [compilación, instalación y límites de distribución](docs/WINDOWS_DISTRIBUTION.md). Es una compilación de prueba sin firma comercial; requiere WebView2.
 
 > Arquitectura V2: web, interfaz de escritorio y shell Windows separados. Consulta [las reparaciones y validaciones actuales](docs/REPARACIONES_V2.md) antes de desplegar.
 
@@ -38,7 +38,7 @@ AI Sysadmin Agent is an advanced platform for intelligent server management, dia
 - `backend/`: **FastAPI (Python)** application. Handles logic, DB, and AI.
 - `frontend-web/`: aplicación web **Next.js**.
 - `frontend-desktop-ui/`: interfaz de escritorio **React/Vite**.
-- `apps/windows/`: shell nativo **.NET 8 / WPF / WebView2**.
+- `apps/windows/`: shell nativo **.NET 10 / WPF / WebView2**.
 - `docs/`: Complete project documentation.
 
 ## 📚 Documentation Index

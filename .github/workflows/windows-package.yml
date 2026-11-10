@@ -21,8 +21,8 @@ jobs:
         shell: pwsh
         run: |
           $base = ([xml](Get-Content apps/windows/AiSysadmin.csproj -Raw)).Project.PropertyGroup.Version | Where-Object { $_ } | Select-Object -First 1
-          $separator = if ($base.Contains('-')) { '.' } else { '-' }
-          $version = "$base${separator}ci.$env:GITHUB_RUN_NUMBER.$env:GITHUB_RUN_ATTEMPT"
+          $parts = $base.Split('.')
+          $version = "$($parts[0]).$($parts[1]).$env:GITHUB_RUN_NUMBER"
           "version=$version" >> $env:GITHUB_OUTPUT
           "tag=windows-$version" >> $env:GITHUB_OUTPUT
       - uses: actions/setup-node@v4
@@ -87,6 +87,9 @@ jobs:
       - name: Verify closing an older version on upgrade
         shell: powershell
         run: ./scripts/test-installer-upgrade.ps1 -Iscc $env:INNO_COMPILER
+      - name: Verify installing before an approved restart
+        shell: powershell
+        run: ./scripts/test-installer-upgrade.ps1 -Iscc $env:INNO_COMPILER -KeepOldRunning
       - uses: actions/upload-artifact@v4
         with:
           name: windows-installers
@@ -94,6 +97,7 @@ jobs:
             dist/windows/*/*.zip
             dist/windows/*/*.exe
             dist/windows/*/SHA256SUMS.txt
+            dist/windows/*/RELEASE_NOTES.md
           if-no-files-found: error
           retention-days: 14
 
@@ -124,7 +128,11 @@ jobs:
           asset_dir="$(dirname "${checksum_files[0]}")"
           (cd "$asset_dir" && sha256sum --check SHA256SUMS.txt)
           printf 'Compilación automática de Windows x64.\n\nRama: `%s`\nCommit: `%s`\n\nDescargá el instalador `*-setup.exe` o el ZIP portable. Incluye el runtime .NET y requiere WebView2 Runtime. Esta compilación de prueba no está firmada.\n' "$SOURCE_REF" "$SOURCE_SHA" > release-notes.md
+          if [[ -f "$asset_dir/RELEASE_NOTES.md" ]]; then printf '\n' >> release-notes.md; cat "$asset_dir/RELEASE_NOTES.md" >> release-notes.md; fi
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then echo "Release already published; keeping immutable assets."; exit 0; fi
+          release_flags=(--prerelease --latest=false)
+          if [[ "$SOURCE_REF" == "testing" ]]; then release_flags=(--latest); fi
           gh release create "$RELEASE_TAG" "$asset_dir"/*.exe "$asset_dir"/*.zip "$asset_dir"/SHA256SUMS.txt \
             --target "$SOURCE_SHA" --title "Windows $RELEASE_VERSION" \
-            --notes-file release-notes.md --prerelease --latest=false
+            --notes-file release-notes.md "${release_flags[@]}"
           printf '### Descargas\n\n[Windows %s](https://github.com/%s/releases/tag/%s)\n' "$RELEASE_VERSION" "$GH_REPO" "$RELEASE_TAG" >> "$GITHUB_STEP_SUMMARY"

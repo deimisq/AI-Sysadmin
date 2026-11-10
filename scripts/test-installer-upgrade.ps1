@@ -1,5 +1,5 @@
 [CmdletBinding()]
-param([string]$Iscc = 'H:/Proyectos/ai_agent/.preview-tools/inno/ISCC.exe')
+param([string]$Iscc = 'H:/Proyectos/ai_agent/.preview-tools/inno/ISCC.exe', [switch]$KeepOldRunning)
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $sandbox = Join-Path $projectRoot ('.preview-tools/installer-upgrade-tests/' + [Guid]::NewGuid().ToString('N'))
@@ -15,8 +15,12 @@ using System;
 using System.IO;
 using System.Windows.Forms;
 public class UpgradeFixture : Form {
+    private Timer shutdown;
     protected override void OnLoad(EventArgs e) {
         File.WriteAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ready.txt"), "ready");
+        shutdown = new Timer { Interval=100 };
+        shutdown.Tick += delegate { if(File.Exists(Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"close.request"))) Close(); };
+        shutdown.Start();
         base.OnLoad(e);
     }
     protected override void OnFormClosing(FormClosingEventArgs e) {
@@ -45,8 +49,14 @@ try {
         Start-Sleep -Milliseconds 100; $running.Refresh()
     }
     $setup = Join-Path $sandbox 'AI-Sysadmin-Agent-upgrade-test-win-x64-setup.exe'
-    $process = Start-Process -FilePath $setup -ArgumentList '/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/NOICONS',"/DIR=`"$install`"","/LOG=`"$(Join-Path $sandbox 'upgrade.log')`"" -WindowStyle Hidden -Wait -PassThru
+    $closeMode = if($KeepOldRunning) { '/NOCLOSEAPPLICATIONS' } else { '/CLOSEAPPLICATIONS' }
+    $process = Start-Process -FilePath $setup -ArgumentList '/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/NOICONS',$closeMode,"/DIR=`"$install`"","/LOG=`"$(Join-Path $sandbox 'upgrade.log')`"" -WindowStyle Hidden -Wait -PassThru
     if ($process.ExitCode -ne 0) { throw "Falló la actualización aislada: $($process.ExitCode)." }
+    if($KeepOldRunning) {
+        $running.Refresh()
+        if($running.HasExited) { throw 'La instalación integrada cerró la versión anterior antes de aprobar el reinicio.' }
+        Set-Content -LiteralPath (Join-Path $old 'close.request') -Value 'approved restart fixture'
+    }
     if (-not $running.WaitForExit(10000)) { throw 'La versión anterior sigue abierta.' }
     if (-not (Test-Path -LiteralPath (Join-Path $old 'closed.txt'))) { throw 'La versión anterior no recibió un cierre normal.' }
     if (-not (Test-Path -LiteralPath (Join-Path $install 'versions/upgrade-test/AiSysadmin.exe'))) { throw 'La versión nueva no se instaló.' }

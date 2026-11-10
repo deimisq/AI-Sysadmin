@@ -42,7 +42,7 @@ export async function sendCommand<T = any>(command: string, payload: Record<stri
             if (event.data.error) reject(new Error(event.data.error));
             else resolve(event.data.result as T);
         };
-        const timer = setTimeout(() => { cleanup(); reject(new Error(`Tiempo de espera agotado: ${command}`)); }, command === 'local_chat_execute' ? 24 * 60 * 60 * 1000 : command === 'local_ai_diagnose' ? 130000 : 35000);
+        const timer = setTimeout(() => { cleanup(); reject(new Error(`Tiempo de espera agotado: ${command}`)); }, ['update_download', 'update_install'].includes(command) ? 16 * 60 * 1000 : command === 'local_chat_execute' ? 24 * 60 * 60 * 1000 : command === 'local_ai_diagnose' ? 130000 : 35000);
         host.addEventListener('message', handler);
         try { host.postMessage({ type: commands[command] || command.toUpperCase(), requestId, payload }); }
         catch (error) { cleanup(); reject(error); }

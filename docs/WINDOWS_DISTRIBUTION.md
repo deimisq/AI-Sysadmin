@@ -1,9 +1,9 @@
-# Distribución Windows — 0.10.0-preview.9
+# Distribución Windows
 
 El cliente local usa .NET 10 LTS. Esta entrega produce dos artefactos **de prueba**, sin firma comercial:
 
-- `AI-Sysadmin-Agent-0.10.0-preview.9-win-x64-setup.exe`: instalación por usuario, accesos directos y desinstalador.
-- `AI-Sysadmin-Agent-0.10.0-preview.9-win-x64-portable.zip`: extraer todo el contenido y abrir `AiSysadmin.exe`.
+- `AI-Sysadmin-Agent-0.11.N-win-x64-setup.exe`: instalación por usuario, accesos directos y desinstalador.
+- `AI-Sysadmin-Agent-0.11.N-win-x64-portable.zip`: extraer todo el contenido y abrir `AiSysadmin.exe`.
 
 Ambos incluyen el runtime .NET; no requieren que el técnico instale un SDK o runtime .NET por separado. Requieren **WebView2 Evergreen Runtime** instalado. El instalador comprueba sus entradas de registro y, si falta, indica la descarga oficial; no lo descarga ni instala de manera oculta.
 
@@ -56,6 +56,8 @@ En el otro equipo, abrir la misma sección, seleccionar el archivo, ingresar su 
 
 ## Compilar
 
+La política de versiones cortas, el acceso a GitHub privado y el flujo de descarga, instalación y reinicio aprobados se describen en [Versiones y actualizaciones](WINDOWS_UPDATES.md). La versión actual se consulta en la barra inferior y en Ayuda.
+
 Requisitos de desarrollo: SDK indicado en [global.json](../global.json), Node 22, dependencias del frontend (`npm ci` en el cliente) e Inno Setup 6.7.3 o compatible. Las herramientas descargadas en `.preview-tools` son locales del entorno y no se distribuyen.
 
 Desde PowerShell en la raíz:
@@ -73,20 +75,20 @@ Se valida la presencia del ejecutable, runtime, loader WebView2 y bundle. Se rec
 ## Verificar
 
 ```powershell
-./scripts/test-windows-package.ps1 -PackageDirectory ./dist/windows/0.10.0-preview.9
+./scripts/test-windows-package.ps1 -PackageDirectory ./dist/windows/0.11.N
 ```
 
 La prueba extrae el ZIP en un directorio nuevo dentro de `.preview-tools/package-tests`, comprueba los hashes y valida el contenido. Para probar instalación/desinstalación:
 
 ```powershell
-./scripts/test-windows-package.ps1 -PackageDirectory ./dist/windows/0.10.0-preview.9 -ExerciseInstaller
+./scripts/test-windows-package.ps1 -PackageDirectory ./dist/windows/0.11.N -ExerciseInstaller
 ```
 
 La segunda opción se niega a usar una instalación ya registrada. Instala en una carpeta aislada, sin iniciar la aplicación ni crear iconos, verifica archivos, ejecuta su desinstalador y comprueba que el inventario/los accesos directos previos no cambiaron. No prueba todavía la interfaz de la aplicación instalada, una actualización sobre una instalación anterior o una cuenta Windows diferente.
 
 El flujo [windows-package.yml](../.github/workflows/windows-package.yml) se ejecuta con cada push a una rama y también permite ejecución manual. Ejecuta las pruebas del cliente, genera los paquetes y verifica la instalación, desinstalación y cierre de la versión anterior durante una actualización. Solo publica si todos los controles terminan correctamente.
 
-Cada ejecución publica una prerelease en [GitHub Releases](https://github.com/deimisq/AI-Sysadmin/releases), con el instalador Windows x64 `*-setup.exe`, el ZIP portable y `SHA256SUMS.txt`. La versión añade `ci.<número de ejecución>.<intento>` a la versión base del proyecto, evitando colisiones entre pushes y reintentos sin modificar archivos de versión. Las notas identifican la rama y el commit exacto. Los paquetes también se conservan como artefactos de Actions durante 14 días; los adjuntos del release permanecen disponibles.
+Cada ejecución de `testing` publica una versión del canal de actualización integrado en [GitHub Releases](https://github.com/deimisq/AI-Sysadmin/releases), con el instalador Windows x64 `*-setup.exe`, el ZIP portable y `SHA256SUMS.txt`. La versión es `MAYOR.MENOR.N`, donde `N` es el número de ejecución del workflow. No lleva sufijos de CI, intento o commit. Los reintentos conservan la versión y no reemplazan releases publicados. Otras ramas generan prereleases que el actualizador ignora. Las notas identifican la rama y el commit exacto. Los paquetes también se conservan como artefactos de Actions durante 14 días; los adjuntos del release permanecen disponibles.
 
 La publicación usa el token automático de GitHub con permiso de escritura limitado al job de release; no requiere configurar un token personal. Al ser privado el repositorio, las descargas requieren acceso al repositorio. Las compilaciones actuales son de prueba y no están firmadas. Si falla una ejecución, revisar Actions y volver a ejecutarla después de corregir el problema. Los antiguos flujos del servidor y de sincronización pública no publican automáticamente desde este repositorio.
 

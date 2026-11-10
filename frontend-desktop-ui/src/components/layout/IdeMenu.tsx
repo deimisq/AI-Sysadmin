@@ -11,6 +11,7 @@ export function IdeMenu() {
             { label: 'Configuración…', action: () => state.setActiveOverlay('settings') },
         ] },
         { label: 'Conexiones', items: [
+            { label: 'Exportar / importar conexiones…', action: () => state.openPreferences('backups') },
             { label: 'Catálogo de conexiones', action: () => state.setActiveOverlay('catalog') },
             { label: 'Buscar conexión…', action: () => window.dispatchEvent(new Event('workspace-command-palette')) },
             { label: 'Buscar en el árbol', action: () => state.requestExplorerAction('search') },

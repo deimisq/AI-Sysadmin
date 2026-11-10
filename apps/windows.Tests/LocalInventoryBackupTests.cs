@@ -35,6 +35,22 @@ public sealed class LocalInventoryBackupTests : IDisposable
         var mapped=layout.GetProperty("assignments").GetProperty("2").GetString(); Assert.NotEqual("infra",mapped);
         Assert.Contains(layout.GetProperty("folders").EnumerateArray(),folder=>folder.GetProperty("id").GetString()==mapped);
     }
+    [Fact] public void PortableCopyCanEmbedExternalKeysWithoutChangingTheSource()
+    {
+        var source = Setup("source"); var target = Setup("target");
+        var path = Path.Combine(_directory,"key.pem");
+        const string key = "-----BEGIN OPENSSH PRIVATE KEY-----\nsynthetic\n-----END OPENSSH PRIVATE KEY-----";
+        File.WriteAllText(path,key);
+        source.Handle("PUT","/servers/1",Body(new { ssh_key_path=path }));
+        var encoded = source.ExportBackup(Password,true);
+        File.Delete(path);
+        var preview = target.PreviewBackup(encoded,Password);
+        Assert.Equal(0,preview.GetProperty("external_key_files").GetInt32());
+        target.ImportBackup(encoded,Password,preview.GetProperty("hash").GetString()!,true,Guid.NewGuid().ToString());
+        Assert.Equal(key,target.Handle("GET","/servers/2/credentials",default).GetProperty("ssh_key_path").GetString());
+        Assert.Equal(path,source.Handle("GET","/servers/1/credentials",default).GetProperty("ssh_key_path").GetString());
+        Assert.Throws<InvalidOperationException>(() => source.ExportBackup(Password,true));
+    }
     [Fact] public void WrongPasswordAndTamperingNeverChangeTheTarget()
     {
         var source=Setup("source"); var target=Setup("target"); var encoded=source.ExportBackup(Password);

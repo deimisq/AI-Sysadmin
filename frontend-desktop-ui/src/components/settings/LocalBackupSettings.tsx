@@ -8,6 +8,7 @@ type Preview = { hash: string; created_at: string; connections: number; folders:
 export function LocalBackupSettings() {
     const [password, setPassword] = useState('');
     const [repeat, setRepeat] = useState('');
+    const [includeKeyFiles, setIncludeKeyFiles] = useState(true);
     const [data, setData] = useState('');
     const [preview, setPreview] = useState<Preview | null>(null);
     const [confirmed, setConfirmed] = useState(false);
@@ -20,18 +21,19 @@ export function LocalBackupSettings() {
         try { await work(); } catch (error) { setMessage(error instanceof Error ? error.message : 'La operación falló.'); }
         finally { setBusy(false); }
     };
-    return <Card><CardHeader><CardTitle>Copia de seguridad local</CardTitle><CardDescription>Conexiones, credenciales guardadas y carpetas en un archivo cifrado portable.</CardDescription></CardHeader>
+    return <Card><CardHeader><CardTitle>Exportar e importar conexiones</CardTitle><CardDescription>Conexiones, credenciales guardadas y carpetas en un archivo cifrado portable.</CardDescription></CardHeader>
         <CardContent className="space-y-4">
-            <p className="text-sm text-muted-foreground">La contraseña protege la copia y será necesaria para restaurarla en otro equipo. No podemos recuperarla. No se incluyen la clave del proveedor IA, chats, diarios de terminal ni tareas. Las claves SSH pegadas se incluyen; los archivos externos solo conservan su ruta y deben copiarse por separado.</p>
+            <p className="text-sm text-muted-foreground">La contraseña protege la copia y será necesaria para restaurarla en otro equipo. No podemos recuperarla. No se incluyen la clave del proveedor IA, chats, diarios de terminal ni tareas. Las claves SSH pegadas se incluyen. Si activás incluir archivos de claves, se guardan cifrados dentro de la copia; de lo contrario, solo se conserva su ruta.</p>
             <label className="block space-y-1">Contraseña de la copia (mínimo 12 caracteres)<Input type="password" autoComplete="new-password" maxLength={1024} value={password} disabled={busy} onChange={event => { setPassword(event.target.value); resetPreview(); }} /></label>
             <label className="block space-y-1">Repetir contraseña para crear una copia<Input type="password" autoComplete="new-password" value={repeat} disabled={busy} onChange={event => setRepeat(event.target.value)} /></label>
             <Button disabled={busy || password.length < 12 || password !== repeat} onClick={() => action(async () => {
-                const result = await sendCommand<{ data: string }>('local_backup_export',{ password });
+                const result = await sendCommand<{ data: string }>('local_backup_export',{ password, include_key_files: includeKeyFiles });
                 const bytes = Uint8Array.from(atob(result.data),char => char.charCodeAt(0));
                 const url = URL.createObjectURL(new Blob([bytes],{ type: 'application/octet-stream' }));
                 const link = document.createElement('a'); link.href = url; link.download = `inventario-${new Date().toISOString().slice(0,10)}.aisysbackup`; link.click(); setTimeout(() => URL.revokeObjectURL(url),1000);
                 setPassword(''); setRepeat(''); setPreview(null); setConfirmed(false); setMessage('Copia cifrada preparada para descargar. Comprobá que el archivo se haya guardado.');
-            })}>Descargar copia cifrada</Button>
+            })}>Exportar conexiones y credenciales</Button>
+            <label className="flex gap-2 text-sm"><input type="checkbox" checked={includeKeyFiles} disabled={busy} onChange={event => setIncludeKeyFiles(event.target.checked)} />Incluir el contenido de los archivos de claves privadas SSH en la copia cifrada para usarlos en otro equipo.</label>
             <div className="border-t pt-4 space-y-3"><h3 className="font-semibold">Restaurar una copia</h3><p className="text-sm text-muted-foreground">Agrega conexiones y carpetas con identificadores nuevos. Conserva lo existente; puede generar conexiones duplicadas. La copia se valida antes de guardar cambios.</p>
                 <Input aria-label="Archivo de copia cifrada" type="file" accept=".aisysbackup" disabled={busy} onChange={event => {
                     resetPreview(); setData(''); const file = event.target.files?.[0]; if (!file) return;

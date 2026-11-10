@@ -48,7 +48,7 @@ public partial class MainWindow
             return JsonSerializer.SerializeToElement(await _terminalContexts.ListAsync());
         }
         var password = payload.GetProperty("password").GetString() ?? "";
-        if (type == "LOCAL_BACKUP_EXPORT") return JsonSerializer.SerializeToElement(new { data = _localConnections.ExportBackup(password) });
+        if (type == "LOCAL_BACKUP_EXPORT") return JsonSerializer.SerializeToElement(new { data = _localConnections.ExportBackup(password, payload.TryGetProperty("include_key_files", out var includeKeys) && includeKeys.ValueKind == JsonValueKind.True) });
         var data = payload.GetProperty("data").GetString() ?? "";
         if (type == "LOCAL_BACKUP_PREVIEW") return _localConnections.PreviewBackup(data, password);
         return _localConnections.ImportBackup(data, password, payload.GetProperty("hash").GetString() ?? "",

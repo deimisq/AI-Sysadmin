@@ -38,6 +38,16 @@ public sealed class InteractiveChatExecutorTests
         task = executor.ExecuteAsync("session", "sleep 60", _ => {}, CancellationToken.None);
         executor.Close("session"); Assert.Equal("disconnected", (await task).Status);
     }
+    [Fact] public async Task RecognizesPromptAfterCarriageReturnAndSplitOscTitles() {
+        var executor = Ready();
+        var task = executor.ExecuteAsync("session", "apt list --upgradable", _ => {}, CancellationToken.None);
+        Data(executor, "apt list --upgradable\r\nListing...\rDone\r\nexample package\r\nold progress\r\u001b]0;root@host: ~\u001b");
+        Assert.False(task.IsCompleted);
+        Data(executor, "\\\u001b[?2004h\u001b[32mroot@host:~#\u001b[0m ");
+        var result = await task.WaitAsync(TimeSpan.FromSeconds(2));
+        Assert.Equal("prompt_returned", result.Status);
+        Assert.Contains("example package", result.Output);
+    }
     [Fact] public async Task BusyTerminalDoesNotReceiveACommand() {
         var executor = Ready(); Data(executor, "apt update\r\nWaiting for headers");
         await Assert.ThrowsAsync<InvalidOperationException>(() => executor.ExecuteAsync("session", "id", _ => throw new Exception("Must not write"), CancellationToken.None));

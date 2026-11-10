@@ -19,8 +19,22 @@ public sealed class InteractiveChatExecutor
         public readonly TaskCompletionSource<LocalTaskAgent.Observation> Completion = new(TaskCreationOptions.RunContinuationsAsynchronously);
     }
     private readonly ConcurrentDictionary<string, Terminal> _terminals = new();
-    private static string Plain(string text) => Regex.Replace(text, @"\x1B(?:\][^\x07]*(?:\x07)|\[[0-?]*[ -/]*[@-~])", "", RegexOptions.None, TimeSpan.FromMilliseconds(100));
-    private static string LastLine(string text) => text.Replace("\r", "").Split('\n')[^1];
+    private static string Plain(string text) => Regex.Replace(text, @"\x1B(?:\][^\x07\x1B]*(?:\x07|\x1B\\)|\[[0-?]*[ -/]*[@-~]|[()][A-Z0-9]|[=>])", "", RegexOptions.None, TimeSpan.FromMilliseconds(100));
+    private static string LastLine(string text) {
+        // PTY output is a stream: CR and backspace move the cursor, rather than
+        // extending the visible prompt. Bash also changes bracketed-paste mode.
+        var line = new StringBuilder(); var cursor = 0;
+        foreach (var character in text) {
+            if (character == '\n') { line.Clear(); cursor = 0; }
+            else if (character == '\r') { line.Clear(); cursor = 0; }
+            else if (character == '\b') { if (cursor > 0) { cursor--; line.Length = cursor; } }
+            else if (!char.IsControl(character)) {
+                if (cursor < line.Length) line[cursor] = character; else line.Append(character);
+                cursor++;
+            }
+        }
+        return line.ToString().TrimEnd();
+    }
     private static void AppendBounded(StringBuilder target, string text) {
         target.Append(text);
         if (target.Length > 24000) target.Remove(0, target.Length - 24000);
@@ -36,7 +50,7 @@ public sealed class InteractiveChatExecutor
             if (terminal.Pending is not { } pending) return;
             pending.Truncated |= pending.Output.Length + text.Length > 24000;
             AppendBounded(pending.Output, text);
-            var last = LastLine(Plain(pending.Output.ToString()));
+            var last = LastLine(Plain(terminal.Recent.ToString()));
             var version = ++pending.Version;
             var returned = last == pending.Prompt || (pending.Prefix.Length > 0 && last.StartsWith(pending.Prefix, StringComparison.Ordinal) && Regex.IsMatch(last[pending.Prefix.Length..], @"^[^#$%]*[#$%] ?$"));
             if (returned) _ = ConfirmPromptAsync(terminal, pending, version);

@@ -69,7 +69,13 @@ public sealed class ChatCommandService
             using var timeout = new CancellationTokenSource();
             lock (_sync) _cancellation = timeout;
             var result = await _execute(proposal.Session, proposal.Command, timeout.Token);
-            _store.SaveAiTurn(invocation, "Resultado observado de " + proposal.Command + " (estado " + result.Status + ", salida " + (result.ExitCode?.ToString() ?? "no disponible") + (result.Truncated ? ", captura parcial" : "") + "):\n" + result.Output, proposal.Command, "result");
+            // Leave room for the command and metadata in the 24000-character
+            // history entry. Otherwise a long capture silently loses its result.
+            var observation = "Resultado observado de " + proposal.Command + " (estado " + result.Status + ", salida " + (result.ExitCode?.ToString() ?? "no disponible") + "):\n";
+            var available = 24000 - observation.Length - 80;
+            var partial = result.Truncated || result.Output.Length > available;
+            var output = result.Output.Length > available ? result.Output[^available..] : result.Output;
+            _store.SaveAiTurn(invocation, observation + (partial ? "[Captura parcial: se conserva el tramo final de la salida.]\n" : "") + output, proposal.Command, "result");
             return result;
         } finally { lock (_sync) _cancellation = null; _gate.Release(); }
     }

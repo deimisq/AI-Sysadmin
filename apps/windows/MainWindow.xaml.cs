@@ -296,7 +296,7 @@ namespace AiSysadminDesktop
                             var payload = root.GetProperty("payload").Clone();
                             var result = await Task.Run(() => {
                                 var password = payload.GetProperty("password").GetString() ?? "";
-                                if (type == "LOCAL_BACKUP_EXPORT") return JsonSerializer.SerializeToElement(new { data = _localConnections.ExportBackup(password) });
+                                if (type == "LOCAL_BACKUP_EXPORT") return JsonSerializer.SerializeToElement(new { data = _localConnections.ExportBackup(password, payload.TryGetProperty("include_key_files", out var includeKeys) && includeKeys.ValueKind == JsonValueKind.True) });
                                 var data = payload.GetProperty("data").GetString() ?? "";
                                 return type == "LOCAL_BACKUP_PREVIEW" ? _localConnections.PreviewBackup(data,password) : _localConnections.ImportBackup(data,password,payload.GetProperty("hash").GetString() ?? "",payload.TryGetProperty("confirmed",out var confirm) && confirm.ValueKind == JsonValueKind.True,payload.GetProperty("operation_id").GetString() ?? "");
                             });

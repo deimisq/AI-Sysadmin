@@ -101,7 +101,7 @@ public sealed class LocalAiTests : IDisposable
         Setup(); Store.Handle("PUT", "/ai/settings", Settings());
         var handler = new Handler(async request => {
             using var payload = JsonDocument.Parse(await request.Content!.ReadAsStringAsync());
-            using var context = JsonDocument.Parse(payload.RootElement.GetProperty("messages")[1].GetProperty("content").GetString()!);
+            using var context = JsonDocument.Parse(payload.RootElement.GetProperty("messages").EnumerateArray().ToArray()[^4].GetProperty("content").GetString()!);
             Assert.Equal("selected diagnostic evidence", context.RootElement.GetProperty("context").GetProperty("evidence").GetProperty("content").GetString());
             return new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("{\"choices\":[{\"message\":{\"content\":\"Evidence analyzed\"}}]}") };
         });

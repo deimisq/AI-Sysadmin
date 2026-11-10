@@ -29,7 +29,7 @@ public sealed class LocalAiCompanionTests : IDisposable
         journal.Register(session,1,target.Fingerprint);journal.Append(session,Encoding.UTF8.GetBytes("$ systemctl status example\nFailed: connection refused\n"));
         var handler=new Handler(async request=>{
             using var payload=JsonDocument.Parse(await request.Content!.ReadAsStringAsync());
-            using var context=JsonDocument.Parse(payload.RootElement.GetProperty("messages")[1].GetProperty("content").GetString()!);
+            using var context=JsonDocument.Parse(payload.RootElement.GetProperty("messages").EnumerateArray().ToArray()[^4].GetProperty("content").GetString()!);
             Assert.Contains("connection refused",context.RootElement.GetProperty("terminal_context").GetProperty("Transcript").GetString());
             return new HttpResponseMessage(HttpStatusCode.OK){Content=new StringContent("{\"choices\":[{\"message\":{\"content\":\"Suggested next investigation\"}}]}")};
         });
@@ -44,7 +44,7 @@ public sealed class LocalAiCompanionTests : IDisposable
         Setup();
         var handler = new Handler(async request => {
             using var payload = JsonDocument.Parse(await request.Content!.ReadAsStringAsync());
-            var instruction = payload.RootElement.GetProperty("messages")[2].GetProperty("content").GetString();
+            var instruction = payload.RootElement.GetProperty("messages")[1].GetProperty("content").GetString();
             Assert.Contains("modo Conversar", instruction);
             Assert.Contains("Nunca anuncies", instruction);
             var content = "```json\n" + JsonSerializer.Serialize(new { analysis = "Propuesta para revisar el disco", proposed_command = "df -h" }) + "\n```";
@@ -90,7 +90,7 @@ public sealed class LocalAiCompanionTests : IDisposable
             Assert.Equal("¿Qué tal está de salud el servidor?", messages[^1].GetProperty("content").GetString());
             Assert.Contains(messages, message => message.GetProperty("role").GetString() == "assistant" && message.GetProperty("content").GetString()!.Contains("apt update terminó"));
             Assert.Contains(messages, message => message.GetProperty("role").GetString() == "user" && message.GetProperty("content").GetString()!.Contains("native_execution_record"));
-            using var context = JsonDocument.Parse(messages[1].GetProperty("content").GetString()!);
+            using var context = JsonDocument.Parse(messages[^4].GetProperty("content").GetString()!);
             Assert.False(context.RootElement.GetProperty("context").TryGetProperty("conversation", out _));
             Assert.False(context.RootElement.GetProperty("context").TryGetProperty("query", out _));
             return new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(JsonSerializer.Serialize(new { choices = new[] { new { message = new { content = "Faltan datos de carga, memoria y servicios para evaluar su salud." } } } })) };
@@ -113,7 +113,7 @@ public sealed class LocalAiCompanionTests : IDisposable
             using var current = JsonDocument.Parse(messages[^2].GetProperty("content").GetString()!);
             Assert.Equal("technician_new_message", current.RootElement.GetProperty("current_request").GetProperty("origin").GetString());
             Assert.False(current.RootElement.GetProperty("current_request").GetProperty("continue_previous_objective").GetBoolean());
-            using var context = JsonDocument.Parse(messages[1].GetProperty("content").GetString()!);
+            using var context = JsonDocument.Parse(messages[^4].GetProperty("content").GetString()!);
             Assert.Equal(transcript, context.RootElement.GetProperty("terminal_context").GetProperty("Transcript").GetString());
             Assert.Contains("NO supongas", messages[^3].GetProperty("content").GetString());
             if (calls > 0) Assert.Contains(messages, message => message.GetProperty("role").GetString() == "user" && message.GetProperty("content").GetString() == questions[calls - 1]);
@@ -150,8 +150,8 @@ public sealed class LocalAiCompanionTests : IDisposable
         var handler=new Handler(async request=>{
             var payload=await request.Content!.ReadAsStringAsync(); Assert.DoesNotContain("BEGINNING-MUST-NOT-BE-SENT",payload);
             using var json=JsonDocument.Parse(payload);
-            Assert.Contains("PARCIAL",json.RootElement.GetProperty("messages")[2].GetProperty("content").GetString());
-            using var context=JsonDocument.Parse(json.RootElement.GetProperty("messages")[1].GetProperty("content").GetString()!);
+            Assert.Contains("PARCIAL",json.RootElement.GetProperty("messages")[1].GetProperty("content").GetString());
+            using var context=JsonDocument.Parse(json.RootElement.GetProperty("messages").EnumerateArray().ToArray()[^4].GetProperty("content").GetString()!);
             Assert.True(context.RootElement.GetProperty("terminal_context").GetProperty("Truncated").GetBoolean());
             return new HttpResponseMessage(HttpStatusCode.OK){Content=new StringContent("{\"choices\":[{\"message\":{\"content\":\"Analysis with partial context\"}}]}")};
         });

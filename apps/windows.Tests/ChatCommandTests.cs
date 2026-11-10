@@ -28,6 +28,20 @@ public sealed class ChatCommandTests : IDisposable
         Assert.Equal(1, calls); Assert.Equal("ask", service.Permission(1, "session"));
     }
     [Theory]
+    [InlineData(24000)]
+    [InlineData(30000)]
+    public async Task LongCommandOutputIsSavedForTheConversation(int length)
+    {
+        Setup(); var store = Store;
+        var service = new ChatCommandService(store, (_, _, _) => true, (_, command, _) => Task.FromResult(new LocalTaskAgent.Observation(command, new string('x',length) + "final observation", null,"prompt_returned")));
+        var proposal = service.Register(store.PrepareAiInvocation(1,"Inspect"),"session","df -h");
+        await service.ExecuteAsync(Body(new { proposal_id=proposal,scope="once" }));
+        var history = store.Handle("GET","/servers/1/history",default).EnumerateArray().ToArray();
+        var result = Assert.Single(history, turn => turn.GetProperty("kind").GetString() == "result");
+        Assert.Contains("final observation", result.GetProperty("analysis").GetString());
+        Assert.Contains("Captura parcial", result.GetProperty("analysis").GetString());
+    }
+    [Theory]
     [InlineData("session")]
     [InlineData("always")]
     public async Task GrantsAreScopedAndRevocable(string scope)

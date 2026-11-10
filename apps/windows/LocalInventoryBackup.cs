@@ -35,13 +35,22 @@ public sealed partial class LocalConnectionStore
     {
         if (password.Length is < 12 or > 1024) throw new ArgumentException("La contraseña de la copia debe tener entre 12 y 1024 caracteres.");
     }
-    public string ExportBackup(string password) => WithInventory(data =>
+    public string ExportBackup(string password, bool includeKeyFiles = false) => WithInventory(data =>
     {
         Password(password);
         // The native folder migration must finish before promising a complete inventory copy.
         if (data.Folders == null) throw new InvalidOperationException("Abrí el inventario para migrar las carpetas antes de crear una copia.");
         ValidateFolders(data.Folders,data.Servers.Select(s => s.Id).ToHashSet());
-        var plain = JsonSerializer.SerializeToUtf8Bytes(new PortableInventory(1,DateTimeOffset.UtcNow,data.Servers,data.Folders),Json);
+        var servers = JsonSerializer.Deserialize<List<Connection>>(JsonSerializer.SerializeToUtf8Bytes(data.Servers,Json),Json)!;
+        if (includeKeyFiles) foreach (var server in servers) {
+            if (string.IsNullOrWhiteSpace(server.SshKeyPath) || server.SshKeyPath.Contains("-----BEGIN")) continue;
+            var file = new FileInfo(server.SshKeyPath);
+            if (!file.Exists || file.Length > 128 * 1024) throw new InvalidOperationException($"No se pudo incluir la clave SSH de {server.Hostname}. Revisá el archivo o desmarcá incluir archivos de claves.");
+            var key = File.ReadAllText(file.FullName);
+            if (!key.Contains("-----BEGIN") || !key.Contains("PRIVATE KEY-----")) throw new InvalidOperationException($"El archivo de clave SSH de {server.Hostname} no tiene un formato privado portable reconocido.");
+            server.SshKeyPath = key;
+        }
+        var plain = JsonSerializer.SerializeToUtf8Bytes(new PortableInventory(1,DateTimeOffset.UtcNow,servers,data.Folders),Json);
         try
         {
             if (plain.Length > MaxBackupBytes) throw new InvalidOperationException("El inventario supera el límite de 8 MiB.");

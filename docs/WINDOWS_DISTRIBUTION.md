@@ -32,6 +32,12 @@ Preview.9 incluye menús Archivo/Conexiones/Ver/Herramientas/Ayuda y panel infer
 
 Solo se transfiere un archivo a la vez por instancia. Las subidas no reemplazan archivos remotos existentes. Para reemplazar un destino local durante una descarga, Windows pide confirmación. Se usan temporales y comprobación de tamaño antes de publicar el nombre final. Si la conexión impide retirar un temporal remoto, se informa su ruta. No hay reanudación ni transferencias de carpetas completas; desconectar SSH solicita cancelación. El contenido transferido no se adjunta al acompañante IA.
 
+## Trasladar conexiones a otro equipo
+
+Abrir **Conexiones → Exportar / importar conexiones**. Elegir una contraseña de al menos 12 caracteres, repetirla y exportar el archivo `.aisysbackup`. Incluye conexiones, credenciales guardadas y carpetas; la opción **Incluir el contenido de los archivos de claves privadas SSH** permite trasladar también las claves referenciadas por ruta. Si un archivo falta, la exportación informa el problema y no entrega una copia incompleta. Al desmarcarla, esas claves deberán copiarse por separado.
+
+En el otro equipo, abrir la misma sección, seleccionar el archivo, ingresar su contraseña, validar el contenido y confirmar la importación. Se agregan las conexiones sin borrar las existentes. La copia usa cifrado con contraseña independiente de la cuenta Windows; no alcanza con copiar el vault DPAPI. No incluye configuración IA ni conversaciones.
+
 ## Compilar
 
 Requisitos de desarrollo: SDK indicado en [global.json](../global.json), Node 22, dependencias del frontend (`npm ci` en el cliente) e Inno Setup 6.7.3 o compatible. Las herramientas descargadas en `.preview-tools` son locales del entorno y no se distribuyen.

@@ -61,12 +61,26 @@ jobs:
         env:
           PACKAGE_VERSION: ${{ steps.version.outputs.version }}
         run: ./scripts/package-windows.ps1 -Iscc $env:INNO_COMPILER -PackageVersion $env:PACKAGE_VERSION
+      - name: Install WebView2 runtime for installation tests
+        shell: pwsh
+        run: |
+          $installer = Join-Path $env:RUNNER_TEMP 'MicrosoftEdgeWebview2Setup.exe'
+          Invoke-WebRequest 'https://go.microsoft.com/fwlink/p/?LinkId=2124703' -OutFile $installer
+          $signature = Get-AuthenticodeSignature -LiteralPath $installer
+          if ($signature.Status -ne 'Valid' -or $signature.SignerCertificate.Subject -notmatch 'Microsoft Corporation') { throw 'Unexpected WebView2 signature' }
+          $process = Start-Process $installer -ArgumentList '/silent','/install' -WindowStyle Hidden -Wait -PassThru
+          if ($process.ExitCode -notin @(0,3010)) { throw "WebView2 setup failed: $($process.ExitCode)" }
       - name: Verify package and isolated installation
         shell: pwsh
         env:
           PACKAGE_VERSION: ${{ steps.version.outputs.version }}
         run: |
           ./scripts/test-windows-package.ps1 -PackageDirectory "dist/windows/$env:PACKAGE_VERSION" -ExerciseInstaller
+      - name: Installation diagnostics
+        if: failure()
+        shell: pwsh
+        run: |
+          Get-ChildItem .preview-tools/package-tests -Filter install.log -Recurse -ErrorAction SilentlyContinue | ForEach-Object { Get-Content -LiteralPath $_.FullName -Tail 80 }
       - name: Verify closing an older version on upgrade
         shell: powershell
         run: ./scripts/test-installer-upgrade.ps1 -Iscc $env:INNO_COMPILER

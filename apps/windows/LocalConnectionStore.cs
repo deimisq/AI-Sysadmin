@@ -17,7 +17,8 @@ public sealed partial class LocalConnectionStore
 
     private sealed class Inventory
     {
-        public int Version { get; set; } = 3;
+        public int Version { get; set; } = 4;
+        [JsonExtensionData] public Dictionary<string, JsonElement>? AdditionalData { get; set; }
         public int NextId { get; set; } = 1;
         public List<Connection> Servers { get; set; } = new();
         public AiConfiguration Ai { get; set; } = new();
@@ -30,6 +31,7 @@ public sealed partial class LocalConnectionStore
     }
     public sealed class AiConfiguration
     {
+        [JsonExtensionData] public Dictionary<string, JsonElement>? AdditionalData { get; set; }
         public string Provider { get; set; } = "";
         public string Username { get; set; } = "opencode";
         public string Organization { get; set; } = "";
@@ -108,6 +110,8 @@ public sealed partial class LocalConnectionStore
             }
             else if (endpoint == "/ai/providers" && method == "GET") result = AiProviders.Catalog;
             else if (endpoint == "/ai/settings" && method == "GET") result = AiMetadata(data.Ai);
+            else if (endpoint == "/ai/settings/pause" && method == "POST")
+            { data.Ai.ConsentVersion = ""; data.Ai.AcceptedAt = null; Save(data); result = AiMetadata(data.Ai); }
             else if (endpoint == "/ai/settings" && method == "DELETE")
             { data.Ai = new AiConfiguration(); Save(data); result = AiMetadata(data.Ai); }
             else if (endpoint == "/ai/settings" && method == "PUT")
@@ -128,15 +132,16 @@ public sealed partial class LocalConnectionStore
                 var model = Read("model").Trim();
                 if (model.Length is < 1 or > 200) throw new ArgumentException("Indicá el identificador del modelo.");
                 var apiKey = body.TryGetProperty("api_key", out var key) ? key.GetString() ?? "" : "";
-                if (apiKey.Length == 0 && data.Ai.BaseUrl == baseUrl && data.Ai.Username == username && AiProviders.Infer(data.Ai.Provider, data.Ai.BaseUrl) == AiProviders.Infer(provider, baseUrl)) apiKey = data.Ai.ApiKey;
+                var sameConnection = data.Ai.BaseUrl == baseUrl && data.Ai.Username == username && AiProviders.Infer(data.Ai.Provider, data.Ai.BaseUrl) == AiProviders.Infer(provider, baseUrl);
+                if (apiKey.Length == 0 && sameConnection) apiKey = data.Ai.ApiKey;
                 if ((apiKey.Length == 0 && preset?.Local != true) || apiKey.Length > 8192 || apiKey.Contains('\r') || apiKey.Contains('\n')) throw new ArgumentException("Indicá una clave API válida para este proveedor.");
                 if (provider == "opencode" && (model.IndexOf('/') < 1 || model.EndsWith('/'))) throw new ArgumentException("Seleccioná un modelo configurado en OpenCode.");
                 if (preset?.Local == true) AiProviders.ValidateCredentials(baseUrl, apiKey);
                 if (!body.TryGetProperty("consent_accepted", out var accepted) || accepted.ValueKind != JsonValueKind.True)
                     throw new ArgumentException("Aceptá el aviso de envío de contexto antes de habilitar la IA.");
-                data.Ai = new AiConfiguration { Provider = provider, BaseUrl = baseUrl, Model = model, ApiKey = apiKey, Username = username,
-                    Organization = provider == "openai" ? Option("organization") : "", Project = provider == "openai" ? Option("project") : "",
-                    Workspace = provider == "claude" ? Option("workspace") : "", ConsentVersion = AiConsentVersion, AcceptedAt = DateTimeOffset.UtcNow };
+                data.Ai = new AiConfiguration { AdditionalData = data.Ai.AdditionalData, Provider = provider, BaseUrl = baseUrl, Model = model, ApiKey = apiKey, Username = username,
+                    Organization = provider == "openai" ? Option("organization", sameConnection ? data.Ai.Organization : "") : "", Project = provider == "openai" ? Option("project", sameConnection ? data.Ai.Project : "") : "",
+                    Workspace = provider == "claude" ? Option("workspace", sameConnection ? data.Ai.Workspace : "") : "", ConsentVersion = AiConsentVersion, AcceptedAt = DateTimeOffset.UtcNow };
                 Save(data); result = AiMetadata(data.Ai);
             }
             else if (method == "GET" && endpoint == "/auth/me")
@@ -250,7 +255,7 @@ public sealed partial class LocalConnectionStore
         {
             plain = ProtectedData.Unprotect(File.ReadAllBytes(_path), Entropy, DataProtectionScope.CurrentUser);
             var data = JsonSerializer.Deserialize<Inventory>(plain, Json) ?? throw new InvalidDataException();
-            if (data.Version is not (1 or 2 or 3) || data.NextId < 1 || data.Servers == null || data.AiHistory == null || data.Ai == null || data.Servers.Any(s => s.Id <= 0 || s.Id >= data.NextId) || data.Servers.Select(s => s.Id).Distinct().Count() != data.Servers.Count)
+            if (data.Version is not (1 or 2 or 3 or 4) || data.NextId < 1 || data.Servers == null || data.AiHistory == null || data.Ai == null || data.Servers.Any(s => s.Id <= 0 || s.Id >= data.NextId) || data.Servers.Select(s => s.Id).Distinct().Count() != data.Servers.Count)
                 throw new InvalidDataException();
             if (data.Restores == null || data.FolderRevision < 0) throw new InvalidDataException();
             if (data.Folders != null) ValidateFolders(data.Folders,data.Servers.Select(s => s.Id).ToHashSet());
@@ -262,7 +267,7 @@ public sealed partial class LocalConnectionStore
     }
     private void Save(Inventory data)
     {
-        data.Version = 3;
+        data.Version = 4;
         Directory.CreateDirectory(Path.GetDirectoryName(_path)!);
         var plain = JsonSerializer.SerializeToUtf8Bytes(data, Json);
         var temporary = _path + "." + Guid.NewGuid().ToString("N") + ".tmp";

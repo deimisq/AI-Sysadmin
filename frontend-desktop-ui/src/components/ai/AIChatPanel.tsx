@@ -250,7 +250,7 @@ function ServerAssistant({ server }: { server: Server | null }) {
             )}
             {accepted && server && <div className="px-3 py-2 text-xs text-gray-300 border-b border-[#333] flex flex-wrap gap-2 justify-between"><span>Contexto de {server.hostname} · {local ? 'Proveedor propio' : 'Backend configurado'}</span><button className="underline" onClick={async () => {
                 requestVersion.current += 1; setAccepted(false); setConsent(false); setLoading(false);
-                if (local) { try { await api.delete('/ai/settings'); notifyAiConfiguration(); } catch { toast.error('No se pudo desconectar la configuración. Reintentá desde Ajustes.'); } }
+                if (local) { try { await api.post('/ai/settings/pause', {}); notifyAiConfiguration(); toast.success('Envíos pausados. La clave guardada se conserva.'); } catch { toast.error('No se pudo pausar la configuración. Reintentá desde Ajustes.'); } }
             }}>Detener nuevos envíos</button></div>}
 
             {/* Messages */}

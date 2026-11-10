@@ -82,7 +82,7 @@ public sealed class LocalInventoryBackupTests : IDisposable
         Assert.Throws<InvalidOperationException>(()=>store.ExportBackup(Password));
         Assert.Throws<ArgumentException>(()=>store.ExportBackup("short"));
     }
-    [Fact] public void VersionTwoInventoryMigratesWithoutLosingCredentialsAndWritesVersionThree()
+    [Fact] public void VersionTwoInventoryMigratesWithoutLosingCredentialsAndWritesVersionFour()
     {
         var store=Setup("source"); var path=Path.Combine(_directory,"source.dat"); var entropy=Encoding.UTF8.GetBytes("AiSysadmin.LocalConnections.v1");
         var node=System.Text.Json.Nodes.JsonNode.Parse(ProtectedData.Unprotect(File.ReadAllBytes(path),entropy,DataProtectionScope.CurrentUser))!;
@@ -92,7 +92,7 @@ public sealed class LocalInventoryBackupTests : IDisposable
         store.Handle("PUT","/workspace/folders",Body(new { revision=0,layout=new { folders=Array.Empty<object>(),assignments=new{} } }));
         Assert.Equal("synthetic-server-secret",store.Handle("GET","/servers/1/credentials",default).GetProperty("ssh_password").GetString());
         using var saved=JsonDocument.Parse(ProtectedData.Unprotect(File.ReadAllBytes(path),entropy,DataProtectionScope.CurrentUser));
-        Assert.Equal(3,saved.RootElement.GetProperty("version").GetInt32());
+        Assert.Equal(4,saved.RootElement.GetProperty("version").GetInt32());
     }
     [Fact] public void CopiesUseFreshSaltAndNonceAndDeletionRemovesFolderAssignment()
     {

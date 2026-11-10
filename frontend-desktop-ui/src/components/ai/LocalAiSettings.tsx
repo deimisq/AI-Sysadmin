@@ -84,7 +84,7 @@ export function LocalAiSettings() {
     };
     const disconnect = async () => {
         setBusy(true);
-        try { await api.delete('/ai/settings'); notifyAiConfiguration(); await load(); toast.success('IA desconectada para futuras consultas.'); }
+        try { await api.post('/ai/settings/pause', {}); notifyAiConfiguration(); await load(); toast.success('IA pausada. La clave y la configuración se conservan.'); }
         catch { toast.error('No se pudo desconectar la IA.'); }
         finally { setBusy(false); }
     };
@@ -122,6 +122,7 @@ export function LocalAiSettings() {
             <label className="block text-sm">{providerId === 'opencode' ? 'Contraseña de OpenCode (opcional)' : providerId === 'ollama' ? 'Token del proxy (opcional)' : 'Clave API'} {sameProvider && settings?.has_api_key && '· dejá vacío para conservar la guardada'}
                 <Input aria-label="Clave API de IA" type="password" autoComplete="off" value={key} onChange={e => { setKey(e.target.value); invalidateModels(); }} onBlur={() => { if (key || provider?.local || (sameProvider && settings?.has_api_key)) void discover(providerId, key); }} disabled={busy} className="mt-2" />
             </label>
+            {sameProvider && settings?.has_api_key && <p className="text-xs text-muted-foreground">Hay una clave protegida guardada en este equipo. El campo vacío no significa que se haya perdido.{!settings.consent_accepted && ' La IA está pausada; revisá y guardá para habilitarla.'}</p>}
             {providerId === 'openai' && <p className="text-xs text-muted-foreground">Usá una clave de la API de OpenAI. El inicio de sesión de ChatGPT no se utiliza en esta conexión.</p>}
             {providerId === 'ollama' && <p className="text-sm text-muted-foreground">Ollama nativo no requiere clave. La app acepta la URL del servidor terminada en /api, /v1 o sin sufijo y la adapta automáticamente. El token solo se usa si tu proxy lo exige; para enviar credenciales a otro equipo se necesita HTTPS.</p>}
             {providerId === 'opencode' && <p className="text-sm text-muted-foreground">Iniciá <code>opencode serve</code> en el servidor indicado. Usará sus proveedores configurados, locales o de nube. El usuario predeterminado es opencode; si configuraste OPENCODE_SERVER_USERNAME, usá ese valor. Para credenciales fuera de este equipo usá HTTPS.</p>}
@@ -145,7 +146,7 @@ export function LocalAiSettings() {
             </div>
             <details className="text-xs text-muted-foreground"><summary className="cursor-pointer">Contexto compartido y privacidad</summary><p className="mt-2 leading-relaxed">La salida SSH se registra cifrada en este equipo. Al pedir ayuda se comparten la consulta, los datos del servidor, la salida disponible y hasta diez intercambios recientes. Estos registros pueden contener información sensible. No se adjuntan credenciales del almacén ni se envía contexto continuamente. Guardar la configuración no envía consultas ni ejecuta tareas.</p></details>
             <label className="flex gap-3 items-start text-sm"><input type="checkbox" checked={accepted} onChange={e => setAccepted(e.target.checked)} disabled={busy} className="mt-1" /><span>Autorizo compartir mis consultas, datos del servidor y registros de terminal con {provider?.name || 'el proveedor seleccionado'}{provider?.local ? ` en ${baseUrl}` : ''} cuando pida ayuda o ejecute una tarea. {providerId === 'opencode' ? 'OpenCode puede reenviarlos al proveedor del modelo elegido y conservar registros.' : provider?.local ? 'El modelo se ejecuta mediante el servidor configurado.' : 'Acepto las condiciones de tratamiento, retención y posibles cargos del proveedor.'}</span></label>
-            <div className="flex flex-wrap gap-3"><Button type="submit" disabled={busy || discovering || !accepted || !!discoveryError || !localModels.some(item => item.id === model) || (!!provider?.requires_key && !key && !(sameProvider && settings?.has_api_key))}>Guardar y habilitar IA</Button>{settings?.consent_accepted && <Button type="button" variant="outline" disabled={busy} onClick={disconnect}>Desconectar IA</Button>}</div>
+            <div className="flex flex-wrap gap-3"><Button type="submit" disabled={busy || discovering || !accepted || !!discoveryError || !localModels.some(item => item.id === model) || (!!provider?.requires_key && !key && !(sameProvider && settings?.has_api_key))}>Guardar y habilitar IA</Button>{settings?.consent_accepted && <Button type="button" variant="outline" disabled={busy} onClick={disconnect}>Pausar IA</Button>}</div>
             {settings?.consent_accepted && <p className="text-xs text-muted-foreground">Configuración activa: {providers.find(item => item.id === settings.provider || item.base_url === settings.base_url)?.name || 'Proveedor existente'} · {settings.model}. Guardar no envía consultas ni ejecuta tareas.</p>}
         </form>}
     </section>;

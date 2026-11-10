@@ -155,7 +155,7 @@ public sealed class PreferencesWindow : Window
             var result = await _request(type, payload);
             // Notify even if the window closed while an already-authorized write was finishing.
             if (type == "LOCAL_BACKUP_IMPORT") _changed("local-inventory-restored");
-            if (type == "LOCAL_REQUEST" && payload.GetProperty("endpoint").GetString() == "/ai/settings" && payload.GetProperty("method").GetString() != "GET") _changed("local-ai-settings-changed");
+            if (type == "LOCAL_REQUEST" && (payload.GetProperty("endpoint").GetString() is "/ai/settings" or "/ai/settings/pause") && payload.GetProperty("method").GetString() != "GET") _changed("local-ai-settings-changed");
             Reply(requestId, result);
         }
         catch (Exception ex)

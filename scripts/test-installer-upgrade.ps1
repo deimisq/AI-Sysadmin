@@ -50,6 +50,9 @@ try {
     if (-not $running.WaitForExit(10000)) { throw 'La versión anterior sigue abierta.' }
     if (-not (Test-Path -LiteralPath (Join-Path $old 'closed.txt'))) { throw 'La versión anterior no recibió un cierre normal.' }
     if (-not (Test-Path -LiteralPath (Join-Path $install 'versions/upgrade-test/AiSysadmin.exe'))) { throw 'La versión nueva no se instaló.' }
+    $installedIcon = Join-Path $install 'app.ico'
+    if (-not (Test-Path -LiteralPath $installedIcon)) { throw 'Falta el icono estable de la instalación.' }
+    if ((Get-FileHash -LiteralPath $installedIcon).Hash -ne (Get-FileHash -LiteralPath (Join-Path $projectRoot 'apps/windows/Assets/app.ico')).Hash) { throw 'El icono instalado no corresponde a la identidad de la app.' }
     Write-Output 'Actualización verificada: instancia anterior cerrada normalmente y nueva versión instalada.'
 } finally {
     if (-not $running.HasExited) {

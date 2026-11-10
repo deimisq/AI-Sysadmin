@@ -45,10 +45,11 @@ Name: "desktopicon"; Description: "Crear un acceso directo en el escritorio"; Fl
 
 [Files]
 Source: "{#PublishDir}\*"; DestDir: "{app}\versions\{#AppVersion}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "..\Assets\app.ico"; DestDir: "{app}"; DestName: "app.ico"; Flags: ignoreversion
 
 [Icons]
-Name: "{autoprograms}\AI Sysadmin Agent"; Filename: "{app}\versions\{#AppVersion}\AiSysadmin.exe"; IconFilename: "{app}\versions\{#AppVersion}\AiSysadmin.exe"; IconIndex: 0; Check: not WizardNoIcons
-Name: "{autodesktop}\AI Sysadmin Agent"; Filename: "{app}\versions\{#AppVersion}\AiSysadmin.exe"; IconFilename: "{app}\versions\{#AppVersion}\AiSysadmin.exe"; IconIndex: 0; Tasks: desktopicon; Check: not WizardNoIcons
+Name: "{autoprograms}\AI Sysadmin Agent"; Filename: "{app}\versions\{#AppVersion}\AiSysadmin.exe"; IconFilename: "{app}\app.ico"; AppUserModelID: "Sentrait.AiSysadminAgent.Desktop"; Check: not WizardNoIcons
+Name: "{autodesktop}\AI Sysadmin Agent"; Filename: "{app}\versions\{#AppVersion}\AiSysadmin.exe"; IconFilename: "{app}\app.ico"; AppUserModelID: "Sentrait.AiSysadminAgent.Desktop"; Tasks: desktopicon; Check: not WizardNoIcons
 
 [Run]
 Filename: "{app}\versions\{#AppVersion}\AiSysadmin.exe"; Description: "Abrir AI Sysadmin Agent"; Flags: nowait postinstall skipifsilent

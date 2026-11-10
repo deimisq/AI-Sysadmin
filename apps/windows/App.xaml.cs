@@ -9,6 +9,7 @@ namespace AiSysadminDesktop
 
         protected override void OnStartup(StartupEventArgs e)
         {
+            WindowsIdentity.InitializeProcess();
             base.OnStartup(e);
 
             // Start API proxy server

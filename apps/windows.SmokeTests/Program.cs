@@ -3,6 +3,8 @@ using System.IO;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
+using System.Runtime.InteropServices;
+using System.Windows.Interop;
 using AiSysadminDesktop;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.Wpf;
@@ -12,6 +14,7 @@ internal static class Program
     [STAThread]
     private static void Main()
     {
+        WindowsIdentity.InitializeProcess();
         var app = new Application { ShutdownMode = ShutdownMode.OnExplicitShutdown };
         app.Startup += async (_, _) => {
             Window? owner = null;
@@ -22,7 +25,14 @@ internal static class Program
                 Environment.SetEnvironmentVariable("AI_AGENT_UI_URL", null);
                 ownerView = new WebView2CompositionControl();
                 owner = new Window { Content = ownerView, Title = "Prueba aislada de Configuración", Width = 900, Height = 650 };
+                owner.SourceInitialized += (_, _) => WindowsIdentity.Apply(owner);
                 owner.Show();
+                var nativeHandle = new WindowInteropHelper(owner).Handle;
+                if (SendMessage(nativeHandle, 0x007F, IntPtr.Zero, IntPtr.Zero) == IntPtr.Zero || SendMessage(nativeHandle, 0x007F, new IntPtr(1), IntPtr.Zero) == IntPtr.Zero)
+                    throw new Exception("La ventana no tiene iconos nativos para Windows.");
+                if (GetCurrentProcessExplicitAppUserModelID(out var appIdPointer) != 0) throw new Exception("La app no tiene identidad de barra de tareas.");
+                try { if (Marshal.PtrToStringUni(appIdPointer) != WindowsIdentity.AppId) throw new Exception("Identidad incorrecta."); }
+                finally { Marshal.FreeCoTaskMem(appIdPointer); }
                 var profile = Path.Combine(AppContext.BaseDirectory, "smoke-profiles", Guid.NewGuid().ToString("N"));
                 var environment = await CoreWebView2Environment.CreateAsync(null, profile);
                 await ownerView.EnsureCoreWebView2Async(environment);
@@ -60,7 +70,7 @@ internal static class Program
                     if (provider == "ollama" && await core.ExecuteScriptAsync("document.querySelector('#preferences-page-ai input[type=password]').required") == "true") throw new Exception("Ollama no debe exigir token.");
                     if (provider != "openai") await WaitForModels(core, "ollama/installed");
                 }
-                Console.WriteLine(JsonSerializer.Serialize(new { success = true, firstOpenMs, reopenMs, sections = new[] { "ai", "context", "backups" }, reusedBrowser = true, clearedKey = true, source = core.Source }));
+                Console.WriteLine(JsonSerializer.Serialize(new { success = true, nativeTaskbarIcons = true, appUserModelId = WindowsIdentity.AppId, firstOpenMs, reopenMs, sections = new[] { "ai", "context", "backups" }, reusedBrowser = true, clearedKey = true, source = core.Source }));
             } catch (Exception ex) {
                 Console.Error.WriteLine(ex);
                 Environment.ExitCode = 1;
@@ -72,6 +82,11 @@ internal static class Program
         };
         app.Run();
     }
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr SendMessage(IntPtr hwnd, uint message, IntPtr wParam, IntPtr lParam);
+    [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
+    private static extern int GetCurrentProcessExplicitAppUserModelID(out IntPtr appId);
 
     private static Task<JsonElement> Respond(string type, JsonElement payload)
     {

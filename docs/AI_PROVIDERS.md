@@ -68,6 +68,14 @@ Windows registra las propuestas y solo ejecuta el comando exacto asociado a su i
 
 Se aceptan respuestas estructuradas como JSON directo o dentro de un bloque Markdown JSON completo. El texto libre sigue admitido en conversación; una decisión de tarea inválida detiene la ejecución.
 
+## Conservación de datos entre actualizaciones
+
+El almacén permanece en `%LOCALAPPDATA%\AiSysadmin\connections.v1.dat`, fuera de las carpetas de cada versión. Su cifrado DPAPI sigue vinculado a la misma cuenta de Windows y conserva la misma entropía. Las escrituras usan reemplazo atómico, sincronización entre procesos y una copia `.bak`; los errores de lectura no crean un inventario vacío encima del existente.
+
+El formato 4 admite la migración de los formatos 1, 2 y 3 conservando configuración IA, claves, conexiones, historial y permisos. Las versiones anteriores que solo entienden formatos hasta el 3 rechazan este almacén en vez de reescribirlo y descartar campos nuevos. La configuración conserva campos desconocidos para futuras ampliaciones. Las opciones de cuenta omitidas al guardar la misma conexión también se conservan.
+
+**Pausar IA** y **Detener nuevos envíos** revocan el consentimiento para futuras consultas, conservando clave, proveedor, modelo y opciones de cuenta. No deben utilizar una eliminación del almacén. El campo de clave permanece vacío por seguridad y la interfaz indica si hay una clave protegida guardada; para reactivar se revisa y guarda la configuración sin volver a escribirla. La eliminación explícita de configuración sigue siendo una operación diferente. Las pruebas de actualización y migración usan claves ficticias; no registran claves reales.
+
 ## Contexto de conversación y limpieza
 
 No es necesario limpiar el chat para cambiar de tema. Cada mensaje del técnico es una petición nueva y puede iniciar otro objetivo o referirse a un episodio anterior. El modelo recibe una indicación explícita de distinguir esas peticiones de las continuaciones automáticas que genera la app después de ejecutar un comando. Se conserva el registro de la sesión y sus datos de alcance para resolver preguntas como «¿por qué falló ese servicio antes?» o «¿qué hizo lo último que ejecuté?», incluidos los comandos manuales. Si una referencia tiene varios significados posibles, se pide una aclaración concreta; una explicación o solicitud de sugerencias no requiere ejecutar acciones. Una pregunta nueva invalida las propuestas todavía pendientes del turno anterior, sin revocar permisos ni borrar la conversación.

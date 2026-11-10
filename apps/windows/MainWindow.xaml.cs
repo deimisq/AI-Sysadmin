@@ -60,7 +60,7 @@ namespace AiSysadminDesktop
                     return result;
                 }, ReadTerminalContextAsync);
             InitializeComponent();
-            SourceInitialized += (_,_) => ApplyNativeDarkCaption();
+            SourceInitialized += (_,_) => { WindowsIdentity.Apply(this); ApplyNativeDarkCaption(); };
             _startupTimeout.Tick += (_,_) => ShowStartupError("UI_START_TIMEOUT");
             InitializeRdpControl();
             

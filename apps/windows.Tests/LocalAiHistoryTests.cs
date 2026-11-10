@@ -109,7 +109,7 @@ public sealed class LocalAiHistoryTests : IDisposable
         Store.Handle("PUT", "/servers/1", Body(new {hostname="Renamed legacy host"}));
         var migrated = ProtectedData.Unprotect(File.ReadAllBytes(StorePath), entropy, DataProtectionScope.CurrentUser);
         using var document = JsonDocument.Parse(migrated);
-        Assert.Equal(3, document.RootElement.GetProperty("version").GetInt32());
+        Assert.Equal(4, document.RootElement.GetProperty("version").GetInt32());
         Assert.Equal(2, document.RootElement.GetProperty("servers").GetArrayLength());
         CryptographicOperations.ZeroMemory(migrated);
     }

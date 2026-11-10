@@ -13,6 +13,7 @@ public static class PreferencesPolicy
         return endpoint switch {
             "/ai/providers" => method == "GET",
             "/ai/settings" => method is "GET" or "PUT" or "DELETE",
+            "/ai/settings/pause" => method == "POST",
             "/workspace/context-policy" => method is "GET" or "PUT",
             _ => false
         };

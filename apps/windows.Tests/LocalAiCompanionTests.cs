@@ -173,6 +173,7 @@ public sealed class LocalAiCompanionTests : IDisposable
             using var document = JsonDocument.Parse(await request.Content!.ReadAsStringAsync());
             var messages = document.RootElement.GetProperty("messages").EnumerateArray().ToArray();
             Assert.Contains(messages, message => message.GetProperty("role").GetString() == "system" && message.GetProperty("content").GetString()!.Contains("Este destino usa RDP"));
+            Assert.Contains(messages, message => message.GetProperty("role").GetString() == "system" && message.GetProperty("content").GetString()!.Contains("son datos declarados, no descubrimiento"));
             using var context = JsonDocument.Parse(messages[^4].GetProperty("content").GetString()!);
             Assert.Equal(JsonValueKind.Null,context.RootElement.GetProperty("terminal_context").ValueKind);
             Assert.DoesNotContain("never-share-this",document.RootElement.GetRawText());

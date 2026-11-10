@@ -194,7 +194,17 @@ public static class AiProviderTransport
     private static async Task<JsonElement> SendAsync(HttpClient client, HttpRequestMessage request, CancellationToken token, int maximumBytes = 1024 * 1024)
     {
         using var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, token);
-        if (!response.IsSuccessStatusCode) throw new InvalidOperationException($"El servicio de IA devolvió HTTP {(int)response.StatusCode}. Revisá la clave, el modelo y la disponibilidad del proveedor.");
+        if (!response.IsSuccessStatusCode) {
+            var reason = (int)response.StatusCode switch {
+                401 => "El proveedor rechazó la autenticación. Revisá la clave configurada; este error no borra la clave guardada.",
+                403 => "El proveedor denegó el acceso. Revisá los permisos del proyecto, la cuenta y el modelo; no se borró la clave guardada.",
+                429 => "Se alcanzó una cuota o límite de solicitudes del proveedor. Esperá o revisá la cuota de tu cuenta; no hace falta volver a guardar la clave.",
+                500 or 502 or 503 or 504 => "El proveedor está temporalmente indisponible o sobrecargado. Probá de nuevo más tarde o elegí otro modelo. No se borró ni modificó la clave guardada.",
+                404 => "El modelo o endpoint no está disponible. Actualizá la lista de modelos en Configuración → IA.",
+                _ => "El proveedor rechazó la solicitud. Revisá el modelo y la configuración; no se modificaron las credenciales guardadas."
+            };
+            throw new InvalidOperationException($"HTTP {(int)response.StatusCode}: {reason}");
+        }
         await using var stream = await response.Content.ReadAsStreamAsync(token);
         using var memory = new MemoryStream();
         var buffer = new byte[8192]; int read;

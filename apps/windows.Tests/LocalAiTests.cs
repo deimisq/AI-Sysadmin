@@ -25,6 +25,26 @@ public sealed class LocalAiTests : IDisposable
     }
 
     [Theory]
+    [InlineData(503, "temporalmente")]
+    [InlineData(429, "cuota")]
+    [InlineData(401, "autenticación")]
+    [InlineData(403, "permisos")]
+    public async Task ProviderErrorsPreserveTheSavedKeyAcrossRestart(int status, string message)
+    {
+        Setup(); Store.Handle("PUT","/ai/settings",Settings());
+        var handler = new Handler(request => {
+            Assert.Equal("synthetic-provider-key",request.Headers.Authorization?.Parameter);
+            return Task.FromResult(new HttpResponseMessage((HttpStatusCode)status));
+        });
+        using var service = new LocalAiService(Store,handler);
+        var error = await Assert.ThrowsAsync<InvalidOperationException>(() => service.DiagnoseAsync(Query));
+        Assert.Contains(message,error.Message);
+        Assert.True(Store.Handle("GET","/ai/settings",default).GetProperty("has_api_key").GetBoolean());
+        Assert.Equal("synthetic-provider-key",Store.PrepareAiInvocation(1,"Retry after reopening").ApiKey);
+        Store.Handle("PUT","/ai/settings",Body(new { base_url="https://provider.example/v1",model="another-model",consent_accepted=true }));
+        Assert.Equal("synthetic-provider-key",Store.PrepareAiInvocation(1,"Changed model").ApiKey);
+    }
+    [Theory]
     [InlineData("http://provider.example/v1", true)]
     [InlineData("https://user:password@provider.example/v1", true)]
     [InlineData("https://provider.example/v1?token=secret", true)]

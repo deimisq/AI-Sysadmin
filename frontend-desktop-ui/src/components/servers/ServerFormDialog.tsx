@@ -25,6 +25,9 @@ const OS_OPTIONS = [
     "CentOS 7",
     "Rocky Linux 9",
     "AlmaLinux 9",
+    "Windows 11",
+    "Windows 10",
+    "Windows Server 2025",
     "Windows Server 2022",
     "Windows Server 2019"
 ];

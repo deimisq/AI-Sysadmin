@@ -160,5 +160,36 @@ public sealed class LocalAiCompanionTests : IDisposable
         Assert.True(result.GetProperty("context_truncated").GetBoolean()); Assert.Equal(4000,result.GetProperty("context_characters").GetInt32());
         Assert.Contains("Contexto de terminal parcial",result.GetProperty("analysis").GetProperty("analysis").GetString());
     }
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task RdpUsesConversationWithoutReadingSshOrRegisteringCommands(bool temporary)
+    {
+        Setup(); var store = Store; var id = temporary ? -50 : 1;
+        if (temporary) store.RegisterTemporaryTarget(id,Guid.NewGuid().ToString(),"192.0.2.10",3389,"test-user","rdp");
+        else store.Handle("PUT","/servers/1",Body(new { connection_protocol="rdp",os_info="Windows Server",ssh_password="never-share-this" }));
+        var calls = 0;
+        var handler = new Handler(async request => {
+            using var document = JsonDocument.Parse(await request.Content!.ReadAsStringAsync());
+            var messages = document.RootElement.GetProperty("messages").EnumerateArray().ToArray();
+            Assert.Contains(messages, message => message.GetProperty("role").GetString() == "system" && message.GetProperty("content").GetString()!.Contains("Este destino usa RDP"));
+            using var context = JsonDocument.Parse(messages[^4].GetProperty("content").GetString()!);
+            Assert.Equal(JsonValueKind.Null,context.RootElement.GetProperty("terminal_context").ValueKind);
+            Assert.DoesNotContain("never-share-this",document.RootElement.GetRawText());
+            if (calls++ > 0) Assert.Contains(messages, message => message.GetProperty("content").GetString() == "El servicio no inicia, error 1067");
+            return new HttpResponseMessage(HttpStatusCode.OK) { Content=new StringContent(JsonSerializer.Serialize(new { choices=new[] { new { message=new { content="{\"analysis\":\"Revisá el Visor de eventos de Windows.\",\"proposed_command\":\"Get-Service\"}" } } } })) };
+        });
+        using var service = new LocalAiService(store,handler,(_,_,_) => throw new Exception("RDP must not read an SSH transcript"));
+        service.RegisterCommand = (_,_,_) => throw new Exception("RDP must not register SSH execution");
+        // Registration is not called even if a provider ignores the RDP instruction.
+
+        foreach (var question in new[] { "El servicio no inicia, error 1067", "¿Dónde encuentro ese evento?" }) {
+            var reply = await service.DiagnoseAsync(Body(new { server_id=id,problem_description=question }));
+            Assert.Equal(JsonValueKind.Null,reply.GetProperty("analysis").GetProperty("proposed_command").ValueKind);
+            Assert.Equal(JsonValueKind.Null,reply.GetProperty("proposal_id").ValueKind);
+            Assert.True(reply.GetProperty("history_saved").GetBoolean());
+        }
+        Assert.Equal(2,calls);
+    }
     public void Dispose(){if(Directory.Exists(_directory))Directory.Delete(_directory,true);}
 }

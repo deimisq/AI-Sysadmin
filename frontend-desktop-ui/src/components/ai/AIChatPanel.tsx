@@ -24,7 +24,8 @@ export function AIChatPanel() {
 
 function ServerAssistant({ server }: { server: Server | null }) {
     const local = isLocalWorkspace();
-    const sshSession = useWorkspaceStore(state => server ? state.nativeSessions[server.id] : undefined);
+    const rdp = (server?.quick_protocol || server?.connection_protocol || (server?.os_info.toLowerCase().includes('windows') ? 'rdp' : 'ssh')) === 'rdp';
+    const sshSession = useWorkspaceStore(state => server && !rdp ? state.nativeSessions[server.id] : undefined);
     const [permission, setPermission] = useState('ask');
     const [executing, setExecuting] = useState(false);
     const [commandResults, setCommandResults] = useState<Record<string, string>>({});
@@ -120,7 +121,7 @@ function ServerAssistant({ server }: { server: Server | null }) {
         try {
             if (server) {
                 // Server context mode
-                const res = await diagnoseProblem(server.id, userMsg, 'es', '2026-10-25', undefined, local ? server : undefined, local ? useWorkspaceStore.getState().nativeSessions[server.id] : undefined);
+                const res = await diagnoseProblem(server.id, userMsg, 'es', '2026-10-25', undefined, local ? server : undefined, local && !rdp ? useWorkspaceStore.getState().nativeSessions[server.id] : undefined);
                 if (version !== requestVersion.current) return;
 
                 // Parse response
@@ -223,16 +224,16 @@ function ServerAssistant({ server }: { server: Server | null }) {
                     <span className="truncate text-blue-200" title={configuration?.base_url}>{configuration?.consent_accepted ? configuration.model : 'Sin configurar'}</span>
                 </div>
 
-                                <details className="text-[11px] text-gray-400"><summary className="cursor-pointer">Contexto y privacidad</summary><p className="pt-2 leading-relaxed">La salida SSH se registra cifrada en este equipo. Al pedir ayuda se comparte el contexto disponible y la conversación reciente con tu proveedor. No hay envío continuo.</p><button className="text-blue-300 hover:underline" onClick={() => useWorkspaceStore.getState().openPreferences('ai')}>Configurar proveedor y privacidad</button></details>
-                <div className="flex gap-2"><button aria-pressed={mode === 'chat'} className="border border-[#444] rounded px-2 py-1" onClick={() => setMode('chat')}>Conversar con el agente</button><button aria-pressed={mode === 'task'} className="border border-[#444] rounded px-2 py-1" onClick={() => setMode('task')}>Tarea avanzada</button></div>
+                                <details className="text-[11px] text-gray-400"><summary className="cursor-pointer">Contexto y privacidad</summary><p className="pt-2 leading-relaxed">{rdp ? 'En RDP se comparte la conversación y los datos del equipo. La IA no recibe capturas ni ve el escritorio o PowerShell. Podés pegar el error o la salida relevante en el chat.' : 'La salida SSH se registra cifrada en este equipo. Al pedir ayuda se comparte el contexto disponible y la conversación reciente con tu proveedor. No hay envío continuo.'}</p><button className="text-blue-300 hover:underline" onClick={() => useWorkspaceStore.getState().openPreferences('ai')}>Configurar proveedor y privacidad</button></details>
+                <div className="flex gap-2"><button aria-pressed={mode === 'chat'} className="border border-[#444] rounded px-2 py-1" onClick={() => setMode('chat')}>Conversar con el agente</button>{!rdp && <button aria-pressed={mode === 'task'} className="border border-[#444] rounded px-2 py-1" onClick={() => setMode('task')}>Tarea avanzada</button>}</div>
             </section>}
             {local && taskRunning && mode === 'chat' && <button className="p-2 text-xs text-amber-300 border-b border-[#444]" onClick={() => setMode('task')}>Hay una tarea en ejecución · Ver progreso o cancelar</button>}
-            {local && <div className={mode === 'task' ? 'flex flex-col flex-1 min-h-0' : 'hidden'}><AgentTaskPanel server={server} enabled={accepted} onRunningChange={setTaskRunning} /></div>}
+            {local && !rdp && <div className={mode === 'task' ? 'flex flex-col flex-1 min-h-0' : 'hidden'}><AgentTaskPanel server={server} enabled={accepted} onRunningChange={setTaskRunning} /></div>}
             {(!local || mode === 'chat') && <>
             {local && server && <div className="px-3 py-2 text-xs text-gray-400 border-b border-[#333]" role="note">
-                El agente propone comandos y solicita permiso antes de ejecutarlos por SSH.
-                <p className="mt-1">Permiso: {permission === 'always' ? 'Automático para este destino' : permission === 'session' ? 'Automático en esta sesión SSH' : 'Preguntar por cada comando'}.</p>
-                {permission !== 'ask' && <button className="text-blue-300 underline" onClick={async () => {
+                {rdp ? 'Asistente RDP: orientación sobre Windows a partir de lo que compartís. Pegá errores o resultados para analizarlos; los pasos y comandos se realizan manualmente en el equipo remoto.' : 'El agente propone comandos y solicita permiso antes de ejecutarlos por SSH.'}
+                {!rdp && <p className="mt-1">Permiso: {permission === 'always' ? 'Automático para este destino' : permission === 'session' ? 'Automático en esta sesión SSH' : 'Preguntar por cada comando'}.</p>}
+                {!rdp && permission !== 'ask' && <button className="text-blue-300 underline" onClick={async () => {
                     setPermission('ask');
                     try { await sendCommand('local_chat_revoke', { server_id: server.id, session_id: sshSession }); } catch { toast.error('No se pudo confirmar la revocación.'); }
                 }}>Revocar permiso automático</button>}
@@ -321,7 +322,7 @@ function ServerAssistant({ server }: { server: Server | null }) {
                     <AssistantTextarea
                         className="w-full bg-[#1e1e1e] border border-[#333] text-white text-xs rounded p-2 pr-10 resize-none focus:border-blue-500 focus:ring-0 outline-none placeholder-gray-600"
                         style={{ minHeight: '40px' }}
-                        placeholder={server ? "Preguntá sobre lo que está pasando en la terminal…" : "Seleccioná un servidor…"}
+                        placeholder={server ? rdp ? "Describí el problema de Windows o pegá el error…" : "Preguntá sobre lo que está pasando en la terminal…" : "Seleccioná un servidor…"}
                         disabled={!server || !accepted || loading || executing || historyLoading || clearingHistory || waitingForTemporarySsh}
                         maxLength={16000}
                         value={input}

@@ -32,6 +32,14 @@ Preview.9 incluye menús Archivo/Conexiones/Ver/Herramientas/Ayuda y panel infer
 
 Solo se transfiere un archivo a la vez por instancia. Las subidas no reemplazan archivos remotos existentes. Para reemplazar un destino local durante una descarga, Windows pide confirmación. Se usan temporales y comprobación de tamaño antes de publicar el nombre final. Si la conexión impide retirar un temporal remoto, se informa su ruta. No hay reanudación ni transferencias de carpetas completas; desconectar SSH solicita cancelación. El contenido transferido no se adjunta al acompañante IA.
 
+## IA en conexiones RDP
+
+En RDP, el acompañante funciona como asesor: recibe los metadatos del destino y la conversación. Podés describir un problema o pegar en el chat el error, evento o resultado que quieras analizar. Conserva el hilo para preguntas posteriores; en conexiones temporales, el historial permanece en memoria hasta cerrar la sesión.
+
+La IA no recibe capturas, cambios del escritorio ni salida de PowerShell/CMD automáticamente. No ejecuta comandos, controla el escritorio ni usa tareas o permisos SSH desde RDP. Los pasos sugeridos deben realizarse manualmente dentro del equipo remoto y sus resultados compartirse en el chat. Los registros SSH no se usan como evidencia de RDP.
+
+La cobertura automatizada usa destinos y respuestas sintéticos: comprueba aislamiento de contexto, historial y ausencia de propuestas ejecutables en RDP guardado y temporal. No sustituye una prueba real del escritorio, autenticación o diagnóstico sobre un servidor Windows.
+
 ## Trasladar conexiones a otro equipo
 
 Abrir **Conexiones → Exportar / importar conexiones**. Elegir una contraseña de al menos 12 caracteres, repetirla y exportar el archivo `.aisysbackup`. Incluye conexiones, credenciales guardadas y carpetas; la opción **Incluir el contenido de los archivos de claves privadas SSH** permite trasladar también las claves referenciadas por ruta. Si un archivo falta, la exportación informa el problema y no entrega una copia incompleta. Al desmarcarla, esas claves deberán copiarse por separado.

@@ -32,7 +32,7 @@ python-multipart
 email-validator
 
 # Scheduling & Reports
-apscheduler>=3.10.0
+apscheduler>=3.11.3
 reportlab>=4.0.0
 pytz
 

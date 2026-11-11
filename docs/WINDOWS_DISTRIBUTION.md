@@ -11,7 +11,7 @@ El instalador limita esta compilación a Windows x64 y build 19045 o posterior. 
 
 ## Datos y actualizaciones
 
-La instalación predeterminada reside en `%LOCALAPPDATA%/Programs/AI Sysadmin Agent/versions/<version>`. Los accesos directos apuntan a la versión instalada más recientemente. No hay actualización automática ni rollback automático; las carpetas separadas no garantizan compatibilidad de un cliente antiguo con datos nuevos.
+La instalación predeterminada reside en `%LOCALAPPDATA%/Programs/AI Sysadmin Agent/versions/<version>`. Los accesos directos apuntan a la versión instalada más recientemente. La app consulta actualizaciones y requiere aprobaciones separadas para descargar, instalar y reiniciar. No hay rollback automático; las carpetas separadas no garantizan compatibilidad de un cliente antiguo con datos nuevos.
 
 Inventario, credenciales, configuración IA, registros y perfil WebView2 permanecen en `%LOCALAPPDATA%/AiSysadmin`. Desinstalar conserva ese directorio. El ZIP portable tampoco vuelve portable el vault: la protección DPAPI sigue ligada a la cuenta de Windows. Para migrar conexiones/carpetas a otra cuenta o equipo, usar la copia cifrada portable de Ajustes.
 

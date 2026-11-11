@@ -1,3 +1,5 @@
+> Documento histórico de una implementación anterior. No usar sus comandos como procedimiento vigente. Consultar [la arquitectura actual](../architecture/SYSTEM_ARCHITECTURE.md) y [la distribución Windows](../WINDOWS_DISTRIBUTION.md).
+
 ## 📊 Fases 2: Backend Integration - Estado Actual
 
 ✅ **80% Completado** (4 de 5 sub-tareas)

@@ -132,7 +132,7 @@ Proveedores IA configurados por cuenta/organización, con registro de capacidade
 
 La política oficial consultada fija fin de soporte de **.NET 8 el 10/11/2026** y mantiene **.NET 10 LTS hasta noviembre de 2028**. Planificar .NET 10 antes de vender una release mantenida. La reparación actual en .NET 8 es una base de transición. [Fuente Microsoft](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core).
 
-La web usa Next.js 14.2.3. La política consultada lista 14.x sin soporte y 16.x como Active LTS. Migrar a una rama soportada y probar auth/renderizado por separado del rediseño completo. [Fuente Next.js](https://nextjs.org/support-policy).
+La propuesta original evaluó Next.js 14.2.3; la revisión actual migró la interfaz web independiente a Next.js 16.4.6/React 19. La política consultada lista 14.x sin soporte y 16.x como Active LTS. Migrar a una rama soportada y probar auth/renderizado por separado del rediseño completo. [Fuente Next.js](https://nextjs.org/support-policy).
 
 ## 6. IA avanzada y ejecución controlada
 

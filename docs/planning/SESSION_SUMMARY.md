@@ -1,3 +1,5 @@
+> Documento histórico de una implementación anterior. No usar sus comandos como procedimiento vigente. Consultar [la arquitectura actual](../architecture/SYSTEM_ARCHITECTURE.md) y [la distribución Windows](../WINDOWS_DISTRIBUTION.md).
+
 # 📋 Resumen de Implementación - AI Sysadmin Agent v0.9.0-beta
 
 **Fecha:** 2025-12-03  

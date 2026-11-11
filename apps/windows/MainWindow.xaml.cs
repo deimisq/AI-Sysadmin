@@ -354,7 +354,7 @@ namespace AiSysadminDesktop
                             if (!_closing) MainWebView.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(new { requestId, result }));
                             return;
                         }
-                        else if (type == "APP_INFO" || type is "UPDATE_STATUS" or "UPDATE_TOKEN" or "UPDATE_CHECK" or "UPDATE_DOWNLOAD" or "UPDATE_INSTALL" or "UPDATE_RESTART")
+                        else if (type == "APP_INFO" || type is "OPEN_SENTRAIT" or "UPDATE_STATUS" or "UPDATE_TOKEN" or "UPDATE_CHECK" or "UPDATE_DOWNLOAD" or "UPDATE_INSTALL" or "UPDATE_RESTART")
                         {
                             var result = await HandleUpdateAsync(type,root.GetProperty("payload"));
                             if(!_closing) MainWebView.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(new { requestId, result }));

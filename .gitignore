@@ -95,6 +95,8 @@ Thumbs.db
 # ----- SSL Certificates -----
 nginx/ssl/*.crt
 nginx/ssl/*.key
+nginx/certs/*.key
+nginx/certs/*.crt
 !nginx/ssl/.gitkeep
 
 # ----- Temporary Files -----

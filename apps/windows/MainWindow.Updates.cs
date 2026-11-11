@@ -17,6 +17,10 @@ public partial class MainWindow
     }
     private async Task<object> HandleUpdateAsync(string type,JsonElement payload)
     {
+        if(type=="OPEN_SENTRAIT") {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(DesktopShellPolicy.OfficialWebsite) { UseShellExecute=true });
+            return true;
+        }
         if(type=="APP_INFO") return new {
             version=AppUpdates.CurrentVersion, product="AI Sysadmin Agent", repository=AppUpdates.Repository,
             runtime=System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription,

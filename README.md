@@ -2,7 +2,7 @@
 
 **Intelligent Server Management & Automation Platform**
 
-[![License](https://img.shields.io/badge/license-Proprietary-blue.svg)](LICENSE)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![Version](https://img.shields.io/badge/version-1.0.0--RC-green.svg)](VERSION.json)
 [![Docker](https://img.shields.io/badge/docker-ready-blue.svg)](docker-compose.yml)
 [![Status](https://img.shields.io/badge/status-validaci%C3%B3n_V2-orange.svg)](docs/REPARACIONES_V2.md)
@@ -113,5 +113,7 @@ Configura primero `.env.prod` a partir de `.env.prod.template`, con secretos pro
 
 ## ⚖️ License
 
-Copyright © 2024 Sentrait. All rights reserved.
+El código original se ofrece bajo Apache 2.0; los componentes de terceros conservan sus licencias. Consulta [NOTICE](NOTICE), [avisos de terceros](THIRD_PARTY_NOTICES.md) y [evaluación de publicación](docs/OPEN_SOURCE_REVIEW.md). La apertura pública está pendiente de sanear el historial.
 See [LICENSE](LICENSE) for full terms.
+
+AI Sysadmin es gratuito. Podés contactar a [Sentra IT](https://sentrait.com.uy/) para apoyar su mantenimiento; no se requiere donar ni existe un medio de cobro integrado. Consulta [contribuciones](CONTRIBUTING.md) y [seguridad](SECURITY.md).

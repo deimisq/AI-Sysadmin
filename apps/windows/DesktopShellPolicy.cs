@@ -5,6 +5,7 @@ namespace AiSysadminDesktop;
 public static class DesktopShellPolicy
 {
     public const string Origin = "https://appassets.local";
+    public const string OfficialWebsite = "https://sentrait.com.uy/";
     public static Uri EntryPoint(string assets, string? developmentUrl)
     {
         if (!string.IsNullOrEmpty(developmentUrl))

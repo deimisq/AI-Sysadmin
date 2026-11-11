@@ -27,6 +27,7 @@ export function IdeMenu() {
             { label: 'Copias de seguridad…', action: () => state.openPreferences('backups') },
         ] },
         { label: 'Ayuda', items: [
+            { label: 'Apoyar el proyecto · Sentra IT', action: () => state.setActiveOverlay('help') },
             { label: 'Documentación', action: () => state.setActiveOverlay('documentation') },
             { label: 'Ayuda de la aplicación', action: () => state.setActiveOverlay('help') },
         ] },

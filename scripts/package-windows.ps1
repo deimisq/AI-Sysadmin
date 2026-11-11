@@ -46,6 +46,8 @@ $runtimeConfig = Get-Content (Join-Path $publish 'AiSysadmin.runtimeconfig.json'
 if (-not $runtimeConfig.runtimeOptions.includedFrameworks) { throw 'El paquete no incluye su runtime.' }
 Copy-Item (Join-Path $projectRoot 'apps/windows/installer/install-notes.txt') (Join-Path $publish 'LEEME.txt')
 Copy-Item (Join-Path $projectRoot 'LICENSE') (Join-Path $publish 'LICENSE-PROJECT.txt')
+Copy-Item (Join-Path $projectRoot 'NOTICE') (Join-Path $publish 'NOTICE')
+Copy-Item (Join-Path $projectRoot 'THIRD_PARTY_NOTICES.md') (Join-Path $publish 'THIRD_PARTY_NOTICES.md')
 $assets = Get-Content (Join-Path $projectRoot 'apps/windows/obj/project.assets.json') -Raw | ConvertFrom-Json
 $noticeRoot = Join-Path $publish 'ThirdParty'
 foreach ($folder in $assets.packageFolders.PSObject.Properties.Name) {

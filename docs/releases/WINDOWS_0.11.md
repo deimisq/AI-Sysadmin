@@ -1,5 +1,7 @@
 # Windows 0.11
 
+- Código original bajo Apache 2.0; distribución acompañada de LICENSE, NOTICE y avisos de terceros. Ayuda incorpora el acceso al sitio oficial de Sentra IT para apoyo voluntario, sin pagos integrados ni funciones condicionadas a donar. La publicación pública del repositorio sigue pendiente de sanear secretos históricos.
+
 - Versiones cortas `0.11.N`, con `N` igual al número de ejecución del workflow Windows. Rama y commit se muestran por separado. La versión base de desarrollo es `0.11.0`.
 - Versión visible en la barra inferior y sección Ayuda con información de producto, instalación, sistema, runtime, arquitectura, repositorio, commit y ubicación de datos.
 - Comprobación de versiones al abrir y búsqueda manual en Ayuda. Las descargas e instalaciones requieren aprobaciones nativas independientes. El instalador se ejecuta desde la app, sin abrirlo manualmente.

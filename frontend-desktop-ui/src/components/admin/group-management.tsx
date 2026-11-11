@@ -1,3 +1,4 @@
+import { uiText } from '../../lib/ui-language';
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -103,7 +104,7 @@ export function GroupManagement({ currentUser }: GroupManagementProps) {
             toast.success("Grupo eliminado");
         } catch (error: any) {
             console.error(error);
-            toast.error(error.message || "Error al eliminar grupo");
+            toast.error(error.message || uiText("Error al eliminar grupo"));
         }
     };
 
@@ -112,19 +113,19 @@ export function GroupManagement({ currentUser }: GroupManagementProps) {
         return org ? org.name : "Desconocida";
     };
 
-    if (loading) return <div>Cargando grupos...</div>;
+    if (loading) return <div>{uiText("Cargando grupos...")}</div>;
 
     if (creatingGroup) {
         return (
             <Card>
                 <CardHeader>
-                    <CardTitle>Nuevo Grupo</CardTitle>
-                    <CardDescription>Crear un nuevo grupo de servidores</CardDescription>
+                    <CardTitle>{uiText("Nuevo Grupo")}</CardTitle>
+                    <CardDescription>{uiText("Crear un nuevo grupo de servidores")}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="grid gap-4 md:grid-cols-2">
                         <div>
-                            <label className="text-sm font-medium">Nombre</label>
+                            <label className="text-sm font-medium">{uiText("Nombre")}</label>
                             <Input
                                 value={newGroup.name}
                                 onChange={(e) => setNewGroup({ ...newGroup, name: e.target.value })}
@@ -148,7 +149,7 @@ export function GroupManagement({ currentUser }: GroupManagementProps) {
                             </div>
                         </div>
                         <div className="col-span-2">
-                            <label className="text-sm font-medium">Descripción</label>
+                            <label className="text-sm font-medium">{uiText("Descripción")}</label>
                             <Input
                                 value={newGroup.description}
                                 onChange={(e) => setNewGroup({ ...newGroup, description: e.target.value })}
@@ -157,26 +158,24 @@ export function GroupManagement({ currentUser }: GroupManagementProps) {
                         </div>
                         {currentUser?.role === "superadmin" && (
                             <div className="col-span-2">
-                                <label className="text-sm font-medium">Organización</label>
+                                <label className="text-sm font-medium">{uiText("Organización")}</label>
                                 <select
                                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                                     value={newGroup.organization_id || ""}
                                     onChange={(e) => setNewGroup({ ...newGroup, organization_id: e.target.value })}
                                 >
-                                    <option value="">(Tu organización actual / Sin asignar)</option>
+                                    <option value="">{uiText("(Tu organización actual / Sin asignar)")}</option>
                                     {organizations.map((org) => (
                                         <option key={org.id} value={org.id}>{org.name}</option>
                                     ))}
                                 </select>
-                                <p className="text-xs text-muted-foreground mt-1">
-                                    Si no se selecciona, se asignará a tu organización actual.
-                                </p>
+                                <p className="text-xs text-muted-foreground mt-1">{uiText("Si no se selecciona, se asignará a tu organización actual.")}</p>
                             </div>
                         )}
                     </div>
                     <div className="flex gap-2">
-                        <Button onClick={handleCreate}>Crear Grupo</Button>
-                        <Button variant="outline" onClick={() => setCreatingGroup(false)}>Cancelar</Button>
+                        <Button onClick={handleCreate}>{uiText("Crear Grupo")}</Button>
+                        <Button variant="outline" onClick={() => setCreatingGroup(false)}>{uiText("Cancelar")}</Button>
                     </div>
                 </CardContent>
             </Card>
@@ -187,12 +186,12 @@ export function GroupManagement({ currentUser }: GroupManagementProps) {
         return (
             <Card>
                 <CardHeader>
-                    <CardTitle>Editar Grupo: {editingGroup.name}</CardTitle>
+                    <CardTitle>{uiText("Editar Grupo:")}{" "}{editingGroup.name}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="grid gap-4 md:grid-cols-2">
                         <div>
-                            <label className="text-sm font-medium">Nombre</label>
+                            <label className="text-sm font-medium">{uiText("Nombre")}</label>
                             <Input
                                 value={editingGroup.name}
                                 onChange={(e) => setEditingGroup({ ...editingGroup, name: e.target.value })}
@@ -215,7 +214,7 @@ export function GroupManagement({ currentUser }: GroupManagementProps) {
                             </div>
                         </div>
                         <div className="col-span-2">
-                            <label className="text-sm font-medium">Descripción</label>
+                            <label className="text-sm font-medium">{uiText("Descripción")}</label>
                             <Input
                                 value={editingGroup.description || ""}
                                 onChange={(e) => setEditingGroup({ ...editingGroup, description: e.target.value })}
@@ -223,26 +222,24 @@ export function GroupManagement({ currentUser }: GroupManagementProps) {
                         </div>
                         {currentUser?.role === "superadmin" && (
                             <div className="col-span-2">
-                                <label className="text-sm font-medium">Organización</label>
+                                <label className="text-sm font-medium">{uiText("Organización")}</label>
                                 <select
                                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                                     value={editingGroup.organization_id || ""}
                                     onChange={(e) => setEditingGroup({ ...editingGroup, organization_id: e.target.value })}
                                 >
-                                    <option value="">(Tu organización actual / Sin asignar)</option>
+                                    <option value="">{uiText("(Tu organización actual / Sin asignar)")}</option>
                                     {organizations.map((org) => (
                                         <option key={org.id} value={org.id}>{org.name}</option>
                                     ))}
                                 </select>
-                                <p className="text-xs text-muted-foreground mt-1">
-                                    Cambiar la organización puede afectar la visibilidad para otros usuarios.
-                                </p>
+                                <p className="text-xs text-muted-foreground mt-1">{uiText("Cambiar la organización puede afectar la visibilidad para otros usuarios.")}</p>
                             </div>
                         )}
                     </div>
                     <div className="flex gap-2">
-                        <Button onClick={handleUpdate}>Guardar Cambios</Button>
-                        <Button variant="outline" onClick={() => setEditingGroup(null)}>Cancelar</Button>
+                        <Button onClick={handleUpdate}>{uiText("Guardar Cambios")}</Button>
+                        <Button variant="outline" onClick={() => setEditingGroup(null)}>{uiText("Cancelar")}</Button>
                     </div>
                 </CardContent>
             </Card>
@@ -255,15 +252,11 @@ export function GroupManagement({ currentUser }: GroupManagementProps) {
                 <div className="flex items-center justify-between">
                     <div>
                         <CardTitle className="flex items-center gap-2">
-                            <Folder className="h-5 w-5" />
-                            Grupos de Servidores
-                        </CardTitle>
-                        <CardDescription>Organizar servidores en grupos lógicos</CardDescription>
+                            <Folder className="h-5 w-5" />{uiText("Grupos de Servidores")}</CardTitle>
+                        <CardDescription>{uiText("Organizar servidores en grupos lógicos")}</CardDescription>
                     </div>
                     <Button onClick={() => setCreatingGroup(true)}>
-                        <Plus className="mr-2 h-4 w-4" />
-                        Nuevo Grupo
-                    </Button>
+                        <Plus className="mr-2 h-4 w-4" />{uiText("Nuevo Grupo")}</Button>
                 </div>
             </CardHeader>
             <CardContent>
@@ -298,7 +291,7 @@ export function GroupManagement({ currentUser }: GroupManagementProps) {
                         </div>
                     ))}
                     {groups.length === 0 && (
-                        <p className="text-center text-muted-foreground py-4">No hay grupos creados.</p>
+                        <p className="text-center text-muted-foreground py-4">{uiText("No hay grupos creados.")}</p>
                     )}
                 </div>
             </CardContent>

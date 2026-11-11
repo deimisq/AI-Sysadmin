@@ -1,3 +1,4 @@
+import { uiText } from '../lib/ui-language';
 import { useState, useEffect } from 'react';
 import { Button } from '../components/ui/button';
 import DashboardLayout from '../components/dashboard-layout';
@@ -92,7 +93,7 @@ export default function RdpDev() {
                         </div>
                         
                         <div className="mt-6 p-3 bg-black/30 rounded font-mono text-sm">
-                            Status: <span className={status.includes('Error') ? "text-red-500" : "text-yellow-500"}>{status}</span>
+                            Status: <span className={status.includes(uiText('Error')) ? "text-red-500" : "text-yellow-500"}>{status}</span>
                         </div>
 
                         <div className="text-xs text-gray-500 mt-4 text-center">

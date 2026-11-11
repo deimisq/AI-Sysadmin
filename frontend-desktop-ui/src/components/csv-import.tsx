@@ -1,3 +1,4 @@
+import { uiText, uiFormat } from '../lib/ui-language';
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -73,7 +74,7 @@ export function CSVImport({ onImportComplete, onCancel }: CSVImportProps) {
             toast.success("Plantilla descargada correctamente");
         } catch (error: any) {
             console.error("Error downloading template:", error);
-            toast.error(error.message || "Error al descargar plantilla");
+            toast.error(error.message || uiText("Error al descargar plantilla"));
         }
     };
 
@@ -113,9 +114,9 @@ export function CSVImport({ onImportComplete, onCancel }: CSVImportProps) {
             }
         } catch (error: any) {
             console.error("Error importing CSV:", error);
-            toast.error(error.message || "Error al importar CSV");
+            toast.error(error.message || uiText("Error al importar CSV"));
             setResult({
-                message: `Error: ${error.message}`,
+                message: uiFormat("Error: {0}", error.message),
                 details: {
                     success: [],
                     errors: [{ row: 0, error: error.message }],
@@ -148,33 +149,25 @@ export function CSVImport({ onImportComplete, onCancel }: CSVImportProps) {
         <Card className="w-full">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                    <FileSpreadsheet className="h-6 w-6" />
-                    Importar Servidores desde CSV
-                </CardTitle>
+                    <FileSpreadsheet className="h-6 w-6" />{uiText("Importar Servidores desde CSV")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
                 {/* Step 1: Download Template */}
                 <div className="p-4 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
-                    <h3 className="font-semibold text-blue-800 dark:text-blue-200 mb-2">
-                        Paso 1: Descargar Plantilla
-                    </h3>
-                    <p className="text-sm text-blue-700 dark:text-blue-300 mb-3">
-                        Descarga la plantilla CSV, complétala con los datos de tus servidores y súbela.
-                    </p>
+                    <h3 className="font-semibold text-blue-800 dark:text-blue-200 mb-2">{uiText("Paso 1: Descargar Plantilla")}</h3>
+                    <p className="text-sm text-blue-700 dark:text-blue-300 mb-3">{uiText("Descarga la plantilla CSV, complétala con los datos de tus servidores y súbela.")}</p>
                     <Button
                         variant="outline"
                         onClick={downloadTemplate}
                         className="border-blue-300 hover:bg-blue-100 dark:border-blue-700 dark:hover:bg-blue-900"
                         type="button"
                     >
-                        <Download className="h-4 w-4 mr-2" />
-                        Descargar Plantilla CSV
-                    </Button>
+                        <Download className="h-4 w-4 mr-2" />{uiText("Descargar Plantilla CSV")}</Button>
                 </div>
 
                 {/* Step 2: Upload File */}
                 <div className="space-y-3">
-                    <h3 className="font-semibold">Paso 2: Subir Archivo CSV</h3>
+                    <h3 className="font-semibold">{uiText("Paso 2: Subir Archivo CSV")}</h3>
 
                     <div
                         className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer
@@ -205,12 +198,10 @@ export function CSVImport({ onImportComplete, onCancel }: CSVImportProps) {
                         <p className="text-sm text-muted-foreground mb-1">
                             {importing
                                 ? "Importando servidores..."
-                                : "Arrastra tu archivo CSV aquí o haz clic para seleccionar"
+                                : uiText("Arrastra tu archivo CSV aquí o haz clic para seleccionar")
                             }
                         </p>
-                        <p className="text-xs text-muted-foreground">
-                            Formato: CSV con columnas hostname, ip_address, ssh_username, etc.
-                        </p>
+                        <p className="text-xs text-muted-foreground">{uiText("Formato: CSV con columnas hostname, ip_address, ssh_username, etc.")}</p>
                     </div>
                 </div>
 
@@ -238,9 +229,7 @@ export function CSVImport({ onImportComplete, onCancel }: CSVImportProps) {
                         {/* Groups Created */}
                         {result.details.groups_created.length > 0 && (
                             <div className="p-3 bg-purple-50 dark:bg-purple-950 rounded-lg">
-                                <p className="text-sm font-medium text-purple-800 dark:text-purple-200">
-                                    Grupos creados automáticamente:
-                                </p>
+                                <p className="text-sm font-medium text-purple-800 dark:text-purple-200">{uiText("Grupos creados automáticamente:")}</p>
                                 <div className="flex flex-wrap gap-2 mt-2">
                                     {result.details.groups_created.map((group, i) => (
                                         <span key={i} className="px-2 py-1 bg-purple-200 dark:bg-purple-800 rounded text-xs">
@@ -254,8 +243,7 @@ export function CSVImport({ onImportComplete, onCancel }: CSVImportProps) {
                         {/* Success List */}
                         {result.details.success.length > 0 && (
                             <div className="max-h-40 overflow-y-auto">
-                                <p className="text-sm font-medium text-green-800 dark:text-green-200 mb-2">
-                                    ✅ Servidores importados ({result.details.success.length}):
+                                <p className="text-sm font-medium text-green-800 dark:text-green-200 mb-2">{uiText("✅ Servidores importados (")}{result.details.success.length}):
                                 </p>
                                 <div className="space-y-1">
                                     {result.details.success.map((s, i) => (
@@ -273,13 +261,12 @@ export function CSVImport({ onImportComplete, onCancel }: CSVImportProps) {
                         {/* Errors List */}
                         {result.details.errors.length > 0 && (
                             <div className="max-h-40 overflow-y-auto">
-                                <p className="text-sm font-medium text-red-800 dark:text-red-200 mb-2">
-                                    ❌ Errores ({result.details.errors.length}):
+                                <p className="text-sm font-medium text-red-800 dark:text-red-200 mb-2">{uiText("❌ Errores (")}{result.details.errors.length}):
                                 </p>
                                 <div className="space-y-1">
                                     {result.details.errors.map((e, i) => (
                                         <div key={i} className="text-xs p-2 bg-red-100 dark:bg-red-900 rounded">
-                                            <span className="font-semibold">Fila {e.row}:</span> {e.error}
+                                            <span className="font-semibold">{uiText("Fila")}{" "}{e.row}:</span> {e.error}
                                             {e.hostname && <span className="ml-1">({e.hostname})</span>}
                                         </div>
                                     ))}
@@ -297,12 +284,10 @@ export function CSVImport({ onImportComplete, onCancel }: CSVImportProps) {
                         className="flex-1"
                         type="button"
                     >
-                        {result ? "Cerrar" : "Cancelar"}
+                        {result ? uiText("Cerrar") : uiText("Cancelar")}
                     </Button>
                     {result && result.details.success.length > 0 && (
-                        <Button onClick={onCancel} className="flex-1" type="button">
-                            Continuar
-                        </Button>
+                        <Button onClick={onCancel} className="flex-1" type="button">{uiText("Continuar")}</Button>
                     )}
                 </div>
             </CardContent>

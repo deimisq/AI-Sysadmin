@@ -1,3 +1,4 @@
+import { uiText } from '../../lib/ui-language';
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -93,19 +94,19 @@ export function OrganizationManagement() {
         return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
     };
 
-    if (loading) return <div>Cargando organizaciones...</div>;
+    if (loading) return <div>{uiText("Cargando organizaciones...")}</div>;
 
     if (creatingOrg) {
         return (
             <Card>
                 <CardHeader>
-                    <CardTitle>Nueva Organización</CardTitle>
-                    <CardDescription>Crear una nueva organización multi-tenant</CardDescription>
+                    <CardTitle>{uiText("Nueva Organización")}</CardTitle>
+                    <CardDescription>{uiText("Crear una nueva organización multi-tenant")}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="grid gap-4 md:grid-cols-2">
                         <div>
-                            <label className="text-sm font-medium">Nombre</label>
+                            <label className="text-sm font-medium">{uiText("Nombre")}</label>
                             <Input
                                 value={newOrg.name}
                                 onChange={(e) => {
@@ -116,7 +117,7 @@ export function OrganizationManagement() {
                             />
                         </div>
                         <div>
-                            <label className="text-sm font-medium">Slug (URL Friendly)</label>
+                            <label className="text-sm font-medium">{uiText("Slug (URL Friendly)")}</label>
                             <Input
                                 value={newOrg.slug}
                                 onChange={(e) => setNewOrg({ ...newOrg, slug: e.target.value })}
@@ -124,19 +125,19 @@ export function OrganizationManagement() {
                             />
                         </div>
                         <div>
-                            <label className="text-sm font-medium">Plan de Suscripción</label>
+                            <label className="text-sm font-medium">{uiText("Plan de Suscripción")}</label>
                             <select
                                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                                 value={newOrg.subscription_tier}
                                 onChange={(e) => setNewOrg({ ...newOrg, subscription_tier: e.target.value })}
                             >
-                                <option value="free">Gratuito</option>
+                                <option value="free">{uiText("Gratuito")}</option>
                                 <option value="pro">Pro</option>
                                 <option value="enterprise">Enterprise</option>
                             </select>
                         </div>
                         <div>
-                            <label className="text-sm font-medium">Límite de Usuarios</label>
+                            <label className="text-sm font-medium">{uiText("Límite de Usuarios")}</label>
                             <Input
                                 type="number"
                                 value={newOrg.max_users}
@@ -145,8 +146,8 @@ export function OrganizationManagement() {
                         </div>
                     </div>
                     <div className="flex gap-2">
-                        <Button onClick={handleCreate}>Crear Organización</Button>
-                        <Button variant="outline" onClick={() => setCreatingOrg(false)}>Cancelar</Button>
+                        <Button onClick={handleCreate}>{uiText("Crear Organización")}</Button>
+                        <Button variant="outline" onClick={() => setCreatingOrg(false)}>{uiText("Cancelar")}</Button>
                     </div>
                 </CardContent>
             </Card>
@@ -157,12 +158,12 @@ export function OrganizationManagement() {
         return (
             <Card>
                 <CardHeader>
-                    <CardTitle>Editar: {editingOrg.name}</CardTitle>
+                    <CardTitle>{uiText("Editar:")}{" "}{editingOrg.name}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="grid gap-4 md:grid-cols-2">
                         <div>
-                            <label className="text-sm font-medium">Nombre</label>
+                            <label className="text-sm font-medium">{uiText("Nombre")}</label>
                             <Input
                                 value={editingOrg.name}
                                 onChange={(e) => setEditingOrg({ ...editingOrg, name: e.target.value })}
@@ -175,13 +176,13 @@ export function OrganizationManagement() {
                                 value={editingOrg.subscription_tier}
                                 onChange={(e) => setEditingOrg({ ...editingOrg, subscription_tier: e.target.value })}
                             >
-                                <option value="free">Gratuito</option>
+                                <option value="free">{uiText("Gratuito")}</option>
                                 <option value="pro">Pro</option>
                                 <option value="enterprise">Enterprise</option>
                             </select>
                         </div>
                         <div>
-                            <label className="text-sm font-medium">Límite de Usuarios</label>
+                            <label className="text-sm font-medium">{uiText("Límite de Usuarios")}</label>
                             <Input
                                 type="number"
                                 value={editingOrg.max_users}
@@ -190,8 +191,8 @@ export function OrganizationManagement() {
                         </div>
                     </div>
                     <div className="flex gap-2">
-                        <Button onClick={handleUpdate}>Guardar Cambios</Button>
-                        <Button variant="outline" onClick={() => setEditingOrg(null)}>Cancelar</Button>
+                        <Button onClick={handleUpdate}>{uiText("Guardar Cambios")}</Button>
+                        <Button variant="outline" onClick={() => setEditingOrg(null)}>{uiText("Cancelar")}</Button>
                     </div>
                 </CardContent>
             </Card>
@@ -204,15 +205,11 @@ export function OrganizationManagement() {
                 <div className="flex items-center justify-between">
                     <div>
                         <CardTitle className="flex items-center gap-2">
-                            <Building2 className="h-5 w-5" />
-                            Organizaciones
-                        </CardTitle>
-                        <CardDescription>Gestionar tenants y suscripciones</CardDescription>
+                            <Building2 className="h-5 w-5" />{uiText("Organizaciones")}</CardTitle>
+                        <CardDescription>{uiText("Gestionar tenants y suscripciones")}</CardDescription>
                     </div>
                     <Button onClick={() => setCreatingOrg(true)}>
-                        <Plus className="mr-2 h-4 w-4" />
-                        Nueva Organización
-                    </Button>
+                        <Plus className="mr-2 h-4 w-4" />{uiText("Nueva Organización")}</Button>
                 </div>
             </CardHeader>
             <CardContent>
@@ -233,8 +230,7 @@ export function OrganizationManagement() {
                                     <span>Slug: {org.slug}</span>
                                     <span className="flex items-center gap-1">
                                         <Users className="h-3 w-3" />
-                                        Max: {org.max_users} usuarios
-                                    </span>
+                                        Max: {org.max_users}{uiText("usuarios")}</span>
                                 </div>
                             </div>
                             <div className="flex gap-2">
@@ -248,7 +244,7 @@ export function OrganizationManagement() {
                         </div>
                     ))}
                     {organizations.length === 0 && (
-                        <p className="text-center text-muted-foreground py-4">No hay organizaciones creadas.</p>
+                        <p className="text-center text-muted-foreground py-4">{uiText("No hay organizaciones creadas.")}</p>
                     )}
                 </div>
             </CardContent>

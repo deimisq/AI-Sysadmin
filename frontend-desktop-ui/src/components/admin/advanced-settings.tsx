@@ -1,3 +1,4 @@
+import { uiText, uiFormat } from '../../lib/ui-language';
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -94,7 +95,7 @@ export function AdvancedSettings() {
                 toast.error("Error al guardar configuración");
             }
         } catch (error: any) {
-            toast.error(`Error: ${error.message}`);
+            toast.error(uiFormat("Error: {0}", error.message));
         } finally {
             setSaving(false);
         }
@@ -115,7 +116,7 @@ export function AdvancedSettings() {
                 toast.error("Error al crear backup");
             }
         } catch (error: any) {
-            toast.error(`Error: ${error.message}`);
+            toast.error(uiFormat("Error: {0}", error.message));
         } finally {
             setBackingUp(false);
         }
@@ -135,7 +136,7 @@ export function AdvancedSettings() {
                 toast.error("Error al restablecer configuración");
             }
         } catch (error: any) {
-            toast.error(`Error: ${error.message}`);
+            toast.error(uiFormat("Error: {0}", error.message));
         }
         setShowResetDialog(false);
     };
@@ -155,19 +156,15 @@ export function AdvancedSettings() {
             <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                        <Settings className="h-5 w-5" />
-                        Configuración Avanzada
-                    </CardTitle>
-                    <CardDescription>
-                        Configuraciones del sistema y opciones avanzadas
-                    </CardDescription>
+                        <Settings className="h-5 w-5" />{uiText("Configuración Avanzada")}</CardTitle>
+                    <CardDescription>{uiText("Configuraciones del sistema y opciones avanzadas")}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6 max-h-[calc(100vh-300px)] overflow-y-auto">
                     {/* Maintenance Mode */}
                     <div className="p-4 border rounded-lg space-y-4 bg-yellow-50 dark:bg-yellow-950/20 border-yellow-200 dark:border-yellow-800">
                         <div className="flex items-center gap-2">
                             <AlertTriangle className="h-5 w-5 text-yellow-600 dark:text-yellow-500" />
-                            <h3 className="text-lg font-medium">Modo de Mantenimiento</h3>
+                            <h3 className="text-lg font-medium">{uiText("Modo de Mantenimiento")}</h3>
                         </div>
                         <div className="flex items-center gap-2">
                             <input
@@ -176,11 +173,11 @@ export function AdvancedSettings() {
                                 onChange={(e) => setConfig({ ...config, maintenance_mode: e.target.checked })}
                                 className="h-4 w-4"
                             />
-                            <Label>Activar modo de mantenimiento</Label>
+                            <Label>{uiText("Activar modo de mantenimiento")}</Label>
                         </div>
                         {config.maintenance_mode && (
                             <div>
-                                <Label>Mensaje de Mantenimiento</Label>
+                                <Label>{uiText("Mensaje de Mantenimiento")}</Label>
                                 <Textarea
                                     value={config.maintenance_message}
                                     onChange={(e) => setConfig({ ...config, maintenance_message: e.target.value })}
@@ -192,7 +189,7 @@ export function AdvancedSettings() {
 
                     {/* Debug & Profiling */}
                     <div className="space-y-4">
-                        <h3 className="text-lg font-medium">Debug y Profiling</h3>
+                        <h3 className="text-lg font-medium">{uiText("Debug y Profiling")}</h3>
                         <div className="space-y-2">
                             <div className="flex items-center gap-2">
                                 <input
@@ -201,7 +198,7 @@ export function AdvancedSettings() {
                                     onChange={(e) => setConfig({ ...config, enable_debug_mode: e.target.checked })}
                                     className="h-4 w-4"
                                 />
-                                <Label>Habilitar modo debug</Label>
+                                <Label>{uiText("Habilitar modo debug")}</Label>
                             </div>
                             <div className="flex items-center gap-2">
                                 <input
@@ -210,7 +207,7 @@ export function AdvancedSettings() {
                                     onChange={(e) => setConfig({ ...config, enable_profiling: e.target.checked })}
                                     className="h-4 w-4"
                                 />
-                                <Label>Habilitar profiling de performance</Label>
+                                <Label>{uiText("Habilitar profiling de performance")}</Label>
                             </div>
                             <div className="flex items-center gap-2">
                                 <input
@@ -219,7 +216,7 @@ export function AdvancedSettings() {
                                     onChange={(e) => setConfig({ ...config, enable_experimental_features: e.target.checked })}
                                     className="h-4 w-4"
                                 />
-                                <Label>Habilitar características experimentales</Label>
+                                <Label>{uiText("Habilitar características experimentales")}</Label>
                             </div>
                         </div>
                     </div>
@@ -234,14 +231,10 @@ export function AdvancedSettings() {
                             <Button variant="outline" onClick={handleBackupNow} disabled={backingUp}>
                                 {backingUp ? (
                                     <>
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                        Creando...
-                                    </>
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />{uiText("Creando...")}</>
                                 ) : (
                                     <>
-                                        <Download className="mr-2 h-4 w-4" />
-                                        Backup Ahora
-                                    </>
+                                        <Download className="mr-2 h-4 w-4" />{uiText("Backup Ahora")}</>
                                 )}
                             </Button>
                         </div>
@@ -253,12 +246,12 @@ export function AdvancedSettings() {
                                     onChange={(e) => setConfig({ ...config, auto_backup_enabled: e.target.checked })}
                                     className="h-4 w-4"
                                 />
-                                <Label>Habilitar backups automáticos</Label>
+                                <Label>{uiText("Habilitar backups automáticos")}</Label>
                             </div>
                             {config.auto_backup_enabled && (
                                 <div className="grid gap-4 md:grid-cols-2">
                                     <div>
-                                        <Label>Hora del Backup Diario</Label>
+                                        <Label>{uiText("Hora del Backup Diario")}</Label>
                                         <Input
                                             type="time"
                                             value={config.auto_backup_time}
@@ -266,7 +259,7 @@ export function AdvancedSettings() {
                                         />
                                     </div>
                                     <div>
-                                        <Label>Retención (días)</Label>
+                                        <Label>{uiText("Retención (días)")}</Label>
                                         <Input
                                             type="number"
                                             value={config.backup_retention_days}
@@ -280,10 +273,10 @@ export function AdvancedSettings() {
 
                     {/* SSH Configuration */}
                     <div className="space-y-4">
-                        <h3 className="text-lg font-medium">Configuración SSH</h3>
+                        <h3 className="text-lg font-medium">{uiText("Configuración SSH")}</h3>
                         <div className="grid gap-4 md:grid-cols-2">
                             <div>
-                                <Label>Algoritmo de Clave SSH</Label>
+                                <Label>{uiText("Algoritmo de Clave SSH")}</Label>
                                 <select
                                     className="w-full px-3 py-2 border rounded-md bg-background"
                                     value={config.ssh_key_algorithm}
@@ -295,7 +288,7 @@ export function AdvancedSettings() {
                                 </select>
                             </div>
                             <div>
-                                <Label>Timeout de Conexión (s)</Label>
+                                <Label>{uiText("Timeout de Conexión (s)")}</Label>
                                 <Input
                                     type="number"
                                     value={config.ssh_connection_timeout}
@@ -307,17 +300,13 @@ export function AdvancedSettings() {
 
                     {/* Danger Zone */}
                     <div className="p-4 border-2 border-red-200 dark:border-red-800 rounded-lg space-y-4 bg-red-50 dark:bg-red-950/20">
-                        <h3 className="text-lg font-medium text-red-600 dark:text-red-400">Zona de Peligro</h3>
+                        <h3 className="text-lg font-medium text-red-600 dark:text-red-400">{uiText("Zona de Peligro")}</h3>
                         <Button
                             variant="destructive"
                             onClick={() => setShowResetDialog(true)}
                         >
-                            <RefreshCw className="mr-2 h-4 w-4" />
-                            Restablecer Configuración
-                        </Button>
-                        <p className="text-sm text-muted-foreground">
-                            Esto restaurará todas las configuraciones a sus valores predeterminados.
-                        </p>
+                            <RefreshCw className="mr-2 h-4 w-4" />{uiText("Restablecer Configuración")}</Button>
+                        <p className="text-sm text-muted-foreground">{uiText("Esto restaurará todas las configuraciones a sus valores predeterminados.")}</p>
                     </div>
 
                     {/* Save Button */}
@@ -325,14 +314,10 @@ export function AdvancedSettings() {
                         <Button onClick={handleSave} disabled={saving}>
                             {saving ? (
                                 <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    Guardando...
-                                </>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />{uiText("Guardando...")}</>
                             ) : (
                                 <>
-                                    <Save className="mr-2 h-4 w-4" />
-                                    Guardar Configuración
-                                </>
+                                    <Save className="mr-2 h-4 w-4" />{uiText("Guardar Configuración")}</>
                             )}
                         </Button>
                     </div>
@@ -343,17 +328,12 @@ export function AdvancedSettings() {
             <AlertDialog open={showResetDialog} onOpenChange={setShowResetDialog}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>¿Restablecer configuración?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            Esta acción restaurará TODAS las configuraciones del sistema a sus valores predeterminados.
-                            Esta acción no se puede deshacer.
-                        </AlertDialogDescription>
+                        <AlertDialogTitle>{uiText("¿Restablecer configuración?")}</AlertDialogTitle>
+                        <AlertDialogDescription>{uiText("Esta acción restaurará TODAS las configuraciones del sistema a sus valores predeterminados. Esta acción no se puede deshacer.")}</AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleResetConfig} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                            Restablecer
-                        </AlertDialogAction>
+                        <AlertDialogCancel>{uiText("Cancelar")}</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleResetConfig} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">{uiText("Restablecer")}</AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>

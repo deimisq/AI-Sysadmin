@@ -5,7 +5,8 @@ No necesita un backend ni una cuenta para las conexiones locales.
 
 Se instala para el usuario actual, sin solicitar privilegios de administrador.
 Las versiones se conservan en carpetas separadas. El acceso directo apunta a
-la version instalada mas recientemente. No hay actualizacion automatica.
+la version instalada mas recientemente. La app consulta actualizaciones;
+descargar, instalar y reiniciar requieren aprobaciones independientes.
 Antes de actualizar, el instalador detecta las versiones abiertas de esta
 instalacion y permite cerrarlas mediante Windows. Al finalizar solo se abre
 la version nueva, si se elige abrir la app. El cierre desconecta las sesiones.
@@ -22,3 +23,7 @@ el aviso de envio de datos. El instalador no configura ni consulta una IA.
 Esta compilacion de prueba no esta firmada con un certificado comercial.
 Windows puede mostrar una advertencia de publicador desconocido.
 No se ofrece rollback automatico de cambios realizados por el agente.
+
+El idioma seleccionado en el instalador se guarda para la aplicacion.
+No se traducen nombres de equipos, comandos ni salidas de terminal.
+Codigo original bajo Apache 2.0; los terceros conservan sus licencias.

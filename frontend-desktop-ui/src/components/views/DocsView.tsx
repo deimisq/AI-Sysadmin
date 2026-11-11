@@ -1,3 +1,4 @@
+import { uiText } from '../../lib/ui-language';
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -17,7 +18,7 @@ interface DocSection {
 const documentationSections: DocSection[] = [
     {
         id: "getting-started",
-        title: "Guía de Inicio Rápido",
+        title: uiText("Guía de Inicio Rápido"),
         icon: Rocket,
         description: "Primeros pasos con AI Sysadmin Agent",
         content: `# 🚀 Guía de Inicio Rápido
@@ -87,9 +88,9 @@ Para obtener ayuda inteligente con un servidor:
     },
     {
         id: "servers",
-        title: "Gestión de Servidores",
+        title: uiText("Gestión de Servidores"),
         icon: FileText,
-        description: "Cómo administrar y conectar servidores",
+        description: uiText("Cómo administrar y conectar servidores"),
         content: `# 📊 Gestión de Servidores
 
 ## Conectar Servidores
@@ -152,9 +153,9 @@ Para cada servidor puedes realizar:
     },
     {
         id: "ai-copilot",
-        title: "Chat IA",
+        title: uiText("Chat IA"),
         icon: Zap,
-        description: "Cómo usar el asistente de IA",
+        description: uiText("Cómo usar el asistente de IA"),
         content: `# 🤖 Chat IA - Tu Asistente Inteligente
 
 ## ¿Qué es el Chat IA?
@@ -228,9 +229,9 @@ Para diagnósticos más precisos, puedes adjuntar:
     },
     {
         id: "notifications",
-        title: "Informes Programados",
+        title: uiText("Informes Programados"),
         icon: AlertCircle,
-        description: "Configurar reportes automáticos",
+        description: uiText("Configurar reportes automáticos"),
         content: `# 📧 Informes Programados
 
 ## Automatiza Reportes de Salud
@@ -280,9 +281,9 @@ Para frecuencias custom:
     },
     {
         id: "security",
-        title: "Seguridad y Permisos",
+        title: uiText("Seguridad y Permisos"),
         icon: Shield,
-        description: "Roles, permisos y mejores prácticas",
+        description: uiText("Roles, permisos y mejores prácticas"),
         content: `# 🔐 Seguridad y Permisos
 
 ## Sistema de Control de Acceso (RBAC)
@@ -370,7 +371,7 @@ Todas las acciones importantes quedan registradas:
     },
     {
         id: "troubleshooting",
-        title: "Solución de Problemas",
+        title: uiText("Solución de Problemas"),
         icon: HelpCircle,
         description: "Problemas comunes y sus soluciones",
         content: `# 🔧 Solución de Problemas
@@ -471,12 +472,8 @@ export function DocsView() {
             {/* Header */}
             <div className="mb-6">
                 <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-                    <Book className="h-8 w-8" />
-                    Documentación
-                </h1>
-                <p className="text-muted-foreground">
-                    Guías completas para usar AI Sysadmin Agent
-                </p>
+                    <Book className="h-8 w-8" />{uiText("Documentación")}</h1>
+                <p className="text-muted-foreground">{uiText("Guías completas para usar AI Sysadmin Agent")}</p>
             </div>
 
             {/* Search */}
@@ -484,7 +481,7 @@ export function DocsView() {
                 <div className="relative">
                     <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                     <Input
-                        placeholder="Buscar en la documentación..."
+                        placeholder={uiText("Buscar en la documentación...")}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="pl-9"
@@ -496,7 +493,7 @@ export function DocsView() {
                 {/* Sidebar */}
                 <Card className="md:col-span-1">
                     <CardHeader>
-                        <CardTitle className="text-sm">Secciones</CardTitle>
+                        <CardTitle className="text-sm">{uiText("Secciones")}</CardTitle>
                     </CardHeader>
                     <CardContent className="p-0">
                         <ScrollArea className="h-[calc(100vh-300px)]">

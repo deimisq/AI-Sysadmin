@@ -15,6 +15,10 @@ Estas instrucciones aplican a todo el repositorio. Mantener este documento actua
 
 ## Documentación, versionado y coherencia del proyecto
 
+- El trabajo y la publicación se limitan a `deimisq/AI-Sysadmin`. No modificar ni sincronizar otros repositorios públicos o privados como parte de estas tareas.
+- Mantener la documentación propia y la comunicación del proyecto en español. La app y el instalador ofrecen únicamente español e inglés; conservar los textos oficiales de licencias, avisos de terceros, identificadores técnicos y contenido del usuario sin traducciones que alteren su significado. El idioma del instalador se guarda en HKCU para la app y debe probarse con claves de registro sintéticas aisladas.
+- Antes de cambiar la visibilidad a pública, revisar referencias, objetos históricos todavía accesibles en GitHub, artefactos y resultados de seguridad. Un escáner sin hallazgos no permite prometer seguridad al 100%. No publicar mientras se confirme que GitHub sirve objetos con secretos; coordinar su purga con GitHub sin probar ni revocar credenciales por iniciativa propia.
+
 - Mantener siempre actualizada toda la documentación del proyecto conforme a su comportamiento real. En cada tarea, revisar y actualizar los documentos afectados: README, guías de uso y desarrollo, configuración, arquitectura, instalación, migración, pruebas y distribución. Eliminar o corregir instrucciones obsoletas, enlaces rotos y ejemplos que ya no funcionen.
 - Mantener actualizado el versionado y sus referencias según la política de Windows de esta guía: CI asigna automáticamente una compilación nueva por ejecución; no aumentar manualmente varios números para cada tarea. Sincronizar instalador, manifiestos y documentación desde esa versión única. Respetar componentes con versionado independiente y no igualar versiones legacy sin motivo.
 - Mantener las notas de versión o el registro de cambios aplicable al día con las funcionalidades, correcciones, cambios de compatibilidad y pasos de migración que correspondan. Distinguir lo implementado, lo verificado y lo pendiente; no documentar resultados o publicaciones que no se hayan comprobado.

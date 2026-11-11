@@ -61,7 +61,8 @@ def build():
         '--hidden-import=sqlalchemy',
         '--hidden-import=sqlalchemy.ext.declarative',
         '--hidden-import=alembic',
-        '--hidden-import=passlib.handlers.bcrypt',
+        '--hidden-import=bcrypt',
+        '--hidden-import=jwt',
         
         '--hidden-import=langchain',
         '--hidden-import=langchain_community',

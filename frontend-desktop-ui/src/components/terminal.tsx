@@ -1,3 +1,4 @@
+import { uiText } from '../lib/ui-language';
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { FolderOpen } from 'lucide-react';
@@ -114,7 +115,7 @@ export default function TerminalComponent(props: TerminalComponentProps) {
         } catch (e: any) {
             if (attempt !== connectionGeneration.current) return;
             console.error("SSH connection failed:", e);
-            setError(e.message || "Error de conexión");
+            setError(e.message || uiText("Error de conexión"));
             setRetryCount(prev => prev + 1);
         } finally {
             if (attempt === connectionGeneration.current) setConnecting(false);
@@ -159,8 +160,7 @@ export default function TerminalComponent(props: TerminalComponentProps) {
                     <button onClick={() => setShowFiles(value => !value)} aria-pressed={showFiles}
                         title="Mostrar u ocultar archivos SFTP"
                         className="flex items-center gap-1 px-2 h-7 text-[11px] text-gray-400 hover:text-white hover:bg-white/5 rounded-sm focus-visible:outline focus-visible:outline-1 focus-visible:outline-blue-400">
-                        <FolderOpen size={13} /> Archivos
-                    </button>, document.getElementById('session-actions')!
+                        <FolderOpen size={13} />{uiText("Archivos")}</button>, document.getElementById('session-actions')!
                 )}
                 <div className="flex-grow flex overflow-hidden relative">
                     {props.serverData?.quick_protocol !== 'sftp' && <div className="flex-1 bg-black min-w-0">
@@ -184,7 +184,7 @@ export default function TerminalComponent(props: TerminalComponentProps) {
             <div className="h-full flex items-center justify-center bg-gray-950">
                 <div className="text-center space-y-4">
                     <div className="animate-spin text-4xl">⚙️</div>
-                    <p className="text-gray-400">Conectando a {props.serverData?.hostname}...</p>
+                    <p className="text-gray-400">{uiText("Conectando a")}{" "}{props.serverData?.hostname}...</p>
                 </div>
             </div>
         );
@@ -196,26 +196,22 @@ export default function TerminalComponent(props: TerminalComponentProps) {
             <div className="h-full flex items-center justify-center bg-gray-950 p-6">
                 <div className="max-w-md w-full space-y-4 text-center">
                     <div className="text-6xl">⚠️</div>
-                    <h3 className="text-xl font-bold text-red-400">Error de Conexión</h3>
+                    <h3 className="text-xl font-bold text-red-400">{uiText("Error de Conexión")}</h3>
                     <div className="bg-red-900/20 border border-red-800 text-red-200 p-4 rounded text-sm">
                         {error}
                     </div>
                     {props.serverData && (
                         <div className="text-xs text-gray-500 space-y-1">
                             <p>{props.serverData.hostname} ({props.serverData.ip_address})</p>
-                            <p>Intento {retryCount}</p>
+                            <p>{uiText("Intento")}{" "}{retryCount}</p>
                         </div>
                     )}
                     <div className="space-y-2">
-                        <Button onClick={autoConnect} className="w-full">
-                            🔄 Reintentar
-                        </Button>
+                        <Button onClick={autoConnect} className="w-full">{uiText("🔄 Reintentar")}</Button>
                         {!local && <button
                             onClick={() => setRetryCount(3)}
                             className="text-xs text-gray-500 hover:text-gray-300 underline"
-                        >
-                            Usar terminal web (proxy)
-                        </button>}
+                        >{uiText("Usar terminal web (proxy)")}</button>}
                     </div>
                 </div>
             </div>

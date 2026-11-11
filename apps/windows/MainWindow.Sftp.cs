@@ -19,12 +19,12 @@ public partial class MainWindow
                 if (_closing || token.IsCancellationRequested) return (path: (string?)null, overwrite: false);
                 if (direction == "upload")
                 {
-                    var dialog = new Microsoft.Win32.OpenFileDialog { Title = "Subir archivo a " + directory, CheckFileExists = true, Multiselect = false };
+                    var dialog = new Microsoft.Win32.OpenFileDialog { Title = UserLanguage.Text("Subir archivo a ") + directory, CheckFileExists = true, Multiselect = false };
                     return (path: dialog.ShowDialog(this) == true ? dialog.FileName : null, overwrite: false);
                 }
                 var safeName = new string(name.Select(c => Path.GetInvalidFileNameChars().Contains(c) ? '_' : c).ToArray());
-                var save = new Microsoft.Win32.SaveFileDialog { Title = "Descargar archivo", FileName = safeName,
-                    Filter = "Todos los archivos|*.*", OverwritePrompt = true };
+                var save = new Microsoft.Win32.SaveFileDialog { Title = UserLanguage.Text("Descargar archivo"), FileName = safeName,
+                    Filter = UserLanguage.Text("Todos los archivos|*.*"), OverwritePrompt = true };
                 return save.ShowDialog(this) == true ? (path: save.FileName, overwrite: File.Exists(save.FileName)) : (path: (string?)null, overwrite: false);
             });
             if (chosen.path == null) throw new OperationCanceledException();

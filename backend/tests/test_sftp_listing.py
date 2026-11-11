@@ -3,6 +3,8 @@ import asyncio
 import importlib.util
 import stat
 import os
+import secrets
+from cryptography.fernet import Fernet
 import sys
 from pathlib import Path
 from types import SimpleNamespace
@@ -12,8 +14,8 @@ from fastapi import HTTPException
 import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-os.environ.update(DATABASE_URL='sqlite://', SECRET_KEY='synthetic-test-only',
-                  ENCRYPTION_KEY='synthetic-test-only')
+os.environ.update(DATABASE_URL='sqlite://', SECRET_KEY=secrets.token_urlsafe(48),
+                  ENCRYPTION_KEY=Fernet.generate_key().decode())
 
 
 def load_service():

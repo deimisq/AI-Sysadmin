@@ -1,5 +1,9 @@
 # Windows 0.11
 
+- Selección explícita de español e inglés en el instalador; la elección se guarda para la interfaz y los diálogos nativos. Catálogos compartidos para controles, permisos, copias, ajustes y mensajes con parámetros; no se traduce la salida del servidor ni el contenido del usuario.
+- Actualización de dependencias de interfaz para corregir avisos conocidos. Revisión automática de secretos y dependencias en CI, además de las pruebas de distribución. La interfaz web independiente migra a Next.js 16/React 19 y requiere Node.js 22.
+- El backend independiente sustituye python-jose por PyJWT y valida sujeto y caducidad obligatorios. Las sesiones antiguas sin esos campos deberán iniciar sesión nuevamente. El almacén y las credenciales locales de Windows no cambian.
+
 - Mantenimiento de seguridad del repositorio: retirada de secretos históricos y configuraciones reales de entorno; no modifica credenciales guardadas en la app ni revoca claves de proveedores. Los clones antiguos requieren reemplazo tras la reescritura.
 
 - Código original bajo Apache 2.0; distribución acompañada de LICENSE, NOTICE y avisos de terceros. Ayuda incorpora el acceso al sitio oficial de Sentra IT para apoyo voluntario, sin pagos integrados ni funciones condicionadas a donar. La publicación pública del repositorio sigue pendiente de sanear secretos históricos.

@@ -1,0 +1,26 @@
+AI Sysadmin Agent - Windows x64
+
+Includes the .NET runtime. Requires Microsoft Edge WebView2 Runtime Evergreen.
+Local connections do not require a backend or an account.
+
+Installed for the current user without administrator privileges.
+The installer detects running versions and offers to close them through Windows.
+Closing the app disconnects SSH/RDP sessions. Only the new version is opened.
+
+The app checks for updates. Downloading, installing and restarting require
+separate approvals. Windows is never restarted automatically.
+
+Connections, credentials, AI settings and logs remain in
+%LOCALAPPDATA%\AiSysadmin and are retained when uninstalling.
+Create an encrypted connection backup before moving to another computer.
+DPAPI data requires the same Windows account; a portable backup uses its own
+password. AI keys, chats and GitHub tokens are excluded from connection backups.
+
+The installer language is saved for the app. This choice does not translate
+terminal output, computer names or content shared by users and AI providers.
+
+AI requires your provider configuration and consent to share context.
+The installer does not configure or contact AI providers.
+
+Original code: Apache 2.0. Third-party components retain their own licenses.
+These builds are not code signed. Windows may show an unknown publisher warning.

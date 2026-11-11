@@ -1,3 +1,4 @@
+import { uiText, uiFormat } from '../lib/ui-language';
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -22,7 +23,7 @@ export function ConversationalChat({ server, onClose }: ConversationalChatProps)
     const [messages, setMessages] = useState<Message[]>([
         {
             role: "system",
-            content: `💡 Conversación con IA para el servidor **${server.hostname}**. Describe el problema que estás experimentando y te ayudaré a diagnosticarlo y resolverlo.`
+            content: uiFormat("💡 Conversación con IA para el servidor **{0}**. Describe el problema que estás experimentando y te ayudaré a diagnosticarlo y resolverlo.", server.hostname)
         }
     ]);
     const [input, setInput] = useState("");
@@ -119,7 +120,7 @@ export function ConversationalChat({ server, onClose }: ConversationalChatProps)
             }));
 
             // Automatically send the results back to the AI for analysis
-            const resultSummary = `Ejecuté el comando que sugeriste. Aquí están los resultados:\n\n**Código de Salida:** ${res.exit_code}\n\n**Output:**\n\`\`\`\n${res.stdout || res.stderr || 'Sin output'}\n\`\`\`\n\nPor favor analiza estos resultados y dime qué encontraste.`;
+            const resultSummary = uiFormat("Ejecuté el comando que sugeriste. Aquí están los resultados:\n\n**Código de Salida:** {0}\n\n**Output:**\n```\n{1}\n```\n\nPor favor analiza estos resultados y dime qué encontraste.", res.exit_code, res.stdout || res.stderr || 'Sin output');
 
             // Add user message with results
             setMessages(prev => [...prev, {
@@ -180,11 +181,9 @@ export function ConversationalChat({ server, onClose }: ConversationalChatProps)
                 <DialogHeader className="px-6 py-4 border-b">
                     <DialogTitle className="flex items-center gap-2">
                         <span className="text-2xl">💬</span>
-                        <span>Chat IA: {server.hostname}</span>
+                        <span>{uiText("Chat IA:")}{" "}{server.hostname}</span>
                     </DialogTitle>
-                    <DialogDescription>
-                        Asistente virtual para diagnóstico y resolución de problemas.
-                    </DialogDescription>
+                    <DialogDescription>{uiText("Asistente virtual para diagnóstico y resolución de problemas.")}</DialogDescription>
                 </DialogHeader>
 
                 <div className="flex-1 overflow-y-auto p-6 space-y-4">
@@ -207,7 +206,7 @@ export function ConversationalChat({ server, onClose }: ConversationalChatProps)
 
                                 {message.proposedCommand && !message.executionResult && (
                                     <div className="mt-4 border border-yellow-500 bg-yellow-500/10 p-3 rounded">
-                                        <p className="text-xs font-bold text-yellow-600 mb-2">📝 Comando Propuesto</p>
+                                        <p className="text-xs font-bold text-yellow-600 mb-2">{uiText("📝 Comando Propuesto")}</p>
                                         <code className="block bg-black text-white p-2 rounded text-xs mb-3 overflow-x-auto">
                                             {message.proposedCommand}
                                         </code>
@@ -217,8 +216,7 @@ export function ConversationalChat({ server, onClose }: ConversationalChatProps)
                                             size="sm"
                                             className="w-full"
                                         >
-                                            <Play className="mr-2 h-3 w-3" /> Ejecutar Comando
-                                        </Button>
+                                            <Play className="mr-2 h-3 w-3" />{uiText("Ejecutar Comando")}</Button>
                                     </div>
                                 )}
 
@@ -229,7 +227,7 @@ export function ConversationalChat({ server, onClose }: ConversationalChatProps)
                                         }`}>
                                         <p className="text-xs font-bold mb-2">
                                             {message.executionResult.exit_code === 0 ? '✅' : '❌'}
-                                            {' '}Resultado de Ejecución (Código: {message.executionResult.exit_code})
+                                            {' '}{uiText("Resultado de Ejecución (Código:")}{" "}{message.executionResult.exit_code})
                                         </p>
                                         <pre className="text-xs bg-black text-white p-2 rounded overflow-x-auto">
                                             {message.executionResult.stdout || message.executionResult.stderr}
@@ -244,7 +242,7 @@ export function ConversationalChat({ server, onClose }: ConversationalChatProps)
                         <div className="flex justify-start">
                             <div className="bg-muted rounded-lg p-4 flex items-center gap-2">
                                 <Loader2 className="h-4 w-4 animate-spin" />
-                                <span className="text-sm text-muted-foreground">Analizando...</span>
+                                <span className="text-sm text-muted-foreground">{uiText("Analizando...")}</span>
                             </div>
                         </div>
                     )}
@@ -299,17 +297,13 @@ export function ConversationalChat({ server, onClose }: ConversationalChatProps)
                                 onClick={() => fileInputRef.current?.click()}
                                 disabled={loading}
                             >
-                                <ImageIcon className="h-4 w-4 mr-2" />
-                                Adjuntar Imagen
-                            </Button>
+                                <ImageIcon className="h-4 w-4 mr-2" />{uiText("Adjuntar Imagen")}</Button>
                             <Button onClick={handleSendMessage} disabled={loading || !input.trim()} className="flex-1">
                                 {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                             </Button>
                         </div>
                     </div>
-                    <p className="text-xs text-muted-foreground mt-2">
-                        💡 Tip: Puedes adjuntar screenshots de errores para un mejor diagnóstico
-                    </p>
+                    <p className="text-xs text-muted-foreground mt-2">{uiText("💡 Tip: Puedes adjuntar screenshots de errores para un mejor diagnóstico")}</p>
                 </div>
             </DialogContent>
         </Dialog>

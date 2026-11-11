@@ -1,3 +1,4 @@
+import { uiText } from '../../lib/ui-language';
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -86,66 +87,58 @@ export function FrontendParameters() {
         <Card>
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                    <Palette className="h-5 w-5" />
-                    Parámetros de Frontend
-                </CardTitle>
-                <CardDescription>
-                    Personaliza la apariencia y comportamiento de la interfaz
-                </CardDescription>
+                    <Palette className="h-5 w-5" />{uiText("Parámetros de Frontend")}</CardTitle>
+                <CardDescription>{uiText("Personaliza la apariencia y comportamiento de la interfaz")}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6 max-h-[calc(100vh-300px)] overflow-y-auto">
                 {/* API Configuration */}
                 <div className="space-y-4 p-4 border rounded-lg">
-                    <h3 className="font-medium text-sm">Configuración API</h3>
+                    <h3 className="font-medium text-sm">{uiText("Configuración API")}</h3>
                     <div>
-                        <label className="text-sm font-medium">URL Base de API</label>
+                        <label className="text-sm font-medium">{uiText("URL Base de API")}</label>
                         <Input
                             value={config.api_url}
                             onChange={(e) => setConfig({ ...config, api_url: e.target.value })}
                             placeholder="/api/v1"
                         />
-                        <p className="text-xs text-muted-foreground mt-1">
-                            URL base para las llamadas al backend
-                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">{uiText("URL base para las llamadas al backend")}</p>
                     </div>
                 </div>
 
                 {/* Application Settings */}
                 <div className="space-y-4 p-4 border rounded-lg">
-                    <h3 className="font-medium text-sm">Configuración de la Aplicación</h3>
+                    <h3 className="font-medium text-sm">{uiText("Configuración de la Aplicación")}</h3>
                     <div>
-                        <label className="text-sm font-medium">Nombre de la Aplicación</label>
+                        <label className="text-sm font-medium">{uiText("Nombre de la Aplicación")}</label>
                         <Input
                             value={config.app_name}
                             onChange={(e) => setConfig({ ...config, app_name: e.target.value })}
                             placeholder="AI Sysadmin Agent"
                         />
-                        <p className="text-xs text-muted-foreground mt-1">
-                            Nombre que se muestra en la barra de título y encabezados
-                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">{uiText("Nombre que se muestra en la barra de título y encabezados")}</p>
                     </div>
                     <div className="grid gap-4 md:grid-cols-2">
                         <div>
-                            <label className="text-sm font-medium">Idioma por Defecto</label>
+                            <label className="text-sm font-medium">{uiText("Idioma por Defecto")}</label>
                             <select
                                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                                 value={config.default_language}
                                 onChange={(e) => setConfig({ ...config, default_language: e.target.value })}
                             >
-                                <option value="en">Inglés</option>
-                                <option value="es">Español</option>
+                                <option value={uiText("en")}>{uiText("Inglés")}</option>
+                                <option value="es">{uiText("Español")}</option>
                             </select>
                         </div>
                         <div>
-                            <label className="text-sm font-medium">Tema</label>
+                            <label className="text-sm font-medium">{uiText("Tema")}</label>
                             <select
                                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                                 value={config.theme}
                                 onChange={(e) => setConfig({ ...config, theme: e.target.value })}
                             >
-                                <option value="light">Claro</option>
-                                <option value="dark">Oscuro</option>
-                                <option value="system">Sistema</option>
+                                <option value="light">{uiText("Claro")}</option>
+                                <option value="dark">{uiText("Oscuro")}</option>
+                                <option value="system">{uiText("Sistema")}</option>
                             </select>
                         </div>
                     </div>
@@ -153,52 +146,46 @@ export function FrontendParameters() {
 
                 {/* UI/UX Settings */}
                 <div className="space-y-4 p-4 border rounded-lg">
-                    <h3 className="font-medium text-sm">Configuración UI/UX</h3>
+                    <h3 className="font-medium text-sm">{uiText("Configuración UI/UX")}</h3>
                     <div className="grid gap-4 md:grid-cols-2">
                         <div>
-                            <label className="text-sm font-medium">Items por Página</label>
+                            <label className="text-sm font-medium">{uiText("Items por Página")}</label>
                             <Input
                                 type="number"
                                 value={config.items_per_page}
                                 onChange={(e) => setConfig({ ...config, items_per_page: e.target.value })}
                             />
-                            <p className="text-xs text-muted-foreground mt-1">
-                                Número de elementos a mostrar en listas paginadas
-                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">{uiText("Número de elementos a mostrar en listas paginadas")}</p>
                         </div>
                         <div>
-                            <label className="text-sm font-medium">Animaciones</label>
+                            <label className="text-sm font-medium">{uiText("Animaciones")}</label>
                             <select
                                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                                 value={config.enable_animations}
                                 onChange={(e) => setConfig({ ...config, enable_animations: e.target.value })}
                             >
-                                <option value="true">Activadas</option>
-                                <option value="false">Desactivadas</option>
+                                <option value="true">{uiText("Activadas")}</option>
+                                <option value="false">{uiText("Desactivadas")}</option>
                             </select>
-                            <p className="text-xs text-muted-foreground mt-1">
-                                Habilitar/deshabilitar animaciones de interfaz
-                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">{uiText("Habilitar/deshabilitar animaciones de interfaz")}</p>
                         </div>
                     </div>
                 </div>
 
                 {/* Developer Settings */}
                 <div className="space-y-4 p-4 border rounded-lg">
-                    <h3 className="font-medium text-sm">Configuración de Desarrollador</h3>
+                    <h3 className="font-medium text-sm">{uiText("Configuración de Desarrollador")}</h3>
                     <div>
-                        <label className="text-sm font-medium">Mostrar Información de Depuración</label>
+                        <label className="text-sm font-medium">{uiText("Mostrar Información de Depuración")}</label>
                         <select
                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                             value={config.show_debug_info}
                             onChange={(e) => setConfig({ ...config, show_debug_info: e.target.value })}
                         >
-                            <option value="false">Desactivado</option>
-                            <option value="true">Activado</option>
+                            <option value="false">{uiText("Desactivado")}</option>
+                            <option value="true">{uiText("Activado")}</option>
                         </select>
-                        <p className="text-xs text-muted-foreground mt-1">
-                            Muestra detalles técnicos adicionales en la interfaz
-                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">{uiText("Muestra detalles técnicos adicionales en la interfaz")}</p>
                     </div>
                 </div>
 
@@ -206,7 +193,7 @@ export function FrontendParameters() {
                 <div className="flex items-center justify-end pt-4 border-t">
                     <Button onClick={handleSave} disabled={loading}>
                         <Save className="mr-2 h-4 w-4" />
-                        {loading ? "Guardando..." : "Guardar Configuración"}
+                        {loading ? uiText("Guardando...") : uiText("Guardar Configuración")}
                     </Button>
                 </div>
 
@@ -223,8 +210,7 @@ export function FrontendParameters() {
 
                 <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                     <p className="text-sm text-blue-800 dark:text-blue-200">
-                        <strong>ℹ️ Nota:</strong> Algunos cambios pueden requerir recargar la página para aplicarse completamente.
-                    </p>
+                        <strong>{uiText("ℹ️ Nota:")}</strong>{uiText("Algunos cambios pueden requerir recargar la página para aplicarse completamente.")}</p>
                 </div>
             </CardContent>
         </Card>

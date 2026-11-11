@@ -7,6 +7,9 @@
 #ifndef OutputDir
   #error OutputDir is required.
 #endif
+#ifndef InstallerSettingsKey
+  #define InstallerSettingsKey "Software\Sentrait\AiSysadminAgent"
+#endif
 #ifndef AppVersion
   #error AppVersion is required.
 #endif
@@ -16,6 +19,7 @@ AppId={#InstallerAppId}
 AppName=AI Sysadmin Agent
 AppVersion={#AppVersion}
 AppPublisher=AI Sysadmin Agent
+AppPublisherURL=https://sentrait.com.uy/
 DefaultDirName={localappdata}\Programs\AI Sysadmin Agent
 DefaultGroupName=AI Sysadmin Agent
 PrivilegesRequired=lowest
@@ -35,13 +39,23 @@ CloseApplications=yes
 RestartApplications=no
 InfoBeforeFile=install-notes.txt
 SetupLogging=yes
+ShowLanguageDialog=yes
 
 [Languages]
-Name: "spanish"; MessagesFile: "compiler:Languages\Spanish.isl"
-Name: "english"; MessagesFile: "compiler:Default.isl"
+Name: "spanish"; MessagesFile: "compiler:Languages\Spanish.isl"; InfoBeforeFile: "install-notes.txt"
+Name: "english"; MessagesFile: "compiler:Default.isl"; InfoBeforeFile: "install-notes.en.txt"
+
+[CustomMessages]
+spanish.CloseCheck=No se pudo comprobar si la aplicación está abierta: %1. Cerrala y volvé a ejecutar el instalador.
+english.CloseCheck=Could not check whether the application is running: %1. Close it and run the installer again.
+spanish.WebViewRequired=Instalá Microsoft Edge WebView2 Runtime (Evergreen) y volvé a ejecutar este instalador: https://developer.microsoft.com/microsoft-edge/webview2/
+english.WebViewRequired=Install Microsoft Edge WebView2 Runtime (Evergreen), then run this installer again: https://developer.microsoft.com/microsoft-edge/webview2/
+
+[Registry]
+Root: HKCU; Subkey: "{#InstallerSettingsKey}"; ValueType: string; ValueName: "Language"; ValueData: "{code:ApplicationLanguage}"
 
 [Tasks]
-Name: "desktopicon"; Description: "Crear un acceso directo en el escritorio"; Flags: unchecked
+Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; Flags: unchecked
 
 [Files]
 Source: "{#PublishDir}\*"; DestDir: "{app}\versions\{#AppVersion}"; Flags: ignoreversion recursesubdirs createallsubdirs
@@ -52,14 +66,19 @@ Name: "{autoprograms}\AI Sysadmin Agent"; Filename: "{app}\versions\{#AppVersion
 Name: "{autodesktop}\AI Sysadmin Agent"; Filename: "{app}\versions\{#AppVersion}\AiSysadmin.exe"; IconFilename: "{app}\app.ico"; AppUserModelID: "Sentrait.AiSysadminAgent.Desktop"; Tasks: desktopicon; Check: not WizardNoIcons
 
 [Run]
-Filename: "{app}\versions\{#AppVersion}\AiSysadmin.exe"; Description: "Abrir AI Sysadmin Agent"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\versions\{#AppVersion}\AiSysadmin.exe"; Description: "{cm:LaunchProgram,AI Sysadmin Agent}"; Flags: nowait postinstall skipifsilent
 
 [Code]
+function ApplicationLanguage(Param: String): String;
+begin
+  if ActiveLanguage = 'english' then Result := 'en' else Result := 'es';
+end;
+
 procedure RegisterInstalledExecutable(const Filename: String);
 begin
   if FileExists(Filename) then
     if not RegisterExtraCloseApplicationsResource(False, Filename) then
-      RaiseException('No se pudo comprobar si la aplicación está abierta: ' + Filename + '. Cerrala y volvé a ejecutar el instalador.');
+      RaiseException(FmtMessage(CustomMessage('CloseCheck'), [Filename]));
 end;
 
 procedure RegisterExtraCloseApplicationsResources;
@@ -100,5 +119,5 @@ function PrepareToInstall(var NeedsRestart: Boolean): String;
 begin
   Result := '';
   if not HasWebView2 then
-    Result := 'Instalá Microsoft Edge WebView2 Runtime (Evergreen) y volvé a ejecutar este instalador: https://developer.microsoft.com/microsoft-edge/webview2/';
+    Result := CustomMessage('WebViewRequired');
 end;

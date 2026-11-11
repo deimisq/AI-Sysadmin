@@ -1,3 +1,4 @@
+import { uiText, uiFormat } from '../../lib/ui-language';
 import { useEffect } from 'react';
 import { X, Terminal as TerminalIcon, Monitor } from 'lucide-react';
 import { useWorkspaceStore, type Tab } from '../../stores/workspaceStore';
@@ -23,11 +24,11 @@ export function WorkspaceArea() {
     if (tabs.length === 0) {
         return <div className="ide-empty h-full flex flex-col items-center justify-center text-gray-500 select-none">
             <img src="/brand/logo.png" alt="AI Sysadmin Agent" className="w-72 max-w-[80%] mb-6" />
-            <h1 className="text-base text-gray-400 mb-5">Espacio de sesiones</h1>
-            <button onClick={() => window.dispatchEvent(new Event('workspace-command-palette'))} className="ide-empty-action"><span>Abrir conexión</span><kbd>Ctrl+Shift+P</kbd></button>
-            <button onClick={() => useWorkspaceStore.getState().requestExplorerAction('add-server')} className="ide-empty-action"><span>Nueva conexión</span><span>Archivo → Nueva conexión</span></button>
-            <button onClick={() => useWorkspaceStore.getState().toggleAIPanel()} className="ide-empty-action"><span>Acompañante IA</span><kbd>Ctrl+Alt+I</kbd></button>
-            <p className="text-[11px] text-gray-600 mt-8">Doble clic en un servidor del explorador para empezar.</p>
+            <h1 className="text-base text-gray-400 mb-5">{uiText("Espacio de sesiones")}</h1>
+            <button onClick={() => window.dispatchEvent(new Event('workspace-command-palette'))} className="ide-empty-action"><span>{uiText("Abrir conexión")}</span><kbd>Ctrl+Shift+P</kbd></button>
+            <button onClick={() => useWorkspaceStore.getState().requestExplorerAction('add-server')} className="ide-empty-action"><span>{uiText("Nueva conexión")}</span><span>{uiText("Archivo → Nueva conexión")}</span></button>
+            <button onClick={() => useWorkspaceStore.getState().toggleAIPanel()} className="ide-empty-action"><span>{uiText("Acompañante IA")}</span><kbd>Ctrl+Alt+I</kbd></button>
+            <p className="text-[11px] text-gray-600 mt-8">{uiText("Doble clic en un servidor del explorador para empezar.")}</p>
         </div>;
     }
 
@@ -64,7 +65,7 @@ export function WorkspaceArea() {
                                 <span className="protocol-badge">{connectionPresentation(tab.server).protocol}</span>
                             </button>
                             <button
-                                aria-label={`Cerrar sesión ${tab.title}`}
+                                aria-label={uiFormat("Cerrar sesión {0}", tab.title)}
                                 onClick={(e) => handleClose(e, tab.id)}
                                 className="p-1 rounded hover:bg-[#444] text-gray-400 hover:text-white focus:text-white"
                             >

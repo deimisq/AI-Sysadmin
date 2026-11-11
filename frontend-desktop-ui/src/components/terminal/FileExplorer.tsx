@@ -1,3 +1,4 @@
+import { uiText, uiFormat } from '../../lib/ui-language';
 import { useState, useEffect, useRef } from 'react';
 import { isWebView2, sendCommand } from '../../lib/bridge';
 import { Folder, File, ChevronUp, RefreshCw, X, Upload, Download } from 'lucide-react';
@@ -169,18 +170,18 @@ export function FileExplorer({ sessionId, initialPath = ".", onClose, className 
             {/* Header */}
             <div className="flex items-center justify-between p-2 border-b border-[#333] bg-[#252526]">
                 <div className="flex items-center gap-2">
-                    <span className="font-semibold text-gray-200 text-xs">Archivos remotos · SFTP</span>
+                    <span className="font-semibold text-gray-200 text-xs">{uiText("Archivos remotos · SFTP")}</span>
                 </div>
                 <div className="flex gap-1">
                     {isWebView2() && <button disabled={loading || transferring || !directoryLoaded || draftPath !== path} onClick={() => void startTransfer('upload')}
                         title="Subir archivo a esta carpeta" aria-label="Subir archivo" className="p-1 disabled:opacity-30 hover:bg-[#333] rounded text-gray-300">
-                        <Upload className="w-3.5 h-3.5 inline mr-1" /><span className="text-xs">Subir</span>
+                        <Upload className="w-3.5 h-3.5 inline mr-1" /><span className="text-xs">{uiText("Subir")}</span>
                     </button>}
                     <button disabled={loading} onClick={() => loadFiles(path)} title="Refrescar" className="p-1 hover:bg-[#333] rounded text-gray-400 hover:text-white transition-colors">
                         <RefreshCw className={cn("w-3.5 h-3.5", loading && "animate-spin")} />
                     </button>
                     {onClose && (
-                        <button onClick={onClose} title="Cerrar Panel" className="p-1 hover:bg-[#333] rounded text-gray-400 hover:text-white transition-colors">
+                        <button onClick={onClose} title={uiText("Cerrar Panel")} className="p-1 hover:bg-[#333] rounded text-gray-400 hover:text-white transition-colors">
                             <X className="w-3.5 h-3.5" />
                         </button>
                     )}
@@ -214,7 +215,7 @@ export function FileExplorer({ sessionId, initialPath = ".", onClose, className 
                     </div>
                 )}
 
-                <div className="px-2 py-1 text-[10px] uppercase tracking-wide text-gray-400 border-b border-[#333] flex justify-between"><span>Nombre / Modificado</span><span>Tamaño</span></div>
+                <div className="px-2 py-1 text-[10px] uppercase tracking-wide text-gray-400 border-b border-[#333] flex justify-between"><span>{uiText("Nombre / Modificado")}</span><span>{uiText("Tamaño")}</span></div>
                 {files.filter(file => file.name.toLocaleLowerCase().includes(filter.toLocaleLowerCase())).map((file) => (
                     <div key={file.name} className="flex items-center">
                     <button type="button" disabled={transferring}
@@ -229,36 +230,36 @@ export function FileExplorer({ sessionId, initialPath = ".", onClose, className 
                             <File className="w-4 h-4 text-gray-500 flex-shrink-0" />
                         )}
                         <span className="min-w-0 flex-1"><span className="block truncate text-gray-200 group-hover:text-white text-xs">{file.name}</span><span className="block text-[10px] text-gray-400">{formatModified(file.modified)}</span></span>
-                        <span className="text-[10px] text-gray-400 font-mono whitespace-nowrap">{file.is_dir ? 'Carpeta' : formatSize(file.size)}</span>
+                        <span className="text-[10px] text-gray-400 font-mono whitespace-nowrap">{file.is_dir ? uiText('Carpeta') : formatSize(file.size)}</span>
                     </button>
                     {!file.is_dir && isWebView2() && <button disabled={transferring || loading || draftPath !== path}
-                        onClick={() => void startTransfer('download', file.name)} aria-label={`Descargar ${file.name}`} title="Descargar archivo"
+                        onClick={() => void startTransfer('download', file.name)} aria-label={uiFormat("Descargar {0}", file.name)} title={uiText("Descargar archivo")}
                         className="p-1.5 text-gray-400 hover:text-white disabled:opacity-30"><Download className="w-3.5 h-3.5" /></button>}
                     </div>
                 ))}
 
-                {!loading && files.length > 0 && !files.some(file => file.name.toLocaleLowerCase().includes(filter.toLocaleLowerCase())) && <p className="p-4 text-xs text-gray-400">No hay coincidencias en esta carpeta.</p>}
+                {!loading && files.length > 0 && !files.some(file => file.name.toLocaleLowerCase().includes(filter.toLocaleLowerCase())) && <p className="p-4 text-xs text-gray-400">{uiText("No hay coincidencias en esta carpeta.")}</p>}
 
                 {!loading && files.length === 0 && !error && (
-                    <div className="text-center p-8 text-gray-500 text-xs italic opacity-50">Directorio vacío</div>
+                    <div className="text-center p-8 text-gray-500 text-xs italic opacity-50">{uiText("Directorio vacío")}</div>
                 )}
             </div>
 
             {transfer && <div className="p-2 border-t border-[#333] text-xs text-gray-300 space-y-2" role="status">
-                <div>{transfer.direction === 'upload' ? 'Subida' : 'Descarga'} · {({ preparing: 'Elige el archivo o destino en Windows', transferring: 'Transfiriendo', cancelling: 'Cancelando…', completed: 'Completada', cancelled: 'Cancelada', failed: 'Error' })[transfer.status]}</div>
+                <div>{transfer.direction === 'upload' ? 'Subida' : 'Descarga'} · {({ preparing: 'Elige el archivo o destino en Windows', transferring: 'Transfiriendo', cancelling: 'Cancelando…', completed: 'Completada', cancelled: 'Cancelada', failed: uiText('Error') })[transfer.status]}</div>
                 {transfer.fileName && <div className="truncate" title={transfer.fileName}>{transfer.fileName}</div>}
                 {activeTransfer(transfer) && <>
                     <progress className="w-full h-1.5" aria-label="Progreso de transferencia" max={Math.max(1, transfer.total)} value={transfer.bytes} />
                     <div>{formatSize(transfer.bytes)} / {formatSize(transfer.total)}</div>
-                    <button onClick={() => void cancelTransfer()} disabled={transfer.status === 'cancelling'} className="px-2 py-1 rounded border border-gray-600 disabled:opacity-40">Cancelar transferencia</button>
+                    <button onClick={() => void cancelTransfer()} disabled={transfer.status === 'cancelling'} className="px-2 py-1 rounded border border-gray-600 disabled:opacity-40">{uiText("Cancelar transferencia")}</button>
                 </>}
                 {transfer.error && <div className="text-red-300 break-words">{transfer.error}</div>}
             </div>}
 
             {/* StatusBar */}
             <div className="bg-[#252526] border-t border-[#333] px-2 py-1 text-[10px] text-gray-500 flex justify-between">
-                <span>{files.length} elementos</span>
-                <span role="status">{loading ? 'Cargando...' : error ? 'Error de lectura' : 'Listo'}</span>
+                <span>{files.length}{" "}{uiText("elementos")}</span>
+                <span role="status">{loading ? uiText('Cargando...') : error ? uiText('Error de lectura') : 'Listo'}</span>
             </div>
         </div>
     );

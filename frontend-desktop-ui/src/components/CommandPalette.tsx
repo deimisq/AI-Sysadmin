@@ -1,3 +1,4 @@
+import { uiText } from '../lib/ui-language';
 import { useEffect, useState } from "react";
 import {
     CommandDialog,
@@ -45,11 +46,11 @@ export function CommandPalette() {
 
     return (
         <CommandDialog open={open} onOpenChange={setOpen}>
-            <CommandInput placeholder="Buscar conexión por nombre, dirección o acción…" />
+            <CommandInput placeholder={uiText("Buscar conexión por nombre, dirección o acción…")} />
             <CommandList>
-                <CommandEmpty>No se encontraron conexiones ni acciones.</CommandEmpty>
+                <CommandEmpty>{uiText("No se encontraron conexiones ni acciones.")}</CommandEmpty>
 
-                <CommandGroup heading="Conexiones">
+                <CommandGroup heading={uiText("Conexiones")}>
                     {servers.map(server => (
                         <CommandItem key={server.id} value={`${server.hostname} ${server.ip_address} ${server.id}`} onSelect={() => runCommand(() => openTab({
                             type: 'terminal',
@@ -67,11 +68,11 @@ export function CommandPalette() {
 
                 <CommandSeparator />
 
-                <CommandGroup heading="Acciones">
-                    <CommandItem onSelect={() => runCommand(() => useWorkspaceStore.getState().requestExplorerAction('add-server'))}><Plus className="mr-2 h-4 w-4" />Nueva conexión</CommandItem>
-                    <CommandItem onSelect={() => runCommand(() => useWorkspaceStore.getState().requestExplorerAction('add-folder'))}><FolderPlus className="mr-2 h-4 w-4" />Nueva carpeta de cliente o entorno</CommandItem>
-                    <CommandItem onSelect={() => runCommand(() => useWorkspaceStore.getState().toggleAIPanel())}><Sparkles className="mr-2 h-4 w-4" />Mostrar u ocultar acompañante IA</CommandItem>
-                    <CommandItem onSelect={() => runCommand(() => useWorkspaceStore.getState().setActiveOverlay('settings'))}><Settings className="mr-2 h-4 w-4" />Ajustes de la aplicación</CommandItem>
+                <CommandGroup heading={uiText("Acciones")}>
+                    <CommandItem onSelect={() => runCommand(() => useWorkspaceStore.getState().requestExplorerAction('add-server'))}><Plus className="mr-2 h-4 w-4" />{uiText("Nueva conexión")}</CommandItem>
+                    <CommandItem onSelect={() => runCommand(() => useWorkspaceStore.getState().requestExplorerAction('add-folder'))}><FolderPlus className="mr-2 h-4 w-4" />{uiText("Nueva carpeta de cliente o entorno")}</CommandItem>
+                    <CommandItem onSelect={() => runCommand(() => useWorkspaceStore.getState().toggleAIPanel())}><Sparkles className="mr-2 h-4 w-4" />{uiText("Mostrar u ocultar acompañante IA")}</CommandItem>
+                    <CommandItem onSelect={() => runCommand(() => useWorkspaceStore.getState().setActiveOverlay('settings'))}><Settings className="mr-2 h-4 w-4" />{uiText("Ajustes de la aplicación")}</CommandItem>
                 </CommandGroup>
             </CommandList>
         </CommandDialog>

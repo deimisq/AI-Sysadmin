@@ -1,3 +1,4 @@
+import { uiText } from '../../lib/ui-language';
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -85,11 +86,9 @@ export function NotificationPreferences({ currentUser }: NotificationPreferences
             <CardHeader>
                 <div className="flex items-center gap-2">
                     <Bell className="h-5 w-5 text-blue-600" />
-                    <CardTitle>Preferencias de Notificación</CardTitle>
+                    <CardTitle>{uiText("Preferencias de Notificación")}</CardTitle>
                 </div>
-                <CardDescription>
-                    Gestiona qué eventos activan una notificación (alertas, nuevos usuarios, etc.)
-                </CardDescription>
+                <CardDescription>{uiText("Gestiona qué eventos activan una notificación (alertas, nuevos usuarios, etc.)")}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6 max-h-[calc(100vh-300px)] overflow-y-auto">
                 {message && (
@@ -116,13 +115,9 @@ export function NotificationPreferences({ currentUser }: NotificationPreferences
                         <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
                                 <Mail className="h-4 w-4 text-blue-600" />
-                                <label htmlFor="notify_new_users" className="font-medium cursor-pointer">
-                                    Nuevos Usuarios
-                                </label>
+                                <label htmlFor="notify_new_users" className="font-medium cursor-pointer">{uiText("Nuevos Usuarios")}</label>
                             </div>
-                            <p className="text-sm text-muted-foreground">
-                                Recibir notificación cuando un nuevo usuario se registra.
-                            </p>
+                            <p className="text-sm text-muted-foreground">{uiText("Recibir notificación cuando un nuevo usuario se registra.")}</p>
                         </div>
                     </div>
 
@@ -140,13 +135,9 @@ export function NotificationPreferences({ currentUser }: NotificationPreferences
                         <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
                                 <Shield className="h-4 w-4 text-red-600" />
-                                <label htmlFor="notify_security_alerts" className="font-medium cursor-pointer">
-                                    Alertas de Seguridad
-                                </label>
+                                <label htmlFor="notify_security_alerts" className="font-medium cursor-pointer">{uiText("Alertas de Seguridad")}</label>
                             </div>
-                            <p className="text-sm text-muted-foreground">
-                                Notificaciones críticas sobre intentos fallidos de login o cambios de configuración sensibles.
-                            </p>
+                            <p className="text-sm text-muted-foreground">{uiText("Notificaciones críticas sobre intentos fallidos de login o cambios de configuración sensibles.")}</p>
                         </div>
                     </div>
 
@@ -164,13 +155,9 @@ export function NotificationPreferences({ currentUser }: NotificationPreferences
                         <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
                                 <Server className="h-4 w-4 text-green-600" />
-                                <label htmlFor="notify_new_servers" className="font-medium cursor-pointer">
-                                    Nuevos Servidores
-                                </label>
+                                <label htmlFor="notify_new_servers" className="font-medium cursor-pointer">{uiText("Nuevos Servidores")}</label>
                             </div>
-                            <p className="text-sm text-muted-foreground">
-                                Aviso cuando un nuevo agente/servidor es detectado o registrado manualmente.
-                            </p>
+                            <p className="text-sm text-muted-foreground">{uiText("Aviso cuando un nuevo agente/servidor es detectado o registrado manualmente.")}</p>
                         </div>
                     </div>
 
@@ -188,13 +175,9 @@ export function NotificationPreferences({ currentUser }: NotificationPreferences
                         <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
                                 <Activity className="h-4 w-4 text-purple-600" />
-                                <label htmlFor="notify_system_events" className="font-medium cursor-pointer">
-                                    Eventos de Sistema
-                                </label>
+                                <label htmlFor="notify_system_events" className="font-medium cursor-pointer">{uiText("Eventos de Sistema")}</label>
                             </div>
-                            <p className="text-sm text-muted-foreground">
-                                Alertas sobre estado de servicios, backups y mantenimiento.
-                            </p>
+                            <p className="text-sm text-muted-foreground">{uiText("Alertas sobre estado de servicios, backups y mantenimiento.")}</p>
                         </div>
                     </div>
 
@@ -212,13 +195,9 @@ export function NotificationPreferences({ currentUser }: NotificationPreferences
                         <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
                                 <Bell className="h-4 w-4 text-orange-600" />
-                                <label htmlFor="notify_version_updates" className="font-medium cursor-pointer">
-                                    Actualizaciones
-                                </label>
+                                <label htmlFor="notify_version_updates" className="font-medium cursor-pointer">{uiText("Actualizaciones")}</label>
                             </div>
-                            <p className="text-sm text-muted-foreground">
-                                Recibir avisos sobre nuevas versiones del software.
-                            </p>
+                            <p className="text-sm text-muted-foreground">{uiText("Recibir avisos sobre nuevas versiones del software.")}</p>
                         </div>
                     </div>
                 </div>
@@ -230,14 +209,13 @@ export function NotificationPreferences({ currentUser }: NotificationPreferences
                         className="bg-blue-600 hover:bg-blue-700"
                     >
                         <Save className="mr-2 h-4 w-4" />
-                        {loading ? "Guardando..." : "Guardar Preferencias"}
+                        {loading ? uiText("Guardando...") : uiText("Guardar Preferencias")}
                     </Button>
                 </div>
 
                 <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                     <p className="text-sm text-blue-800 dark:text-blue-200">
-                        <strong>ℹ️ Nota:</strong> Estas preferencias son personales para tu usuario.
-                    </p>
+                        <strong>{uiText("ℹ️ Nota:")}</strong>{uiText("Estas preferencias son personales para tu usuario.")}</p>
                 </div>
             </CardContent>
         </Card>

@@ -81,6 +81,7 @@ namespace AiSysadminDesktop
             var environment = await CoreWebView2Environment.CreateAsync(null, profile).WaitAsync(TimeSpan.FromSeconds(15));
             await MainWebView.EnsureCoreWebView2Async(environment).WaitAsync(TimeSpan.FromSeconds(15));
             var core = MainWebView.CoreWebView2;
+            await core.AddScriptToExecuteOnDocumentCreatedAsync(UserLanguage.BootstrapScript);
             await core.AddScriptToExecuteOnDocumentCreatedAsync("window.__AI_AGENT_NATIVE_PREFERENCES__=true;");
             var settings = core.Settings;
             settings.IsBuiltInErrorPageEnabled = false;
@@ -112,8 +113,8 @@ namespace AiSysadminDesktop
                 using var deferral = args.GetDeferral();
                 args.Handled = true;
                 var dialog = new Microsoft.Win32.SaveFileDialog {
-                    Title = "Guardar archivo", FileName = Path.GetFileName(args.ResultFilePath),
-                    Filter = "Todos los archivos|*.*", OverwritePrompt = true
+                    Title = UserLanguage.Text("Guardar archivo"), FileName = Path.GetFileName(args.ResultFilePath),
+                    Filter = UserLanguage.Text("Todos los archivos|*.*"), OverwritePrompt = true
                 };
                 if (dialog.ShowDialog(this) == true) args.ResultFilePath = dialog.FileName;
                 else args.Cancel = true;

@@ -1,3 +1,4 @@
+import { uiText } from '../../lib/ui-language';
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -81,7 +82,7 @@ export function InvitationManagement({ currentUser }: InvitationManagementProps)
             await loadData();
             toast.success("Invitación eliminada");
         } catch (error: any) {
-            toast.error("Error al eliminar");
+            toast.error(uiText("Error al eliminar"));
         }
     };
 
@@ -101,22 +102,18 @@ export function InvitationManagement({ currentUser }: InvitationManagementProps)
                 <div className="flex items-center justify-between">
                     <div>
                         <CardTitle className="flex items-center gap-2">
-                            <Mail className="h-5 w-5" />
-                            Invitaciones Pendientes
-                        </CardTitle>
-                        <CardDescription>Gestionar invitaciones de acceso para nuevos usuarios</CardDescription>
+                            <Mail className="h-5 w-5" />{uiText("Invitaciones Pendientes")}</CardTitle>
+                        <CardDescription>{uiText("Gestionar invitaciones de acceso para nuevos usuarios")}</CardDescription>
                     </div>
                     <Button onClick={() => setCreating(true)}>
-                        <Plus className="mr-2 h-4 w-4" />
-                        Nueva Invitación
-                    </Button>
+                        <Plus className="mr-2 h-4 w-4" />{uiText("Nueva Invitación")}</Button>
                 </div>
             </CardHeader>
             <CardContent>
                 {/* Creation Form */}
                 {creating && (
                     <div className="bg-muted/30 p-4 rounded-lg border mb-4 space-y-4">
-                        <h3 className="font-medium text-sm">Nueva Invitación</h3>
+                        <h3 className="font-medium text-sm">{uiText("Nueva Invitación")}</h3>
                         <div className="grid gap-4 md:grid-cols-2">
                             <div>
                                 <label className="text-xs font-medium">Email</label>
@@ -127,26 +124,26 @@ export function InvitationManagement({ currentUser }: InvitationManagementProps)
                                 />
                             </div>
                             <div>
-                                <label className="text-xs font-medium">Rol</label>
+                                <label className="text-xs font-medium">{uiText("Rol")}</label>
                                 <select
                                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                                     value={newInvite.role}
                                     onChange={e => setNewInvite({ ...newInvite, role: e.target.value })}
                                 >
-                                    <option value="user">Usuario</option>
+                                    <option value="user">{uiText("Usuario")}</option>
                                     <option value="admin">Admin</option>
-                                    <option value="group_admin">Admin de Grupo</option>
+                                    <option value="group_admin">{uiText("Admin de Grupo")}</option>
                                 </select>
                             </div>
                             {currentUser?.role === 'superadmin' && (
                                 <div className="col-span-2">
-                                    <label className="text-xs font-medium">Organización</label>
+                                    <label className="text-xs font-medium">{uiText("Organización")}</label>
                                     <select
                                         className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                                         value={newInvite.organization_id}
                                         onChange={e => setNewInvite({ ...newInvite, organization_id: e.target.value })}
                                     >
-                                        <option value="">(Asignar a mi organización)</option>
+                                        <option value="">{uiText("(Asignar a mi organización)")}</option>
                                         {organizations.map(org => (
                                             <option key={org.id} value={org.id}>{org.name}</option>
                                         ))}
@@ -155,8 +152,8 @@ export function InvitationManagement({ currentUser }: InvitationManagementProps)
                             )}
                         </div>
                         <div className="flex gap-2 justify-end">
-                            <Button variant="outline" size="sm" onClick={() => setCreating(false)}>Cancelar</Button>
-                            <Button size="sm" onClick={handleCreate}>Generar Invitación</Button>
+                            <Button variant="outline" size="sm" onClick={() => setCreating(false)}>{uiText("Cancelar")}</Button>
+                            <Button size="sm" onClick={handleCreate}>{uiText("Generar Invitación")}</Button>
                         </div>
                     </div>
                 )}
@@ -165,8 +162,8 @@ export function InvitationManagement({ currentUser }: InvitationManagementProps)
                 {lastCreatedToken && (
                     <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 p-4 rounded-lg mb-4 flex items-center justify-between">
                         <div>
-                            <p className="text-sm font-medium text-green-800 dark:text-green-300">Invitación Creada Exitosamente</p>
-                            <p className="text-xs text-green-700 dark:text-green-400 mt-1">Comparte este token o enlace con el usuario:</p>
+                            <p className="text-sm font-medium text-green-800 dark:text-green-300">{uiText("Invitación Creada Exitosamente")}</p>
+                            <p className="text-xs text-green-700 dark:text-green-400 mt-1">{uiText("Comparte este token o enlace con el usuario:")}</p>
                             <code className="text-xs bg-white dark:bg-black/20 px-2 py-1 rounded mt-1 block select-all">{lastCreatedToken}</code>
                         </div>
                         <Button size="sm" variant="ghost" onClick={() => copyToken(lastCreatedToken)}>
@@ -178,7 +175,7 @@ export function InvitationManagement({ currentUser }: InvitationManagementProps)
                 {/* List */}
                 <div className="space-y-2">
                     {invitations.length === 0 ? (
-                        <p className="text-sm text-muted-foreground text-center py-8">No hay invitaciones pendientes.</p>
+                        <p className="text-sm text-muted-foreground text-center py-8">{uiText("No hay invitaciones pendientes.")}</p>
                     ) : (
                         invitations.map(invite => (
                             <div key={invite.id} className="flex items-center justify-between p-3 border rounded hover:bg-muted/50">
@@ -193,7 +190,7 @@ export function InvitationManagement({ currentUser }: InvitationManagementProps)
                                         )}
                                     </div>
                                     <div className="text-xs text-muted-foreground mt-1 flex gap-4">
-                                        <span>Expira: {new Date(invite.expires_at).toLocaleDateString()}</span>
+                                        <span>{uiText("Expira:")}{" "}{new Date(invite.expires_at).toLocaleDateString()}</span>
                                         <span className="font-mono bg-muted px-1 rounded select-all" title="Token">{invite.token?.substring(0, 8) || 'N/A'}...</span>
                                     </div>
                                 </div>

@@ -1,3 +1,4 @@
+import { uiText } from '../../lib/ui-language';
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -143,30 +144,24 @@ export function CommunicationSettings() {
         <Card>
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                    <MessageSquare className="h-5 w-5" />
-                    Configuración de Comunicación
-                </CardTitle>
-                <CardDescription>
-                    Configura notificaciones por email e integraciones de mensajería
-                </CardDescription>
+                    <MessageSquare className="h-5 w-5" />{uiText("Configuración de Comunicación")}</CardTitle>
+                <CardDescription>{uiText("Configura notificaciones por email e integraciones de mensajería")}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6 max-h-[calc(100vh-300px)] overflow-y-auto">
                 {/* SMTP Configuration */}
                 <div className="space-y-4 p-4 border rounded-lg">
                     <div className="flex items-center justify-between">
                         <h3 className="font-medium text-sm flex items-center gap-2">
-                            <Mail className="h-4 w-4" />
-                            Configuración SMTP
-                        </h3>
+                            <Mail className="h-4 w-4" />{uiText("Configuración SMTP")}</h3>
                         <div className="flex items-center gap-2">
-                            <span className="text-xs text-muted-foreground">Habilitar SMTP</span>
+                            <span className="text-xs text-muted-foreground">{uiText("Habilitar SMTP")}</span>
                             <select
                                 className="h-8 rounded-md border border-input bg-background px-2 text-sm"
                                 value={config.smtp_enabled}
                                 onChange={(e) => setConfig({ ...config, smtp_enabled: e.target.value })}
                             >
-                                <option value="false">Desactivado</option>
-                                <option value="true">Activado</option>
+                                <option value="false">{uiText("Desactivado")}</option>
+                                <option value="true">{uiText("Activado")}</option>
                             </select>
                         </div>
                     </div>
@@ -237,10 +232,10 @@ export function CommunicationSettings() {
                                     onChange={(e) => setConfig({ ...config, smtp_use_tls: e.target.checked ? "true" : "false" })}
                                     className="h-4 w-4"
                                 />
-                                <label className="text-sm font-medium">Usar TLS/STARTTLS</label>
+                                <label className="text-sm font-medium">{uiText("Usar TLS/STARTTLS")}</label>
                             </div>
                             <div className="space-y-2">
-                                <label className="text-sm font-medium">Destinatario de prueba</label>
+                                <label className="text-sm font-medium">{uiText("Destinatario de prueba")}</label>
                                 <div className="flex gap-2">
                                     <Input
                                         type="email"
@@ -258,9 +253,7 @@ export function CommunicationSettings() {
                                         {testingEmail ? "Enviando..." : "Enviar Prueba"}
                                     </Button>
                                 </div>
-                                <p className="text-xs text-muted-foreground">
-                                    Envía un email de prueba para verificar la configuración SMTP
-                                </p>
+                                <p className="text-xs text-muted-foreground">{uiText("Envía un email de prueba para verificar la configuración SMTP")}</p>
                             </div>
                         </>
                     )}
@@ -268,24 +261,22 @@ export function CommunicationSettings() {
 
                 {/* Notification Settings */}
                 <div className="space-y-4 p-4 border rounded-lg">
-                    <h3 className="font-medium text-sm">Configuración de Notificaciones</h3>
+                    <h3 className="font-medium text-sm">{uiText("Configuración de Notificaciones")}</h3>
                     <div>
-                        <label className="text-sm font-medium">Habilitar Notificaciones por Email</label>
+                        <label className="text-sm font-medium">{uiText("Habilitar Notificaciones por Email")}</label>
                         <select
                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                             value={config.enable_email_notifications}
                             onChange={(e) => setConfig({ ...config, enable_email_notifications: e.target.value })}
                         >
-                            <option value="false">Desactivado</option>
-                            <option value="true">Activado</option>
+                            <option value="false">{uiText("Desactivado")}</option>
+                            <option value="true">{uiText("Activado")}</option>
                         </select>
-                        <p className="text-xs text-muted-foreground mt-1">
-                            Enviar alertas por email para eventos críticos
-                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">{uiText("Enviar alertas por email para eventos críticos")}</p>
                     </div>
                     {config.enable_email_notifications === "true" && (
                         <div>
-                            <label className="text-sm font-medium">Email del Administrador</label>
+                            <label className="text-sm font-medium">{uiText("Email del Administrador")}</label>
                             <Input
                                 type="email"
                                 value={config.admin_email}
@@ -298,7 +289,7 @@ export function CommunicationSettings() {
 
                 {/* Future Integrations */}
                 <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
-                    <h3 className="font-medium text-sm">Integraciones de Mensajería (Próximamente)</h3>
+                    <h3 className="font-medium text-sm">{uiText("Integraciones de Mensajería (Próximamente)")}</h3>
                     <div className="grid gap-4 md:grid-cols-2">
                         <div>
                             <label className="text-sm font-medium text-muted-foreground">Microsoft Teams Webhook</label>
@@ -349,19 +340,15 @@ export function CommunicationSettings() {
                     >
                         {showSecrets ? (
                             <>
-                                <EyeOff className="mr-2 h-4 w-4" />
-                                Ocultar Secretos
-                            </>
+                                <EyeOff className="mr-2 h-4 w-4" />{uiText("Ocultar Secretos")}</>
                         ) : (
                             <>
-                                <Eye className="mr-2 h-4 w-4" />
-                                Mostrar Secretos
-                            </>
+                                <Eye className="mr-2 h-4 w-4" />{uiText("Mostrar Secretos")}</>
                         )}
                     </Button>
                     <Button onClick={handleSave} disabled={loading}>
                         <Save className="mr-2 h-4 w-4" />
-                        {loading ? "Guardando..." : "Guardar Configuración"}
+                        {loading ? uiText("Guardando...") : uiText("Guardar Configuración")}
                     </Button>
                 </div>
 
@@ -378,9 +365,7 @@ export function CommunicationSettings() {
 
                 <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                     <p className="text-sm text-blue-800 dark:text-blue-200">
-                        <strong>ℹ️ Nota:</strong> Las credenciales SMTP se almacenan de forma segura en la base de datos.
-                        Los cambios se aplican inmediatamente.
-                    </p>
+                        <strong>{uiText("ℹ️ Nota:")}</strong>{uiText("Las credenciales SMTP se almacenan de forma segura en la base de datos. Los cambios se aplican inmediatamente.")}</p>
                 </div>
             </CardContent>
         </Card>

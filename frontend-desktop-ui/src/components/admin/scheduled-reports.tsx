@@ -1,3 +1,4 @@
+import { uiText, uiFormat } from '../../lib/ui-language';
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -156,10 +157,10 @@ export function ScheduledReports() {
                 loadData();
             } else {
                 const error = (await res.json()) as any;
-                setMessage(`❌ Error: ${error.detail || "Error desconocido"}`);
+                setMessage(uiFormat("❌ Error: {0}", error.detail || "Error desconocido"));
             }
         } catch (error: any) {
-            setMessage(`❌ Error: ${error.message}`);
+            setMessage(uiFormat("❌ Error: {0}", error.message));
         }
     };
 
@@ -178,7 +179,7 @@ export function ScheduledReports() {
                 loadData();
             }
         } catch (error: any) {
-            setMessage(`❌ Error: ${error.message}`);
+            setMessage(uiFormat("❌ Error: {0}", error.message));
         }
     };
 
@@ -194,7 +195,7 @@ export function ScheduledReports() {
                 setMessage("✅ Chequeo iniciado. El reporte será enviado por email.");
             }
         } catch (error: any) {
-            setMessage(`❌ Error: ${error.message}`);
+            setMessage(uiFormat("❌ Error: {0}", error.message));
         } finally {
             setTimeout(() => setRunningId(null), 2000);
         }
@@ -297,12 +298,8 @@ export function ScheduledReports() {
         <Card>
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                    <Calendar className="h-5 w-5" />
-                    Informes Programados
-                </CardTitle>
-                <CardDescription>
-                    Configura chequeos de salud automáticos que se ejecutan periódicamente y envían reportes por email
-                </CardDescription>
+                    <Calendar className="h-5 w-5" />{uiText("Informes Programados")}</CardTitle>
+                <CardDescription>{uiText("Configura chequeos de salud automáticos que se ejecutan periódicamente y envían reportes por email")}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6 max-h-[calc(100vh-300px)] overflow-y-auto">
                 {message && (
@@ -314,19 +311,17 @@ export function ScheduledReports() {
                 {/* Add Button */}
                 {!showForm && !showHistory && (
                     <Button onClick={() => { resetForm(); setShowForm(true); setEditingId(null); }}>
-                        <Plus className="mr-2 h-4 w-4" />
-                        Nuevo Chequeo Programado
-                    </Button>
+                        <Plus className="mr-2 h-4 w-4" />{uiText("Nuevo Chequeo Programado")}</Button>
                 )}
 
                 {/* Form */}
                 {showForm && (
                     <div className="border rounded-lg p-4 space-y-4 bg-muted/50">
-                        <h3 className="font-medium">{editingId ? "Editar Chequeo" : "Nuevo Chequeo Programado"}</h3>
+                        <h3 className="font-medium">{editingId ? "Editar Chequeo" : uiText("Nuevo Chequeo Programado")}</h3>
 
                         <div className="grid gap-4 md:grid-cols-2">
                             <div>
-                                <label className="text-sm font-medium">Nombre</label>
+                                <label className="text-sm font-medium">{uiText("Nombre")}</label>
                                 <Input
                                     value={form.name}
                                     onChange={(e) => setForm({ ...form, name: e.target.value })}
@@ -335,26 +330,26 @@ export function ScheduledReports() {
                             </div>
 
                             <div>
-                                <label className="text-sm font-medium">Tipo de objetivo</label>
+                                <label className="text-sm font-medium">{uiText("Tipo de objetivo")}</label>
                                 <select
                                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                                     value={form.target_type}
                                     onChange={(e) => setForm({ ...form, target_type: e.target.value as any })}
                                 >
-                                    <option value="server">Servidor individual</option>
-                                    <option value="group">Grupo de servidores</option>
+                                    <option value="server">{uiText("Servidor individual")}</option>
+                                    <option value="group">{uiText("Grupo de servidores")}</option>
                                 </select>
                             </div>
 
                             {form.target_type === "server" ? (
                                 <div>
-                                    <label className="text-sm font-medium">Servidor</label>
+                                    <label className="text-sm font-medium">{uiText("Servidor")}</label>
                                     <select
                                         className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                                         value={form.server_id}
                                         onChange={(e) => setForm({ ...form, server_id: e.target.value })}
                                     >
-                                        <option value="">Seleccionar servidor...</option>
+                                        <option value="">{uiText("Seleccionar servidor...")}</option>
                                         {servers.map(s => (
                                             <option key={s.id} value={s.id}>{s.hostname}</option>
                                         ))}
@@ -362,13 +357,13 @@ export function ScheduledReports() {
                                 </div>
                             ) : (
                                 <div>
-                                    <label className="text-sm font-medium">Grupo</label>
+                                    <label className="text-sm font-medium">{uiText("Grupo")}</label>
                                     <select
                                         className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                                         value={form.group_id}
                                         onChange={(e) => setForm({ ...form, group_id: e.target.value })}
                                     >
-                                        <option value="">Seleccionar grupo...</option>
+                                        <option value="">{uiText("Seleccionar grupo...")}</option>
                                         {groups.map(g => (
                                             <option key={g.id} value={g.id}>{g.name}</option>
                                         ))}
@@ -377,22 +372,22 @@ export function ScheduledReports() {
                             )}
 
                             <div>
-                                <label className="text-sm font-medium">Frecuencia</label>
+                                <label className="text-sm font-medium">{uiText("Frecuencia")}</label>
                                 <select
                                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                                     value={form.schedule_type}
                                     onChange={(e) => setForm({ ...form, schedule_type: e.target.value })}
                                 >
-                                    <option value="daily">Diario</option>
-                                    <option value="weekly">Semanal</option>
-                                    <option value="monthly">Mensual</option>
-                                    <option value="custom">Personalizado (Cron)</option>
+                                    <option value="daily">{uiText("Diario")}</option>
+                                    <option value="weekly">{uiText("Semanal")}</option>
+                                    <option value="monthly">{uiText("Mensual")}</option>
+                                    <option value="custom">{uiText("Personalizado (Cron)")}</option>
                                 </select>
                             </div>
 
                             <div className="grid grid-cols-2 gap-2">
                                 <div>
-                                    <label className="text-sm font-medium">Hora</label>
+                                    <label className="text-sm font-medium">{uiText("Hora")}</label>
                                     <Input
                                         type="number"
                                         min="0"
@@ -402,7 +397,7 @@ export function ScheduledReports() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="text-sm font-medium">Minuto</label>
+                                    <label className="text-sm font-medium">{uiText("Minuto")}</label>
                                     <Input
                                         type="number"
                                         min="0"
@@ -415,26 +410,26 @@ export function ScheduledReports() {
 
                             {form.schedule_type === "weekly" && (
                                 <div>
-                                    <label className="text-sm font-medium">Día de la semana</label>
+                                    <label className="text-sm font-medium">{uiText("Día de la semana")}</label>
                                     <select
                                         className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                                         value={form.schedule_day_of_week}
                                         onChange={(e) => setForm({ ...form, schedule_day_of_week: e.target.value })}
                                     >
-                                        <option value="0">Lunes</option>
-                                        <option value="1">Martes</option>
-                                        <option value="2">Miércoles</option>
-                                        <option value="3">Jueves</option>
-                                        <option value="4">Viernes</option>
-                                        <option value="5">Sábado</option>
-                                        <option value="6">Domingo</option>
+                                        <option value="0">{uiText("Lunes")}</option>
+                                        <option value="1">{uiText("Martes")}</option>
+                                        <option value="2">{uiText("Miércoles")}</option>
+                                        <option value="3">{uiText("Jueves")}</option>
+                                        <option value="4">{uiText("Viernes")}</option>
+                                        <option value="5">{uiText("Sábado")}</option>
+                                        <option value="6">{uiText("Domingo")}</option>
                                     </select>
                                 </div>
                             )}
 
                             {form.schedule_type === "monthly" && (
                                 <div>
-                                    <label className="text-sm font-medium">Día del mes</label>
+                                    <label className="text-sm font-medium">{uiText("Día del mes")}</label>
                                     <Input
                                         type="number"
                                         min="1"
@@ -447,24 +442,24 @@ export function ScheduledReports() {
 
                             {form.schedule_type === "custom" && (
                                 <div className="md:col-span-2">
-                                    <label className="text-sm font-medium">Expresión Cron</label>
+                                    <label className="text-sm font-medium">{uiText("Expresión Cron")}</label>
                                     <Input
                                         value={form.cron_expression}
                                         onChange={(e) => setForm({ ...form, cron_expression: e.target.value })}
                                         placeholder="0 9 * * 1 (Lunes a las 9:00)"
                                     />
-                                    <p className="text-xs text-muted-foreground mt-1">Formato: minuto hora día mes día_semana</p>
+                                    <p className="text-xs text-muted-foreground mt-1">{uiText("Formato: minuto hora día mes día_semana")}</p>
                                 </div>
                             )}
 
                             <div className="md:col-span-2">
-                                <label className="text-sm font-medium">Emails destinatarios</label>
+                                <label className="text-sm font-medium">{uiText("Emails destinatarios")}</label>
                                 <Input
                                     value={form.email_recipients}
                                     onChange={(e) => setForm({ ...form, email_recipients: e.target.value })}
                                     placeholder="admin@example.com, ops@example.com"
                                 />
-                                <p className="text-xs text-muted-foreground mt-1">Separar múltiples emails con comas</p>
+                                <p className="text-xs text-muted-foreground mt-1">{uiText("Separar múltiples emails con comas")}</p>
                             </div>
 
                             <div className="flex items-center gap-2">
@@ -475,17 +470,15 @@ export function ScheduledReports() {
                                     onChange={(e) => setForm({ ...form, is_active: e.target.checked })}
                                     className="h-4 w-4"
                                 />
-                                <label htmlFor="is_active" className="text-sm font-medium">Activo</label>
+                                <label htmlFor="is_active" className="text-sm font-medium">{uiText("Activo")}</label>
                             </div>
                         </div>
 
                         <div className="flex gap-2 pt-4">
                             <Button onClick={handleSubmit}>
-                                {editingId ? "Guardar cambios" : "Crear"}
+                                {editingId ? "Guardar cambios" : uiText("Crear")}
                             </Button>
-                            <Button variant="outline" onClick={() => { setShowForm(false); setEditingId(null); }}>
-                                Cancelar
-                            </Button>
+                            <Button variant="outline" onClick={() => { setShowForm(false); setEditingId(null); }}>{uiText("Cancelar")}</Button>
                         </div>
                     </div>
                 )}
@@ -494,14 +487,12 @@ export function ScheduledReports() {
                 {showHistory && (
                     <div className="border rounded-lg p-4 space-y-4">
                         <div className="flex items-center justify-between">
-                            <h3 className="font-medium">Historial de Reportes</h3>
-                            <Button variant="outline" size="sm" onClick={() => setShowHistory(null)}>
-                                Volver
-                            </Button>
+                            <h3 className="font-medium">{uiText("Historial de Reportes")}</h3>
+                            <Button variant="outline" size="sm" onClick={() => setShowHistory(null)}>{uiText("Volver")}</Button>
                         </div>
 
                         {reports.length === 0 ? (
-                            <p className="text-muted-foreground">No hay reportes aún.</p>
+                            <p className="text-muted-foreground">{uiText("No hay reportes aún.")}</p>
                         ) : (
                             <div className="space-y-2">
                                 {reports.map(report => (
@@ -535,9 +526,7 @@ export function ScheduledReports() {
                 {!showForm && !showHistory && (
                     <div className="space-y-3">
                         {checks.length === 0 ? (
-                            <p className="text-muted-foreground text-center py-8">
-                                No hay chequeos programados. Crea uno nuevo para comenzar.
-                            </p>
+                            <p className="text-muted-foreground text-center py-8">{uiText("No hay chequeos programados. Crea uno nuevo para comenzar.")}</p>
                         ) : (
                             checks.map(check => (
                                 <div key={check.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors">
@@ -545,7 +534,7 @@ export function ScheduledReports() {
                                         <div className="flex items-center gap-2">
                                             <span className="font-medium">{check.name}</span>
                                             {!check.is_active && (
-                                                <span className="px-2 py-0.5 rounded text-xs bg-gray-100 dark:bg-gray-800">Inactivo</span>
+                                                <span className="px-2 py-0.5 rounded text-xs bg-gray-100 dark:bg-gray-800">{uiText("Inactivo")}</span>
                                             )}
                                             {getStatusBadge(check.last_status)}
                                         </div>
@@ -566,8 +555,7 @@ export function ScheduledReports() {
                                                 {check.email_recipients.split(",")[0]}...
                                             </span>
                                         </div>
-                                        <div className="text-xs text-muted-foreground mt-1">
-                                            Última ejecución: {formatDate(check.last_run)} • Próxima: {formatDate(check.next_run)}
+                                        <div className="text-xs text-muted-foreground mt-1">{uiText("Última ejecución:")}{formatDate(check.last_run)}{" "}{uiText("• Próxima:")}{" "}{formatDate(check.next_run)}
                                         </div>
                                     </div>
                                     <div className="flex gap-1">

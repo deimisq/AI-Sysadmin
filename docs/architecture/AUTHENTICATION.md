@@ -85,14 +85,15 @@ ACCESS_TOKEN_EXPIRE_MINUTES=30
 
 ### Hashing de Contraseñas
 ```python
-from passlib.context import CryptContext
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+from utils.auth import get_password_hash, verify_password
+# bcrypt es el formato conservado para los hashes existentes.
 ```
 
 ### Creación de Token JWT
 ```python
-from jose import jwt
-access_token = jwt.encode({"sub": username}, SECRET_KEY, algorithm=ALGORITHM)
+from utils.auth import create_access_token, decode_access_token
+access_token = create_access_token({"sub": username})
+# PyJWT verifica firma, algoritmo configurado, sujeto y caducidad obligatorios.
 ```
 
 ### Rutas Protegidas

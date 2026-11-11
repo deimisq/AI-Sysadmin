@@ -1,3 +1,4 @@
+import { uiText } from '../../lib/ui-language';
 import { X, LayoutDashboard } from 'lucide-react';
 import { useWorkspaceStore } from '../../stores/workspaceStore';
 import { DashboardView } from '../views/DashboardView';
@@ -21,7 +22,7 @@ export function OverlayContainer() {
     switch (activeOverlay) {
         case 'catalog':
             Content = <div className="h-full"><ConnectionCatalog /></div>;
-            title = 'Catálogo de conexiones';
+            title = uiText('Catálogo de conexiones');
             break;
         case 'dashboard':
             Content = <div className="h-full"><DashboardView /></div>;
@@ -29,23 +30,23 @@ export function OverlayContainer() {
             break;
         case 'reports':
             Content = <div className="h-full"><ReportsView /></div>;
-            title = "Informes";
+            title = uiText("Informes");
             break;
         case 'documentation':
             Content = <div className="h-full"><DocsView /></div>;
-            title = "Documentación";
+            title = uiText("Documentación");
             break;
         case 'profile':
             Content = <div className="h-full"><ProfileView /></div>;
-            title = "Perfil";
+            title = uiText("Perfil");
             break;
         case 'admin':
             Content = <div className="h-full"><AdminView /></div>;
-            title = "Administración";
+            title = uiText("Administración");
             break;
         case 'help':
             Content = <div className="h-full"><HelpView /></div>;
-            title = "Ayuda";
+            title = uiText("Ayuda");
             break;
         default:
             return null;

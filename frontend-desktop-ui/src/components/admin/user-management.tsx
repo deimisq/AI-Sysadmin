@@ -1,3 +1,4 @@
+import { uiText, uiFormat } from '../../lib/ui-language';
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -135,7 +136,7 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                 role: "user",
                 is_active: true
             });
-            toast.success("Usuario creado exitosamente");
+            toast.success(uiText("Usuario creado exitosamente"));
         } catch (error: any) {
             console.error(error);
             toast.error(error.message || "Error al crear usuario");
@@ -221,7 +222,7 @@ export function UserManagement({ currentUser }: UserManagementProps) {
     };
 
     const handleSendApprovalNotification = async (user: any) => {
-        const confirmed = window.confirm(`¿Enviar notificación de aprobación a ${user.email}?`);
+        const confirmed = window.confirm(uiFormat("¿Enviar notificación de aprobación a {0}?", user.email));
         if (!confirmed) return;
 
         try {
@@ -253,7 +254,7 @@ export function UserManagement({ currentUser }: UserManagementProps) {
     };
 
     if (loading) {
-        return <div>Cargando usuarios...</div>;
+        return <div>{uiText("Cargando usuarios...")}</div>;
     }
 
     // Create User Form
@@ -261,8 +262,8 @@ export function UserManagement({ currentUser }: UserManagementProps) {
         return (
             <Card>
                 <CardHeader>
-                    <CardTitle>Crear Usuario</CardTitle>
-                    <CardDescription>Añadir un nuevo usuario al sistema</CardDescription>
+                    <CardTitle>{uiText("Crear Usuario")}</CardTitle>
+                    <CardDescription>{uiText("Añadir un nuevo usuario al sistema")}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="grid gap-4 md:grid-cols-2">
@@ -276,7 +277,7 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                             />
                         </div>
                         <div>
-                            <label className="text-sm font-medium">Usuario *</label>
+                            <label className="text-sm font-medium">{uiText("Usuario *")}</label>
                             <Input
                                 value={newUser.username}
                                 onChange={(e) => setNewUser({ ...newUser, username: e.target.value })}
@@ -284,7 +285,7 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                             />
                         </div>
                         <div>
-                            <label className="text-sm font-medium">Contraseña *</label>
+                            <label className="text-sm font-medium">{uiText("Contraseña *")}</label>
                             <Input
                                 type="password"
                                 value={newUser.password}
@@ -293,7 +294,7 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                             />
                         </div>
                         <div>
-                            <label className="text-sm font-medium">Nombre Completo</label>
+                            <label className="text-sm font-medium">{uiText("Nombre Completo")}</label>
                             <Input
                                 value={newUser.full_name}
                                 onChange={(e) => setNewUser({ ...newUser, full_name: e.target.value })}
@@ -301,15 +302,15 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                             />
                         </div>
                         <div>
-                            <label className="text-sm font-medium">Rol</label>
+                            <label className="text-sm font-medium">{uiText("Rol")}</label>
                             <select
                                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                                 value={newUser.role}
                                 onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
                             >
-                                <option value="user">Usuario</option>
-                                <option value="group_admin">Admin de Grupo</option>
-                                <option value="admin">Administrador</option>
+                                <option value="user">{uiText("Usuario")}</option>
+                                <option value="group_admin">{uiText("Admin de Grupo")}</option>
+                                <option value="admin">{uiText("Administrador")}</option>
                                 {currentUser?.role === "superadmin" && (
                                     <option value="superadmin">Superadmin</option>
                                 )}
@@ -317,13 +318,13 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                         </div>
                         {currentUser?.role === "superadmin" && (
                             <div>
-                                <label className="text-sm font-medium">Organización</label>
+                                <label className="text-sm font-medium">{uiText("Organización")}</label>
                                 <select
                                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                                     value={newUser.organization_id || ""}
                                     onChange={(e) => setNewUser({ ...newUser, organization_id: e.target.value ? parseInt(e.target.value) : undefined })}
                                 >
-                                    <option value="">(Tu organización actual)</option>
+                                    <option value="">{uiText("(Tu organización actual)")}</option>
                                     {organizationsList.map((org) => (
                                         <option key={org.id} value={org.id}>{org.name}</option>
                                     ))}
@@ -337,12 +338,12 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                                 onChange={(e) => setNewUser({ ...newUser, is_active: e.target.checked })}
                                 className="h-4 w-4"
                             />
-                            <label className="text-sm font-medium">Activo</label>
+                            <label className="text-sm font-medium">{uiText("Activo")}</label>
                         </div>
                     </div>
                     <div className="flex gap-2">
-                        <Button onClick={handleCreateUser}>Crear</Button>
-                        <Button variant="outline" onClick={() => setCreatingUser(false)}>Cancelar</Button>
+                        <Button onClick={handleCreateUser}>{uiText("Crear")}</Button>
+                        <Button variant="outline" onClick={() => setCreatingUser(false)}>{uiText("Cancelar")}</Button>
                     </div>
                 </CardContent>
             </Card>
@@ -354,8 +355,8 @@ export function UserManagement({ currentUser }: UserManagementProps) {
         return (
             <Card>
                 <CardHeader>
-                    <CardTitle>Editar Usuario: {editingUser.username}</CardTitle>
-                    <CardDescription>Actualizar información y rol del usuario</CardDescription>
+                    <CardTitle>{uiText("Editar Usuario:")}{" "}{editingUser.username}</CardTitle>
+                    <CardDescription>{uiText("Actualizar información y rol del usuario")}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="grid gap-4 md:grid-cols-2">
@@ -367,41 +368,39 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                             />
                         </div>
                         <div>
-                            <label className="text-sm font-medium">Usuario</label>
+                            <label className="text-sm font-medium">{uiText("Usuario")}</label>
                             <Input
                                 value={editingUser.username}
                                 onChange={(e) => setEditingUser({ ...editingUser, username: e.target.value })}
                             />
                         </div>
                         <div>
-                            <label className="text-sm font-medium">Nombre Completo</label>
+                            <label className="text-sm font-medium">{uiText("Nombre Completo")}</label>
                             <Input
                                 value={editingUser.full_name || ""}
                                 onChange={(e) => setEditingUser({ ...editingUser, full_name: e.target.value })}
                             />
                         </div>
                         <div>
-                            <label className="text-sm font-medium">Nueva Contraseña (opcional)</label>
+                            <label className="text-sm font-medium">{uiText("Nueva Contraseña (opcional)")}</label>
                             <Input
                                 type="password"
                                 placeholder="Dejar vacío para no cambiar"
                                 value={editingUser.newPassword || ""}
                                 onChange={(e) => setEditingUser({ ...editingUser, newPassword: e.target.value })}
                             />
-                            <p className="text-xs text-muted-foreground mt-1">
-                                Solo completar si desea cambiar la contraseña del usuario
-                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">{uiText("Solo completar si desea cambiar la contraseña del usuario")}</p>
                         </div>
                         <div>
-                            <label className="text-sm font-medium">Rol</label>
+                            <label className="text-sm font-medium">{uiText("Rol")}</label>
                             <select
                                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                                 value={editingUser.role}
                                 onChange={(e) => setEditingUser({ ...editingUser, role: e.target.value })}
                             >
-                                <option value="user">Usuario</option>
-                                <option value="group_admin">Admin de Grupo</option>
-                                <option value="admin">Administrador</option>
+                                <option value="user">{uiText("Usuario")}</option>
+                                <option value="group_admin">{uiText("Admin de Grupo")}</option>
+                                <option value="admin">{uiText("Administrador")}</option>
                                 {currentUser?.role === "superadmin" && (
                                     <option value="superadmin">Superadmin</option>
                                 )}
@@ -409,13 +408,13 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                         </div>
                         {currentUser?.role === "superadmin" && (
                             <div>
-                                <label className="text-sm font-medium">Organización</label>
+                                <label className="text-sm font-medium">{uiText("Organización")}</label>
                                 <select
                                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                                     value={editingUser.organization_id || ""}
                                     onChange={(e) => setEditingUser({ ...editingUser, organization_id: e.target.value ? parseInt(e.target.value) : undefined })}
                                 >
-                                    <option value="">(Sin asignar)</option>
+                                    <option value="">{uiText("(Sin asignar)")}</option>
                                     {organizationsList.map((org) => (
                                         <option key={org.id} value={org.id}>{org.name}</option>
                                     ))}
@@ -429,12 +428,12 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                                 onChange={(e) => setEditingUser({ ...editingUser, is_active: e.target.checked })}
                                 className="h-4 w-4"
                             />
-                            <label className="text-sm font-medium">Activo</label>
+                            <label className="text-sm font-medium">{uiText("Activo")}</label>
                         </div>
                     </div>
                     <div className="flex gap-2">
-                        <Button onClick={handleSaveUser}>Guardar</Button>
-                        <Button variant="outline" onClick={() => setEditingUser(null)}>Cancelar</Button>
+                        <Button onClick={handleSaveUser}>{uiText("Guardar")}</Button>
+                        <Button variant="outline" onClick={() => setEditingUser(null)}>{uiText("Cancelar")}</Button>
                     </div>
                 </CardContent>
             </Card>
@@ -449,12 +448,12 @@ export function UserManagement({ currentUser }: UserManagementProps) {
         return (
             <Card>
                 <CardHeader>
-                    <CardTitle>Gestionar Permisos: {managingPermissions.username}</CardTitle>
-                    <CardDescription>Asignar acceso a grupos de servidores</CardDescription>
+                    <CardTitle>{uiText("Gestionar Permisos:")}{" "}{managingPermissions.username}</CardTitle>
+                    <CardDescription>{uiText("Asignar acceso a grupos de servidores")}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4 max-h-[calc(100vh-300px)] overflow-y-auto">
                     <div>
-                        <h3 className="font-medium mb-2">Grupos Actuales</h3>
+                        <h3 className="font-medium mb-2">{uiText("Grupos Actuales")}</h3>
                         {userGroups.length > 0 ? (
                             <div className="space-y-2">
                                 {userGroups.map((group: any) => (
@@ -464,12 +463,12 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                                             <div className="flex-1">
                                                 <span className="font-medium">{group.name}</span>
                                                 <div className="flex items-center gap-2 mt-1">
-                                                    <span className="text-xs text-muted-foreground">Rol:</span>
+                                                    <span className="text-xs text-muted-foreground">{uiText("Rol:")}</span>
                                                     <span className={`px-2 py-0.5 rounded text-xs font-medium ${group.role === 'group_admin'
                                                         ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
                                                         : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
                                                         }`}>
-                                                        {group.role === 'group_admin' ? "Admin de Grupo" : "Usuario"}
+                                                        {group.role === 'group_admin' ? uiText("Admin de Grupo") : uiText("Usuario")}
                                                     </span>
                                                 </div>
                                             </div>
@@ -485,12 +484,12 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                                 ))}
                             </div>
                         ) : (
-                            <p className="text-sm text-muted-foreground">No tiene grupos asignados.</p>
+                            <p className="text-sm text-muted-foreground">{uiText("No tiene grupos asignados.")}</p>
                         )}
                     </div>
 
                     <div>
-                        <h3 className="font-medium mb-2">Grupos Disponibles</h3>
+                        <h3 className="font-medium mb-2">{uiText("Grupos Disponibles")}</h3>
                         {availableGroups.length > 0 ? (
                             <div className="space-y-2">
                                 {availableGroups.map((group) => (
@@ -505,9 +504,7 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                                                 size="sm"
                                                 onClick={() => handleGrantAccess(group.id, "user")}
                                             >
-                                                <Plus className="h-4 w-4 mr-1" />
-                                                Usuario
-                                            </Button>
+                                                <Plus className="h-4 w-4 mr-1" />{uiText("Usuario")}</Button>
                                             <Button
                                                 variant="outline"
                                                 size="sm"
@@ -522,11 +519,11 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                                 ))}
                             </div>
                         ) : (
-                            <p className="text-sm text-muted-foreground">Todos los grupos están asignados.</p>
+                            <p className="text-sm text-muted-foreground">{uiText("Todos los grupos están asignados.")}</p>
                         )}
                     </div>
 
-                    <Button variant="outline" onClick={() => setManagingPermissions(null)}>Cerrar</Button>
+                    <Button variant="outline" onClick={() => setManagingPermissions(null)}>{uiText("Cerrar")}</Button>
                 </CardContent>
             </Card>
         );
@@ -539,15 +536,11 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                 <div className="flex items-center justify-between">
                     <div>
                         <CardTitle className="flex items-center gap-2">
-                            <Users className="h-5 w-5" />
-                            Gestión de Usuarios
-                        </CardTitle>
-                        <CardDescription>Administra usuarios y sus permisos</CardDescription>
+                            <Users className="h-5 w-5" />{uiText("Gestión de Usuarios")}</CardTitle>
+                        <CardDescription>{uiText("Administra usuarios y sus permisos")}</CardDescription>
                     </div>
                     <Button onClick={() => setCreatingUser(true)}>
-                        <Plus className="mr-2 h-4 w-4" />
-                        Nuevo Usuario
-                    </Button>
+                        <Plus className="mr-2 h-4 w-4" />{uiText("Nuevo Usuario")}</Button>
                 </div>
             </CardHeader>
             <CardContent className="max-h-[calc(100vh-300px)] overflow-y-auto">
@@ -564,9 +557,7 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                                         {user.role}
                                     </span>
                                     {!user.is_active && (
-                                        <span className="px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800">
-                                            Inactivo
-                                        </span>
+                                        <span className="px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800">{uiText("Inactivo")}</span>
                                     )}
                                 </div>
                                 <p className="text-sm text-muted-foreground">{user.email}</p>
@@ -580,9 +571,7 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                                     size="sm"
                                     onClick={() => handleManagePermissions(user)}
                                 >
-                                    <FolderOpen className="h-4 w-4 mr-1" />
-                                    Grupos
-                                </Button>
+                                    <FolderOpen className="h-4 w-4 mr-1" />{uiText("Grupos")}</Button>
                                 {user.is_active && (
                                     <Button
                                         variant="outline"

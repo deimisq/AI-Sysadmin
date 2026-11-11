@@ -1,0 +1,27 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /frontend-desktop-ui
+    schedule:
+      interval: weekly
+    target-branch: testing
+  - package-ecosystem: npm
+    directory: /frontend-web
+    schedule:
+      interval: weekly
+    target-branch: testing
+  - package-ecosystem: nuget
+    directory: /apps/windows
+    schedule:
+      interval: weekly
+    target-branch: testing
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    target-branch: testing
+  - package-ecosystem: pip
+    directory: /backend
+    schedule:
+      interval: weekly
+    target-branch: testing

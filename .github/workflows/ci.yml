@@ -1,8 +1,11 @@
-name: Validate architecture V2
+name: Validar arquitectura y compatibilidad
 on:
   pull_request:
   push:
-    branches: [main, Public]
+    branches: [testing, main, Public]
+
+permissions:
+  contents: read
 
 jobs:
   backend-security:
@@ -12,8 +15,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: pip install -r backend/requirements-test.txt
-      - run: python -m pytest backend/tests/test_access_control.py -q
+      - run: python -m pip install --upgrade pip setuptools
+      - run: python -m pip install -r backend/requirements-test.txt pip-audit
+      - run: python -m pip_audit
+      - run: python -m pytest backend/tests/test_access_control.py backend/tests/test_sftp_listing.py backend/tests/test_jwt_validation.py -q
 
   web:
     runs-on: ubuntu-latest

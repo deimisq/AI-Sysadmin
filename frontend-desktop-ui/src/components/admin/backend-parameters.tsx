@@ -1,3 +1,4 @@
+import { uiText } from '../../lib/ui-language';
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -86,17 +87,13 @@ export function BackendParameters() {
         <Card>
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                    <Settings className="h-5 w-5" />
-                    Parámetros de Backend
-                </CardTitle>
-                <CardDescription>
-                    Configuración del sistema, base de datos y seguridad
-                </CardDescription>
+                    <Settings className="h-5 w-5" />{uiText("Parámetros de Backend")}</CardTitle>
+                <CardDescription>{uiText("Configuración del sistema, base de datos y seguridad")}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6 max-h-[calc(100vh-300px)] overflow-y-auto">
                 {/* Database Configuration */}
                 <div className="space-y-4 p-4 border rounded-lg">
-                    <h3 className="font-medium text-sm">Configuración Base de Datos</h3>
+                    <h3 className="font-medium text-sm">{uiText("Configuración Base de Datos")}</h3>
                     <div>
                         <label className="text-sm font-medium">Database URL</label>
                         <Input
@@ -105,15 +102,13 @@ export function BackendParameters() {
                             onChange={(e) => setConfig({ ...config, database_url: e.target.value })}
                             placeholder="postgresql://user:pass@host:5432/dbname"
                         />
-                        <p className="text-xs text-muted-foreground mt-1">
-                            Cadena de conexión a Base de Datos (SQLAlchemy format)
-                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">{uiText("Cadena de conexión a Base de Datos (SQLAlchemy format)")}</p>
                     </div>
                 </div>
 
                 {/* Security Settings */}
                 <div className="space-y-4 p-4 border rounded-lg">
-                    <h3 className="font-medium text-sm">Configuración de Seguridad</h3>
+                    <h3 className="font-medium text-sm">{uiText("Configuración de Seguridad")}</h3>
                     <div>
                         <label className="text-sm font-medium">Secret Key</label>
                         <Input
@@ -122,13 +117,11 @@ export function BackendParameters() {
                             onChange={(e) => setConfig({ ...config, secret_key: e.target.value })}
                             placeholder="••••••••"
                         />
-                        <p className="text-xs text-muted-foreground mt-1">
-                            Clave para firmar tokens JWT y cifrar datos sensibles
-                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">{uiText("Clave para firmar tokens JWT y cifrar datos sensibles")}</p>
                     </div>
                     <div className="grid gap-4 md:grid-cols-2">
                         <div>
-                            <label className="text-sm font-medium">Algoritmo</label>
+                            <label className="text-sm font-medium">{uiText("Algoritmo")}</label>
                             <select
                                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                                 value={config.algorithm}
@@ -140,7 +133,7 @@ export function BackendParameters() {
                             </select>
                         </div>
                         <div>
-                            <label className="text-sm font-medium">Expiración Token (min)</label>
+                            <label className="text-sm font-medium">{uiText("Expiración Token (min)")}</label>
                             <Input
                                 type="number"
                                 value={config.access_token_expire_minutes}
@@ -152,37 +145,33 @@ export function BackendParameters() {
 
                 {/* CORS Settings */}
                 <div className="space-y-4 p-4 border rounded-lg">
-                    <h3 className="font-medium text-sm">Configuración CORS</h3>
+                    <h3 className="font-medium text-sm">{uiText("Configuración CORS")}</h3>
                     <div>
-                        <label className="text-sm font-medium">Orígenes Permitidos (CORS)</label>
+                        <label className="text-sm font-medium">{uiText("Orígenes Permitidos (CORS)")}</label>
                         <Input
                             value={config.cors_origins}
                             onChange={(e) => setConfig({ ...config, cors_origins: e.target.value })}
                             placeholder="*"
                         />
-                        <p className="text-xs text-muted-foreground mt-1">
-                            Lista de dominios permitidos separados por coma, o "*" para todos.
-                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">{uiText("Lista de dominios permitidos separados por coma, o \"*\" para todos.")}</p>
                     </div>
                 </div>
 
                 {/* Application Settings */}
                 <div className="space-y-4 p-4 border rounded-lg">
-                    <h3 className="font-medium text-sm">Configuración de Aplicación</h3>
+                    <h3 className="font-medium text-sm">{uiText("Configuración de Aplicación")}</h3>
                     <div className="grid gap-4 md:grid-cols-2">
                         <div>
-                            <label className="text-sm font-medium">Modo Debug</label>
+                            <label className="text-sm font-medium">{uiText("Modo Debug")}</label>
                             <select
                                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                                 value={config.debug_mode}
                                 onChange={(e) => setConfig({ ...config, debug_mode: e.target.value })}
                             >
-                                <option value="false">Desactivado</option>
-                                <option value="true">Activado</option>
+                                <option value="false">{uiText("Desactivado")}</option>
+                                <option value="true">{uiText("Activado")}</option>
                             </select>
-                            <p className="text-xs text-muted-foreground mt-1">
-                                Habilita logs detallados y trazas de error
-                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">{uiText("Habilita logs detallados y trazas de error")}</p>
                         </div>
                         <div>
                             <label className="text-sm font-medium">Log Level</label>
@@ -209,19 +198,15 @@ export function BackendParameters() {
                     >
                         {showSecrets ? (
                             <>
-                                <EyeOff className="mr-2 h-4 w-4" />
-                                Ocultar Secretos
-                            </>
+                                <EyeOff className="mr-2 h-4 w-4" />{uiText("Ocultar Secretos")}</>
                         ) : (
                             <>
-                                <Eye className="mr-2 h-4 w-4" />
-                                Mostrar Secretos
-                            </>
+                                <Eye className="mr-2 h-4 w-4" />{uiText("Mostrar Secretos")}</>
                         )}
                     </Button>
                     <Button onClick={handleSave} disabled={loading}>
                         <Save className="mr-2 h-4 w-4" />
-                        {loading ? "Guardando..." : "Guardar Configuración"}
+                        {loading ? uiText("Guardando...") : uiText("Guardar Configuración")}
                     </Button>
                 </div>
 
@@ -238,8 +223,7 @@ export function BackendParameters() {
 
                 <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                     <p className="text-sm text-blue-800 dark:text-blue-200">
-                        <strong>ℹ️ Nota:</strong> Algunos cambios críticos pueden requerir reiniciar el servicio backend.
-                    </p>
+                        <strong>{uiText("ℹ️ Nota:")}</strong>{uiText("Algunos cambios críticos pueden requerir reiniciar el servicio backend.")}</p>
                 </div>
             </CardContent>
         </Card>

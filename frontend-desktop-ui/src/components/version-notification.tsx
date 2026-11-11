@@ -1,3 +1,4 @@
+import { uiText } from '../lib/ui-language';
 import { useEffect, useState } from "react";
 import { Bell, X, Download, ExternalLink } from "lucide-react";
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api/v1";
@@ -98,18 +99,12 @@ export function VersionNotification() {
                     </div>
 
                     <div className="flex-1">
-                        <h4 className="font-bold text-lg mb-1">
-                            ¡Nueva versión disponible! 🚀
-                        </h4>
-                        <p className="text-sm text-blue-100 mb-3">
-                            Versión <span className="font-mono font-bold">{versionInfo.latest_version}</span> está disponible.
-                            <br />
-                            Tu versión actual: <span className="font-mono">{versionInfo.current_version}</span>
+                        <h4 className="font-bold text-lg mb-1">{uiText("¡Nueva versión disponible! 🚀")}</h4>
+                        <p className="text-sm text-blue-100 mb-3">{uiText("Versión")}<span className="font-mono font-bold">{versionInfo.latest_version}</span>{uiText("está disponible.")}<br />{uiText("Tu versión actual:")}<span className="font-mono">{versionInfo.current_version}</span>
                         </p>
 
                         {versionInfo.release_date && (
-                            <p className="text-xs text-blue-200 mb-3">
-                                Publicado: {versionInfo.release_date}
+                            <p className="text-xs text-blue-200 mb-3">{uiText("Publicado:")}{versionInfo.release_date}
                             </p>
                         )}
 
@@ -121,9 +116,7 @@ export function VersionNotification() {
                                     rel="noopener noreferrer"
                                     className="inline-flex items-center gap-1 px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded text-sm font-medium transition-colors"
                                 >
-                                    <ExternalLink className="h-4 w-4" />
-                                    Ver Cambios
-                                </a>
+                                    <ExternalLink className="h-4 w-4" />{uiText("Ver Cambios")}</a>
                             )}
 
                             {versionInfo.download_url && (
@@ -133,9 +126,7 @@ export function VersionNotification() {
                                     rel="noopener noreferrer"
                                     className="inline-flex items-center gap-1 px-3 py-1.5 bg-green-500 hover:bg-green-600 rounded text-sm font-medium transition-colors"
                                 >
-                                    <Download className="h-4 w-4" />
-                                    Descargar
-                                </a>
+                                    <Download className="h-4 w-4" />{uiText("Descargar")}</a>
                             )}
                         </div>
                     </div>
@@ -143,7 +134,7 @@ export function VersionNotification() {
                     <button
                         onClick={handleDismiss}
                         className="flex-shrink-0 p-1 hover:bg-white/20 rounded transition-colors"
-                        title="Descartar"
+                        title={uiText("Descartar")}
                     >
                         <X className="h-5 w-5" />
                     </button>

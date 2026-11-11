@@ -1,3 +1,4 @@
+import { uiText } from '../lib/ui-language';
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
@@ -63,9 +64,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
     const navItems = [
         { label: "Dashboard", icon: LayoutDashboard, href: "/", exact: true },
-        { label: "Informes", icon: Calendar, href: "/scheduled-reports" },
+        { label: uiText("Informes"), icon: Calendar, href: "/scheduled-reports" },
         { label: "Docs", icon: Book, href: "/documentation" },
-        { label: "Perfil", icon: User, href: "/profile" },
+        { label: uiText("Perfil"), icon: User, href: "/profile" },
         { label: "Admin", icon: Shield, href: "/admin" },
     ];
 
@@ -102,9 +103,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     })}
                 </nav>
 
-                <div className="mt-8 px-2 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    AJUSTES
-                </div>
+                <div className="mt-8 px-2 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">{uiText("AJUSTES")}</div>
                 <div className="flex items-center gap-2 px-2 mb-4">
                     <ThemeSwitcher />
                 </div>
@@ -122,9 +121,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     className="w-full justify-start"
                     onClick={handleLogout}
                 >
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Salir
-                </Button>
+                    <LogOut className="mr-2 h-4 w-4" />{uiText("Salir")}</Button>
             </div>
         </div>
     );
@@ -166,7 +163,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     size="icon"
                     className="absolute -right-4 top-6 h-8 w-8 rounded-full border bg-background shadow-md z-50 hover:bg-muted"
                     onClick={() => setLeftOpen(!leftOpen)}
-                    title={leftOpen ? "Colapsar menú" : "Expandir menú"}
+                    title={leftOpen ? uiText("Colapsar menú") : uiText("Expandir menú")}
                 >
                     {leftOpen ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                 </Button>

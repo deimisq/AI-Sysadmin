@@ -1,3 +1,4 @@
+import { uiText } from '../lib/ui-language';
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -112,12 +113,9 @@ export function ServerDiagnostic({ server, onClose }: ServerDiagnosticProps) {
             <DialogContent className="max-w-2xl">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
-                        <Activity className="h-5 w-5" />
-                        Diagnóstico: {server.hostname}
+                        <Activity className="h-5 w-5" />{uiText("Diagnóstico:")}{server.hostname}
                     </DialogTitle>
-                    <DialogDescription>
-                        Información en tiempo real del servidor
-                    </DialogDescription>
+                    <DialogDescription>{uiText("Información en tiempo real del servidor")}</DialogDescription>
                 </DialogHeader>
 
                 {loading ? (
@@ -129,13 +127,11 @@ export function ServerDiagnostic({ server, onClose }: ServerDiagnosticProps) {
                         {/* Error State */}
                         {diagnostic?.status === "error" && (
                             <div className="p-4 border border-red-500/50 rounded-lg bg-red-500/10">
-                                <h3 className="font-medium text-red-600 dark:text-red-400 mb-2">Error al conectar con el servidor</h3>
+                                <h3 className="font-medium text-red-600 dark:text-red-400 mb-2">{uiText("Error al conectar con el servidor")}</h3>
                                 <p className="text-sm text-muted-foreground">
                                     {diagnostic.error || "No se pudo establecer conexión SSH"}
                                 </p>
-                                <p className="text-xs text-muted-foreground mt-2">
-                                    Verifica que el servidor esté encendido y que las credenciales SSH sean correctas.
-                                </p>
+                                <p className="text-xs text-muted-foreground mt-2">{uiText("Verifica que el servidor esté encendido y que las credenciales SSH sean correctas.")}</p>
                             </div>
                         )}
 
@@ -161,7 +157,7 @@ export function ServerDiagnostic({ server, onClose }: ServerDiagnosticProps) {
                                 <div className="flex items-center gap-3">
                                     <Activity className="h-5 w-5 text-muted-foreground" />
                                     <div>
-                                        <p className="font-medium">Sistema Operativo</p>
+                                        <p className="font-medium">{uiText("Sistema Operativo")}</p>
                                         <p className="text-sm text-muted-foreground">{server.os_info || 'No especificado'}</p>
                                     </div>
                                 </div>
@@ -202,7 +198,7 @@ export function ServerDiagnostic({ server, onClose }: ServerDiagnosticProps) {
                                         <div className="p-4 border rounded-lg">
                                             <div className="flex items-center gap-2 mb-2">
                                                 <MemoryStick className="h-4 w-4 text-muted-foreground" />
-                                                <h3 className="text-sm font-medium">Memoria</h3>
+                                                <h3 className="text-sm font-medium">{uiText("Memoria")}</h3>
                                             </div>
                                             <p className="text-2xl font-bold">{diagnostic.memory_usage}%</p>
                                             <div className="mt-2 h-2 bg-muted rounded-full overflow-hidden">
@@ -218,7 +214,7 @@ export function ServerDiagnostic({ server, onClose }: ServerDiagnosticProps) {
                                         <div className="p-4 border rounded-lg">
                                             <div className="flex items-center gap-2 mb-2">
                                                 <HardDrive className="h-4 w-4 text-muted-foreground" />
-                                                <h3 className="text-sm font-medium">Disco (Raíz)</h3>
+                                                <h3 className="text-sm font-medium">{uiText("Disco (Raíz)")}</h3>
                                             </div>
                                             <p className="text-2xl font-bold">{diagnostic.disk_usage}%</p>
                                             <div className="mt-2 h-2 bg-muted rounded-full overflow-hidden">
@@ -235,7 +231,7 @@ export function ServerDiagnostic({ server, onClose }: ServerDiagnosticProps) {
                                     <div className="p-4 border rounded-lg">
                                         <div className="flex items-center gap-2 mb-3">
                                             <HardDrive className="h-4 w-4 text-muted-foreground" />
-                                            <h3 className="font-medium">Detalle de Almacenamiento</h3>
+                                            <h3 className="font-medium">{uiText("Detalle de Almacenamiento")}</h3>
                                         </div>
                                         <div className="overflow-x-auto">
                                             <table className="w-full text-sm text-left">
@@ -274,19 +270,16 @@ export function ServerDiagnostic({ server, onClose }: ServerDiagnosticProps) {
                                 )}
 
                                 {diagnostic.last_check && (
-                                    <p className="text-xs text-muted-foreground text-center">
-                                        Última verificación: {formatDate(diagnostic.last_check)}
+                                    <p className="text-xs text-muted-foreground text-center">{uiText("Última verificación:")}{formatDate(diagnostic.last_check)}
                                     </p>
                                 )}
                             </>
                         )}
 
                         <div className="flex justify-end gap-2 pt-4 border-t">
-                            <Button variant="outline" onClick={onClose}>Cerrar</Button>
+                            <Button variant="outline" onClick={onClose}>{uiText("Cerrar")}</Button>
                             <Button onClick={loadDiagnostic}>
-                                <Activity className="mr-2 h-4 w-4" />
-                                Actualizar
-                            </Button>
+                                <Activity className="mr-2 h-4 w-4" />{uiText("Actualizar")}</Button>
                         </div>
                     </div>
                 )}

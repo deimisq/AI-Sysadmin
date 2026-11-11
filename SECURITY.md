@@ -13,3 +13,5 @@ El historial fue reescrito para retirar configuraciones reales de entorno, clave
 Después de actualizar las referencias remotas, quienes tengan clones anteriores deben clonarlo de nuevo. No mezclar ni subir ramas antiguas; trasladar únicamente cambios propios revisados. Las firmas de etiquetas afectadas por la reescritura dejan de validar los objetos anteriores. Las descargas ya publicadas y copias externas no se modifican por reescribir Git.
 
 Validación local: `gitleaks git . --redact --log-opts="--all"`, complementada con el escáner de patrones del proyecto. Un resultado sin hallazgos no certifica ausencia absoluta de secretos. La limpieza no revoca credenciales, no borra cachés de GitHub ni invalida claves descargadas previamente.
+
+GitHub puede conservar objetos anteriores accesibles por identificador aunque no aparezcan en un clon nuevo. La comprobación previa a publicar confirmó un archivo sensible todavía recuperable; el repositorio debe permanecer privado hasta gestionar y verificar su purga con GitHub. No incluir valores de claves en solicitudes de soporte.

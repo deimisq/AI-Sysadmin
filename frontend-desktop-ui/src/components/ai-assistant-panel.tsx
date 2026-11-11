@@ -1,3 +1,4 @@
+import { uiText, uiFormat } from '../lib/ui-language';
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2, Send, X, Image as ImageIcon, Server as ServerIcon, Play } from "lucide-react";
@@ -64,7 +65,7 @@ export function AiAssistantPanel() {
         if (srv) {
             setMessages([{
                 role: "system",
-                content: `💡 **${srv.hostname}** seleccionado. Estoy listo para ayudarte con el diagnóstico.`
+                content: uiFormat("💡 **{0}** seleccionado. Estoy listo para ayudarte con el diagnóstico.", srv.hostname)
             }]);
         }
     }, [selectedServerId, servers]);
@@ -196,11 +197,11 @@ export function AiAssistantPanel() {
                 // Add a system/user message indicating we captured output
                 setMessages(prev => [...prev, {
                     role: "user",
-                    content: `👀 *Resultado capturado automáticamente:*\n\`\`\`\n${capturedOutput.substring(0, 8000)}\n\`\`\``
+                    content: uiFormat("👀 *Resultado capturado automáticamente:*\n```\n{0}\n```", capturedOutput.substring(0, 8000))
                 }]);
 
                 // Send to AI
-                const promptWithOutput = `He ejecutado el comando: ${command}.\n\nEste es el resultado obtenido de la terminal:\n\`\`\`\n${capturedOutput}\n\`\`\`\n\nAnaliza este resultado brevemente y dime qué significa o cuál es el siguiente paso.`;
+                const promptWithOutput = uiFormat("He ejecutado el comando: {0}.\n\nEste es el resultado obtenido de la terminal:\n```\n{1}\n```\n\nAnaliza este resultado brevemente y dime qué significa o cuál es el siguiente paso.", command, capturedOutput);
                 await processAndAddAiResponse(promptWithOutput);
             } else {
                 setMessages(prev => [...prev, { role: "system", content: "⚠️ No se detectó output del comando (o tardó demasiado)." }]);
@@ -230,7 +231,7 @@ export function AiAssistantPanel() {
                     value={selectedServerId}
                     onChange={(e) => setSelectedServerId(e.target.value)}
                 >
-                    <option value="" disabled>Seleccionar Servidor</option>
+                    <option value="" disabled>{uiText("Seleccionar Servidor")}</option>
                     {servers.map(s => (
                         <option key={s.id} value={s.id}>{s.hostname} ({s.ip_address})</option>
                     ))}
@@ -272,16 +273,14 @@ export function AiAssistantPanel() {
                                     onClick={() => handleExecuteCommand(idx, msg.proposedCommand!)}
                                     disabled={loading}
                                 >
-                                    <Play className="h-3 w-3" /> Ejecutar y Analizar
-                                </Button>
+                                    <Play className="h-3 w-3" />{uiText("Ejecutar y Analizar")}</Button>
                             </div>
                         )}
                     </div>
                 ))}
                 {loading && (
                     <div className="flex items-center gap-2 text-muted-foreground text-xs p-2">
-                        <Loader2 className="h-3 w-3 animate-spin" /> Pensando...
-                    </div>
+                        <Loader2 className="h-3 w-3 animate-spin" />{uiText("Pensando...")}</div>
                 )}
                 <div ref={messagesEndRef} />
             </div>

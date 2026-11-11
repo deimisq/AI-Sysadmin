@@ -53,7 +53,7 @@ jobs:
             --include-package=uvicorn \
             --include-package=sqlalchemy \
             --include-package=pydantic \
-            --include-package=jose --include-package=passlib \
+            --include-package=jwt --include-package=bcrypt \
             --include-package=httpx \
             --include-package=ansible \
             --include-package=google.generativeai \

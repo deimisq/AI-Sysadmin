@@ -1,3 +1,4 @@
+import { uiText } from '../../lib/ui-language';
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -99,7 +100,7 @@ export function ServerManagement({ currentUser }: ServerManagementProps) {
             toast.success("Servidor actualizado correctamente");
         } catch (error: any) {
             console.error(error);
-            toast.error(error.message || "Error al actualizar servidor");
+            toast.error(error.message || uiText("Error al actualizar servidor"));
         }
     };
 
@@ -142,7 +143,7 @@ export function ServerManagement({ currentUser }: ServerManagementProps) {
             toast.success("Servidor creado correctamente");
         } catch (error: any) {
             console.error(error);
-            toast.error(error.message || "Error al crear servidor");
+            toast.error(error.message || uiText("Error al crear servidor"));
         }
     };
 
@@ -153,15 +154,15 @@ export function ServerManagement({ currentUser }: ServerManagementProps) {
         try {
             await deleteServer(serverId);
             await loadData();
-            toast.success("Servidor eliminado");
+            toast.success(uiText("Servidor eliminado"));
         } catch (error: any) {
             console.error(error);
-            toast.error(error.message || "Error al eliminar servidor");
+            toast.error(error.message || uiText("Error al eliminar servidor"));
         }
     };
 
     if (loading) {
-        return <div>Cargando...</div>;
+        return <div>{uiText("Cargando...")}</div>;
     }
 
     // Create Server Form
@@ -169,8 +170,8 @@ export function ServerManagement({ currentUser }: ServerManagementProps) {
         return (
             <Card>
                 <CardHeader>
-                    <CardTitle>Crear Nuevo Servidor</CardTitle>
-                    <CardDescription>Añadir un nuevo servidor al inventario</CardDescription>
+                    <CardTitle>{uiText("Crear Nuevo Servidor")}</CardTitle>
+                    <CardDescription>{uiText("Añadir un nuevo servidor al inventario")}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4 max-h-[calc(100vh-300px)] overflow-y-auto">
                     <div className="grid gap-4 md:grid-cols-2">
@@ -183,7 +184,7 @@ export function ServerManagement({ currentUser }: ServerManagementProps) {
                             />
                         </div>
                         <div>
-                            <label className="text-sm font-medium">Dirección IP *</label>
+                            <label className="text-sm font-medium">{uiText("Dirección IP *")}</label>
                             <Input
                                 value={newServer.ip_address}
                                 onChange={(e) => setNewServer({ ...newServer, ip_address: e.target.value })}
@@ -191,20 +192,20 @@ export function ServerManagement({ currentUser }: ServerManagementProps) {
                             />
                         </div>
                         <div className="col-span-2">
-                            <label className="text-sm font-medium">Sistema Operativo *</label>
+                            <label className="text-sm font-medium">{uiText("Sistema Operativo *")}</label>
                             <select
                                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                                 value={newServer.os_info}
                                 onChange={(e) => setNewServer({ ...newServer, os_info: e.target.value })}
                             >
-                                <option value="">Seleccionar OS</option>
+                                <option value="">{uiText("Seleccionar OS")}</option>
                                 {OS_OPTIONS.map((os) => (
                                     <option key={os} value={os}>{os}</option>
                                 ))}
                             </select>
                         </div>
                         <div>
-                            <label className="text-sm font-medium">Usuario SSH *</label>
+                            <label className="text-sm font-medium">{uiText("Usuario SSH *")}</label>
                             <Input
                                 value={newServer.ssh_username}
                                 onChange={(e) => setNewServer({ ...newServer, ssh_username: e.target.value })}
@@ -212,7 +213,7 @@ export function ServerManagement({ currentUser }: ServerManagementProps) {
                             />
                         </div>
                         <div>
-                            <label className="text-sm font-medium">Contraseña SSH</label>
+                            <label className="text-sm font-medium">{uiText("Contraseña SSH")}</label>
                             <Input
                                 type="password"
                                 value={newServer.ssh_password}
@@ -221,29 +222,29 @@ export function ServerManagement({ currentUser }: ServerManagementProps) {
                             />
                         </div>
                         <div className="col-span-2">
-                            <label className="text-sm font-medium">Ruta Clave SSH</label>
+                            <label className="text-sm font-medium">{uiText("Ruta Clave SSH")}</label>
                             <Input
                                 value={newServer.ssh_key_path}
                                 onChange={(e) => setNewServer({ ...newServer, ssh_key_path: e.target.value })}
                                 placeholder="/path/to/private/key"
                             />
-                            <p className="text-xs text-muted-foreground mt-1">Ruta absoluta en el servidor donde corre el agente</p>
+                            <p className="text-xs text-muted-foreground mt-1">{uiText("Ruta absoluta en el servidor donde corre el agente")}</p>
                         </div>
                         <div className="col-span-2">
-                            <label className="text-sm font-medium">Grupo</label>
+                            <label className="text-sm font-medium">{uiText("Grupo")}</label>
                             <select
                                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                                 value={newServer.group_id}
                                 onChange={(e) => setNewServer({ ...newServer, group_id: e.target.value })}
                             >
-                                <option value="">Sin Grupo</option>
+                                <option value="">{uiText("Sin Grupo")}</option>
                                 {groups.map((group) => (
                                     <option key={group.id} value={group.id}>{group.name}</option>
                                 ))}
                             </select>
                         </div>
                         <div className="col-span-2">
-                            <label className="text-sm font-medium">Descripción</label>
+                            <label className="text-sm font-medium">{uiText("Descripción")}</label>
                             <Input
                                 value={newServer.description}
                                 onChange={(e) => setNewServer({ ...newServer, description: e.target.value })}
@@ -252,8 +253,8 @@ export function ServerManagement({ currentUser }: ServerManagementProps) {
                         </div>
                     </div>
                     <div className="flex gap-2">
-                        <Button onClick={handleCreateServer}>Crear Servidor</Button>
-                        <Button variant="outline" onClick={() => setCreatingServer(false)}>Cancelar</Button>
+                        <Button onClick={handleCreateServer}>{uiText("Crear Servidor")}</Button>
+                        <Button variant="outline" onClick={() => setCreatingServer(false)}>{uiText("Cancelar")}</Button>
                     </div>
                 </CardContent>
             </Card>
@@ -265,8 +266,8 @@ export function ServerManagement({ currentUser }: ServerManagementProps) {
         return (
             <Card>
                 <CardHeader>
-                    <CardTitle>Editar Servidor: {editingServer.hostname}</CardTitle>
-                    <CardDescription>Actualizar información del servidor</CardDescription>
+                    <CardTitle>{uiText("Editar Servidor:")}{" "}{editingServer.hostname}</CardTitle>
+                    <CardDescription>{uiText("Actualizar información del servidor")}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4 max-h-[calc(100vh-300px)] overflow-y-auto">
                     <div className="grid gap-4 md:grid-cols-2">
@@ -278,14 +279,14 @@ export function ServerManagement({ currentUser }: ServerManagementProps) {
                             />
                         </div>
                         <div>
-                            <label className="text-sm font-medium">Dirección IP</label>
+                            <label className="text-sm font-medium">{uiText("Dirección IP")}</label>
                             <Input
                                 value={editingServer.ip_address}
                                 onChange={(e) => setEditingServer({ ...editingServer, ip_address: e.target.value })}
                             />
                         </div>
                         <div className="col-span-2">
-                            <label className="text-sm font-medium">Sistema Operativo</label>
+                            <label className="text-sm font-medium">{uiText("Sistema Operativo")}</label>
                             <select
                                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                                 value={editingServer.os_info}
@@ -297,14 +298,14 @@ export function ServerManagement({ currentUser }: ServerManagementProps) {
                             </select>
                         </div>
                         <div>
-                            <label className="text-sm font-medium">Usuario SSH</label>
+                            <label className="text-sm font-medium">{uiText("Usuario SSH")}</label>
                             <Input
                                 value={editingServer.ssh_username}
                                 onChange={(e) => setEditingServer({ ...editingServer, ssh_username: e.target.value })}
                             />
                         </div>
                         <div>
-                            <label className="text-sm font-medium">Nueva Contraseña SSH (Opcional)</label>
+                            <label className="text-sm font-medium">{uiText("Nueva Contraseña SSH (Opcional)")}</label>
                             <Input
                                 type="password"
                                 value={editingServer.ssh_password}
@@ -313,7 +314,7 @@ export function ServerManagement({ currentUser }: ServerManagementProps) {
                             />
                         </div>
                         <div className="col-span-2">
-                            <label className="text-sm font-medium">Nueva Ruta Clave SSH (Opcional)</label>
+                            <label className="text-sm font-medium">{uiText("Nueva Ruta Clave SSH (Opcional)")}</label>
                             <Input
                                 value={editingServer.ssh_key_path}
                                 onChange={(e) => setEditingServer({ ...editingServer, ssh_key_path: e.target.value })}
@@ -321,20 +322,20 @@ export function ServerManagement({ currentUser }: ServerManagementProps) {
                             />
                         </div>
                         <div className="col-span-2">
-                            <label className="text-sm font-medium">Grupo</label>
+                            <label className="text-sm font-medium">{uiText("Grupo")}</label>
                             <select
                                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                                 value={editingServer.group_id || ""}
                                 onChange={(e) => setEditingServer({ ...editingServer, group_id: e.target.value })}
                             >
-                                <option value="">Sin Grupo</option>
+                                <option value="">{uiText("Sin Grupo")}</option>
                                 {groups.map((group) => (
                                     <option key={group.id} value={group.id}>{group.name}</option>
                                 ))}
                             </select>
                         </div>
                         <div className="col-span-2">
-                            <label className="text-sm font-medium">Descripción</label>
+                            <label className="text-sm font-medium">{uiText("Descripción")}</label>
                             <Input
                                 value={editingServer.description || ""}
                                 onChange={(e) => setEditingServer({ ...editingServer, description: e.target.value })}
@@ -342,8 +343,8 @@ export function ServerManagement({ currentUser }: ServerManagementProps) {
                         </div>
                     </div>
                     <div className="flex gap-2">
-                        <Button onClick={handleSaveServer}>Guardar Cambios</Button>
-                        <Button variant="outline" onClick={() => setEditingServer(null)}>Cancelar</Button>
+                        <Button onClick={handleSaveServer}>{uiText("Guardar Cambios")}</Button>
+                        <Button variant="outline" onClick={() => setEditingServer(null)}>{uiText("Cancelar")}</Button>
                     </div>
                 </CardContent>
             </Card>
@@ -357,15 +358,11 @@ export function ServerManagement({ currentUser }: ServerManagementProps) {
                 <div className="flex items-center justify-between">
                     <div>
                         <CardTitle className="flex items-center gap-2">
-                            <Server className="h-5 w-5" />
-                            Gestión de Servidores
-                        </CardTitle>
-                        <CardDescription>Administrar todos los servidores registrados</CardDescription>
+                            <Server className="h-5 w-5" />{uiText("Gestión de Servidores")}</CardTitle>
+                        <CardDescription>{uiText("Administrar todos los servidores registrados")}</CardDescription>
                     </div>
                     <Button onClick={() => setCreatingServer(true)}>
-                        <Plus className="mr-2 h-4 w-4" />
-                        Nuevo Servidor
-                    </Button>
+                        <Plus className="mr-2 h-4 w-4" />{uiText("Nuevo Servidor")}</Button>
                 </div>
             </CardHeader>
             <CardContent className="max-h-[calc(100vh-300px)] overflow-y-auto">
@@ -416,9 +413,7 @@ export function ServerManagement({ currentUser }: ServerManagementProps) {
                         </div>
                     ))}
                     {servers.length === 0 && (
-                        <div className="text-center p-10 text-muted-foreground">
-                            No hay servidores registrados aún.
-                        </div>
+                        <div className="text-center p-10 text-muted-foreground">{uiText("No hay servidores registrados aún.")}</div>
                     )}
                 </div>
             </CardContent>

@@ -1,3 +1,4 @@
+import { uiText } from '../../lib/ui-language';
 import { useEffect, useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -132,18 +133,18 @@ export function ServerFormDialog({ open, onOpenChange, serverToEdit, groups, onS
             let saved: Server;
             if (isEditing && serverToEdit) {
                 saved = await updateServer(serverToEdit.id, payload);
-                toast.success('Servidor actualizado exitosamente');
+                toast.success(uiText('Servidor actualizado exitosamente'));
             } else {
                 saved = await createServer(payload);
-                toast.success('Servidor creado exitosamente');
+                toast.success(uiText('Servidor creado exitosamente'));
             }
             // Persistence already succeeded: a follow-up presentation failure must not invite another create.
             try { await onSuccess(saved); }
-            catch { toast.warning('La conexión se guardó, pero no se pudo actualizar su organización. Revisa el inventario antes de volver a crearla.'); }
+            catch { toast.warning(uiText('La conexión se guardó, pero no se pudo actualizar su organización. Revisa el inventario antes de volver a crearla.')); }
             onOpenChange(false);
         } catch (err: any) {
 
-            toast.error(err.message || 'Error al guardar el servidor');
+            toast.error(err.message || uiText('Error al guardar el servidor'));
         } finally {
             saving.current = false;
             setLoading(false);
@@ -156,45 +157,45 @@ export function ServerFormDialog({ open, onOpenChange, serverToEdit, groups, onS
               <form ref={formRef} noValidate onSubmit={event => { event.preventDefault(); void handleSubmit(); }} className="flex flex-col max-h-[90vh]">
                 <DialogHeader className="px-5 py-4 border-b border-[#383838] shrink-0">
                     <DialogTitle className="text-base font-semibold text-white">
-                        {isEditing ? 'Propiedades de la conexión' : 'Nueva conexión'}
+                        {isEditing ? uiText('Propiedades de la conexión') : uiText('Nueva conexión')}
                     </DialogTitle>
                     <DialogDescription className="text-gray-400">
                         {isEditing
-                            ? 'Modifica los detalles de conexión y configuración del servidor.'
+                            ? uiText('Modifica los detalles de conexión y configuración del servidor.')
                             : 'Ingresa los detalles para conectar un nuevo servidor a la plataforma.'}
                     </DialogDescription>
                 </DialogHeader>
 
                 <fieldset disabled={loading} className="connection-fields space-y-4 px-5 py-4 overflow-y-auto min-h-0">
-                    <legend className="sr-only">Propiedades de conexión</legend>
-                    {destination && <p className="text-xs text-gray-300 border-b border-[#383838] pb-3 break-words"><span className="text-gray-400">Carpeta de destino: </span>{destination}</p>}
+                    <legend className="sr-only">{uiText("Propiedades de conexión")}</legend>
+                    {destination && <p className="text-xs text-gray-300 border-b border-[#383838] pb-3 break-words"><span className="text-gray-400">{uiText("Carpeta de destino:")}{" "}</span>{destination}</p>}
                     {local && <div className="space-y-3">
-                        <p className="text-xs text-gray-400">Se guarda cifrado en este equipo con tu cuenta de Windows. La conexión sale directamente desde aquí.</p>
+                        <p className="text-xs text-gray-400">{uiText("Se guarda cifrado en este equipo con tu cuenta de Windows. La conexión sale directamente desde aquí.")}</p>
                         <div className="grid grid-cols-2 gap-4">
-                            <label className="text-sm">Protocolo<select aria-label="Protocolo" value={protocol} onChange={e => { const next = e.target.value as 'ssh' | 'rdp'; setProtocol(next); setPort(next === 'ssh' ? 22 : 3389); }} className="mt-2 w-full rounded border border-[#444] bg-[#2d2d2d] p-2"><option value="ssh">SSH</option><option value="rdp">RDP</option></select></label>
-                            <label className="text-sm">Puerto<Input aria-invalid={!!errors.port} aria-describedby={errors.port ? "error-port" : undefined} aria-label="Puerto" type="number" min={1} max={65535} value={Number.isNaN(port) ? '' : port} onChange={e => setPort(e.target.value === '' ? NaN : Number(e.target.value))} className="mt-2 bg-[#2d2d2d] border-[#444]" /></label>
+                            <label className="text-sm">{uiText("Protocolo")}<select aria-label={uiText("Protocolo")} value={protocol} onChange={e => { const next = e.target.value as 'ssh' | 'rdp'; setProtocol(next); setPort(next === 'ssh' ? 22 : 3389); }} className="mt-2 w-full rounded border border-[#444] bg-[#2d2d2d] p-2"><option value="ssh">SSH</option><option value="rdp">RDP</option></select></label>
+                            <label className="text-sm">{uiText("Puerto")}<Input aria-invalid={!!errors.port} aria-describedby={errors.port ? "error-port" : undefined} aria-label={uiText("Puerto")} type="number" min={1} max={65535} value={Number.isNaN(port) ? '' : port} onChange={e => setPort(e.target.value === '' ? NaN : Number(e.target.value))} className="mt-2 bg-[#2d2d2d] border-[#444]" /></label>
                         </div>
                         {errors.port && <p id="error-port" role="alert" className="text-xs text-red-300">{errors.port}</p>}
                     </div>}
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                            <Label htmlFor="connection-hostname" className="text-gray-300">Nombre *</Label>
+                            <Label htmlFor="connection-hostname" className="text-gray-300">{uiText("Nombre *")}</Label>
                             <Input
                                 id="connection-hostname" aria-invalid={!!errors.hostname} aria-describedby={errors.hostname ? "error-hostname" : undefined}
                                 value={formData.hostname}
                                 onChange={(e) => setFormData({ ...formData, hostname: e.target.value })}
-                                placeholder="ej., servidor-web-01"
+                                placeholder={uiText("ej., servidor-web-01")}
                                 className="bg-[#2d2d2d] border-[#444] text-white placeholder:text-gray-500"
                             />
                             {errors.hostname && <p id="error-hostname" role="alert" className="text-xs text-red-300">{errors.hostname}</p>}
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="connection-ip_address" className="text-gray-300">Dirección IP o DNS *</Label>
+                            <Label htmlFor="connection-ip_address" className="text-gray-300">{uiText("Dirección IP o DNS *")}</Label>
                             <Input
                                 id="connection-ip_address" aria-invalid={!!errors.ip_address} aria-describedby={errors.ip_address ? "error-ip_address" : undefined}
                                 value={formData.ip_address}
                                 onChange={(e) => setFormData({ ...formData, ip_address: e.target.value })}
-                                placeholder="ej., 192.168.1.100"
+                                placeholder={uiText("ej., 192.168.1.100")}
                                 className="bg-[#2d2d2d] border-[#444] text-white placeholder:text-gray-500"
                             />
                             {errors.ip_address && <p id="error-ip_address" role="alert" className="text-xs text-red-300">{errors.ip_address}</p>}
@@ -202,7 +203,7 @@ export function ServerFormDialog({ open, onOpenChange, serverToEdit, groups, onS
                     </div>
 
                     <div className="space-y-2">
-                        <Label className="text-gray-300">Sistema Operativo</Label>
+                        <Label className="text-gray-300">{uiText("Sistema Operativo")}</Label>
                         <select
                             className="flex h-10 w-full rounded-md border border-[#444] bg-[#2d2d2d] px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                             value={isCustomOS ? "other" : formData.os_info}
@@ -217,11 +218,11 @@ export function ServerFormDialog({ open, onOpenChange, serverToEdit, groups, onS
                                 }
                             }}
                         >
-                            <option value="" disabled>Selecciona Sistema Operativo</option>
+                            <option value="" disabled>{uiText("Selecciona Sistema Operativo")}</option>
                             {OS_OPTIONS.map((os) => (
                                 <option key={os} value={os}>{os}</option>
                             ))}
-                            <option value="other">Otro / Personalizado...</option>
+                            <option value="other">{uiText("Otro / Personalizado...")}</option>
                         </select>
 
                         {isCustomOS && (
@@ -236,13 +237,13 @@ export function ServerFormDialog({ open, onOpenChange, serverToEdit, groups, onS
                     </div>
 
                     {!local && <div className="space-y-2">
-                        <Label className="text-gray-300">Grupo</Label>
+                        <Label className="text-gray-300">{uiText("Grupo")}</Label>
                         <select
                             className="flex h-10 w-full rounded-md border border-[#444] bg-[#2d2d2d] px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                             value={formData.group_id || ''}
                             onChange={(e) => setFormData({ ...formData, group_id: e.target.value ? Number(e.target.value) : null })}
                         >
-                            <option value="">Sin grupo (General)</option>
+                            <option value="">{uiText("Sin grupo (General)")}</option>
                             {groups.map(g => (
                                 <option key={g.id} value={g.id}>{g.name}</option>
                             ))}
@@ -251,7 +252,7 @@ export function ServerFormDialog({ open, onOpenChange, serverToEdit, groups, onS
 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                            <Label htmlFor="connection-ssh_username" className="text-gray-300">Usuario {local && protocol === 'rdp' ? 'RDP' : 'SSH'}</Label>
+                            <Label htmlFor="connection-ssh_username" className="text-gray-300">{uiText("Usuario")}{" "}{local && protocol === 'rdp' ? 'RDP' : 'SSH'}</Label>
                             <Input
                                 id="connection-ssh_username" aria-invalid={!!errors.ssh_username} aria-describedby={errors.ssh_username ? "error-ssh_username" : undefined}
                                 value={formData.ssh_username}
@@ -262,47 +263,43 @@ export function ServerFormDialog({ open, onOpenChange, serverToEdit, groups, onS
                             {errors.ssh_username && <p id="error-ssh_username" role="alert" className="text-xs text-red-300">{errors.ssh_username}</p>}
                         </div>
                         <div className="space-y-2">
-                            <Label className="text-gray-300">Contraseña {isEditing && '(vacío conserva la actual)'}</Label>
+                            <Label className="text-gray-300">{uiText("Contraseña")}{" "}{isEditing && uiText('(vacío conserva la actual)')}</Label>
                             <Input
                                 type="password"
                                 value={formData.ssh_password}
                                 onChange={(e) => setFormData({ ...formData, ssh_password: e.target.value })}
-                                placeholder={isEditing ? "••••••••" : "Contraseña"}
+                                placeholder={isEditing ? "••••••••" : uiText("Contraseña")}
                                 className="bg-[#2d2d2d] border-[#444] text-white placeholder:text-gray-500"
                             />
                         </div>
                     </div>
 
                     {(!local || protocol === 'ssh') && <div className="space-y-2">
-                        <Label className="text-gray-300">Clave privada SSH: contenido o ruta {isEditing && '(vacío conserva la actual)'}</Label>
+                        <Label className="text-gray-300">{uiText("Clave privada SSH: contenido o ruta")}{" "}{isEditing && uiText('(vacío conserva la actual)')}</Label>
                         <Textarea
                             className="min-h-[100px] font-mono text-xs bg-[#2d2d2d] border-[#444] text-white placeholder:text-gray-500"
                             value={formData.ssh_key_path}
                             onChange={(e) => setFormData({ ...formData, ssh_key_path: e.target.value })}
                             placeholder="-----BEGIN OPENSSH PRIVATE KEY-----&#10;..."
                         />
-                        <p className="text-xs text-gray-500">
-                            Proporciona contraseña SSH o ruta de clave privada (prioridad a clave).
-                        </p>
+                        <p className="text-xs text-gray-500">{uiText("Proporciona contraseña SSH o ruta de clave privada (prioridad a clave).")}</p>
                     </div>}
 
                     <div className="space-y-2">
-                        <Label className="text-gray-300">Descripción (Opcional)</Label>
+                        <Label className="text-gray-300">{uiText("Descripción (Opcional)")}</Label>
                         <Textarea
                             value={formData.description}
                             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                            placeholder="Información adicional..."
+                            placeholder={uiText("Información adicional...")}
                             className="bg-[#2d2d2d] border-[#444] text-white placeholder:text-gray-500"
                         />
                     </div>
                 </fieldset>
 
                 <DialogFooter className="px-5 py-3 border-t border-[#383838] bg-[#252525] shrink-0 gap-2 sm:gap-0">
-                    <Button type="button" disabled={loading} variant="outline" onClick={() => changeOpen(false)} className="border-[#444] text-gray-300 hover:bg-[#333] hover:text-white">
-                        Cancelar
-                    </Button>
+                    <Button type="button" disabled={loading} variant="outline" onClick={() => changeOpen(false)} className="border-[#444] text-gray-300 hover:bg-[#333] hover:text-white">{uiText("Cancelar")}</Button>
                     <Button type="submit" disabled={loading} className="bg-blue-600 hover:bg-blue-700 text-white">
-                        {loading ? 'Guardando...' : 'Guardar conexión'}
+                        {loading ? uiText('Guardando...') : uiText('Guardar conexión')}
                     </Button>
                 </DialogFooter>
               </form>

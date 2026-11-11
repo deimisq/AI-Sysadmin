@@ -82,7 +82,7 @@ internal sealed class SshTrustDialog : Window
             Margin = new Thickness(0, 0, 8, 0), Cursor = Cursors.Arrow
         };
         var cancel = new Controls.Button {
-            Content = "Cancelar", Padding = new Thickness(14, 7, 14, 7),
+            Content = UserLanguage.Text("Cancelar"), Padding = new Thickness(14, 7, 14, 7),
             IsCancel = true, IsDefault = true, Cursor = Cursors.Arrow
         };
         accept.Click += (_, _) => DialogResult = true;

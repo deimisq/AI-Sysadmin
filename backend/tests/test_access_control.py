@@ -1,9 +1,11 @@
 """Regression tests use an isolated in-memory database and never contact servers."""
 import os
+import secrets
 import sys
 from pathlib import Path
 from types import ModuleType, SimpleNamespace
 from unittest.mock import AsyncMock, Mock
+from cryptography.fernet import Fernet
 
 import pytest
 from fastapi import FastAPI
@@ -14,8 +16,8 @@ from sqlalchemy.pool import StaticPool
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 os.environ.update(DATABASE_URL="sqlite://", DESKTOP_MODE="false",
-                  SECRET_KEY="synthetic-test-only",
-                  ENCRYPTION_KEY="synthetic-test-only")
+                  SECRET_KEY=secrets.token_urlsafe(48),
+                  ENCRYPTION_KEY=Fernet.generate_key().decode())
 
 import models
 import dependencies

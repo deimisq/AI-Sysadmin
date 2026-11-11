@@ -3,7 +3,7 @@ import sys
 import asyncio
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
-from passlib.context import CryptContext
+from utils.auth import get_password_hash
 from models import User, RoleType
 from database import Base
 from settings import settings
@@ -12,9 +12,6 @@ from settings import settings
 DATABASE_URL = settings.DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://")
 engine = create_async_engine(DATABASE_URL, echo=False)
 AsyncSessionLocal = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
-
-# Setup password hashing
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 async def create_superuser(email, username, password, full_name):
     async with AsyncSessionLocal() as session:
@@ -27,7 +24,7 @@ async def create_superuser(email, username, password, full_name):
             print(f"User with email {email} or username {username} already exists.")
             return
 
-        hashed_password = pwd_context.hash(password)
+        hashed_password = get_password_hash(password)
         
         new_user = User(
             email=email,

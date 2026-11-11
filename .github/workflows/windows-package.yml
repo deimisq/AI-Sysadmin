@@ -89,7 +89,7 @@ jobs:
         run: ./scripts/test-installer-upgrade.ps1 -Iscc $env:INNO_COMPILER
       - name: Verify installing before an approved restart
         shell: powershell
-        run: ./scripts/test-installer-upgrade.ps1 -Iscc $env:INNO_COMPILER -KeepOldRunning
+        run: ./scripts/test-installer-upgrade.ps1 -Iscc $env:INNO_COMPILER -KeepOldRunning -Language english
       - uses: actions/upload-artifact@v4
         with:
           name: windows-installers

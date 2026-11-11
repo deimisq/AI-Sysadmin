@@ -1,3 +1,4 @@
+import { uiText, uiFormat } from '../../lib/ui-language';
 import { useEffect, useState, useMemo, useRef } from 'react';
 import { Search, ChevronDown, ChevronRight, RotateCw, MoreVertical, Terminal, MessageSquare, Pencil, Trash2, Plus, Folder } from 'lucide-react';
 import { emptyFolderLayout, readFolderLayout, removeFolder, folderPath, type FolderLayout, type ConnectionFolder } from '../../lib/connection-folders';
@@ -54,21 +55,21 @@ export function ServerExplorer() {
                     }
                     if (active && version === folderLoadVersion.current) { setLayout(saved.layout); folderRevision.current = saved.revision; folderReady.current = true; }
                 } else if (active) { setLayout(readFolderLayout(localStorage.getItem(layoutKey))); folderReady.current = true; }
-            } catch { if (active) toast.error('No se pudo leer la organización de carpetas. Actualizá el inventario para reintentar.'); }
+            } catch { if (active) toast.error(uiText('No se pudo leer la organización de carpetas. Actualizá el inventario para reintentar.')); }
         };
         void load(); window.addEventListener('local-inventory-restored',load); window.addEventListener('connection-folders-refresh',load);
         return () => { active = false; window.removeEventListener('local-inventory-restored',load); window.removeEventListener('connection-folders-refresh',load); };
     }, [layoutKey]);
     const saveLayout = async (next: FolderLayout) => {
         if (!layoutKey) return false;
-        if (!folderReady.current || folderSaving.current) { toast.warning('Esperá a que termine la carga o el guardado de carpetas.'); return false; }
+        if (!folderReady.current || folderSaving.current) { toast.warning(uiText('Esperá a que termine la carga o el guardado de carpetas.')); return false; }
         folderSaving.current = true;
         try {
             if (local) { const saved = await api.put<{ revision: number; layout: FolderLayout }>('/workspace/folders',{ layout: next, revision: folderRevision.current }); folderRevision.current = saved.revision; setLayout(saved.layout); }
             else { localStorage.setItem(layoutKey, JSON.stringify(next)); setLayout(next); }
             return true;
         }
-        catch { toast.error('No se pudieron guardar las carpetas. Se recargará la organización guardada.'); window.dispatchEvent(new Event('connection-folders-refresh')); return false; }
+        catch { toast.error(uiText('No se pudieron guardar las carpetas. Se recargará la organización guardada.')); window.dispatchEvent(new Event('connection-folders-refresh')); return false; }
         finally { folderSaving.current = false; }
     };
     const addFolder = (parentId: string | null = null) => {
@@ -195,10 +196,10 @@ export function ServerExplorer() {
             try {
                 await deleteServer(deletingServer.id);
                 setDeletingServer(null);
-                toast.success("Servidor eliminado");
+                toast.success(uiText("Servidor eliminado"));
                 loadData();
             } catch (err: any) {
-                toast.error(`Error: ${err.message}`);
+                toast.error(uiFormat("Error: {0}", err.message));
             }
         }
     };
@@ -227,15 +228,15 @@ export function ServerExplorer() {
         if (searchTerm && !matches && !folderServers.length && !children.some(Boolean)) return null;
         return <CollapsibleGroup key={folder.id} title={folder.name} count={folderServers.length} defaultOpen={true} forceOpen={!!searchTerm}
             actions={<DropdownMenu><DropdownMenuTrigger aria-label={`Opciones de ${folder.name}`} className="p-1"><MoreVertical className="h-3 w-3" /></DropdownMenuTrigger><DropdownMenuContent>
-                <DropdownMenuItem onClick={() => { setCreationFolderId(folder.id); setEditingServer(null); setFormOpen(true); }}>Nueva conexión en esta carpeta</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => addFolder(folder.id)}>Crear subcarpeta</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setFolderForm({ ...folder })}>Renombrar</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setDeletingFolder(folder.id)}>Eliminar carpeta</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => { setCreationFolderId(folder.id); setEditingServer(null); setFormOpen(true); }}>{uiText("Nueva conexión en esta carpeta")}</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => addFolder(folder.id)}>{uiText("Crear subcarpeta")}</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setFolderForm({ ...folder })}>{uiText("Renombrar")}</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setDeletingFolder(folder.id)}>{uiText("Eliminar carpeta")}</DropdownMenuItem>
             </DropdownMenuContent></DropdownMenu>}>
             <div className="pl-1 border-l border-[#333] ml-2">
                 {children}
                 {folderServers.map(renderServer)}
-                {!folderServers.length && !layout.folders.some(f => f.parentId === folder.id) && <p className="px-3 py-2 text-xs text-gray-400">Carpeta vacía</p>}
+                {!folderServers.length && !layout.folders.some(f => f.parentId === folder.id) && <p className="px-3 py-2 text-xs text-gray-400">{uiText("Carpeta vacía")}</p>}
             </div>
         </CollapsibleGroup>;
     };
@@ -243,7 +244,7 @@ export function ServerExplorer() {
     if (loading && servers.length === 0) return (
         <div className="p-4 flex flex-col items-center justify-center h-full text-xs text-muted-foreground gap-2">
             <RotateCw className="w-4 h-4 animate-spin" />
-            <span>Cargando inventario...</span>
+            <span>{uiText("Cargando inventario...")}</span>
         </div>
     );
 
@@ -254,8 +255,7 @@ export function ServerExplorer() {
                 onClick={loadData}
                 className="px-3 py-1 bg-[#333] hover:bg-[#444] text-white rounded transition-colors flex items-center gap-1"
             >
-                <RotateCw className="w-3 h-3" /> Reintentar
-            </button>
+                <RotateCw className="w-3 h-3" />{uiText("Reintentar")}</button>
         </div>
     );
 
@@ -264,15 +264,13 @@ export function ServerExplorer() {
             {/* Header / Search */}
             <div className="px-2 py-1.5 border-b border-[#333] space-y-1">
                 <div className="flex items-center justify-between">
-                    <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                        CONEXIONES
-                    </div>
+                    <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">{uiText("CONEXIONES")}</div>
                     <div className="flex gap-1">
                         <button onClick={() => addFolder()} disabled={!layoutKey} aria-label="Crear carpeta local" title="Crear carpeta local" className="hover:bg-[#333] p-1 rounded disabled:opacity-30"><Folder className="w-3.5 h-3.5" /></button>
-                        <button onClick={handleAddServer} title="Agregar Servidor" className="hover:bg-[#333] p-1 rounded text-gray-400 hover:text-white">
+                        <button onClick={handleAddServer} title={uiText("Agregar Servidor")} className="hover:bg-[#333] p-1 rounded text-gray-400 hover:text-white">
                             <Plus className="w-3.5 h-3.5" />
                         </button>
-                        {!local && <button onClick={() => setShowGroupManager(true)} title="Gestionar Grupos" className="hover:bg-[#333] p-1 rounded text-gray-400 hover:text-white">
+                        {!local && <button onClick={() => setShowGroupManager(true)} title={uiText("Gestionar Grupos")} className="hover:bg-[#333] p-1 rounded text-gray-400 hover:text-white">
                             <FolderCog className="w-3.5 h-3.5" />
                         </button>}
                         <button onClick={loadData} title="Refrescar" className="hover:bg-[#333] p-1 rounded text-gray-400 hover:text-white">
@@ -285,8 +283,8 @@ export function ServerExplorer() {
                     <input
                         type="text"
                         ref={searchInput}
-                        aria-label="Buscar en el inventario"
-                        placeholder="Nombre, dirección o grupo…"
+                        aria-label={uiText("Buscar en el inventario")}
+                        placeholder={uiText("Nombre, dirección o grupo…")}
                         value={searchTerm}
                         onChange={e => setSearchTerm(e.target.value)}
                         className="w-full bg-[#3c3c3c] border border-transparent focus:border-blue-500 rounded-sm py-1 pl-7 pr-2 text-xs text-white placeholder-gray-500 outline-none"
@@ -331,7 +329,7 @@ export function ServerExplorer() {
                 {/* Empty State */}
                 {filteredServers.length === 0 && layout.folders.length === 0 && (
                     <div className="text-xs text-gray-500 px-4 py-8 italic text-center opacity-60">
-                        {searchTerm ? 'No se encontraron resultados' : 'No hay servidores'}
+                        {searchTerm ? uiText('No se encontraron resultados') : uiText('No hay servidores')}
                     </div>
                 )}
             </div>
@@ -339,15 +337,15 @@ export function ServerExplorer() {
             {/* Dialogs */}
             <Dialog open={!!deletingServer} onOpenChange={open => { if (!open) setDeletingServer(null); }}>
                 <DialogContent className="bg-card text-card-foreground">
-                    <DialogTitle>Eliminar conexión {deletingServer?.hostname}</DialogTitle>
-                    <DialogDescription>Se elimina del inventario. No se borra ni modifica el servidor remoto.</DialogDescription>
-                    <div className="flex justify-end gap-2"><button onClick={() => setDeletingServer(null)} className="px-3 py-2 rounded border border-border">Cancelar</button><button onClick={confirmDeleteServer} className="px-3 py-2 rounded bg-red-700 text-white">Eliminar conexión</button></div>
+                    <DialogTitle>{uiText("Eliminar conexión")}{" "}{deletingServer?.hostname}</DialogTitle>
+                    <DialogDescription>{uiText("Se elimina del inventario. No se borra ni modifica el servidor remoto.")}</DialogDescription>
+                    <div className="flex justify-end gap-2"><button onClick={() => setDeletingServer(null)} className="px-3 py-2 rounded border border-border">{uiText("Cancelar")}</button><button onClick={confirmDeleteServer} className="px-3 py-2 rounded bg-red-700 text-white">{uiText("Eliminar conexión")}</button></div>
                 </DialogContent>
             </Dialog>
             <Dialog open={!!folderForm} onOpenChange={open => { if (!open) setFolderForm(null); }}>
                 <DialogContent className="bg-card text-card-foreground">
                     <DialogTitle>{folderForm?.id ? 'Renombrar carpeta' : 'Crear carpeta local'}</DialogTitle>
-                    <DialogDescription>Organizá conexiones en este equipo sin cambiar sus permisos.</DialogDescription>
+                    <DialogDescription>{uiText("Organizá conexiones en este equipo sin cambiar sus permisos.")}</DialogDescription>
                     <form className="space-y-4" onSubmit={async event => {
                         event.preventDefault();
                         if (!folderForm?.name.trim()) return;
@@ -357,18 +355,17 @@ export function ServerExplorer() {
                             : [...layout.folders, { id: crypto.randomUUID(), name, parentId: folderForm.parentId }] });
                         if (saved) setFolderForm(null);
                     }}>
-                        <label className="block text-sm">Nombre de la carpeta
-                            <input autoFocus required maxLength={100} value={folderForm?.name || ''} onChange={e => setFolderForm(prev => prev ? { ...prev, name: e.target.value } : null)} className="mt-2 w-full bg-muted border border-border rounded p-2" />
+                        <label className="block text-sm">{uiText("Nombre de la carpeta")}<input autoFocus required maxLength={100} value={folderForm?.name || ''} onChange={e => setFolderForm(prev => prev ? { ...prev, name: e.target.value } : null)} className="mt-2 w-full bg-muted border border-border rounded p-2" />
                         </label>
-                        <div className="flex justify-end gap-2"><button type="button" onClick={() => setFolderForm(null)} className="px-3 py-2 rounded border border-border">Cancelar</button><button type="submit" disabled={!folderForm?.name.trim()} className="px-3 py-2 rounded bg-blue-600 text-white disabled:opacity-40">Guardar carpeta</button></div>
+                        <div className="flex justify-end gap-2"><button type="button" onClick={() => setFolderForm(null)} className="px-3 py-2 rounded border border-border">{uiText("Cancelar")}</button><button type="submit" disabled={!folderForm?.name.trim()} className="px-3 py-2 rounded bg-blue-600 text-white disabled:opacity-40">{uiText("Guardar carpeta")}</button></div>
                     </form>
                 </DialogContent>
             </Dialog>
             <Dialog open={!!deletingFolder} onOpenChange={open => { if (!open) setDeletingFolder(null); }}>
                 <DialogContent className="bg-card text-card-foreground">
-                    <DialogTitle>Eliminar carpeta y subcarpetas</DialogTitle>
-                    <DialogDescription>Los servidores se conservarán y volverán a mostrarse en sus grupos originales.</DialogDescription>
-                    <div className="flex justify-end gap-2"><button onClick={() => setDeletingFolder(null)} className="px-3 py-2 rounded border border-border">Cancelar</button><button onClick={() => { if (deletingFolder) saveLayout(removeFolder(layout, deletingFolder)); setDeletingFolder(null); }} className="px-3 py-2 rounded bg-red-700 text-white">Eliminar carpeta</button></div>
+                    <DialogTitle>{uiText("Eliminar carpeta y subcarpetas")}</DialogTitle>
+                    <DialogDescription>{uiText("Los servidores se conservarán y volverán a mostrarse en sus grupos originales.")}</DialogDescription>
+                    <div className="flex justify-end gap-2"><button onClick={() => setDeletingFolder(null)} className="px-3 py-2 rounded border border-border">{uiText("Cancelar")}</button><button onClick={() => { if (deletingFolder) saveLayout(removeFolder(layout, deletingFolder)); setDeletingFolder(null); }} className="px-3 py-2 rounded bg-red-700 text-white">{uiText("Eliminar carpeta")}</button></div>
                 </DialogContent>
             </Dialog>
             <ServerFormDialog
@@ -384,10 +381,10 @@ export function ServerExplorer() {
                     try {
                         if (!editingServer && creationFolderId) {
                             if (!layout.folders.some(folder => folder.id === creationFolderId)) {
-                                toast.warning('La conexión se guardó en su grupo original: la carpeta de destino ya no está disponible.');
+                                toast.warning(uiText('La conexión se guardó en su grupo original: la carpeta de destino ya no está disponible.'));
                             } else {
                                 const assigned = await saveLayout({ ...layout, assignments: { ...layout.assignments, [saved.id]: creationFolderId } });
-                                if (!assigned) toast.warning('La conexión se guardó en su grupo original. Puedes moverla a la carpeta desde sus opciones.');
+                                if (!assigned) toast.warning(uiText('La conexión se guardó en su grupo original. Puedes moverla a la carpeta desde sus opciones.'));
                             }
                         }
                     } finally { loadData(); }
@@ -449,7 +446,7 @@ function ServerItem({ server, selected, onConnect, onChat, onEdit, onDelete, fol
             onDoubleClick={onConnect}
         >
             <OSIcon os={server.os_info} className="h-3.5 w-3.5 min-w-[14px]" />
-            <button type="button" onClick={event => { if (event.detail === 0) onConnect(); }} aria-label={`Abrir conexión ${server.hostname}`} title={`${server.hostname} · ${server.ip_address} · ${connection.protocol}:${connection.port}\nDoble clic o Enter para conectar`} className="flex-1 min-w-0 text-left py-0.5">
+            <button type="button" onClick={event => { if (event.detail === 0) onConnect(); }} aria-label={uiFormat("Abrir conexión {0}", server.hostname)} title={`${server.hostname} · ${server.ip_address} · ${connection.protocol}:${connection.port}\nDoble clic o Enter para conectar`} className="flex-1 min-w-0 text-left py-0.5">
                 <div className="truncate text-xs leading-tight">{server.hostname}</div>
 
             </button>
@@ -462,25 +459,20 @@ function ServerItem({ server, selected, onConnect, onChat, onEdit, onDelete, fol
                     <MoreVertical className="h-3 w-3 text-gray-400 hover:text-white" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48 bg-[#252526] border-[#444] text-[#ccc] z-50">
-                    <label className="block p-2 text-xs">Carpeta local
-                        <select aria-label={`Carpeta de ${server.hostname}`} value={folderId} onChange={e => onMove(e.target.value)} className="mt-1 w-full bg-[#333] text-white rounded p-1">
-                            <option value="">Grupo original</option>
+                    <label className="block p-2 text-xs">{uiText("Carpeta local")}<select aria-label={`Carpeta de ${server.hostname}`} value={folderId} onChange={e => onMove(e.target.value)} className="mt-1 w-full bg-[#333] text-white rounded p-1">
+                            <option value="">{uiText("Grupo original")}</option>
                             {folders.map(f => <option key={f.id} value={f.id}>{folderPath(folders, f.id)}</option>)}
                         </select>
                     </label>
                     <DropdownMenuItem onClick={onConnect} className="hover:bg-[#094771] hover:text-white cursor-pointer py-1.5 focus:bg-[#094771] focus:text-white">
-                        <Terminal className="mr-2 h-3.5 w-3.5" /> Abrir conexión
-                    </DropdownMenuItem>
+                        <Terminal className="mr-2 h-3.5 w-3.5" />{uiText("Abrir conexión")}</DropdownMenuItem>
                     <DropdownMenuItem onClick={onChat} className="hover:bg-[#333] focus:bg-[#333] cursor-pointer py-1.5">
-                        <MessageSquare className="mr-2 h-3.5 w-3.5" /> Asistente IA
-                    </DropdownMenuItem>
+                        <MessageSquare className="mr-2 h-3.5 w-3.5" />{uiText("Asistente IA")}</DropdownMenuItem>
                     <DropdownMenuItem onClick={onEdit} className="hover:bg-[#333] focus:bg-[#333] cursor-pointer py-1.5">
-                        <Pencil className="mr-2 h-3.5 w-3.5" /> Editar
-                    </DropdownMenuItem>
+                        <Pencil className="mr-2 h-3.5 w-3.5" />{uiText("Editar")}</DropdownMenuItem>
                     <DropdownMenuSeparator className="bg-[#444]" />
                     <DropdownMenuItem onClick={onDelete} className="hover:bg-[#333] focus:bg-[#333] text-red-400 hover:text-red-300 focus:text-red-300 cursor-pointer py-1.5">
-                        <Trash2 className="mr-2 h-3.5 w-3.5" /> Eliminar
-                    </DropdownMenuItem>
+                        <Trash2 className="mr-2 h-3.5 w-3.5" />{uiText("Eliminar")}</DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
         </div>

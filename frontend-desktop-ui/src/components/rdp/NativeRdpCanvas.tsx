@@ -1,3 +1,4 @@
+import { uiText, uiFormat } from '../../lib/ui-language';
 import { useEffect, useRef, useState } from 'react';
 import { sendCommand, isWebView2 } from '../../lib/bridge';
 
@@ -30,7 +31,7 @@ export function NativeRdpCanvas({ host, username, password, port = 3389, active 
             if (message.state === 'ready') setStatus('active');
             if (message.state === 'error' || message.state === 'disconnected') {
                 setStatus('error');
-                setError(`RDP: ${message.state}, c\u00f3digo ${message.code}. Comprueba usuario, red y permisos de escritorio remoto.`);
+                setError(uiFormat("RDP: {0}, código {1}. Comprueba usuario, red y permisos de escritorio remoto.", message.state, message.code));
             }
         };
         bridge.addEventListener('message', handler);
@@ -112,10 +113,10 @@ export function NativeRdpCanvas({ host, username, password, port = 3389, active 
     }, [started, active]);
 
     return <div ref={containerRef} className="w-full h-full bg-black relative overflow-hidden flex items-center justify-center">
-        {status === 'launching' && <div className="text-gray-300 text-sm">Conectando al escritorio remoto...</div>}
+        {status === 'launching' && <div className="text-gray-300 text-sm">{uiText("Conectando al escritorio remoto...")}</div>}
         {status === 'error' && <div role="alert" className="text-red-300 p-4 max-w-lg text-sm space-y-3">
-            <p>No se pudo establecer la sesión RDP</p><p className="text-xs break-words">{error}</p>
-            <button onClick={() => setRetry(value => value + 1)} className="px-3 py-1 border border-gray-600 rounded text-gray-200">Reconectar esta sesión</button>
+            <p>{uiText("No se pudo establecer la sesión RDP")}</p><p className="text-xs break-words">{error}</p>
+            <button onClick={() => setRetry(value => value + 1)} className="px-3 py-1 border border-gray-600 rounded text-gray-200">{uiText("Reconectar esta sesión")}</button>
         </div>}
     </div>;
 }

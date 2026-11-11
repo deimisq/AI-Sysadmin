@@ -18,7 +18,7 @@ const I18nContext = createContext<I18nContextType | undefined>(undefined);
 const messages = { en, es };
 
 export function I18nProvider({ children }: { children: ReactNode }) {
-    const [locale, setLocaleState] = useState<Locale>("en");
+    const [locale, setLocaleState] = useState<Locale>("es");
 
     useEffect(() => {
         // Load locale from cookie

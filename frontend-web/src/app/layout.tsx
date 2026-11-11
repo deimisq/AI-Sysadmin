@@ -11,7 +11,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
     title: "Sysadmin AI Agent",
-    description: "AI-powered sysadmin assistant",
+    description: "Asistente de administración de sistemas con inteligencia artificial",
 };
 
 export default function RootLayout({
@@ -20,7 +20,7 @@ export default function RootLayout({
     children: React.ReactNode;
 }>) {
     return (
-        <html lang="en" suppressHydrationWarning>
+        <html lang="es" suppressHydrationWarning>
             <body className={`${inter.className} min-h-screen flex flex-col`}>
                 <ThemeProvider>
                     <I18nProvider>

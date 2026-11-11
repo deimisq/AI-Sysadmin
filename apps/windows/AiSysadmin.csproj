@@ -18,6 +18,9 @@
   <ItemGroup>
     <Resource Include="Assets\app.ico" />
     <Resource Include="Assets\logo.png" />
+    <EmbeddedResource WithCulture="false" Include="../../frontend-desktop-ui/src/locales/en.json" LogicalName="AiSysadmin.Language.Common" />
+    <EmbeddedResource WithCulture="false" Include="../../frontend-desktop-ui/src/locales/desktop.en.json" LogicalName="AiSysadmin.Language.Desktop" />
+    <EmbeddedResource WithCulture="false" Include="../../frontend-desktop-ui/src/locales/controls.en.json" LogicalName="AiSysadmin.Language.Controls" />
   </ItemGroup>
 
   <ItemGroup>

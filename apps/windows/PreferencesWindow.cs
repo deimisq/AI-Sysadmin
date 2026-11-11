@@ -22,7 +22,7 @@ public sealed class PreferencesWindow : Window
     // environment. A windowed controller fails with ERROR_INVALID_STATE here.
     private readonly WorkspaceWebView _view = new() { Visibility = Visibility.Hidden, AllowExternalDrop = false,
         DefaultBackgroundColor = System.Drawing.Color.FromArgb(32, 32, 32) };
-    private readonly TextBlock _status = new() { Text = "Abriendo Configuración…", Foreground = Brushes.LightGray,
+    private readonly TextBlock _status = new() { Text = UserLanguage.Text("Abriendo Configuración…"), Foreground = Brushes.LightGray,
         HorizontalAlignment = System.Windows.HorizontalAlignment.Center, VerticalAlignment = System.Windows.VerticalAlignment.Center, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(24) };
     private readonly DispatcherTimer _timeout = new() { Interval = TimeSpan.FromSeconds(20) };
     private readonly Func<string, JsonElement, Task<JsonElement>> _request;
@@ -39,7 +39,7 @@ public sealed class PreferencesWindow : Window
     public PreferencesWindow(Window owner, CoreWebView2Environment environment, bool enterprise, string section,
         Func<string, JsonElement, Task<JsonElement>> request, Action<string> changed)
     {
-        Owner = owner; Title = "Configuración · AI Sysadmin Agent";
+        Owner = owner; Title = UserLanguage.Text("Configuración · AI Sysadmin Agent");
         Icon = new BitmapImage(new Uri("pack://application:,,,/AiSysadmin;component/Assets/app.ico"));
         FontFamily = new System.Windows.Media.FontFamily("Segoe UI");
         UseLayoutRounding = true;
@@ -50,7 +50,7 @@ public sealed class PreferencesWindow : Window
         _request = request; _changed = changed;
         var grid = new Grid(); grid.Children.Add(_view); grid.Children.Add(_status); Content = grid;
         SourceInitialized += (_, _) => { var handle = new WindowInteropHelper(this).Handle; int dark = 1; DwmSetWindowAttribute(handle, 20, ref dark, 4); };
-        _timeout.Tick += (_, _) => Fail("La configuración no respondió. Cierra esta ventana y vuelve a abrirla.");
+        _timeout.Tick += (_, _) => Fail(UserLanguage.Text("La configuración no respondió. Cierra esta ventana y vuelve a abrirla."));
         Closed += (_, _) => { _closed = true; _timeout.Stop(); _view.Dispose(); };
         Loaded += async (_, _) => { if (!_initializationStarted) { _initializationStarted = true; await InitializeAsync(environment, enterprise); } };
     }
@@ -95,6 +95,7 @@ public sealed class PreferencesWindow : Window
             if (_closed) return;
             step = "WEBVIEW_CONFIGURE";
             var core = _view.CoreWebView2;
+            await core.AddScriptToExecuteOnDocumentCreatedAsync(UserLanguage.BootstrapScript);
             var entry = DesktopShellPolicy.EntryPoint(Path.Combine(AppContext.BaseDirectory, "wwwroot"), Environment.GetEnvironmentVariable("AI_AGENT_UI_URL"));
             _origin = entry.GetLeftPart(UriPartial.Authority);
             if (_origin == DesktopShellPolicy.Origin)
@@ -121,7 +122,7 @@ public sealed class PreferencesWindow : Window
             core.ProcessFailed += (_, _) => Fail("La interfaz de Configuración se detuvo. Cierra esta ventana y vuelve a abrirla.");
             core.DownloadStarting += (_, args) => {
                 using var deferral = args.GetDeferral(); args.Handled = true;
-                var dialog = new Microsoft.Win32.SaveFileDialog { Title = "Guardar copia cifrada", FileName = Path.GetFileName(args.ResultFilePath), OverwritePrompt = true };
+                var dialog = new Microsoft.Win32.SaveFileDialog { Title = UserLanguage.Text("Guardar copia cifrada"), FileName = Path.GetFileName(args.ResultFilePath), OverwritePrompt = true };
                 if (dialog.ShowDialog(this) == true) args.ResultFilePath = dialog.FileName; else args.Cancel = true;
             };
             core.WebMessageReceived += OnMessage;

@@ -1,3 +1,4 @@
+import { uiText } from '../../lib/ui-language';
 import { useState, useEffect } from 'react';
 // import { invoke } from '@tauri-apps/api/core';
 import { Button } from '../ui/button';
@@ -82,7 +83,7 @@ export function RDPComponent({ serverData, onDisconnect, active = true }: RDPCom
     if (error) {
         return (
             <div className="h-full flex flex-col items-center justify-center bg-gray-900 text-white p-4">
-                <h3 className="text-xl text-red-500 mb-4 font-bold">Error de Conexión</h3>
+                <h3 className="text-xl text-red-500 mb-4 font-bold">{uiText("Error de Conexión")}</h3>
                 <div className="bg-red-900/30 border border-red-800 p-4 rounded mb-6 max-w-lg overflow-auto">
                     <p className="font-mono text-sm">{error}</p>
                 </div>
@@ -91,16 +92,12 @@ export function RDPComponent({ serverData, onDisconnect, active = true }: RDPCom
                         onClick={() => setRetry(value => value + 1)}
                         variant="default"
                         className="bg-blue-600 hover:bg-blue-700"
-                    >
-                        Reintentar
-                    </Button>
+                    >{uiText("Reintentar")}</Button>
                     <Button
                         variant="outline"
                         onClick={onDisconnect}
                         className="bg-transparent border-gray-600 hover:bg-gray-800 text-gray-300"
-                    >
-                        Volver
-                    </Button>
+                    >{uiText("Volver")}</Button>
                 </div>
             </div>
         );
@@ -111,7 +108,7 @@ export function RDPComponent({ serverData, onDisconnect, active = true }: RDPCom
         return (
             <div className="h-full flex flex-col items-center justify-center bg-[#1e1e1e] text-white">
                 <div className="animate-pulse text-6xl mb-6">🪟</div>
-                <h2 className="text-xl font-semibold mb-2">Preparando RDP Nativo</h2>
+                <h2 className="text-xl font-semibold mb-2">{uiText("Preparando RDP Nativo")}</h2>
                 <p className="text-gray-400 mb-4">
                     {serverData.hostname} ({serverData.ip_address})
                 </p>

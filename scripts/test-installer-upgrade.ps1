@@ -1,5 +1,6 @@
 [CmdletBinding()]
-param([string]$Iscc = 'H:/Proyectos/ai_agent/.preview-tools/inno/ISCC.exe', [switch]$KeepOldRunning)
+param([string]$Iscc = 'H:/Proyectos/ai_agent/.preview-tools/inno/ISCC.exe', [switch]$KeepOldRunning,
+    [ValidateSet('spanish','english')][string]$Language = 'spanish')
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $sandbox = Join-Path $projectRoot ('.preview-tools/installer-upgrade-tests/' + [Guid]::NewGuid().ToString('N'))
@@ -10,6 +11,8 @@ New-Item -ItemType Directory -Force -Path $old,$payload | Out-Null
 # A separate AppId and /NOICONS isolate this test from the user's installation.
 $testId = [Guid]::NewGuid().ToString().ToUpperInvariant()
 $registry = "HKCU:/Software/Microsoft/Windows/CurrentVersion/Uninstall/{$testId}_is1"
+$settingsKey = "Software\AiSysadminInstallerTests\$testId"
+$settingsRegistry = "HKCU:/$settingsKey"
 $source = @'
 using System;
 using System.IO;
@@ -39,7 +42,7 @@ public class UpgradeFixture : Form {
 $executable = Join-Path $old 'AiSysadmin.exe'
 Add-Type -TypeDefinition $source -ReferencedAssemblies 'System.Windows.Forms','System.Drawing' -OutputAssembly $executable -OutputType WindowsApplication
 Copy-Item -LiteralPath $executable -Destination (Join-Path $payload 'AiSysadmin.exe')
-& $Iscc '/Q' "/DPublishDir=$payload" "/DOutputDir=$sandbox" '/DAppVersion=upgrade-test' "/DInstallerAppId={{$testId}" (Join-Path $projectRoot 'apps/windows/installer/Windows.iss')
+& $Iscc '/Q' "/DPublishDir=$payload" "/DOutputDir=$sandbox" '/DAppVersion=upgrade-test' "/DInstallerAppId={{$testId}" "/DInstallerSettingsKey=$settingsKey" (Join-Path $projectRoot 'apps/windows/installer/Windows.iss')
 if ($LASTEXITCODE -ne 0) { throw 'No se pudo compilar el instalador aislado.' }
 $running = Start-Process -FilePath $executable -WindowStyle Hidden -PassThru
 try {
@@ -50,8 +53,10 @@ try {
     }
     $setup = Join-Path $sandbox 'AI-Sysadmin-Agent-upgrade-test-win-x64-setup.exe'
     $closeMode = if($KeepOldRunning) { '/NOCLOSEAPPLICATIONS' } else { '/CLOSEAPPLICATIONS' }
-    $process = Start-Process -FilePath $setup -ArgumentList '/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/NOICONS',$closeMode,"/DIR=`"$install`"","/LOG=`"$(Join-Path $sandbox 'upgrade.log')`"" -WindowStyle Hidden -Wait -PassThru
+    $process = Start-Process -FilePath $setup -ArgumentList '/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/NOICONS',"/LANG=$Language",$closeMode,"/DIR=`"$install`"","/LOG=`"$(Join-Path $sandbox 'upgrade.log')`"" -WindowStyle Hidden -Wait -PassThru
     if ($process.ExitCode -ne 0) { throw "Falló la actualización aislada: $($process.ExitCode)." }
+    $expectedLanguage = if ($Language -eq 'english') { 'en' } else { 'es' }
+    if ((Get-ItemProperty -LiteralPath $settingsRegistry).Language -ne $expectedLanguage) { throw 'El idioma del instalador no se guardó para la app.' }
     if($KeepOldRunning) {
         $running.Refresh()
         if($running.HasExited) { throw 'La instalación integrada cerró la versión anterior antes de aprobar el reinicio.' }
@@ -73,5 +78,9 @@ try {
         $registered = (Get-ItemProperty -LiteralPath $registry).InstallLocation
         if ([IO.Path]::GetFullPath($registered).TrimEnd('\') -ne [IO.Path]::GetFullPath($install).TrimEnd('\')) { throw 'Ruta de desinstalación de prueba inesperada.' }
         Start-Process -FilePath (Join-Path $install 'unins000.exe') -ArgumentList '/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART' -WindowStyle Hidden -Wait
+    }
+    if (Test-Path -LiteralPath $settingsRegistry) {
+        Remove-ItemProperty -LiteralPath $settingsRegistry -Name Language -ErrorAction SilentlyContinue
+        Remove-Item -LiteralPath $settingsRegistry
     }
 }

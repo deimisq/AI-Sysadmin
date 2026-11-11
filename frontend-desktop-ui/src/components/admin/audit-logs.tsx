@@ -1,3 +1,4 @@
+import { uiText } from '../../lib/ui-language';
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -123,7 +124,7 @@ export function AuditLogs() {
     const handleApplyFilters = () => {
         setCurrentPage(1);
         loadLogs();
-        toast.success("Filtros aplicados");
+        toast.success(uiText("Filtros aplicados"));
     };
 
     const handleClearFilters = () => {
@@ -136,7 +137,7 @@ export function AuditLogs() {
         });
         setCurrentPage(1);
         setTimeout(() => loadLogs(), 100);
-        toast.success("Filtros limpiados");
+        toast.success(uiText("Filtros limpiados"));
     };
 
     const handleExportCSV = async () => {
@@ -158,13 +159,13 @@ export function AuditLogs() {
                 a.href = url;
                 a.download = `audit_logs_${new Date().toISOString()}.csv`;
                 a.click();
-                toast.success("Exportación exitosa");
+                toast.success(uiText("Exportación exitosa"));
             } else {
                 toast.error("Error en exportación");
             }
         } catch (error) {
             console.error("Failed to export", error);
-            toast.error("Error al exportar");
+            toast.error(uiText("Error al exportar"));
         } finally {
             setExporting(false);
         }
@@ -213,7 +214,7 @@ export function AuditLogs() {
     };
 
     if (loading && logs.length === 0) {
-        return <div className="text-center py-10">Cargando datos...</div>;
+        return <div className="text-center py-10">{uiText("Cargando datos...")}</div>;
     }
 
     return (
@@ -223,7 +224,7 @@ export function AuditLogs() {
                 <div className="grid gap-4 md:grid-cols-4">
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Hoy</CardTitle>
+                            <CardTitle className="text-sm font-medium">{uiText("Hoy")}</CardTitle>
                             <Activity className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
@@ -232,7 +233,7 @@ export function AuditLogs() {
                     </Card>
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Esta Semana</CardTitle>
+                            <CardTitle className="text-sm font-medium">{uiText("Esta Semana")}</CardTitle>
                             <BarChart3 className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
@@ -241,7 +242,7 @@ export function AuditLogs() {
                     </Card>
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Este Mes</CardTitle>
+                            <CardTitle className="text-sm font-medium">{uiText("Este Mes")}</CardTitle>
                             <BarChart3 className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
@@ -265,10 +266,8 @@ export function AuditLogs() {
                     <div className="flex items-center justify-between flex-wrap gap-4">
                         <div>
                             <CardTitle className="flex items-center gap-2">
-                                <Shield className="h-5 w-5" />
-                                Registros de Auditoría
-                            </CardTitle>
-                            <CardDescription>Monitoriza las acciones de usuarios y eventos del sistema</CardDescription>
+                                <Shield className="h-5 w-5" />{uiText("Registros de Auditoría")}</CardTitle>
+                            <CardDescription>{uiText("Monitoriza las acciones de usuarios y eventos del sistema")}</CardDescription>
                         </div>
                         <div className="flex items-center gap-2">
                             <Button
@@ -284,9 +283,7 @@ export function AuditLogs() {
                                 size="sm"
                                 onClick={() => setShowFilters(!showFilters)}
                             >
-                                <Filter className="h-4 w-4 mr-2" />
-                                Filtros
-                            </Button>
+                                <Filter className="h-4 w-4 mr-2" />{uiText("Filtros")}</Button>
                             <Button
                                 variant="outline"
                                 size="sm"
@@ -294,7 +291,7 @@ export function AuditLogs() {
                                 disabled={exporting}
                             >
                                 <Download className="h-4 w-4 mr-2" />
-                                {exporting ? "Exportando..." : "Exportar CSV"}
+                                {exporting ? uiText("Exportando...") : uiText("Exportar CSV")}
                             </Button>
                             <Button
                                 variant="outline"
@@ -311,7 +308,7 @@ export function AuditLogs() {
                         <div className="mt-4 p-4 border rounded-lg space-y-4 bg-muted/50">
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div>
-                                    <label className="text-sm font-medium mb-2 block">Fecha Inicio</label>
+                                    <label className="text-sm font-medium mb-2 block">{uiText("Fecha Inicio")}</label>
                                     <Input
                                         type="date"
                                         value={filters.start_date}
@@ -319,7 +316,7 @@ export function AuditLogs() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="text-sm font-medium mb-2 block">Fecha Fin</label>
+                                    <label className="text-sm font-medium mb-2 block">{uiText("Fecha Fin")}</label>
                                     <Input
                                         type="date"
                                         value={filters.end_date}
@@ -327,32 +324,28 @@ export function AuditLogs() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="text-sm font-medium mb-2 block">Acción</label>
+                                    <label className="text-sm font-medium mb-2 block">{uiText("Acción")}</label>
                                     <select
                                         className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                                         value={filters.action}
                                         onChange={(e) => setFilters({ ...filters, action: e.target.value })}
                                     >
-                                        <option value="">Todas</option>
-                                        <option value="create_user">Crear Usuario</option>
-                                        <option value="update_user">Actualizar Usuario</option>
-                                        <option value="delete_user">Eliminar Usuario</option>
-                                        <option value="create_server">Crear Servidor</option>
-                                        <option value="update_server">Actualizar Servidor</option>
-                                        <option value="delete_server">Eliminar Servidor</option>
+                                        <option value="">{uiText("Todas")}</option>
+                                        <option value="create_user">{uiText("Crear Usuario")}</option>
+                                        <option value="update_user">{uiText("Actualizar Usuario")}</option>
+                                        <option value="delete_user">{uiText("Eliminar Usuario")}</option>
+                                        <option value="create_server">{uiText("Crear Servidor")}</option>
+                                        <option value="update_server">{uiText("Actualizar Servidor")}</option>
+                                        <option value="delete_server">{uiText("Eliminar Servidor")}</option>
                                         <option value="login">Login</option>
                                     </select>
                                 </div>
                             </div>
                             <div className="flex justify-end gap-2">
                                 <Button variant="outline" size="sm" onClick={handleClearFilters}>
-                                    <X className="h-4 w-4 mr-2" />
-                                    Limpiar
-                                </Button>
+                                    <X className="h-4 w-4 mr-2" />{uiText("Limpiar")}</Button>
                                 <Button size="sm" onClick={handleApplyFilters}>
-                                    <Filter className="h-4 w-4 mr-2" />
-                                    Aplicar
-                                </Button>
+                                    <Filter className="h-4 w-4 mr-2" />{uiText("Aplicar")}</Button>
                             </div>
                         </div>
                     )}
@@ -389,8 +382,7 @@ export function AuditLogs() {
                                                             <span className={`px-2 py-1 rounded text-xs font-medium ${getActionBadgeColor(log.action)}`}>
                                                                 {log.action}
                                                             </span>
-                                                            <span className="text-xs text-muted-foreground">
-                                                                en {log.resource_type}
+                                                            <span className="text-xs text-muted-foreground">{uiText("en")}{log.resource_type}
                                                             </span>
                                                             {log.user_role && (
                                                                 <span className={`px-2 py-1 rounded text-xs font-medium ${getRoleBadgeColor(log.user_role)}`}>
@@ -411,9 +403,7 @@ export function AuditLogs() {
                                                         </p>
                                                         {log.details && (
                                                             <details className="mt-2">
-                                                                <summary className="text-xs text-muted-foreground cursor-pointer hover:text-foreground">
-                                                                    Ver detalles
-                                                                </summary>
+                                                                <summary className="text-xs text-muted-foreground cursor-pointer hover:text-foreground">{uiText("Ver detalles")}</summary>
                                                                 <pre className="text-xs bg-muted p-2 rounded mt-1 overflow-x-auto">
                                                                     {JSON.stringify(log.details, null, 2)}
                                                                 </pre>
@@ -433,8 +423,7 @@ export function AuditLogs() {
                             {/* Pagination */}
                             {totalPages > 1 && (
                                 <div className="flex items-center justify-between mt-6 pt-4 border-t">
-                                    <p className="text-sm text-muted-foreground">
-                                        Pág {currentPage} de {totalPages} • {totalLogs} total
+                                    <p className="text-sm text-muted-foreground">{uiText("Pág")}{currentPage}{" "}{uiText("de")}{" "}{totalPages} • {totalLogs} total
                                     </p>
                                     <div className="flex gap-2">
                                         <Button
@@ -443,17 +432,13 @@ export function AuditLogs() {
                                             onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                                             disabled={currentPage === 1}
                                         >
-                                            <ChevronLeft className="h-4 w-4 mr-1" />
-                                            Anterior
-                                        </Button>
+                                            <ChevronLeft className="h-4 w-4 mr-1" />{uiText("Anterior")}</Button>
                                         <Button
                                             variant="outline"
                                             size="sm"
                                             onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                                             disabled={currentPage === totalPages}
-                                        >
-                                            Siguiente
-                                            <ChevronRight className="h-4 w-4 ml-1" />
+                                        >{uiText("Siguiente")}<ChevronRight className="h-4 w-4 ml-1" />
                                         </Button>
                                     </div>
                                 </div>
@@ -461,7 +446,7 @@ export function AuditLogs() {
                         </>
                     ) : (
                         <p className="text-sm text-muted-foreground text-center py-10">
-                            {searchTerm ? "No se encontraron resultados" : "No hay registros"}
+                            {searchTerm ? uiText("No se encontraron resultados") : "No hay registros"}
                         </p>
                     )}
                 </CardContent>

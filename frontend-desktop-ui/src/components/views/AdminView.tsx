@@ -1,3 +1,4 @@
+import { uiText } from '../../lib/ui-language';
 import { useState, useEffect } from "react";
 import { AdminTabs } from "@/components/admin-layout";
 import { UserManagement } from "@/components/admin/user-management";
@@ -61,7 +62,7 @@ export function AdminView() {
     };
 
     if (!currentUser) {
-        return <div className="p-6">Cargando perfil de administrador...</div>;
+        return <div className="p-6">{uiText("Cargando perfil de administrador...")}</div>;
     }
 
     return (
@@ -69,10 +70,8 @@ export function AdminView() {
             <div className="space-y-6">
                 {/* Header */}
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Panel de Administración</h1>
-                    <p className="text-muted-foreground">
-                        Configura y gestiona el sistema
-                    </p>
+                    <h1 className="text-3xl font-bold tracking-tight">{uiText("Panel de Administración")}</h1>
+                    <p className="text-muted-foreground">{uiText("Configura y gestiona el sistema")}</p>
                 </div>
 
                 {/* Tabs */}

@@ -1,3 +1,4 @@
+import { uiText } from '../../lib/ui-language';
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -104,17 +105,13 @@ export function AIParameters() {
         <Card>
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                    <Brain className="h-5 w-5" />
-                    Parámetros de IA
-                </CardTitle>
-                <CardDescription>
-                    Configura los proveedores de Inteligencia Artificial y modelos
-                </CardDescription>
+                    <Brain className="h-5 w-5" />{uiText("Parámetros de IA")}</CardTitle>
+                <CardDescription>{uiText("Configura los proveedores de Inteligencia Artificial y modelos")}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6 max-h-[calc(100vh-300px)] overflow-y-auto">
                 {/* Provider Selection */}
                 <div>
-                    <label className="text-sm font-medium mb-2 block">Proveedor de LLM</label>
+                    <label className="text-sm font-medium mb-2 block">{uiText("Proveedor de LLM")}</label>
                     <select
                         className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                         value={config.llm_provider}
@@ -133,15 +130,14 @@ export function AIParameters() {
                             </option>
                         ))}
                     </select>
-                    <p className="text-xs text-muted-foreground mt-1">
-                        Modelo seleccionado: {selectedProvider?.model}
+                    <p className="text-xs text-muted-foreground mt-1">{uiText("Modelo seleccionado:")}{selectedProvider?.model}
                     </p>
                 </div>
 
                 {/* AWS Bedrock Configuration */}
                 {config.llm_provider === "bedrock" && (
                     <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
-                        <h3 className="font-medium text-sm">Configuración AWS Bedrock</h3>
+                        <h3 className="font-medium text-sm">{uiText("Configuración AWS Bedrock")}</h3>
                         <div>
                             <label className="text-sm font-medium">AWS Region</label>
                             <Input
@@ -149,9 +145,7 @@ export function AIParameters() {
                                 onChange={(e) => setConfig({ ...config, aws_region: e.target.value })}
                                 placeholder="us-east-1"
                             />
-                            <p className="text-xs text-muted-foreground mt-1">
-                                Región donde está habilitado el modelo (ej. us-east-1)
-                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">{uiText("Región donde está habilitado el modelo (ej. us-east-1)")}</p>
                         </div>
                         <div>
                             <label className="text-sm font-medium">Access Key / Bearer Token</label>
@@ -161,9 +155,7 @@ export function AIParameters() {
                                 onChange={(e) => setConfig({ ...config, aws_bearer_token_bedrock: e.target.value })}
                                 placeholder="ABSK..."
                             />
-                            <p className="text-xs text-muted-foreground mt-1">
-                                Credenciales para acceder a Bedrock API
-                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">{uiText("Credenciales para acceder a Bedrock API")}</p>
                         </div>
                     </div>
                 )}
@@ -171,7 +163,7 @@ export function AIParameters() {
                 {/* Anthropic API Configuration */}
                 {config.llm_provider === "anthropic" && (
                     <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
-                        <h3 className="font-medium text-sm">Configuración Anthropic API</h3>
+                        <h3 className="font-medium text-sm">{uiText("Configuración Anthropic API")}</h3>
                         <div>
                             <label className="text-sm font-medium">Anthropic API Key</label>
                             <Input
@@ -187,7 +179,7 @@ export function AIParameters() {
                 {/* Google Gemini Configuration */}
                 {config.llm_provider === "gemini" && (
                     <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
-                        <h3 className="font-medium text-sm">Configuración Google Gemini</h3>
+                        <h3 className="font-medium text-sm">{uiText("Configuración Google Gemini")}</h3>
                         <div>
                             <label className="text-sm font-medium">Google API Key</label>
                             <Input
@@ -203,7 +195,7 @@ export function AIParameters() {
                 {/* OpenAI Configuration */}
                 {config.llm_provider === "openai" && (
                     <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
-                        <h3 className="font-medium text-sm">Configuración OpenAI</h3>
+                        <h3 className="font-medium text-sm">{uiText("Configuración OpenAI")}</h3>
                         <div>
                             <label className="text-sm font-medium">OpenAI API Key</label>
                             <Input
@@ -218,10 +210,10 @@ export function AIParameters() {
 
                 {/* Model Parameters */}
                 <div className="space-y-4 p-4 border rounded-lg">
-                    <h3 className="font-medium text-sm">Parámetros del Modelo</h3>
+                    <h3 className="font-medium text-sm">{uiText("Parámetros del Modelo")}</h3>
                     <div className="grid gap-4 md:grid-cols-2">
                         <div>
-                            <label className="text-sm font-medium">Temperatura (0.0 - 2.0)</label>
+                            <label className="text-sm font-medium">{uiText("Temperatura (0.0 - 2.0)")}</label>
                             <Input
                                 type="number"
                                 step="0.1"
@@ -230,9 +222,7 @@ export function AIParameters() {
                                 value={config.temperature}
                                 onChange={(e) => setConfig({ ...config, temperature: e.target.value })}
                             />
-                            <p className="text-xs text-muted-foreground mt-1">
-                                Controla la creatividad. Valores bajos son más deterministas.
-                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">{uiText("Controla la creatividad. Valores bajos son más deterministas.")}</p>
                         </div>
                         <div>
                             <label className="text-sm font-medium">Max Tokens</label>
@@ -244,9 +234,7 @@ export function AIParameters() {
                                 value={config.max_tokens}
                                 onChange={(e) => setConfig({ ...config, max_tokens: e.target.value })}
                             />
-                            <p className="text-xs text-muted-foreground mt-1">
-                                Longitud máxima de la respuesta generada.
-                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">{uiText("Longitud máxima de la respuesta generada.")}</p>
                         </div>
                     </div>
                 </div>
@@ -260,19 +248,15 @@ export function AIParameters() {
                     >
                         {showSecrets ? (
                             <>
-                                <EyeOff className="mr-2 h-4 w-4" />
-                                Ocultar Secretos
-                            </>
+                                <EyeOff className="mr-2 h-4 w-4" />{uiText("Ocultar Secretos")}</>
                         ) : (
                             <>
-                                <Eye className="mr-2 h-4 w-4" />
-                                Mostrar Secretos
-                            </>
+                                <Eye className="mr-2 h-4 w-4" />{uiText("Mostrar Secretos")}</>
                         )}
                     </Button>
                     <Button onClick={handleSave} disabled={loading}>
                         <Save className="mr-2 h-4 w-4" />
-                        {loading ? "Guardando..." : "Guardar Configuración"}
+                        {loading ? uiText("Guardando...") : uiText("Guardar Configuración")}
                     </Button>
                 </div>
 
@@ -289,8 +273,7 @@ export function AIParameters() {
 
                 <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                     <p className="text-sm text-blue-800 dark:text-blue-200">
-                        <strong>ℹ️ Nota:</strong> Los cambios en la configuración de IA se aplicarán inmediatamente para las nuevas conversaciones. Asegúrate de que las credenciales tengan los permisos necesarios.
-                    </p>
+                        <strong>{uiText("ℹ️ Nota:")}</strong>{uiText("Los cambios en la configuración de IA se aplicarán inmediatamente para las nuevas conversaciones. Asegúrate de que las credenciales tengan los permisos necesarios.")}</p>
                 </div>
             </CardContent>
         </Card>

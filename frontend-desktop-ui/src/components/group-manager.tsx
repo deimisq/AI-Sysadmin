@@ -1,3 +1,4 @@
+import { uiText } from '../lib/ui-language';
 import { useState, useEffect } from "react";
 import { fetchGroups, createGroup, updateGroup, deleteGroup } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -68,7 +69,7 @@ export function GroupManager({ onClose }: { onClose: () => void }) {
             setGroups(data);
         } catch (error) {
             console.error("Failed to load groups", error);
-            toast.error("Error al cargar grupos");
+            toast.error(uiText("Error al cargar grupos"));
         } finally {
             setLoading(false);
         }
@@ -93,7 +94,7 @@ export function GroupManager({ onClose }: { onClose: () => void }) {
             await loadGroups();
         } catch (error) {
             console.error("Failed to save group", error);
-            toast.error("Error al guardar grupo");
+            toast.error(uiText("Error al guardar grupo"));
         } finally {
             setLoading(false);
         }
@@ -109,7 +110,7 @@ export function GroupManager({ onClose }: { onClose: () => void }) {
             setDeletingGroup(null);
         } catch (error: any) {
             console.error(error);
-            toast.error(error.message || "Error al eliminar grupo");
+            toast.error(error.message || uiText("Error al eliminar grupo"));
         }
     };
 
@@ -124,9 +125,7 @@ export function GroupManager({ onClose }: { onClose: () => void }) {
             <Card className="w-full">
                 <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle className="flex items-center gap-2">
-                        <FolderOpen className="h-5 w-5" />
-                        Gestión de Grupos
-                    </CardTitle>
+                        <FolderOpen className="h-5 w-5" />{uiText("Gestión de Grupos")}</CardTitle>
                     <Button variant="ghost" size="icon" onClick={onClose} type="button">
                         <X className="h-4 w-4" />
                     </Button>
@@ -136,21 +135,21 @@ export function GroupManager({ onClose }: { onClose: () => void }) {
                     {showForm ? (
                         <form onSubmit={handleSubmit} className="space-y-4 p-4 border rounded-lg bg-muted/50">
                             <h3 className="font-semibold">
-                                {editingGroup ? "Editar Grupo" : "Crear Grupo"}
+                                {editingGroup ? uiText("Editar Grupo") : uiText("Crear Grupo")}
                             </h3>
                             <div>
-                                <Label>Nombre del grupo *</Label>
+                                <Label>{uiText("Nombre del grupo *")}</Label>
                                 <Input
-                                    placeholder="ej., Producción"
+                                    placeholder={uiText("ej., Producción")}
                                     value={formData.name}
                                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                     required
                                 />
                             </div>
                             <div>
-                                <Label>Descripción</Label>
+                                <Label>{uiText("Descripción")}</Label>
                                 <Input
-                                    placeholder="Descripción opcional"
+                                    placeholder={uiText("Descripción opcional")}
                                     value={formData.description}
                                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                                 />
@@ -174,18 +173,14 @@ export function GroupManager({ onClose }: { onClose: () => void }) {
                             </div>
                             <div className="flex gap-2">
                                 <Button type="submit" disabled={loading}>
-                                    {loading ? "Guardando..." : editingGroup ? "Actualizar" : "Crear"}
+                                    {loading ? uiText("Guardando...") : editingGroup ? uiText("Actualizar") : uiText("Crear")}
                                 </Button>
-                                <Button type="button" variant="outline" onClick={handleCancel}>
-                                    Cancelar
-                                </Button>
+                                <Button type="button" variant="outline" onClick={handleCancel}>{uiText("Cancelar")}</Button>
                             </div>
                         </form>
                     ) : (
                         <Button onClick={() => setShowForm(true)} type="button">
-                            <Plus className="mr-2 h-4 w-4" />
-                            Crear Nuevo Grupo
-                        </Button>
+                            <Plus className="mr-2 h-4 w-4" />{uiText("Crear Nuevo Grupo")}</Button>
                     )}
 
                     {/* Groups List */}
@@ -213,7 +208,7 @@ export function GroupManager({ onClose }: { onClose: () => void }) {
                                         size="icon"
                                         onClick={() => setEditingGroup(group)}
                                         type="button"
-                                        title="Editar"
+                                        title={uiText("Editar")}
                                     >
                                         <Edit2 className="h-4 w-4" />
                                     </Button>
@@ -222,7 +217,7 @@ export function GroupManager({ onClose }: { onClose: () => void }) {
                                         size="icon"
                                         onClick={() => setDeletingGroup(group)}
                                         type="button"
-                                        title="Eliminar"
+                                        title={uiText("Eliminar")}
                                     >
                                         <Trash2 className="h-4 w-4" />
                                     </Button>
@@ -232,8 +227,8 @@ export function GroupManager({ onClose }: { onClose: () => void }) {
                         {groups.length === 0 && !showForm && (
                             <div className="text-center p-10 text-muted-foreground">
                                 <FolderOpen className="h-12 w-12 mx-auto mb-4 opacity-20" />
-                                <p>No hay grupos creados</p>
-                                <p className="text-sm mt-2">Crea un grupo para organizar tus servidores</p>
+                                <p>{uiText("No hay grupos creados")}</p>
+                                <p className="text-sm mt-2">{uiText("Crea un grupo para organizar tus servidores")}</p>
                             </div>
                         )}
                     </div>
@@ -244,17 +239,12 @@ export function GroupManager({ onClose }: { onClose: () => void }) {
             <AlertDialog open={!!deletingGroup} onOpenChange={(open) => !open && setDeletingGroup(null)}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>¿Eliminar grupo?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            Esta acción eliminará el grupo <strong>{deletingGroup?.name}</strong>.
-                            Los servidores en este grupo no serán eliminados, solo desagrupados.
-                        </AlertDialogDescription>
+                        <AlertDialogTitle>{uiText("¿Eliminar grupo?")}</AlertDialogTitle>
+                        <AlertDialogDescription>{uiText("Esta acción eliminará el grupo")}<strong>{deletingGroup?.name}</strong>{uiText(". Los servidores en este grupo no serán eliminados, solo desagrupados.")}</AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                            Eliminar
-                        </AlertDialogAction>
+                        <AlertDialogCancel>{uiText("Cancelar")}</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">{uiText("Eliminar")}</AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>

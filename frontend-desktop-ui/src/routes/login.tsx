@@ -1,3 +1,4 @@
+import { uiText } from '../lib/ui-language';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { login, register } from '../lib/api';
@@ -74,8 +75,8 @@ export default function Login() {
                 </CardHeader>
                 <CardContent>
                     {isWebView2() && <div className="mb-5 space-y-2">
-                        <Button className="w-full" variant="outline" onClick={() => { selectWorkspaceMode('local'); window.location.hash = '#/'; window.location.reload(); }}>Trabajar en este equipo sin cuenta</Button>
-                        <p className="text-xs text-muted-foreground text-center">Conexiones y credenciales protegidas con tu cuenta de Windows.</p>
+                        <Button className="w-full" variant="outline" onClick={() => { selectWorkspaceMode('local'); window.location.hash = '#/'; window.location.reload(); }}>{uiText("Trabajar en este equipo sin cuenta")}</Button>
+                        <p className="text-xs text-muted-foreground text-center">{uiText("Conexiones y credenciales protegidas con tu cuenta de Windows.")}</p>
                     </div>}
                     <form onSubmit={handleSubmit} className="space-y-4">
                         {!isLogin && (

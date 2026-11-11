@@ -1,3 +1,4 @@
+import { uiText } from '../lib/ui-language';
 
 import DashboardLayout from "@/components/dashboard-layout";
 import { Card, CardContent } from "@/components/ui/card";
@@ -38,16 +39,16 @@ function TabButton({ icon: Icon, label, active, onClick }: TabButtonProps) {
 }
 
 const tabs = [
-    { id: "users", label: "Usuarios", icon: Users },
-    { id: "invitations", label: "Invitaciones", icon: UserPlus },
-    { id: "groups", label: "Grupos", icon: Folder },
-    { id: "servers", label: "Servidores", icon: Server },
-    { id: "ai", label: "Parámetros IA", icon: Settings },
-    { id: "stats", label: "Estadísticas", icon: Activity },
+    { id: "users", label: uiText("Usuarios"), icon: Users },
+    { id: "invitations", label: uiText("Invitaciones"), icon: UserPlus },
+    { id: "groups", label: uiText("Grupos"), icon: Folder },
+    { id: "servers", label: uiText("Servidores"), icon: Server },
+    { id: "ai", label: uiText("Parámetros IA"), icon: Settings },
+    { id: "stats", label: uiText("Estadísticas"), icon: Activity },
     { id: "scheduled", label: "Reportes", icon: FileText },
-    { id: "audit-logs", label: "Auditoría", icon: Shield },
-    { id: "security", label: "Seguridad", icon: Shield },
-    { id: "notifications", label: "Notificaciones", icon: Bell },
+    { id: "audit-logs", label: uiText("Auditoría"), icon: Shield },
+    { id: "security", label: uiText("Seguridad"), icon: Shield },
+    { id: "notifications", label: uiText("Notificaciones"), icon: Bell },
     { id: "communication", label: "Comunicaciones", icon: Mail },
     { id: "frontend", label: "Frontend", icon: Code },
     { id: "backend", label: "Backend", icon: Server },
@@ -66,7 +67,7 @@ export function AdminTabs({ activeTab, onTabChange, currentUser }: AdminTabsProp
     if (currentUser?.role === 'superadmin') {
         // Check if already exists to avoid duplicates if re-rendered
         if (!visibleTabs.some(t => t.id === "organizations")) {
-            visibleTabs.unshift({ id: "organizations", label: "Organizaciones", icon: Building2 });
+            visibleTabs.unshift({ id: "organizations", label: uiText("Organizaciones"), icon: Building2 });
         }
     }
 

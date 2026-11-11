@@ -1,3 +1,4 @@
+import { uiText, uiFormat } from '../../lib/ui-language';
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -90,10 +91,10 @@ export function ProfileView() {
                 loadProfile();
             } else {
                 const error = await res.json();
-                toast.error(`Error: ${error.detail || "No se pudo actualizar el perfil"}`);
+                toast.error(uiFormat("Error: {0}", error.detail || "No se pudo actualizar el perfil"));
             }
         } catch (error: any) {
-            toast.error(`Error: ${error.message}`);
+            toast.error(uiFormat("Error: {0}", error.message));
         } finally {
             setSaving(false);
         }
@@ -130,10 +131,10 @@ export function ProfileView() {
                 });
             } else {
                 const error = await res.json();
-                toast.error(`Error: ${error.detail || "No se pudo cambiar la contraseña"}`);
+                toast.error(uiFormat("Error: {0}", error.detail || "No se pudo cambiar la contraseña"));
             }
         } catch (error: any) {
-            toast.error(`Error: ${error.message}`);
+            toast.error(uiFormat("Error: {0}", error.message));
         } finally {
             setSaving(false);
         }
@@ -164,7 +165,7 @@ export function ProfileView() {
     if (!user) {
         return (
             <div className="p-8">
-                <p className="text-muted-foreground">No se pudo cargar el perfil</p>
+                <p className="text-muted-foreground">{uiText("No se pudo cargar el perfil")}</p>
             </div>
         );
     }
@@ -174,10 +175,8 @@ export function ProfileView() {
             <div className="space-y-6">
                 {/* Header */}
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Mi Perfil</h1>
-                    <p className="text-muted-foreground">
-                        Administra tu información personal y preferencias
-                    </p>
+                    <h1 className="text-3xl font-bold tracking-tight">{uiText("Mi Perfil")}</h1>
+                    <p className="text-muted-foreground">{uiText("Administra tu información personal y preferencias")}</p>
                 </div>
 
                 <div className="grid gap-6 md:grid-cols-2">
@@ -185,25 +184,19 @@ export function ProfileView() {
                     <Card>
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
-                                <User className="h-5 w-5" />
-                                Información de Usuario
-                            </CardTitle>
-                            <CardDescription>
-                                Información básica de tu cuenta
-                            </CardDescription>
+                                <User className="h-5 w-5" />{uiText("Información de Usuario")}</CardTitle>
+                            <CardDescription>{uiText("Información básica de tu cuenta")}</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="space-y-2">
-                                <Label htmlFor="username">Usuario</Label>
+                                <Label htmlFor="username">{uiText("Usuario")}</Label>
                                 <Input
                                     id="username"
                                     value={user.username}
                                     disabled
                                     className="bg-muted"
                                 />
-                                <p className="text-xs text-muted-foreground">
-                                    El nombre de usuario no se puede cambiar
-                                </p>
+                                <p className="text-xs text-muted-foreground">{uiText("El nombre de usuario no se puede cambiar")}</p>
                             </div>
 
                             <div className="space-y-2">
@@ -222,7 +215,7 @@ export function ProfileView() {
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="full_name">Nombre Completo</Label>
+                                <Label htmlFor="full_name">{uiText("Nombre Completo")}</Label>
                                 <Input
                                     id="full_name"
                                     value={profileForm.full_name}
@@ -232,7 +225,7 @@ export function ProfileView() {
                             </div>
 
                             <div className="space-y-2">
-                                <Label>Rol</Label>
+                                <Label>{uiText("Rol")}</Label>
                                 <div className="flex items-center gap-2">
                                     <Shield className="h-4 w-4 text-muted-foreground" />
                                     {getRoleBadge(user.role)}
@@ -240,7 +233,7 @@ export function ProfileView() {
                             </div>
 
                             <div className="space-y-2">
-                                <Label>Miembro desde</Label>
+                                <Label>{uiText("Miembro desde")}</Label>
                                 <p className="text-sm text-muted-foreground">
                                     {new Date(user.created_at).toLocaleDateString('es-ES', {
                                         year: 'numeric',
@@ -257,14 +250,10 @@ export function ProfileView() {
                             >
                                 {saving ? (
                                     <>
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                        Guardando...
-                                    </>
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />{uiText("Guardando...")}</>
                                 ) : (
                                     <>
-                                        <Save className="mr-2 h-4 w-4" />
-                                        Guardar Cambios
-                                    </>
+                                        <Save className="mr-2 h-4 w-4" />{uiText("Guardar Cambios")}</>
                                 )}
                             </Button>
                         </CardContent>
@@ -274,16 +263,12 @@ export function ProfileView() {
                     <Card>
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
-                                <Lock className="h-5 w-5" />
-                                Cambiar Contraseña
-                            </CardTitle>
-                            <CardDescription>
-                                Actualiza tu contraseña de acceso
-                            </CardDescription>
+                                <Lock className="h-5 w-5" />{uiText("Cambiar Contraseña")}</CardTitle>
+                            <CardDescription>{uiText("Actualiza tu contraseña de acceso")}</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="space-y-2">
-                                <Label htmlFor="current_password">Contraseña Actual</Label>
+                                <Label htmlFor="current_password">{uiText("Contraseña Actual")}</Label>
                                 <Input
                                     id="current_password"
                                     type="password"
@@ -294,7 +279,7 @@ export function ProfileView() {
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="new_password">Nueva Contraseña</Label>
+                                <Label htmlFor="new_password">{uiText("Nueva Contraseña")}</Label>
                                 <Input
                                     id="new_password"
                                     type="password"
@@ -302,13 +287,11 @@ export function ProfileView() {
                                     onChange={(e) => setPasswordForm({ ...passwordForm, new_password: e.target.value })}
                                     placeholder="••••••••"
                                 />
-                                <p className="text-xs text-muted-foreground">
-                                    Mínimo 6 caracteres
-                                </p>
+                                <p className="text-xs text-muted-foreground">{uiText("Mínimo 6 caracteres")}</p>
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="confirm_password">Confirmar Nueva Contraseña</Label>
+                                <Label htmlFor="confirm_password">{uiText("Confirmar Nueva Contraseña")}</Label>
                                 <Input
                                     id="confirm_password"
                                     type="password"
@@ -326,14 +309,10 @@ export function ProfileView() {
                             >
                                 {saving ? (
                                     <>
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                        Cambiando...
-                                    </>
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />{uiText("Cambiando...")}</>
                                 ) : (
                                     <>
-                                        <Lock className="mr-2 h-4 w-4" />
-                                        Cambiar Contraseña
-                                    </>
+                                        <Lock className="mr-2 h-4 w-4" />{uiText("Cambiar Contraseña")}</>
                                 )}
                             </Button>
                         </CardContent>
@@ -343,42 +322,33 @@ export function ProfileView() {
                     <Card className="md:col-span-2">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
-                                <Settings className="h-5 w-5" />
-                                Preferencias
-                            </CardTitle>
-                            <CardDescription>
-                                Configura la apariencia y el comportamiento de la aplicación
-                            </CardDescription>
+                                <Settings className="h-5 w-5" />{uiText("Preferencias")}</CardTitle>
+                            <CardDescription>{uiText("Configura la apariencia y el comportamiento de la aplicación")}</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="flex items-center justify-between p-4 border rounded-lg">
                                 <div>
-                                    <p className="font-medium">Tema de la aplicación</p>
-                                    <p className="text-sm text-muted-foreground">
-                                        El tema se cambia desde el botón en la barra superior
-                                    </p>
+                                    <p className="font-medium">{uiText("Tema de la aplicación")}</p>
+                                    <p className="text-sm text-muted-foreground">{uiText("El tema se cambia desde el botón en la barra superior")}</p>
                                 </div>
                                 <div className="flex items-center gap-2 px-3 py-1 rounded-md bg-muted">
-                                    <span className="text-sm">☀️ Claro / 🌙 Oscuro</span>
+                                    <span className="text-sm">{uiText("☀️ Claro / 🌙 Oscuro")}</span>
                                 </div>
                             </div>
 
                             <div className="flex items-center justify-between p-4 border rounded-lg">
                                 <div>
-                                    <p className="font-medium">Idioma</p>
-                                    <p className="text-sm text-muted-foreground">
-                                        Idioma de la interfaz de usuario
-                                    </p>
+                                    <p className="font-medium">{uiText("Idioma")}</p>
+                                    <p className="text-sm text-muted-foreground">{uiText("Idioma de la interfaz de usuario")}</p>
                                 </div>
                                 <div className="flex items-center gap-2 px-3 py-1 rounded-md bg-muted">
-                                    <span className="text-sm">🇪🇸 Español</span>
+                                    <span className="text-sm">{uiText("🇪🇸 Español")}</span>
                                 </div>
                             </div>
 
                             <div className="p-4 border rounded-lg bg-muted/50">
                                 <p className="text-sm text-muted-foreground">
-                                    💡 <strong>Tip:</strong> Más opciones de preferencias se agregarán en futuras actualizaciones.
-                                </p>
+                                    💡 <strong>Tip:</strong>{uiText("Más opciones de preferencias se agregarán en futuras actualizaciones.")}</p>
                             </div>
                         </CardContent>
                     </Card>

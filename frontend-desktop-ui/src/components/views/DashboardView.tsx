@@ -1,3 +1,4 @@
+import { uiText } from '../../lib/ui-language';
 import { useEffect, useState, useMemo } from 'react';
 import {
     fetchServers,
@@ -142,12 +143,12 @@ export function DashboardView() {
                 group_id: serverForm.group_id ?? undefined
             };
             await createServer(payload);
-            toast.success('Servidor agregado exitosamente');
+            toast.success(uiText('Servidor agregado exitosamente'));
             loadData();
             setAddServerOpen(false);
             resetForm();
         } catch (err: any) {
-            toast.error(err.message || 'Error al agregar servidor');
+            toast.error(err.message || uiText('Error al agregar servidor'));
         }
     };
 
@@ -159,12 +160,12 @@ export function DashboardView() {
                 group_id: serverForm.group_id ?? undefined
             };
             await updateServer(editingServer.id, payload);
-            toast.success('Servidor actualizado');
+            toast.success(uiText('Servidor actualizado'));
             loadData();
             setEditingServer(null);
             resetForm();
         } catch (err: any) {
-            toast.error(err.message || 'Error al actualizar');
+            toast.error(err.message || uiText('Error al actualizar'));
         }
     };
 
@@ -172,11 +173,11 @@ export function DashboardView() {
         if (!deletingServer) return;
         try {
             await deleteServer(deletingServer.id);
-            toast.success('Servidor eliminado');
+            toast.success(uiText('Servidor eliminado'));
             loadData();
             setDeletingServer(null);
         } catch (err: any) {
-            toast.error(err.message || 'Error al eliminar');
+            toast.error(err.message || uiText('Error al eliminar'));
         }
     };
 
@@ -273,14 +274,12 @@ export function DashboardView() {
             </CardContent>
             <CardFooter className="px-4 pb-4 pt-0 gap-1 flex-wrap">
                 <Button className="flex-1 min-w-[90px] h-8 text-xs" onClick={() => openConsole(server.id)} type="button">
-                    <Terminal className="mr-1 h-3 w-3" />
-                    Consola
-                </Button>
+                    <Terminal className="mr-1 h-3 w-3" />{uiText("Consola")}</Button>
                 <Button
                     variant="outline"
                     size="icon"
                     className="h-8 w-8 shrink-0"
-                    title="Chat IA"
+                    title={uiText("Chat IA")}
                     onClick={() => setChatServer(server)}
                     type="button"
                 >
@@ -290,7 +289,7 @@ export function DashboardView() {
                     variant="outline"
                     size="icon"
                     className="h-8 w-8 shrink-0"
-                    title="Diagnóstico"
+                    title={uiText("Diagnóstico")}
                     onClick={() => setDiagnosticServer(server)}
                     type="button"
                 >
@@ -300,7 +299,7 @@ export function DashboardView() {
                     variant="outline"
                     size="icon"
                     className="h-8 w-8 shrink-0"
-                    title="Editar"
+                    title={uiText("Editar")}
                     onClick={() => openEditDialog(server)}
                     type="button"
                 >
@@ -310,7 +309,7 @@ export function DashboardView() {
                     variant="outline"
                     size="icon"
                     className="h-8 w-8 shrink-0 hover:bg-destructive/10 hover:text-destructive"
-                    title="Eliminar"
+                    title={uiText("Eliminar")}
                     onClick={() => setDeletingServer(server)}
                     type="button"
                 >
@@ -331,14 +330,12 @@ export function DashboardView() {
                 <div className="text-sm text-muted-foreground truncate">{server.description || '-'}</div>
                 <div className="flex gap-2 justify-end items-center">
                     <Button size="sm" className="h-8 text-xs" onClick={() => openConsole(server.id)} type="button">
-                        <Terminal className="mr-1 h-3 w-3" />
-                        Consola
-                    </Button>
+                        <Terminal className="mr-1 h-3 w-3" />{uiText("Consola")}</Button>
                     <Button
                         variant="outline"
                         size="icon"
                         className="h-8 w-8 shrink-0"
-                        title="Chat IA"
+                        title={uiText("Chat IA")}
                         onClick={() => setChatServer(server)}
                         type="button"
                     >
@@ -348,7 +345,7 @@ export function DashboardView() {
                         variant="outline"
                         size="icon"
                         className="h-8 w-8 shrink-0"
-                        title="Diagnóstico"
+                        title={uiText("Diagnóstico")}
                         onClick={() => setDiagnosticServer(server)}
                         type="button"
                     >
@@ -358,7 +355,7 @@ export function DashboardView() {
                         variant="outline"
                         size="icon"
                         className="h-8 w-8 shrink-0"
-                        title="Editar"
+                        title={uiText("Editar")}
                         onClick={() => openEditDialog(server)}
                         type="button"
                     >
@@ -368,7 +365,7 @@ export function DashboardView() {
                         variant="outline"
                         size="icon"
                         className="h-8 w-8 shrink-0 hover:bg-destructive/10 hover:text-destructive"
-                        title="Eliminar"
+                        title={uiText("Eliminar")}
                         onClick={() => setDeletingServer(server)}
                         type="button"
                     >
@@ -392,7 +389,7 @@ export function DashboardView() {
                     <ChevronDown className={cn("h-4 w-4 transition-transform", !isExpanded && "-rotate-90")} />
                     {isExpanded ? <FolderOpen className="h-4 w-4" /> : <Folder className="h-4 w-4" />}
                     <span className="font-medium">{name}</span>
-                    <span className="text-xs opacity-60 ml-auto">{count} servidor{count !== 1 ? 'es' : ''}</span>
+                    <span className="text-xs opacity-60 ml-auto">{count}{" "}{uiText("servidor")}{count !== 1 ? 'es' : ''}</span>
                 </div>
 
                 {isExpanded && (
@@ -417,8 +414,8 @@ export function DashboardView() {
             <div className="p-8 pb-4 space-y-6 border-b">
                 <div className="flex flex-col md:flex-row justify-between md:items-start gap-4">
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight">Agente IA Sysadmin</h1>
-                        <p className="text-muted-foreground mt-1">Gestiona tu infraestructura con asistencia inteligente</p>
+                        <h1 className="text-3xl font-bold tracking-tight">{uiText("Agente IA Sysadmin")}</h1>
+                        <p className="text-muted-foreground mt-1">{uiText("Gestiona tu infraestructura con asistencia inteligente")}</p>
                     </div>
                     <div className="flex gap-3">
                         <Button
@@ -435,17 +432,13 @@ export function DashboardView() {
                             onClick={() => setManageGroupsOpen(true)}
                             type="button"
                         >
-                            <Settings className="h-4 w-4" />
-                            Gestionar Grupos
-                        </Button>
+                            <Settings className="h-4 w-4" />{uiText("Gestionar Grupos")}</Button>
                         <Button
                             className="gap-2"
                             onClick={() => setAddServerOpen(true)}
                             type="button"
                         >
-                            <Plus className="h-4 w-4" />
-                            Agregar Servidor
-                        </Button>
+                            <Plus className="h-4 w-4" />{uiText("Agregar Servidor")}</Button>
                     </div>
                 </div>
 
@@ -454,7 +447,7 @@ export function DashboardView() {
                     <div className="relative w-full md:w-96">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <Input
-                            placeholder="Buscar servidores..."
+                            placeholder={uiText("Buscar servidores...")}
                             className="pl-9 bg-muted/50 border-0 focus-visible:ring-1"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
@@ -466,44 +459,34 @@ export function DashboardView() {
                             <DropdownMenuTrigger asChild>
                                 <Button variant="outline" size="sm" className="gap-2">
                                     <Filter className="h-3.5 w-3.5" />
-                                    {selectedGroupFilter === 'all' ? 'Todos los grupos' :
-                                        selectedGroupFilter === 'ungrouped' ? 'Sin agrupar' :
+                                    {selectedGroupFilter === 'all' ? uiText('Todos los grupos') :
+                                        selectedGroupFilter === 'ungrouped' ? uiText('Sin agrupar') :
                                             groups.find(g => String(g.id) === selectedGroupFilter)?.name}
                                     <ChevronDown className="h-3 w-3 opacity-50" />
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent>
-                                <DropdownMenuItem onClick={() => setSelectedGroupFilter('all')}>
-                                    Todos los grupos
-                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => setSelectedGroupFilter('all')}>{uiText("Todos los grupos")}</DropdownMenuItem>
                                 {groups.map(g => (
                                     <DropdownMenuItem key={g.id} onClick={() => setSelectedGroupFilter(String(g.id))}>
                                         {g.name}
                                     </DropdownMenuItem>
                                 ))}
-                                <DropdownMenuItem onClick={() => setSelectedGroupFilter('ungrouped')}>
-                                    Sin agrupar
-                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => setSelectedGroupFilter('ungrouped')}>{uiText("Sin agrupar")}</DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
 
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button variant="outline" size="sm" className="gap-2">
-                                    {sortMode === 'name' ? 'Nombre' : sortMode === 'ip' ? 'IP' : 'Grupo'}
+                                    {sortMode === 'name' ? uiText('Nombre') : sortMode === 'ip' ? 'IP' : uiText('Grupo')}
                                     <ChevronDown className="h-3 w-3 opacity-50" />
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent>
-                                <DropdownMenuItem onClick={() => setSortMode('name')}>
-                                    Por nombre
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => setSortMode('ip')}>
-                                    Por IP
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => setSortMode('group')}>
-                                    Por grupo
-                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => setSortMode('name')}>{uiText("Por nombre")}</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => setSortMode('ip')}>{uiText("Por IP")}</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => setSortMode('group')}>{uiText("Por grupo")}</DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
 
@@ -543,12 +526,12 @@ export function DashboardView() {
                         {groups.map(g => (
                             <GroupSection key={g.id} id={String(g.id)} name={g.name} count={serversByGroup[String(g.id)]?.length || 0} />
                         ))}
-                        <GroupSection id="ungrouped" name="Sin agrupar" count={serversByGroup['ungrouped']?.length || 0} />
+                        <GroupSection id="ungrouped" name={uiText("Sin agrupar")} count={serversByGroup['ungrouped']?.length || 0} />
 
                         {processedServers.length === 0 && !loading && (
                             <div className="text-center py-20 text-muted-foreground">
                                 <ServerIcon className="h-12 w-12 mx-auto mb-4 opacity-20" />
-                                <p>No se encontraron servidores</p>
+                                <p>{uiText("No se encontraron servidores")}</p>
                             </div>
                         )}
                     </div>
@@ -559,10 +542,8 @@ export function DashboardView() {
             <Dialog open={addServerOpen} onOpenChange={setAddServerOpen}>
                 <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
-                        <DialogTitle className="text-2xl">Agregar Nuevo Servidor</DialogTitle>
-                        <DialogDescription>
-                            Agrega servidores manualmente o importa varios desde un archivo CSV
-                        </DialogDescription>
+                        <DialogTitle className="text-2xl">{uiText("Agregar Nuevo Servidor")}</DialogTitle>
+                        <DialogDescription>{uiText("Agrega servidores manualmente o importa varios desde un archivo CSV")}</DialogDescription>
                     </DialogHeader>
 
                     <div className="flex gap-2 border-b pb-4">
@@ -571,57 +552,53 @@ export function DashboardView() {
                             className="flex-1 gap-2"
                             type="button"
                         >
-                            <ServerIcon className="h-4 w-4" />
-                            Agregar Manualmente
-                        </Button>
+                            <ServerIcon className="h-4 w-4" />{uiText("Agregar Manualmente")}</Button>
                         <Button
                             variant="outline"
                             className="flex-1 gap-2"
                             onClick={() => setAddServerMode('csv')}
                             type="button"
                         >
-                            <Plus className="h-4 w-4" />
-                            Importar desde CSV
-                        </Button>
+                            <Plus className="h-4 w-4" />{uiText("Importar desde CSV")}</Button>
                     </div>
 
                     <div className="space-y-4">
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <Label>Nombre *</Label>
+                                <Label>{uiText("Nombre *")}</Label>
                                 <Input
                                     value={serverForm.hostname}
                                     onChange={(e) => setServerForm({ ...serverForm, hostname: e.target.value })}
-                                    placeholder="ej., servidor-web-01"
+                                    placeholder={uiText("ej., servidor-web-01")}
                                 />
                             </div>
                             <div>
-                                <Label>Dirección IP *</Label>
+                                <Label>{uiText("Dirección IP *")}</Label>
                                 <Input
                                     value={serverForm.ip_address}
                                     onChange={(e) => setServerForm({ ...serverForm, ip_address: e.target.value })}
-                                    placeholder="ej., 192.168.1.100"
+                                    placeholder={uiText("ej., 192.168.1.100")}
                                 />
                             </div>
                         </div>
 
                         <div>
-                            <Label>Sistema Operativo</Label>
+                            <Label>{uiText("Sistema Operativo")}</Label>
                             <Input
                                 value={serverForm.os_info}
                                 onChange={(e) => setServerForm({ ...serverForm, os_info: e.target.value })}
-                                placeholder="ej., Ubuntu 22.04"
+                                placeholder={uiText("ej., Ubuntu 22.04")}
                             />
                         </div>
 
                         <div>
-                            <Label>Grupo</Label>
+                            <Label>{uiText("Grupo")}</Label>
                             <select
                                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                 value={serverForm.group_id || ''}
                                 onChange={(e) => setServerForm({ ...serverForm, group_id: e.target.value ? Number(e.target.value) : null })}
                             >
-                                <option value="">Selecciona un grupo</option>
+                                <option value="">{uiText("Selecciona un grupo")}</option>
                                 {groups.map(g => (
                                     <option key={g.id} value={g.id}>{g.name}</option>
                                 ))}
@@ -630,7 +607,7 @@ export function DashboardView() {
 
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <Label>Usuario SSH</Label>
+                                <Label>{uiText("Usuario SSH")}</Label>
                                 <Input
                                     value={serverForm.ssh_username}
                                     onChange={(e) => setServerForm({ ...serverForm, ssh_username: e.target.value })}
@@ -638,7 +615,7 @@ export function DashboardView() {
                                 />
                             </div>
                             <div>
-                                <Label>Contraseña SSH (Opcional)</Label>
+                                <Label>{uiText("Contraseña SSH (Opcional)")}</Label>
                                 <Input
                                     type="password"
                                     value={serverForm.ssh_password}
@@ -649,36 +626,30 @@ export function DashboardView() {
                         </div>
 
                         <div>
-                            <Label>Ruta a la clave privada (/home/user/.ssh/id_rsa) O pega el contenido de la clave aquí</Label>
+                            <Label>{uiText("Ruta a la clave privada (/home/user/.ssh/id_rsa) O pega el contenido de la clave aquí")}</Label>
                             <Textarea
                                 className="min-h-[100px] font-mono text-xs"
                                 value={serverForm.ssh_key_path}
                                 onChange={(e) => setServerForm({ ...serverForm, ssh_key_path: e.target.value })}
                                 placeholder="-----BEGIN OPENSSH PRIVATE KEY-----&#10;..."
                             />
-                            <p className="text-xs text-muted-foreground mt-1">
-                                Proporciona contraseña SSH o ruta de clave privada (no ambas)
-                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">{uiText("Proporciona contraseña SSH o ruta de clave privada (no ambas)")}</p>
                         </div>
 
                         <div>
-                            <Label>Descripción opcional</Label>
+                            <Label>{uiText("Descripción opcional")}</Label>
                             <Textarea
                                 value={serverForm.description}
                                 onChange={(e) => setServerForm({ ...serverForm, description: e.target.value })}
-                                placeholder="Información adicional sobre el servidor"
+                                placeholder={uiText("Información adicional sobre el servidor")}
                             />
                         </div>
                     </div>
 
                     <DialogFooter className="gap-2 sm:gap-0">
-                        <Button variant="outline" onClick={() => { setAddServerOpen(false); resetForm(); }}>
-                            Cancelar
-                        </Button>
+                        <Button variant="outline" onClick={() => { setAddServerOpen(false); resetForm(); }}>{uiText("Cancelar")}</Button>
                         <Button onClick={handleAddServer} className="gap-2">
-                            <Plus className="h-4 w-4" />
-                            Agregar Servidor
-                        </Button>
+                            <Plus className="h-4 w-4" />{uiText("Agregar Servidor")}</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
@@ -687,46 +658,46 @@ export function DashboardView() {
             <Dialog open={!!editingServer} onOpenChange={(open) => !open && setEditingServer(null)}>
                 <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
-                        <DialogTitle className="text-2xl">Editar Servidor</DialogTitle>
-                        <DialogDescription>Modifica los datos del servidor</DialogDescription>
+                        <DialogTitle className="text-2xl">{uiText("Editar Servidor")}</DialogTitle>
+                        <DialogDescription>{uiText("Modifica los datos del servidor")}</DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4">
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <Label>Nombre *</Label>
+                                <Label>{uiText("Nombre *")}</Label>
                                 <Input
                                     value={serverForm.hostname}
                                     onChange={(e) => setServerForm({ ...serverForm, hostname: e.target.value })}
-                                    placeholder="ej., servidor-web-01"
+                                    placeholder={uiText("ej., servidor-web-01")}
                                 />
                             </div>
                             <div>
-                                <Label>Dirección IP *</Label>
+                                <Label>{uiText("Dirección IP *")}</Label>
                                 <Input
                                     value={serverForm.ip_address}
                                     onChange={(e) => setServerForm({ ...serverForm, ip_address: e.target.value })}
-                                    placeholder="ej., 192.168.1.100"
+                                    placeholder={uiText("ej., 192.168.1.100")}
                                 />
                             </div>
                         </div>
 
                         <div>
-                            <Label>Sistema Operativo</Label>
+                            <Label>{uiText("Sistema Operativo")}</Label>
                             <Input
                                 value={serverForm.os_info}
                                 onChange={(e) => setServerForm({ ...serverForm, os_info: e.target.value })}
-                                placeholder="ej., Ubuntu 22.04"
+                                placeholder={uiText("ej., Ubuntu 22.04")}
                             />
                         </div>
 
                         <div>
-                            <Label>Grupo</Label>
+                            <Label>{uiText("Grupo")}</Label>
                             <select
                                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                 value={serverForm.group_id || ''}
                                 onChange={(e) => setServerForm({ ...serverForm, group_id: e.target.value ? Number(e.target.value) : null })}
                             >
-                                <option value="">Selecciona un grupo</option>
+                                <option value="">{uiText("Selecciona un grupo")}</option>
                                 {groups.map(g => (
                                     <option key={g.id} value={g.id}>{g.name}</option>
                                 ))}
@@ -735,7 +706,7 @@ export function DashboardView() {
 
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <Label>Usuario SSH</Label>
+                                <Label>{uiText("Usuario SSH")}</Label>
                                 <Input
                                     value={serverForm.ssh_username}
                                     onChange={(e) => setServerForm({ ...serverForm, ssh_username: e.target.value })}
@@ -743,7 +714,7 @@ export function DashboardView() {
                                 />
                             </div>
                             <div>
-                                <Label>Contraseña SSH (dejar en blanco para mantener)</Label>
+                                <Label>{uiText("Contraseña SSH (dejar en blanco para mantener)")}</Label>
                                 <Input
                                     type="password"
                                     value={serverForm.ssh_password}
@@ -754,32 +725,28 @@ export function DashboardView() {
                         </div>
 
                         <div>
-                            <Label>Ruta de Clave Privada SSH (dejar en blanco para mantener)</Label>
+                            <Label>{uiText("Ruta de Clave Privada SSH (dejar en blanco para mantener)")}</Label>
                             <Textarea
                                 className="min-h-[100px] font-mono text-xs"
                                 value={serverForm.ssh_key_path}
                                 onChange={(e) => setServerForm({ ...serverForm, ssh_key_path: e.target.value })}
                                 placeholder="-----BEGIN OPENSSH PRIVATE KEY-----&#10;..."
                             />
-                            <p className="text-xs text-muted-foreground mt-1">
-                                Proporciona contraseña SSH o ruta de clave privada (no ambas)
-                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">{uiText("Proporciona contraseña SSH o ruta de clave privada (no ambas)")}</p>
                         </div>
 
                         <div>
-                            <Label>Descripción opcional</Label>
+                            <Label>{uiText("Descripción opcional")}</Label>
                             <Textarea
                                 value={serverForm.description}
                                 onChange={(e) => setServerForm({ ...serverForm, description: e.target.value })}
-                                placeholder="Información adicional sobre el servidor"
+                                placeholder={uiText("Información adicional sobre el servidor")}
                             />
                         </div>
                     </div>
                     <DialogFooter className="gap-2 sm:gap-0">
-                        <Button variant="outline" onClick={() => { setEditingServer(null); resetForm(); }}>
-                            Cancelar
-                        </Button>
-                        <Button onClick={handleEditServer}>Guardar Cambios</Button>
+                        <Button variant="outline" onClick={() => { setEditingServer(null); resetForm(); }}>{uiText("Cancelar")}</Button>
+                        <Button onClick={handleEditServer}>{uiText("Guardar Cambios")}</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
@@ -788,17 +755,12 @@ export function DashboardView() {
             <AlertDialog open={!!deletingServer} onOpenChange={(open) => !open && setDeletingServer(null)}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>¿Eliminar servidor?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            Esta acción eliminará permanentemente el servidor <strong>{deletingServer?.hostname}</strong>.
-                            Esta acción no se puede deshacer.
-                        </AlertDialogDescription>
+                        <AlertDialogTitle>{uiText("¿Eliminar servidor?")}</AlertDialogTitle>
+                        <AlertDialogDescription>{uiText("Esta acción eliminará permanentemente el servidor")}<strong>{deletingServer?.hostname}</strong>{uiText(". Esta acción no se puede deshacer.")}</AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDeleteServer} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                            Eliminar
-                        </AlertDialogAction>
+                        <AlertDialogCancel>{uiText("Cancelar")}</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDeleteServer} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">{uiText("Eliminar")}</AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>

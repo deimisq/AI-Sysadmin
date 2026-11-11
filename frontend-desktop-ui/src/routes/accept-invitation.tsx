@@ -1,3 +1,4 @@
+import { uiText } from '../lib/ui-language';
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -98,7 +99,7 @@ export default function AcceptInvitation() {
                 <Card className="w-full max-w-md">
                     <CardContent className="pt-6 flex flex-col items-center justify-center gap-2">
                         <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-                        <p className="text-sm text-muted-foreground">Cargando invitación...</p>
+                        <p className="text-sm text-muted-foreground">{uiText("Cargando invitación...")}</p>
                     </CardContent>
                 </Card>
             </div>
@@ -115,13 +116,11 @@ export default function AcceptInvitation() {
                                 <AlertCircle className="h-8 w-8 text-red-600 dark:text-red-400" />
                             </div>
                         </div>
-                        <CardTitle className="text-center text-red-600">Error</CardTitle>
+                        <CardTitle className="text-center text-red-600">{uiText("Error")}</CardTitle>
                     </CardHeader>
                     <CardContent className="text-center space-y-4">
                         <p className="text-muted-foreground">{error}</p>
-                        <Button onClick={() => navigate("/login")}>
-                            Ir al Login
-                        </Button>
+                        <Button onClick={() => navigate("/login")}>{uiText("Ir al Login")}</Button>
                     </CardContent>
                 </Card>
             </div>
@@ -134,10 +133,8 @@ export default function AcceptInvitation() {
                 <Card className="w-full max-w-md">
                     <CardContent className="pt-6 text-center">
                         <CheckCircle2 className="h-16 w-16 text-green-600 mx-auto mb-4" />
-                        <h2 className="text-2xl font-bold text-green-600 mb-2">¡Cuenta Creada!</h2>
-                        <p className="text-muted-foreground">
-                            Redirigiendo al inicio de sesión...
-                        </p>
+                        <h2 className="text-2xl font-bold text-green-600 mb-2">{uiText("¡Cuenta Creada!")}</h2>
+                        <p className="text-muted-foreground">{uiText("Redirigiendo al inicio de sesión...")}</p>
                     </CardContent>
                 </Card>
             </div>
@@ -153,18 +150,16 @@ export default function AcceptInvitation() {
                             <UserPlus className="h-8 w-8 text-blue-600 dark:text-blue-400" />
                         </div>
                     </div>
-                    <CardTitle className="text-2xl text-center">Bienvenido a AI Sysadmin Agent</CardTitle>
-                    <CardDescription className="text-center">
-                        Has sido invitado a crear una cuenta
-                        {invitation?.organization_name && (
-                            <> para <strong>{invitation.organization_name}</strong></>
+                    <CardTitle className="text-2xl text-center">{uiText("Bienvenido a AI Sysadmin Agent")}</CardTitle>
+                    <CardDescription className="text-center">{uiText("Has sido invitado a crear una cuenta")}{invitation?.organization_name && (
+                            <>{" "}{uiText("para")}{" "}<strong>{invitation.organization_name}</strong></>
                         )}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
-                            <label className="text-sm font-medium">Email (pre-asignado)</label>
+                            <label className="text-sm font-medium">{uiText("Email (pre-asignado)")}</label>
                             <Input
                                 type="email"
                                 value={invitation?.email || ""}
@@ -174,7 +169,7 @@ export default function AcceptInvitation() {
                         </div>
 
                         <div>
-                            <label className="text-sm font-medium">Nombre Completo</label>
+                            <label className="text-sm font-medium">{uiText("Nombre Completo")}</label>
                             <Input
                                 value={formData.full_name}
                                 onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
@@ -184,7 +179,7 @@ export default function AcceptInvitation() {
                         </div>
 
                         <div>
-                            <label className="text-sm font-medium">Nombre de Usuario</label>
+                            <label className="text-sm font-medium">{uiText("Nombre de Usuario")}</label>
                             <Input
                                 value={formData.username}
                                 onChange={(e) => setFormData({ ...formData, username: e.target.value })}
@@ -194,18 +189,18 @@ export default function AcceptInvitation() {
                         </div>
 
                         <div>
-                            <label className="text-sm font-medium">Contraseña</label>
+                            <label className="text-sm font-medium">{uiText("Contraseña")}</label>
                             <Input
                                 type="password"
                                 value={formData.password}
                                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                placeholder="Mínimo 6 caracteres"
+                                placeholder={uiText("Mínimo 6 caracteres")}
                                 required
                             />
                         </div>
 
                         <div>
-                            <label className="text-sm font-medium">Confirmar Contraseña</label>
+                            <label className="text-sm font-medium">{uiText("Confirmar Contraseña")}</label>
                             <Input
                                 type="password"
                                 value={formData.confirmPassword}
@@ -218,7 +213,7 @@ export default function AcceptInvitation() {
                         {invitation?.role && (
                             <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
                                 <p className="text-sm text-blue-800 dark:text-blue-300">
-                                    <strong>Rol asignado:</strong> {invitation.role}
+                                    <strong>{uiText("Rol asignado:")}</strong> {invitation.role}
                                 </p>
                             </div>
                         )}
@@ -230,21 +225,16 @@ export default function AcceptInvitation() {
                         >
                             {submitting ? (
                                 <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    Creando cuenta...
-                                </>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />{uiText("Creando cuenta...")}</>
                             ) : (
-                                "Crear Cuenta"
+                                uiText("Crear Cuenta")
                             )}
                         </Button>
                     </form>
 
                     <div className="mt-4 text-center">
-                        <p className="text-sm text-muted-foreground">
-                            ¿Ya tienes una cuenta?{" "}
-                            <a href="/#/login" className="text-blue-600 hover:underline">
-                                Iniciar sesión
-                            </a>
+                        <p className="text-sm text-muted-foreground">{uiText("¿Ya tienes una cuenta?")}{" "}
+                            <a href="/#/login" className="text-blue-600 hover:underline">{uiText("Iniciar sesión")}</a>
                         </p>
                     </div>
                 </CardContent>

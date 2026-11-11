@@ -42,7 +42,7 @@ public sealed class AppUpdates : IDisposable
     }
     public bool IsInstalling { get { lock(_sync) return _state=="installing"; } }
     public void SaveToken(string token) {
-        if (token.Length > 8192 || token.Any(char.IsWhiteSpace) || token.Any(char.IsControl)) throw new ArgumentException("Token de GitHub inválido.");
+        if (token.Length > 8192 || token.Any(char.IsWhiteSpace) || token.Any(char.IsControl)) throw new ArgumentException(UserLanguage.Text("Token de GitHub inválido."));
         Directory.CreateDirectory(_directory);
         if (token.Length == 0) { if(File.Exists(TokenPath)) File.Delete(TokenPath); return; }
         var plain=Encoding.UTF8.GetBytes(token);
@@ -60,7 +60,7 @@ public sealed class AppUpdates : IDisposable
             var response=await _http.SendAsync(request,HttpCompletionOption.ResponseHeadersRead);
             if(response.StatusCode is HttpStatusCode.Redirect or HttpStatusCode.MovedPermanently or HttpStatusCode.TemporaryRedirect or HttpStatusCode.PermanentRedirect) {
                 var location=response.Headers.Location; response.Dispose();
-                if(location==null || !location.IsAbsoluteUri || location.Scheme!="https" || location.UserInfo.Length>0 || !(location.Host.EndsWith(".githubusercontent.com",StringComparison.OrdinalIgnoreCase))) throw new InvalidOperationException("Redirección de descarga no autorizada.");
+                if(location==null || !location.IsAbsoluteUri || location.Scheme!="https" || location.UserInfo.Length>0 || !(location.Host.EndsWith(".githubusercontent.com",StringComparison.OrdinalIgnoreCase))) throw new InvalidOperationException(UserLanguage.Text("Redirección de descarga no autorizada."));
                 target=location; authenticated=false; continue;
             }
             if(!response.IsSuccessStatusCode) {
@@ -69,16 +69,16 @@ public sealed class AppUpdates : IDisposable
             }
             return response;
         }
-        throw new InvalidOperationException("Demasiadas redirecciones de GitHub.");
+        throw new InvalidOperationException(UserLanguage.Text("Demasiadas redirecciones de GitHub."));
     }
     private static async Task<byte[]> Bounded(HttpResponseMessage response,int limit) {
         await using var input=await response.Content.ReadAsStreamAsync(); using var output=new MemoryStream();
         var buffer=new byte[8192]; int count;
-        while((count=await input.ReadAsync(buffer))>0) { if(output.Length+count>limit) throw new InvalidOperationException("Respuesta de GitHub demasiado grande."); output.Write(buffer,0,count); }
+        while((count=await input.ReadAsync(buffer))>0) { if(output.Length+count>limit) throw new InvalidOperationException(UserLanguage.Text("Respuesta de GitHub demasiado grande.")); output.Write(buffer,0,count); }
         return output.ToArray();
     }
     public async Task CheckAsync() {
-        if(!await _gate.WaitAsync(0)) throw new InvalidOperationException("Ya hay una actualización en curso.");
+        if(!await _gate.WaitAsync(0)) throw new InvalidOperationException(UserLanguage.Text("Ya hay una actualización en curso."));
         try {
             if(_state is "downloaded" or "restart") return;
             State("checking");
@@ -104,17 +104,17 @@ public sealed class AppUpdates : IDisposable
         finally { _gate.Release(); }
     }
     public async Task DownloadAsync() {
-        if(!await _gate.WaitAsync(0)) throw new InvalidOperationException("Ya hay una actualización en curso.");
+        if(!await _gate.WaitAsync(0)) throw new InvalidOperationException(UserLanguage.Text("Ya hay una actualización en curso."));
         try {
-            if(_state!="available") throw new InvalidOperationException("Buscá una actualización antes de descargar.");
+            if(_state!="available") throw new InvalidOperationException(UserLanguage.Text("Buscá una actualización antes de descargar."));
             State("downloading"); Directory.CreateDirectory(_directory);
             _file=Path.Combine(_directory,$"AI-Sysadmin-{_version}-{Guid.NewGuid():N}.exe");
             using var response=await RequestAsync($"https://api.github.com/repos/{Repository}/releases/assets/{_asset}",true);
             await using(var input=await response.Content.ReadAsStreamAsync())
             await using(var output=new FileStream(_file,FileMode.CreateNew,FileAccess.Write,FileShare.None)) {
                 var buffer=new byte[65536]; int count; long total=0;
-                while((count=await input.ReadAsync(buffer))>0) { total+=count; if(total>_size) throw new InvalidOperationException("El tamaño de la descarga no coincide."); await output.WriteAsync(buffer.AsMemory(0,count)); lock(_sync) _received=total; }
-                if(total!=_size) throw new InvalidOperationException("Descarga incompleta.");
+                while((count=await input.ReadAsync(buffer))>0) { total+=count; if(total>_size) throw new InvalidOperationException(UserLanguage.Text("El tamaño de la descarga no coincide.")); await output.WriteAsync(buffer.AsMemory(0,count)); lock(_sync) _received=total; }
+                if(total!=_size) throw new InvalidOperationException(UserLanguage.Text("Descarga incompleta."));
             }
             VerifyFile(); State("downloaded");
         } catch(Exception error) { if(File.Exists(_file)) File.Delete(_file); State("error",error.Message); throw; }
@@ -122,7 +122,7 @@ public sealed class AppUpdates : IDisposable
     }
     private void VerifyFile() {
         using var stream=File.OpenRead(_file);
-        if(!Convert.ToHexString(SHA256.HashData(stream)).Equals(_digest,StringComparison.OrdinalIgnoreCase)) throw new InvalidOperationException("El hash de la actualización no coincide. No se ejecutó el archivo.");
+        if(!Convert.ToHexString(SHA256.HashData(stream)).Equals(_digest,StringComparison.OrdinalIgnoreCase)) throw new InvalidOperationException(UserLanguage.Text("El hash de la actualización no coincide. No se ejecutó el archivo."));
     }
     public static string? InstallRoot() {
         using var key=Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Uninstall\{4DFF87E7-6939-4591-910C-8BA873B15B32}_is1");
@@ -133,7 +133,7 @@ public sealed class AppUpdates : IDisposable
         return AppContext.BaseDirectory.StartsWith(expected,StringComparison.OrdinalIgnoreCase) ? root : null;
     }
     public async Task InstallAsync() {
-        if(!await _gate.WaitAsync(0)) throw new InvalidOperationException("Ya hay una actualización en curso.");
+        if(!await _gate.WaitAsync(0)) throw new InvalidOperationException(UserLanguage.Text("Ya hay una actualización en curso."));
         try {
             if(_state!="downloaded") throw new InvalidOperationException("Primero descargá y verificá la actualización.");
             var root=InstallRoot() ?? throw new InvalidOperationException("La actualización integrada requiere la app instalada. Esta instancia es portable o de desarrollo.");

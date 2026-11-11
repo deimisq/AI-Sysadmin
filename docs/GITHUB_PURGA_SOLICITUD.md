@@ -1,6 +1,6 @@
 # Solicitud de purga de datos sensibles en GitHub
 
-Este texto es un borrador para enviar mediante [GitHub Support](https://support.github.com/contact?tags=rr-sensitive-data-removal). No es una solicitud enviada ni una confirmación de eliminación. No adjuntar valores de claves ni informes sin redactar. Mantener privado el repositorio durante la gestión.
+La solicitud se envió con autorización del usuario el 11 de noviembre de 2026 mediante GitHub Support. Se verificó el ticket privado [#4989026](https://help.github.com/ticket/personal/0/4989026), con estado **Open** al registrar el envío. Esto confirma recepción, no una purga realizada. El texto siguiente es la base de la solicitud; el formulario enviado también incluyó los identificadores afectados, sin valores de claves. No adjuntar secretos ni informes sin redactar. Mantener privado el repositorio durante la gestión.
 
 ## Texto de la solicitud
 

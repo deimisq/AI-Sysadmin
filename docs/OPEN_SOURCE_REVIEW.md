@@ -32,7 +32,7 @@ A solicitud del usuario se reescribieron ramas y etiquetas para retirar entornos
 
 **GitHub todavía devuelve contenido sensible al consultar un commit anterior por identificador.** Se comprobó en memoria, sin imprimir ni probar la credencial. El repositorio permanece privado: un clon limpio no demuestra que GitHub haya purgado objetos y cachés.
 
-Se preparó la [solicitud de purga](GITHUB_PURGA_SOLICITUD.md) en el formulario privado de GitHub Support, con la sesión iniciada y los identificadores afectados. Está pendiente de autorización de envío; no hay un ticket confirmado ni una purga realizada. GitHub decide si presta asistencia y puede requerir medidas adicionales. No se probaron ni revocaron credenciales. Limpiar Git no invalida credenciales ni elimina copias externas.
+Se envió la [solicitud de purga](GITHUB_PURGA_SOLICITUD.md), autorizada por el usuario, el 11 de noviembre de 2026. GitHub confirmó su recepción en el ticket privado #4989026, con estado Open al registrar el envío. Incluye los identificadores afectados, sin valores de claves. No se ha confirmado una purga. GitHub decide si presta asistencia y puede requerir medidas adicionales. No se probaron ni revocaron credenciales. Limpiar Git no invalida credenciales ni elimina copias externas.
 
 El inventario remoto contiene 35 releases y 96 ejecuciones de Actions al iniciar esta revisión. Se descargaron los 35 ZIP portables y se verificaron tamaños y SHA256 contra sus metadatos de GitHub. En sus 1.145 archivos de texto no aparecieron los patrones buscados de claves Google, tokens GitHub o bloques completos de claves privadas; tampoco nombres de archivos de almacén local contemplados por el control. El ZIP `0.11.39` también pasó revisión con Gitleaks salvo una cabecera PEM de ejemplo, sin una clave completa, retirada de los formularios nuevos. Sus avisos npm faltaban y se incorporaron al empaquetado siguiente. Esto no es una auditoría de todos los binarios, instaladores o logs. Los assets antiguos no se modificaron ni sobrescribieron.
 
@@ -40,7 +40,7 @@ Se consultaron los logs de las 96 ejecuciones inventariadas. Se pudieron descarg
 
 ## Pendientes antes de cambiar la visibilidad
 
-1. Autorizar y enviar la solicitud privada preparada en GitHub Support, y obtener respuesta. Comprobar después que los objetos sensibles ya no son recuperables. No publicar enlaces a objetos antiguos en issues abiertos.
+1. Obtener respuesta al ticket privado #4989026 de GitHub Support. Comprobar después que los objetos sensibles ya no son recuperables. No publicar enlaces a objetos antiguos en issues abiertos.
 2. Cerrar la revisión de artefactos históricos y resultados de seguridad. Distinguir ZIP, instaladores y logs; no extender comprobaciones parciales a todos los archivos de GitHub.
 3. Verificar los workflows del commit final y sus descargas con avisos de terceros. No anunciar una compilación exitosa antes de terminar CI.
 4. Solo tras resolver los bloqueos, cambiar la visibilidad y verificar descargas y actualizaciones sin autenticación. El actualizador admite acceso anónimo, pero no puede verificarse una descarga pública mientras el repositorio siga privado.

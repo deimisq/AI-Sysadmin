@@ -60,6 +60,8 @@ Estas instrucciones aplican a todo el repositorio. Mantener este documento actua
 
 ## Mantenimiento de esta guía
 
+- El objetivo de distribución indicado por el usuario es ofrecer la app gratis y permitir aportes voluntarios desde la app, la presentación de Sentrait y GitHub. Los aportes no deben condicionar el uso. La evaluación de licencia está en [docs/OPEN_SOURCE_REVIEW.md](docs/OPEN_SOURCE_REVIEW.md); la recomendación no implica que se haya cambiado LICENSE ni autorizado hacer público el repositorio. No publicar cuentas o enlaces de donación inventados.
+
 - Actualizar este archivo cuando el usuario establezca una preferencia permanente o cambie una decisión de arquitectura, publicación, pruebas o persistencia.
 - Comprobar las rutas y procedimientos antes de documentarlos. Reemplazar instrucciones obsoletas y evitar duplicidades o detalles transitorios.
 - La instrucción de subir los cambios al finalizar cada tarea también aplica a las modificaciones de este archivo.

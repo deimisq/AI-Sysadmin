@@ -165,7 +165,7 @@ jobs:
           fi
 
       - name: Create Release in Private Repo
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ steps.tag.outputs.version }}
           name: AI Sysadmin Agent ${{ steps.tag.outputs.version }}
@@ -179,7 +179,7 @@ jobs:
 
       - name: Create Release in Public Repo
         if: github.repository == 'sentrait/ai_agent'
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ steps.tag.outputs.version }}
           name: AI Sysadmin Agent ${{ steps.tag.outputs.version }}

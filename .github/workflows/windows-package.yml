@@ -30,7 +30,7 @@ jobs:
           node-version: '22'
           cache: npm
           cache-dependency-path: frontend-desktop-ui/package-lock.json
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v6
         with:
           global-json-file: global.json
       - uses: actions/setup-python@v5

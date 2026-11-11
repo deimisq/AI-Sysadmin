@@ -6,7 +6,7 @@ pydantic-settings
 python-dotenv
 cryptography
 PyJWT[crypto]>=2.15.1,<3
-bcrypt>=4.3
+bcrypt>=5.0.0
 python-multipart
 email-validator
 pytest

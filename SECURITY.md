@@ -15,3 +15,5 @@ Después de actualizar las referencias remotas, quienes tengan clones anteriores
 Validación local: `gitleaks git . --redact --log-opts="--all"`, complementada con el escáner de patrones del proyecto. Un resultado sin hallazgos no certifica ausencia absoluta de secretos. La limpieza no revoca credenciales, no borra cachés de GitHub ni invalida claves descargadas previamente.
 
 GitHub puede conservar objetos anteriores accesibles por identificador aunque no aparezcan en un clon nuevo. La comprobación previa a publicar confirmó un archivo sensible todavía recuperable; el repositorio debe permanecer privado hasta gestionar y verificar su purga con GitHub. No incluir valores de claves en solicitudes de soporte.
+
+El [borrador de solicitud privada](docs/GITHUB_PURGA_SOLICITUD.md) indica la información necesaria y el criterio de cierre. Prepararlo no significa haber enviado el caso ni haber obtenido una purga. El estado se mantiene en la [revisión de apertura](docs/OPEN_SOURCE_REVIEW.md).

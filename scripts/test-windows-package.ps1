@@ -28,7 +28,7 @@ function Assert-Payload([string]$Directory) {
         if (-not $path.StartsWith($prefix,[StringComparison]::OrdinalIgnoreCase)) { throw 'Ruta fuera del paquete.' }
         if ((Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant() -ne $file.sha256) { throw "Contenido invalido: $($file.path)" }
     }
-    foreach ($required in @('AiSysadmin.exe','coreclr.dll','hostfxr.dll','WebView2Loader.dll','wwwroot/index.html','wwwroot/preferences.html','wwwroot/brand/icon.png','wwwroot/brand/logo.png')) {
+    foreach ($required in @('AiSysadmin.exe','coreclr.dll','hostfxr.dll','WebView2Loader.dll','wwwroot/index.html','wwwroot/preferences.html','wwwroot/brand/icon.png','wwwroot/brand/logo.png','LICENSE-PROJECT.txt','NOTICE','THIRD_PARTY_NOTICES.md','ThirdParty/npm/inventario.json')) {
         if (-not (Test-Path -LiteralPath (Join-Path $Directory $required))) { throw "Componente faltante: $required" }
     }
 }

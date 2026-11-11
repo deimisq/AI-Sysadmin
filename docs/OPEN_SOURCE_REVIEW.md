@@ -1,83 +1,46 @@
-# Recomendación de licencia y donaciones
+﻿# Revisión para publicar AI Sysadmin
 
-Fecha: 2026-11-11. Código revisado: línea Windows 0.11, base `3965f295`.
+Revisión: 11 de noviembre de 2026. Alcance: **deimisq/AI-Sysadmin**, cliente Windows 0.11 y código de este repositorio. No certifica seguridad absoluta ni autoriza modificar otros repositorios.
 
-## Recomendación
+## Licencia y aportes
 
-Para distribuir AI Sysadmin gratis, recibir contribuciones y financiar su mantenimiento mediante aportes voluntarios, recomiendo **Apache License 2.0 para el código propio sobre el que el titular tenga derechos**. Aplicada al código original mediante LICENSE y NOTICE tras la autorización del usuario. Los derechos y licencias de terceros se conservan; la titularidad de aportes externos requiere revisión.
+El código propio adopta Apache License 2.0 mediante [LICENSE](../LICENSE) y [NOTICE](../NOTICE), conservando licencias y derechos de terceros. Permite uso gratuito, contribuciones y aportes voluntarios, pero también derivados comerciales y cerrados. No concede derechos de marca ni obliga a conservar un botón de donaciones en los derivados. Véase el [texto oficial](https://www.apache.org/licenses/LICENSE-2.0.html).
 
-Apache 2.0 permite uso, modificación y distribución, también comercial; exige conservar los avisos aplicables y contempla una concesión explícita de patentes. No otorga por sí sola derechos de marca sobre Sentrait. Facilita adopción empresarial y permite mantener abierta la aplicación sin condicionar su uso a una donación.
+La app, README y financiación de GitHub apuntan al [sitio oficial de Sentra IT](https://sentrait.com.uy/). El uso es gratuito. No se facilitó un destino de cobro específico: no se inventaron cuentas ni se habilitaron pagos. La presentación web requiere publicación editorial y queda fuera de las modificaciones de este repositorio.
 
-La contrapartida debe aceptarse conscientemente: terceros pueden crear derivados cerrados y venderlos cumpliendo las condiciones. No se les puede imponer mantener el botón de donaciones de Sentrait como una condición adicional incompatible con la licencia. La conservación de avisos legales no equivale a publicidad obligatoria en la interfaz.
+## Licencias y distribución
 
-Si la prioridad fuera exigir reciprocidad en los derivados distribuidos, elegir GPLv3 en lugar de Apache 2.0. GPLv3 también permite vender y aceptar aportes; no sirve para prohibir usos comerciales. AGPLv3 responde especialmente al caso de modificaciones usadas para prestar servicio por red; no parece necesaria para financiar el cliente Windows por donaciones. MIT es válida, pero Apache 2.0 ofrece disposiciones explícitas adicionales de patentes y marca útiles para este proyecto.
+El cliente WPF/WebView2 con React incorpora licencia propia, NOTICE, avisos NuGet y del runtime. El empaquetado agrega ahora avisos originales npm y un inventario conservador de dependencias de producción instaladas; falla si falta un aviso requerido. Los avisos recuperados de upstream registran procedencia y versiones, incluyendo una excepción de referencia histórica documentada. Véanse [avisos de terceros](../THIRD_PARTY_NOTICES.md) y [distribución Windows](WINDOWS_DISTRIBUTION.md).
 
-Fuentes: [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0.html), [resumen GPLv3](https://choosealicense.com/licenses/gpl-3.0/), [preguntas frecuentes GNU](https://www.gnu.org/licenses/gpl-faq.en.html).
+Las implementaciones Python/Rust y despliegues legacy no forman parte del instalador Windows vigente. No se certificó una distribución completa con todas sus dependencias opcionales. Ansible conserva sus obligaciones GPL; las APIs IA, Windows y WebView2 mantienen sus condiciones externas. Publicar el código propio no libera modelos ni vuelve gratuitas las APIs.
 
-## Qué se revisó y qué se encontró
+No se realizó una comprobación jurídica de la titularidad de cada aporte histórico. Los autores Git, incluidos agentes, no bastan para demostrar derechos: el mantenimiento debe conservar autorizaciones y avisos de aportes ajenos.
 
-Esta es una revisión técnica de licencias declaradas y arquitectura, no una autorización jurídica para relicenciar aportes ajenos ni una auditoría completa de seguridad del historial.
+## Verificaciones realizadas
 
-| Área | Evidencia revisada | Resultado y acción |
-|---|---|---|
-| Licencia propia | [LICENSE](../LICENSE) y README | Apache 2.0 para código original; NOTICE distingue mantenimiento, titulares respectivos y dependencias. El instalador incluye los avisos. |
-| Cliente Windows | Proyecto y cinco paquetes NuGet resueltos en el entorno | SSH.NET 2026.0.0, BouncyCastle.Cryptography 2.7.0 y Microsoft.Extensions.* declaran MIT. WebView2 1.0.2957.106 referencia LICENSE.txt; el archivo instalado contiene condiciones permisivas de tres cláusulas y avisos Microsoft. Conservar los avisos y comprobar también los del runtime redistribuido. |
-| Interfaz de escritorio | package.json, metadatos locales y 440 entradas del package-lock | Predominan MIT, Apache y BSD/ISC. Lightning CSS y once paquetes de plataforma declaran MPL-2.0 y aparecen como dependencias de desarrollo. caniuse-lite declara CC-BY-4.0 y es de desarrollo en este lock. No convertir sus licencias a Apache: distinguir herramientas de compilación de contenido realmente distribuido y conservar atribuciones aplicables. |
-| Interfaz web | 658 entradas de frontend-web/package-lock.json | Predominan licencias permisivas; axe-core declara MPL-2.0 como dependencia de desarrollo. caniuse-lite declara CC-BY-4.0. busboy y streamsearch no declaran licencia en este lock: comprobar sus archivos/licencias de las versiones exactas antes de dar por cerrada su revisión. Un campo ausente no prueba incompatibilidad. |
-| Backend Python | requirements generales, desktop y uso de ansible_runner | Existe Ansible, cuyo upstream es GPLv3. Muchas dependencias no están fijadas a versiones exactas: no se puede certificar una distribución concreta solo con estos requirements. Revisar resolución y empaquetado; Apache para código propio no reemplaza obligaciones GPL de componentes distribuidos. |
-| Implementaciones legacy | Manifiestos Tauri/Rust y estructura | Conservan implementaciones y dependencias propias. Falta una revisión resuelta de todas sus dependencias, de archivos copiados y de autoría. No extender el visto bueno del cliente Windows a todo el monorepo. |
-| RDP, Windows y servicios IA | Arquitectura nativa y transporte | El control RDP del sistema, WebView2 Runtime y APIs externas mantienen sus condiciones. Liberar el código propio no convierte Windows ni los modelos en software libre ni vuelve gratuitas las APIs de terceros. |
-| Autoría e historial | Resumen de autores de Git y procedencia del repositorio | Hay distintos nombres de autor; las identidades de agentes de código no prueban titularidad. Confirmar derechos del titular, aportes de otras personas/organizaciones, gráficos y código incorporado antes de relicenciar. |
+La revisión anterior completó 200 pruebas Windows, incluidas dos integraciones SSH/SFTP en laboratorio; 79 pruebas backend; compilaciones de ambas interfaces y pruebas de idioma del instalador con registro sintético. Los workflows de seguridad, compatibilidad y distribución del commit `2292209` finalizaron correctamente. No se usaron equipos reales del usuario como fixtures.
 
-Los conteos corresponden a entradas de los locks, incluyendo dependencias transitivas, desarrollo y plataformas opcionales; no equivalen a paquetes distribuidos en el instalador. No se revisó línea por línea la autoría de todo el código ni se escanearon todos los commits buscando secretos.
+Las auditorías npm de ambas interfaces y la restauración NuGet auditada no informaron vulnerabilidades conocidas. El entorno Python resuelto para pruebas pasó pip-audit tras sustituir python-jose por PyJWT; no comprende todas las dependencias opcionales o despliegues legacy.
 
-Referencias adicionales: [Ansible COPYING GPLv3](https://github.com/ansible/ansible/blob/devel/COPYING), [SSH.NET](https://github.com/sshnet/SSH.NET), [guacamole-lite Apache 2.0](https://github.com/vadimpronin/guacamole-lite). Las licencias y avisos de terceros deben acompañar las distribuciones según corresponda.
+La revisión de avisos agregó tres pruebas del recolector: el frontend pasa ahora 39 pruebas y compila. Se retiraron cabeceras PEM de los placeholders, que generaban una coincidencia sin contener una clave. El bundle regenerado y el paquete extraído pasaron Gitleaks. Se generó una distribución local de validación `0.11.60040`: sus 692 archivos y hashes pasaron la comprobación del paquete, con avisos para 169 dependencias npm. No se instaló sobre el equipo del usuario ni se publicó esa versión local.
 
-## Donaciones: un destino común en tres lugares
+La documentación propia está en español. La app y el instalador ofrecen español e inglés mediante catálogos; preservan textos legales oficiales, identificadores técnicos y contenido del usuario. Las pruebas no sustituyen una revisión visual exhaustiva de todos los recorridos.
 
-Crear una página canónica de apoyo bajo **sentrait.com.uy**, con ruta y medio de cobro por definir. La app y GitHub deben apuntar al mismo destino, para poder cambiar medios de pago sin recompilar el programa.
+## Secretos históricos: publicación bloqueada
 
-- **App:** botón discreto «Apoyar el proyecto» en Ayuda/Acerca de y una opción en el menú Ayuda. Abrir la página oficial en el navegador predeterminado, con una ruta HTTPS permitida expresamente. La navegación del WebView está restringida actualmente; un enlace HTML sin adaptación nativa puede no funcionar. No pedir datos de tarjetas ni incorporar secretos del procesador de pago en la app.
-- **Presentación en Sentrait:** explicar uso gratuito, licencia, descargas oficiales, costos externos de proveedores IA y carácter voluntario del aporte. Separar «Descargar gratis» de «Apoyar el proyecto». No condicionar funciones, actualizaciones o seguridad a donar. Se verificó https://sentrait.com.uy/ en el navegador y su repositorio React/Vite. Se preparó una ficha en borrador en el repositorio web; no se modificó el contenido persistido de producción ni se verificó un checkout de donaciones.
-- **GitHub:** configurar `.github/FUNDING.yml` en la rama predeterminada usando una URL custom o una cuenta de financiación real; añadir un enlace en README. No crear enlaces de pago ficticios ni asumir una cuenta GitHub Sponsors habilitada. [Documentación de GitHub](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/displaying-a-sponsor-button-in-your-repository).
+A solicitud del usuario se reescribieron ramas y etiquetas para retirar entornos reales, claves TLS, scripts con credenciales y un entorno virtual versionado. Las referencias saneadas y un clon nuevo pasaron Gitleaks sin hallazgos. Los clones anteriores deben reemplazarse para no reintroducir objetos eliminados.
 
-Texto sugerido: «AI Sysadmin es gratuito. Si te resulta útil, podés apoyar su desarrollo con un aporte voluntario. Donar no es necesario para usarlo.» El tratamiento administrativo y los comprobantes del cobro deben definirse con el responsable de Sentrait según su situación real; no prometer deducibilidad fiscal.
+**GitHub todavía devuelve contenido sensible al consultar un commit anterior por identificador.** Se comprobó en memoria, sin imprimir ni probar la credencial. El repositorio permanece privado: un clon limpio no demuestra que GitHub haya purgado objetos y cachés.
 
-## Antes de abrir el repositorio
+Se preparó la [solicitud de purga](GITHUB_PURGA_SOLICITUD.md). No se ha enviado: GitHub Support requiere iniciar sesión en el navegador. GitHub decide si presta asistencia y puede requerir medidas adicionales. No se probaron ni revocaron credenciales. Limpiar Git no invalida credenciales ni elimina copias externas.
 
-1. Confirmar titular legal y autorización para relicenciar; elegir Apache 2.0 aceptando sus permisos sobre derivados, o GPLv3 si se prioriza reciprocidad.
-2. Terminar el inventario de componentes realmente distribuidos, atribuciones, runtime y dependencias Python/Rust no cerradas. Si hace falta, delimitar la publicación inicial al cliente Windows sin afirmar que el backend completo quedó certificado.
-3. Revisar todas las ramas, tags, historial, releases, artefactos y logs de Actions por secretos, datos de clientes o archivos privados. Revocar cualquier secreto expuesto; borrarlo del último commit no elimina el historial. No reescribir historial ni cambiar visibilidad sin una tarea explícita para esa operación.
-4. Actualizar licencia, avisos de terceros, README, documentación y metadatos del instalador. Añadir guía de contribución y un canal privado para reportar vulnerabilidades.
-5. Definir la página y cuenta de cobro reales e integrar los tres accesos de apoyo, sin cambiar la licencia ni la gratuidad según el aporte.
-6. Hacer pública la distribución aprobada y comprobar descargas y actualizaciones anónimas. El actualizador ya permite solicitudes sin token, pero la interfaz y documentación todavía hablan de repositorio privado y deben ajustarse cuando cambie la visibilidad.
+El inventario remoto contiene 35 releases y 96 ejecuciones de Actions al iniciar esta revisión. Se descargaron los 35 ZIP portables y se verificaron tamaños y SHA256 contra sus metadatos de GitHub. En sus 1.145 archivos de texto no aparecieron los patrones buscados de claves Google, tokens GitHub o bloques completos de claves privadas; tampoco nombres de archivos de almacén local contemplados por el control. El ZIP `0.11.39` también pasó revisión con Gitleaks salvo una cabecera PEM de ejemplo, sin una clave completa, retirada de los formularios nuevos. Sus avisos npm faltaban y se incorporaron al empaquetado siguiente. Esto no es una auditoría de todos los binarios, instaladores o logs. Los assets antiguos no se modificaron ni sobrescribieron.
 
-Se aplicó Apache 2.0 al código original y se prepararon los accesos de apoyo desde Ayuda y GitHub hacia https://sentrait.com.uy/. No se cambió la visibilidad ni se habilitaron cobros. Falta confirmar el titular legal específico y el medio de aporte.
+## Pendientes antes de cambiar la visibilidad
 
-## Control de publicación ejecutado
+1. Iniciar sesión en GitHub Support, enviar la solicitud privada y obtener respuesta. Comprobar después que los objetos sensibles ya no son recuperables. No publicar enlaces a objetos antiguos en issues abiertos.
+2. Cerrar la revisión de artefactos históricos y resultados de seguridad. Distinguir ZIP, instaladores y logs; no extender comprobaciones parciales a todos los archivos de GitHub.
+3. Verificar los workflows del commit final y sus descargas con avisos de terceros. No anunciar una compilación exitosa antes de terminar CI.
+4. Solo tras resolver los bloqueos, cambiar la visibilidad y verificar descargas y actualizaciones sin autenticación. El actualizador admite acceso anónimo, pero no puede verificarse una descarga pública mientras el repositorio siga privado.
 
-El escáner de patrones `scripts/audit-publication.mjs` recorrió las 25 referencias locales y 29.264 blobs disponibles: 42 coincidencias y ningún objeto omitido por tamaño. Incluye ejemplos y fixtures, por lo que no son 42 secretos confirmados ni constituye una auditoría completa. No se comprobaron vigencia de credenciales, referencias remotas no descargadas, logs, releases ni artefactos.
-
-Se encontró una clave privada en `nginx/certs/server.key`; se retiraron del seguimiento la clave y su certificado conservando los archivos locales, y se excluyeron de Git. El historial además contiene patrones de clave Google en `test_gemini.py` y `list_models.py`. No se imprimen valores ni se prueban credenciales. Revocar/rotar las claves si fueron utilizadas y revisar las coincidencias antes de abrir el repositorio. Quitar archivos actuales no sanea commits anteriores.
-
-**Publicación bloqueada:** mantener el repositorio privado. La limpieza del historial requiere una operación coordinada que contemple ramas, tags, clones y los remotos antiguos; esta tarea no reescribe ni fuerza pushes. Revisar también autoría, obligaciones de terceros y artefactos antes de cambiar visibilidad.
-
-La ficha web `ai-sysadmin` está preparada con `published: false` en el repositorio Sentra-IT. Los datos por defecto no sustituyen el contenido persistido del sitio: requiere incorporación y publicación editorial. No anunciarla como disponible en producción ni ofrecer enlaces públicos al repositorio privado.
-## Limpieza del historial autorizada
-
-A solicitud explícita del usuario se reescribieron las referencias locales para quitar `nginx/certs/`, `nginx/ssl/`, `.env.prod`, archivos de entorno reales de interfaces anteriores, `test_gemini.py`, `list_models.py` y el entorno `venv/`. Se reemplazaron patrones de tokens y coincidencias de claves genéricas también en contenido y mensajes. Se conservaron las plantillas y los ejemplos sintéticos sin credenciales reales. No se probó ni revocó ninguna credencial.
-
-Gitleaks pasó de nueve coincidencias a cero en todas las referencias locales después de la limpieza. El escáner adicional recorrió 1.921 blobs sin omisiones por tamaño: sus 16 coincidencias restantes son cabeceras de ejemplos/formularios y fixtures, no hallazgos de Gitleaks. Esta comprobación no garantiza ausencia absoluta de secretos ni elimina copias externas.
-
-La publicación de las referencias reescritas debe verificarse contra cada remoto con leases explícitos. La guía de seguridad explica cómo reemplazar clones anteriores. El remoto histórico `sentrait/ai_agent` también debe recibir sus referencias saneadas sin adelantar su rama testing al desarrollo actual. El espejo mencionado por el workflow legacy, `sentrait/ai_agent_public`, no es accesible con la autenticación actual; no se certifica su contenido ni su inexistencia. Mantener privado el repositorio principal hasta completar la revisión de publicación; el usuario no solicitó cambiar su visibilidad en esta tarea.
-## Revisión previa a publicación del repositorio actual
-
-El alcance queda limitado a deimisq/AI-Sysadmin por instrucción del usuario. Se retiró el workflow de sincronización hacia otros repositorios. La documentación principal se actualizó en español; los textos oficiales de Apache y las licencias de terceros se conservan sin traducciones sustitutivas. Se incorporaron catálogos español/inglés al cliente Windows y persistencia del idioma elegido en el instalador.
-
-Comprobaciones locales: 200 pruebas Windows superadas, incluidas las dos integraciones SSH/SFTP en loopback sintético; 36 pruebas frontend superadas; compilación de las dos interfaces; instaladores sintéticos español e inglés con registro aislado. Las auditorías npm de ambas interfaces quedaron sin avisos conocidos; la restauración NuGet con auditoría completa terminó sin avisos. El entorno Python resuelto para las pruebas de autorización, SFTP y JWT quedó sin avisos en pip-audit tras sustituir python-jose por PyJWT y actualizar herramientas. Esto no certifica el conjunto completo de dependencias opcionales Python/Rust ni todos los posibles despliegues.
-
-**Bloqueo confirmado en GitHub:** una consulta autenticada al archivo test_gemini.py mediante el identificador del commit anterior a la limpieza todavía devuelve contenido con un patrón de clave. No se imprimió la clave ni se probó contra el proveedor. Aunque un clon nuevo y las ramas saneadas no presenten hallazgos, cambiar ahora la visibilidad podría exponer ese objeto retenido. Mantener el repositorio privado y solicitar a GitHub la purga de objetos sensibles/cachés. Otro push o reescritura de ramas no demuestra su eliminación. No se revocaron credenciales.
-
-No se promete seguridad al 100% ni se afirma que el repositorio sea público. Antes de abrirlo, verificar la purga, los artefactos y la publicación final, además de revisar los resultados de CI. La traducción de la app no debe modificar comandos, nombres de equipos, salidas remotas ni conversaciones.
-
-La revisión del backend incluye ahora 79 pruebas de autorización, adaptador SFTP y validación JWT superadas. La transición exige volver a iniciar sesión si existían tokens sin exp o sub. No modifica el formato bcrypt de contraseñas ni el almacén Windows.
+Un escáner sin hallazgos no permite prometer seguridad al 100%. La firma de código y las pruebas en más equipos siguen siendo mejoras de distribución; no deben presentarse como realizadas.

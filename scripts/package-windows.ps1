@@ -50,6 +50,8 @@ Copy-Item (Join-Path $projectRoot 'NOTICE') (Join-Path $publish 'NOTICE')
 Copy-Item (Join-Path $projectRoot 'THIRD_PARTY_NOTICES.md') (Join-Path $publish 'THIRD_PARTY_NOTICES.md')
 $assets = Get-Content (Join-Path $projectRoot 'apps/windows/obj/project.assets.json') -Raw | ConvertFrom-Json
 $noticeRoot = Join-Path $publish 'ThirdParty'
+& $Node (Join-Path $projectRoot 'scripts/collect-frontend-notices.mjs') (Join-Path $projectRoot 'frontend-desktop-ui') (Join-Path $noticeRoot 'npm')
+if ($LASTEXITCODE -ne 0) { throw 'No se pudieron conservar los avisos originales del frontend.' }
 foreach ($folder in $assets.packageFolders.PSObject.Properties.Name) {
     foreach ($library in $assets.libraries.PSObject.Properties) {
         if ($library.Value.type -ne 'package') { continue }

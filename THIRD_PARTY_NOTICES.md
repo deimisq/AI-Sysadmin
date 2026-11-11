@@ -9,4 +9,6 @@ Apache 2.0 se aplica al código original de AI Sysadmin sobre el que sus titular
 
 El empaquetador Windows conserva los avisos NuGet y runtime disponibles bajo `ThirdParty`, además de LICENSE-PROJECT.txt, NOTICE y este documento. Las herramientas de compilación no se incorporan al instalador por el hecho de aparecer en un lock. Mantener una revisión del contenido efectivamente redistribuido.
 
+Los avisos originales de las dependencias npm de producción instaladas se conservan en `ThirdParty/npm`, junto con un inventario de nombres, versiones, licencias y procedencia. Es un inventario conservador: no afirma que todo el árbol npm esté presente en el bundle. Los textos que faltan en el tarball npm se conservan bajo `assets/licenses/npm` con referencias explícitas en `sources.json`; el empaquetado falla si aparece un paquete sin aviso original y sin una copia revisada para esa versión. Para react-remove-scroll-bar, el gitHead declarado por npm no está disponible en upstream: se documenta la referencia pública del aviso MIT, consistente con la licencia declarada por la versión.
+
 Alcance y pendientes: [revisión de licencias](docs/OPEN_SOURCE_REVIEW.md). Este documento no reemplaza los textos completos de licencia de los componentes.

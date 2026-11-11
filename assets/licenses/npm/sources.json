@@ -1,0 +1,122 @@
+[
+  {
+    "name": "@radix-ui/number",
+    "version": "1.1.1",
+    "source": "https://raw.githubusercontent.com/radix-ui/primitives/fcef0668a5c827e5a4baac405474d75680f9a4eb/LICENSE",
+    "license": "MIT",
+    "declared_git_head": "fcef0668a5c827e5a4baac405474d75680f9a4eb",
+    "note": "Referencia declarada por npm."
+  },
+  {
+    "name": "@radix-ui/react-compose-refs",
+    "version": "1.1.2",
+    "source": "https://raw.githubusercontent.com/radix-ui/primitives/fcef0668a5c827e5a4baac405474d75680f9a4eb/LICENSE",
+    "license": "MIT",
+    "declared_git_head": "fcef0668a5c827e5a4baac405474d75680f9a4eb",
+    "note": "Referencia declarada por npm."
+  },
+  {
+    "name": "@radix-ui/react-context",
+    "version": "1.1.2",
+    "source": "https://raw.githubusercontent.com/radix-ui/primitives/fcef0668a5c827e5a4baac405474d75680f9a4eb/LICENSE",
+    "license": "MIT",
+    "declared_git_head": "fcef0668a5c827e5a4baac405474d75680f9a4eb",
+    "note": "Referencia declarada por npm."
+  },
+  {
+    "name": "@radix-ui/react-direction",
+    "version": "1.1.1",
+    "source": "https://raw.githubusercontent.com/radix-ui/primitives/fcef0668a5c827e5a4baac405474d75680f9a4eb/LICENSE",
+    "license": "MIT",
+    "declared_git_head": "fcef0668a5c827e5a4baac405474d75680f9a4eb",
+    "note": "Referencia declarada por npm."
+  },
+  {
+    "name": "@radix-ui/react-id",
+    "version": "1.1.1",
+    "source": "https://raw.githubusercontent.com/radix-ui/primitives/fcef0668a5c827e5a4baac405474d75680f9a4eb/LICENSE",
+    "license": "MIT",
+    "declared_git_head": "fcef0668a5c827e5a4baac405474d75680f9a4eb",
+    "note": "Referencia declarada por npm."
+  },
+  {
+    "name": "@radix-ui/react-use-callback-ref",
+    "version": "1.1.1",
+    "source": "https://raw.githubusercontent.com/radix-ui/primitives/fcef0668a5c827e5a4baac405474d75680f9a4eb/LICENSE",
+    "license": "MIT",
+    "declared_git_head": "fcef0668a5c827e5a4baac405474d75680f9a4eb",
+    "note": "Referencia declarada por npm."
+  },
+  {
+    "name": "@radix-ui/react-use-escape-keydown",
+    "version": "1.1.1",
+    "source": "https://raw.githubusercontent.com/radix-ui/primitives/fcef0668a5c827e5a4baac405474d75680f9a4eb/LICENSE",
+    "license": "MIT",
+    "declared_git_head": "fcef0668a5c827e5a4baac405474d75680f9a4eb",
+    "note": "Referencia declarada por npm."
+  },
+  {
+    "name": "@radix-ui/react-use-layout-effect",
+    "version": "1.1.1",
+    "source": "https://raw.githubusercontent.com/radix-ui/primitives/fcef0668a5c827e5a4baac405474d75680f9a4eb/LICENSE",
+    "license": "MIT",
+    "declared_git_head": "fcef0668a5c827e5a4baac405474d75680f9a4eb",
+    "note": "Referencia declarada por npm."
+  },
+  {
+    "name": "@radix-ui/react-use-previous",
+    "version": "1.1.1",
+    "source": "https://raw.githubusercontent.com/radix-ui/primitives/fcef0668a5c827e5a4baac405474d75680f9a4eb/LICENSE",
+    "license": "MIT",
+    "declared_git_head": "fcef0668a5c827e5a4baac405474d75680f9a4eb",
+    "note": "Referencia declarada por npm."
+  },
+  {
+    "name": "@radix-ui/react-use-rect",
+    "version": "1.1.1",
+    "source": "https://raw.githubusercontent.com/radix-ui/primitives/fcef0668a5c827e5a4baac405474d75680f9a4eb/LICENSE",
+    "license": "MIT",
+    "declared_git_head": "fcef0668a5c827e5a4baac405474d75680f9a4eb",
+    "note": "Referencia declarada por npm."
+  },
+  {
+    "name": "@radix-ui/react-use-size",
+    "version": "1.1.1",
+    "source": "https://raw.githubusercontent.com/radix-ui/primitives/fcef0668a5c827e5a4baac405474d75680f9a4eb/LICENSE",
+    "license": "MIT",
+    "declared_git_head": "fcef0668a5c827e5a4baac405474d75680f9a4eb",
+    "note": "Referencia declarada por npm."
+  },
+  {
+    "name": "@radix-ui/rect",
+    "version": "1.1.1",
+    "source": "https://raw.githubusercontent.com/radix-ui/primitives/fcef0668a5c827e5a4baac405474d75680f9a4eb/LICENSE",
+    "license": "MIT",
+    "declared_git_head": "fcef0668a5c827e5a4baac405474d75680f9a4eb",
+    "note": "Referencia declarada por npm."
+  },
+  {
+    "name": "@tauri-apps/cli-win32-x64-msvc",
+    "version": "2.10.0",
+    "source": "https://raw.githubusercontent.com/tauri-apps/tauri/4485811185b600415ea4db42544c996ce7f91ec0/LICENSE_MIT",
+    "license": "MIT",
+    "declared_git_head": "4485811185b600415ea4db42544c996ce7f91ec0",
+    "note": "Referencia declarada por npm."
+  },
+  {
+    "name": "react-remove-scroll-bar",
+    "version": "2.3.8",
+    "source": "https://raw.githubusercontent.com/theKashey/react-remove-scroll-bar/8ca9ba5ea52de03308fe8ced94f7b159a44d28ff/LICENSE",
+    "license": "MIT",
+    "declared_git_head": "b3b1287aad81def2e2ae707274b74531b61ddbaf",
+    "note": "El gitHead de npm no está disponible en upstream; se conserva la licencia MIT del repositorio oficial en la referencia indicada, consistente con la declaración de la versión publicada."
+  },
+  {
+    "name": "react-resizable-panels",
+    "version": "3.0.6",
+    "source": "https://raw.githubusercontent.com/bvaughn/react-resizable-panels/43a071df6bb96d54e8b81a6be0e2d453af45cc4b/LICENSE",
+    "license": "MIT",
+    "declared_git_head": "43a071df6bb96d54e8b81a6be0e2d453af45cc4b",
+    "note": "Referencia declarada por npm."
+  }
+]

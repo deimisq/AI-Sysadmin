@@ -94,10 +94,14 @@ La publicación usa el token automático de GitHub con permiso de escritura limi
 
 ## Antes de distribuir comercialmente
 
-Faltan firma de código y timestamp, revisión de licencias y titular del producto —la licencia actual del repositorio todavía contiene el marcador `[Your Company Name]`—, matriz de sistemas soportados, pruebas de actualización/recuperación e instalador en equipos limpios. Tampoco se anuncia una verificación real de IA, RDP y SSH contra infraestructura del cliente a partir de las pruebas simuladas.
+Faltan firma de código y timestamp, ampliar la matriz de sistemas soportados y probar el instalador en más equipos limpios. El código propio usa Apache 2.0; los avisos de terceros acompañan los paquetes. Los límites sobre titularidad de aportes externos y distribuciones legacy constan en la [revisión de apertura](OPEN_SOURCE_REVIEW.md). Tampoco se anuncia una verificación real de IA, RDP y SSH contra infraestructura del cliente a partir de las pruebas simuladas.
 
 Referencias: [soporte de .NET](https://dotnet.microsoft.com/en-us/platform/support/policy), [publicación .NET](https://learn.microsoft.com/en-us/dotnet/core/deploying/), [distribución WebView2](https://learn.microsoft.com/en-us/microsoft-edge/webview2/concepts/distribution), [Inno Setup](https://jrsoftware.org/isdl.php).
 
 ## Idiomas del instalador y de la app
 
 El instalador muestra el selector español/inglés y guarda es/en en HKCU bajo Software\Sentrait\AiSysadminAgent. El cliente y su ventana de preferencias reciben ese valor antes de cargar React. Los catálogos traducen textos propios y diálogos nativos; no modifican datos del usuario ni salidas remotas. Las pruebas del instalador deben usar InstallerSettingsKey y AppId sintéticos para no cambiar el idioma de una instalación real. Las notas legales de terceros conservan su texto oficial.
+
+## Avisos npm en los paquetes
+
+El empaquetador ejecuta [collect-frontend-notices.mjs](../scripts/collect-frontend-notices.mjs) y conserva avisos originales e inventario en `ThirdParty/npm`. Incluye dependencias de producción instaladas según el lock; no copia el árbol de dependencias ni configuraciones locales. Si una dependencia no trae avisos, exige una copia revisada para su nombre y versión en [assets/licenses/npm](../assets/licenses/npm), con procedencia en `sources.json`. Actualizar dependencias puede requerir nuevos avisos antes de empaquetar. El proceso falla si falta un aviso; no sustituirlo por la licencia del proyecto. Las pruebas del recolector usan paquetes sintéticos.

@@ -280,7 +280,7 @@ export function ServerFormDialog({ open, onOpenChange, serverToEdit, groups, onS
                             className="min-h-[100px] font-mono text-xs bg-[#2d2d2d] border-[#444] text-white placeholder:text-gray-500"
                             value={formData.ssh_key_path}
                             onChange={(e) => setFormData({ ...formData, ssh_key_path: e.target.value })}
-                            placeholder="-----BEGIN OPENSSH PRIVATE KEY-----&#10;..."
+                            placeholder={uiText('Pegá el contenido de tu clave privada SSH')}
                         />
                         <p className="text-xs text-gray-500">{uiText("Proporciona contraseña SSH o ruta de clave privada (prioridad a clave).")}</p>
                     </div>}

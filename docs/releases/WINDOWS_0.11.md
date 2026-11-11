@@ -1,5 +1,7 @@
 # Windows 0.11
 
+- Distribución con inventario y avisos originales de dependencias npm, además de NuGet y .NET. El empaquetado rechaza dependencias de producción sin avisos revisados. Los ejemplos de campos de clave privada no contienen cabeceras PEM para evitar falsos positivos del escáner de los paquetes.
+
 - Selección explícita de español e inglés en el instalador; la elección se guarda para la interfaz y los diálogos nativos. Catálogos compartidos para controles, permisos, copias, ajustes y mensajes con parámetros; no se traduce la salida del servidor ni el contenido del usuario.
 - Actualización de dependencias de interfaz para corregir avisos conocidos. Revisión automática de secretos y dependencias en CI, además de las pruebas de distribución. La interfaz web independiente migra a Next.js 16/React 19 y requiere Node.js 22.
 - El backend independiente sustituye python-jose por PyJWT y valida sujeto y caducidad obligatorios. Las sesiones antiguas sin esos campos deberán iniciar sesión nuevamente. El almacén y las credenciales locales de Windows no cambian.

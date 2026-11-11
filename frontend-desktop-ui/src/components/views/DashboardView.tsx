@@ -631,7 +631,7 @@ export function DashboardView() {
                                 className="min-h-[100px] font-mono text-xs"
                                 value={serverForm.ssh_key_path}
                                 onChange={(e) => setServerForm({ ...serverForm, ssh_key_path: e.target.value })}
-                                placeholder="-----BEGIN OPENSSH PRIVATE KEY-----&#10;..."
+                                placeholder={uiText('Pegá el contenido de tu clave privada SSH')}
                             />
                             <p className="text-xs text-muted-foreground mt-1">{uiText("Proporciona contraseña SSH o ruta de clave privada (no ambas)")}</p>
                         </div>
@@ -730,7 +730,7 @@ export function DashboardView() {
                                 className="min-h-[100px] font-mono text-xs"
                                 value={serverForm.ssh_key_path}
                                 onChange={(e) => setServerForm({ ...serverForm, ssh_key_path: e.target.value })}
-                                placeholder="-----BEGIN OPENSSH PRIVATE KEY-----&#10;..."
+                                placeholder={uiText('Pegá el contenido de tu clave privada SSH')}
                             />
                             <p className="text-xs text-muted-foreground mt-1">{uiText("Proporciona contraseña SSH o ruta de clave privada (no ambas)")}</p>
                         </div>

@@ -68,4 +68,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: docker compose --env-file .env.prod.template -f docker-compose.prod.yml config --quiet
+      - name: Validar configuración con una plantilla sin secretos reales
+        run: |
+          cp .env.prod.template .env.prod
+          docker compose --env-file .env.prod -f docker-compose.prod.yml config --quiet

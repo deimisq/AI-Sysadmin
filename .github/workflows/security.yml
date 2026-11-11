@@ -58,5 +58,5 @@ jobs:
       - name: Revisar dependencias directas y transitivas
         shell: pwsh
         run: |
-          dotnet restore apps/windows.Tests/AiSysadmin.Tests.csproj -p:NuGetAudit=true -p:NuGetAuditMode=all -p:WarningsAsErrors="NU1900;NU1901;NU1902;NU1903;NU1904;NU1905" --force
+          dotnet restore apps/windows.Tests/AiSysadmin.Tests.csproj -p:NuGetAudit=true -p:NuGetAuditMode=all -p:WarningsAsErrors=NU1900%3BNU1901%3BNU1902%3BNU1903%3BNU1904%3BNU1905 --force
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

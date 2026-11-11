@@ -36,6 +36,8 @@ Se preparó la [solicitud de purga](GITHUB_PURGA_SOLICITUD.md). No se ha enviado
 
 El inventario remoto contiene 35 releases y 96 ejecuciones de Actions al iniciar esta revisión. Se descargaron los 35 ZIP portables y se verificaron tamaños y SHA256 contra sus metadatos de GitHub. En sus 1.145 archivos de texto no aparecieron los patrones buscados de claves Google, tokens GitHub o bloques completos de claves privadas; tampoco nombres de archivos de almacén local contemplados por el control. El ZIP `0.11.39` también pasó revisión con Gitleaks salvo una cabecera PEM de ejemplo, sin una clave completa, retirada de los formularios nuevos. Sus avisos npm faltaban y se incorporaron al empaquetado siguiente. Esto no es una auditoría de todos los binarios, instaladores o logs. Los assets antiguos no se modificaron ni sobrescribieron.
 
+Se consultaron los logs de las 96 ejecuciones inventariadas. Se pudieron descargar y revisar 91, con 1.356 archivos de texto sin coincidencias de los mismos patrones. Cinco descargas siguieron sin estar disponibles tras reintentar; no se certifica su contenido. Los controles no imprimieron valores de credenciales. El workflow de secretos y dependencias del commit `60547c7` finalizó correctamente; los de compatibilidad y distribución seguían ejecutándose al registrar este estado.
+
 ## Pendientes antes de cambiar la visibilidad
 
 1. Iniciar sesión en GitHub Support, enviar la solicitud privada y obtener respuesta. Comprobar después que los objetos sensibles ya no son recuperables. No publicar enlaces a objetos antiguos en issues abiertos.

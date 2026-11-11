@@ -12,8 +12,11 @@ export function HelpView() {
         <section className="space-y-3 rounded-lg border p-4">
             <h2 className="text-xl font-semibold">{uiText("Apoyar el proyecto")}</h2>
             <p>{uiText("AI Sysadmin es gratuito y su código original se distribuye bajo Apache 2.0. Podés usarlo y recibir actualizaciones sin donar. Las dependencias conservan sus propias licencias.")}</p>
-            <p>{uiText("Si te resulta útil, visitá Sentra IT para contactar al mantenimiento y consultar cómo apoyar su desarrollo. Por ahora no hay una cuenta de cobro integrada en la app.")}</p>
-            <button className="text-blue-400 underline" onClick={() => { void sendCommand('open_sentrait').catch(() => setSupportError(uiText('Abrí https://sentrait.com.uy/ en tu navegador.'))); }}>{uiText("Visitar Sentra IT · sitio oficial")}</button>
+            <p>{uiText("Podés apoyar su desarrollo mediante GitHub Sponsors de @deimisq. Los aportes son voluntarios y se gestionan en GitHub; la app no solicita datos de pago.")}</p>
+            <div className="flex flex-wrap items-center gap-4">
+                <button className="inline-flex items-center gap-2 rounded-md bg-pink-600 px-4 py-2 font-medium text-white hover:bg-pink-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-400" onClick={() => { setSupportError(''); void sendCommand('open_sponsors').catch(() => setSupportError(uiText('Abrí https://github.com/sponsors/deimisq en tu navegador.'))); }}><span aria-hidden="true">♥</span>{uiText("Apoyar en GitHub Sponsors")}</button>
+                <button className="text-blue-400 underline" onClick={() => { setSupportError(''); void sendCommand('open_sentrait').catch(() => setSupportError(uiText('Abrí https://sentrait.com.uy/ en tu navegador.'))); }}>{uiText("Visitar Sentra IT · sitio oficial")}</button>
+            </div>
             {supportError && <p role="status">{supportError}</p>}
         </section>
         <section className="space-y-3 text-sm">

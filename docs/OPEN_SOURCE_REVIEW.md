@@ -6,7 +6,7 @@ Revisión: 11 de noviembre de 2026. Alcance: **deimisq/AI-Sysadmin**, cliente Wi
 
 El código propio adopta Apache License 2.0 mediante [LICENSE](../LICENSE) y [NOTICE](../NOTICE), conservando licencias y derechos de terceros. Permite uso gratuito, contribuciones y aportes voluntarios, pero también derivados comerciales y cerrados. No concede derechos de marca ni obliga a conservar un botón de donaciones en los derivados. Véase el [texto oficial](https://www.apache.org/licenses/LICENSE-2.0.html).
 
-La app, README y financiación de GitHub apuntan al [sitio oficial de Sentra IT](https://sentrait.com.uy/). El uso es gratuito. No se facilitó un destino de cobro específico: no se inventaron cuentas ni se habilitaron pagos. La presentación web requiere publicación editorial y queda fuera de las modificaciones de este repositorio.
+La app, README y financiación de GitHub apuntan a [GitHub Sponsors de @deimisq](https://github.com/sponsors/deimisq), destino facilitado por el usuario. El uso es gratuito y los aportes son voluntarios; los pagos se gestionan fuera de la app. Se conserva el enlace al [sitio oficial de Sentra IT](https://sentrait.com.uy/). No se verificó un pago ni la disponibilidad de todos los métodos de aporte. La presentación web requiere publicación editorial y queda fuera de las modificaciones de este repositorio.
 
 ## Licencias y distribución
 

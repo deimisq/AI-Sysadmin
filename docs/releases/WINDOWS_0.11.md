@@ -1,5 +1,7 @@
 # Windows 0.11
 
+- Ayuda incorpora un acceso a GitHub Sponsors de @deimisq en el navegador predeterminado, con textos en español e inglés. Los aportes son voluntarios y no se solicitan datos de pago en la app.
+
 - Distribución con inventario y avisos originales de dependencias npm, además de NuGet y .NET. El empaquetado rechaza dependencias de producción sin avisos revisados. Los ejemplos de campos de clave privada no contienen cabeceras PEM para evitar falsos positivos del escáner de los paquetes.
 
 - Selección explícita de español e inglés en el instalador; la elección se guarda para la interfaz y los diálogos nativos. Catálogos compartidos para controles, permisos, copias, ajustes y mensajes con parámetros; no se traduce la salida del servidor ni el contenido del usuario.

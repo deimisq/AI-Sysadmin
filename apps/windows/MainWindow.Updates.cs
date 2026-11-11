@@ -17,8 +17,9 @@ public partial class MainWindow
     }
     private async Task<object> HandleUpdateAsync(string type,JsonElement payload)
     {
-        if(type=="OPEN_SENTRAIT") {
-            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(DesktopShellPolicy.OfficialWebsite) { UseShellExecute=true });
+        if(type is "OPEN_SENTRAIT" or "OPEN_SPONSORS") {
+            var destination = type == "OPEN_SPONSORS" ? DesktopShellPolicy.SponsorsWebsite : DesktopShellPolicy.OfficialWebsite;
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(destination) { UseShellExecute=true });
             return true;
         }
         if(type=="APP_INFO") return new {

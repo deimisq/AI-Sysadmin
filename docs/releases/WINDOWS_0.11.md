@@ -1,5 +1,7 @@
 # Windows 0.11
 
+- Mantenimiento de seguridad del repositorio: retirada de secretos históricos y configuraciones reales de entorno; no modifica credenciales guardadas en la app ni revoca claves de proveedores. Los clones antiguos requieren reemplazo tras la reescritura.
+
 - Código original bajo Apache 2.0; distribución acompañada de LICENSE, NOTICE y avisos de terceros. Ayuda incorpora el acceso al sitio oficial de Sentra IT para apoyo voluntario, sin pagos integrados ni funciones condicionadas a donar. La publicación pública del repositorio sigue pendiente de sanear secretos históricos.
 
 - Versiones cortas `0.11.N`, con `N` igual al número de ejecución del workflow Windows. Rama y commit se muestran por separado. La versión base de desarrollo es `0.11.0`.

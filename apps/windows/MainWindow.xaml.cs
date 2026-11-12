@@ -63,6 +63,7 @@ namespace AiSysadminDesktop
             SourceInitialized += (_,_) => { WindowsIdentity.Apply(this); ApplyNativeDarkCaption(); };
             _startupTimeout.Tick += (_,_) => ShowStartupError("UI_START_TIMEOUT");
             InitializeRdpControl();
+            RestoreWindowPresentation();
             
             // Iniciar WebView
             _ = InitializeAsync();

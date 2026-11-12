@@ -36,6 +36,7 @@ El cliente vigente usa .NET 10, WPF, WebView2 y React/TypeScript. Las conexiones
 - En RDP, asesoramiento con texto o una captura revisada y autorizada para cada consulta. No hay vigilancia continua ni control del escritorio por la IA.
 - Exportación e importación de conexiones mediante copia cifrada con contraseña. No incluye claves de IA, tokens GitHub ni conversaciones.
 - Actualización integrada con aprobaciones separadas para descargar, instalar y reiniciar la app.
+- Recuerda el tamaño y estado maximizado de la ventana, las carpetas expandidas o contraídas y los paneles visibles al volver a abrir.
 
 La línea Windows es **0.11.N**: CI asigna N según el número de ejecución. El commit se muestra por separado en Ayuda. Los componentes heredados tienen versiones independientes.
 

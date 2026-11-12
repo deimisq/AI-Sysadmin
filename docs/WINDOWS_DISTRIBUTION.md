@@ -102,6 +102,12 @@ Referencias: [soporte de .NET](https://dotnet.microsoft.com/en-us/platform/suppo
 
 El instalador muestra el selector español/inglés y guarda es/en en HKCU bajo Software\Sentrait\AiSysadminAgent. El cliente y su ventana de preferencias reciben ese valor antes de cargar React. Los catálogos traducen textos propios y diálogos nativos; no modifican datos del usuario ni salidas remotas. Las pruebas del instalador deben usar InstallerSettingsKey y AppId sintéticos para no cambiar el idioma de una instalación real. Las notas legales de terceros conservan su texto oficial.
 
-## Avisos npm en los paquetes
+## Preferencias de presentación
+
+La ventana principal guarda su tamaño normal y estado maximizado en `%LOCALAPPDATA%/AiSysadmin/window-presentation.v1.json`. Al reabrir se centra y ajusta al área de trabajo de la pantalla, respetando el tamaño mínimo de la interfaz. Cerrar minimizada conserva el último estado normal o maximizado. Un archivo ausente o inválido usa los valores iniciales; un fallo de guardado no bloquea el cierre.
+
+La visibilidad del explorador, acompañante IA y panel inferior, y la expansión de carpetas y grupos se guardan localmente en el perfil WebView2 mediante `workspace-presentation:v1`. Las claves del árbol distinguen usuario/espacio y tipo de nodo; buscar solo expande temporalmente. Son preferencias visuales del equipo, sin credenciales ni sesiones, y no se incluyen en la copia de conexiones.
+
+## Avisos npm: procedimiento
 
 El empaquetador ejecuta [collect-frontend-notices.mjs](../scripts/collect-frontend-notices.mjs) y conserva avisos originales e inventario en `ThirdParty/npm`. Incluye dependencias de producción instaladas según el lock; no copia el árbol de dependencias ni configuraciones locales. Si una dependencia no trae avisos, exige una copia revisada para su nombre y versión en [assets/licenses/npm](../assets/licenses/npm), con procedencia en `sources.json`. Actualizar dependencias puede requerir nuevos avisos antes de empaquetar. El proceso falla si falta un aviso; no sustituirlo por la licencia del proyecto. Las pruebas del recolector usan paquetes sintéticos.

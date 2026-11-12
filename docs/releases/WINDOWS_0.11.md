@@ -1,5 +1,7 @@
 # Windows 0.11
 
+- Persistencia de presentación: tamaño normal y estado maximizado de la ventana principal, visibilidad del explorador, acompañante IA y panel inferior, y expansión de carpetas, subcarpetas y grupos por usuario/espacio de trabajo. La búsqueda no altera la expansión guardada. No se restauran sesiones remotas ni se guardan credenciales en estas preferencias.
+
 - Ayuda incorpora un acceso a GitHub Sponsors de @deimisq en el navegador predeterminado, con textos en español e inglés. Los aportes son voluntarios y no se solicitan datos de pago en la app.
 
 - Distribución con inventario y avisos originales de dependencias npm, además de NuGet y .NET. El empaquetado rechaza dependencias de producción sin avisos revisados. Los ejemplos de campos de clave privada no contienen cabeceras PEM para evitar falsos positivos del escáner de los paquetes.

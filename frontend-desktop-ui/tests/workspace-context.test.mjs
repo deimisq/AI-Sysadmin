@@ -6,9 +6,49 @@ import ts from 'typescript';
 globalThis.__workspaceCreate=create;
 const source=readFileSync(new URL('../src/stores/workspaceStore.ts',import.meta.url),'utf8').replace("import { create } from 'zustand';",'const create = globalThis.__workspaceCreate;').replace("import { hasNativePreferences, sendCommand } from '../lib/bridge';", 'const hasNativePreferences = () => !!globalThis.__nativePreferences; const sendCommand = async (command, payload) => { globalThis.__nativeRequest = {command,payload}; };');
 const code=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.ESNext}}).outputText;
-const {useWorkspaceStore:store}=await import(`data:text/javascript;base64,${Buffer.from(code).toString('base64')}`);
+const {useWorkspaceStore:store,readWorkspacePresentation}=await import(`data:text/javascript;base64,${Buffer.from(code).toString('base64')}`);
 beforeEach(()=>{ globalThis.__nativePreferences=false; delete globalThis.__nativeRequest; store.setState({nativeSessions:{}, tabs:[], activeTabId:null, sidebarVisible:true, explorerAction:null, activeOverlay:null}); });
 after(()=>{delete globalThis.__workspaceCreate;delete globalThis.__nativePreferences;delete globalThis.__nativeRequest;});
+
+test('restores panel visibility and scoped folder expansion in a fresh workspace without restoring sessions', async () => {
+    const previous = globalThis.localStorage;
+    const values = new Map();
+    globalThis.localStorage = { getItem: key => values.get(key) ?? null, setItem: (key,value) => values.set(key,value) };
+    try {
+        store.setState({sidebarVisible:false, aiPanelVisible:false, toolsVisible:true, explorerExpanded:{}});
+        store.getState().setExplorerExpanded('device:1:folder:a',false);
+        store.getState().setExplorerExpanded('device:1:folder:child',true);
+        store.getState().setExplorerExpanded('enterprise:2:group:a',true);
+        store.getState().openTab({id:'sensitive-session',type:'terminal',title:'private-target',server:{password:'synthetic-password'}});
+        store.getState().toggleTools();
+        const raw = values.get('workspace-presentation:v1');
+        assert.equal(raw.includes('synthetic-password'),false);
+        assert.equal(raw.includes('sensitive-session'),false);
+        const {useWorkspaceStore:reopened} = await import(`data:text/javascript;base64,${Buffer.from(code).toString('base64')}#reopened`);
+        const state = reopened.getState();
+        assert.equal(state.sidebarVisible,false);
+        assert.equal(state.aiPanelVisible,false);
+        assert.equal(state.toolsVisible,false);
+        assert.equal(state.explorerExpanded['device:1:folder:a'],false);
+        assert.equal(state.explorerExpanded['device:1:folder:child'],true);
+        assert.equal(state.explorerExpanded['enterprise:2:group:a'],true);
+        assert.deepEqual(state.tabs,[]);
+        assert.deepEqual(state.nativeSessions,{});
+    } finally {globalThis.localStorage=previous;}
+});
+
+test('invalid or unavailable presentation storage falls back safely and never breaks toggles', () => {
+    const previous = globalThis.localStorage;
+    try {
+        globalThis.localStorage = {getItem:()=> '{broken'};
+        assert.deepEqual(readWorkspacePresentation(),{sidebarVisible:true,aiPanelVisible:true,toolsVisible:false,explorerExpanded:{}});
+        globalThis.localStorage = {getItem:()=> JSON.stringify({sidebarVisible:'false',aiPanelVisible:false,toolsVisible:null,explorerExpanded:{a:false,b:'true'}})};
+        assert.deepEqual(readWorkspacePresentation(),{sidebarVisible:true,aiPanelVisible:false,toolsVisible:false,explorerExpanded:{a:false}});
+        globalThis.localStorage = {getItem:()=>{throw new Error('blocked');},setItem:()=>{throw new Error('quota');}};
+        assert.equal(readWorkspacePresentation().sidebarVisible,true);
+        assert.doesNotThrow(()=>store.getState().toggleSidebar());
+    } finally {globalThis.localStorage=previous;}
+});
 test('cleanup from an older terminal cannot remove a replacement session',()=>{
     store.getState().registerNativeSession(1,'old');store.getState().registerNativeSession(1,'new');
     store.getState().clearNativeSession(1,'old');

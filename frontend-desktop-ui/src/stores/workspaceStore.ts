@@ -6,6 +6,22 @@ import { type PreferencesSection } from '../lib/preferences';
 export type TabType = 'terminal' | 'rdp';
 export type OverlayType = 'dashboard' | 'catalog' | 'settings' | 'profile' | 'admin' | 'documentation' | 'reports' | 'help' | null;
 
+const layoutStorageKey = 'workspace-presentation:v1';
+export function readWorkspacePresentation() {
+    const defaults = { sidebarVisible: true, aiPanelVisible: true, toolsVisible: false, explorerExpanded: {} as Record<string, boolean> };
+    try {
+        const value = JSON.parse(localStorage.getItem(layoutStorageKey) || 'null');
+        if (!value || typeof value !== 'object') return defaults;
+        return {
+            sidebarVisible: typeof value.sidebarVisible === 'boolean' ? value.sidebarVisible : defaults.sidebarVisible,
+            aiPanelVisible: typeof value.aiPanelVisible === 'boolean' ? value.aiPanelVisible : defaults.aiPanelVisible,
+            toolsVisible: typeof value.toolsVisible === 'boolean' ? value.toolsVisible : defaults.toolsVisible,
+            explorerExpanded: Object.fromEntries(Object.entries(value.explorerExpanded && typeof value.explorerExpanded === 'object' && !Array.isArray(value.explorerExpanded) ? value.explorerExpanded : {})
+                .filter(([key, expanded]) => key.length <= 512 && typeof expanded === 'boolean').slice(-10000)) as Record<string, boolean>,
+        };
+    } catch { return defaults; }
+}
+
 export interface Tab {
     id: string;
     type: TabType;
@@ -25,6 +41,8 @@ interface WorkspaceState {
     openPreferences: (section?: PreferencesSection) => void;
     nativeSessions: Record<number, string>;
     toolsVisible: boolean;
+    explorerExpanded: Record<string, boolean>;
+    setExplorerExpanded: (key: string, expanded: boolean) => void;
     toggleTools: () => void;
     explorerAction: 'add-server' | 'add-folder' | 'search' | null;
     requestExplorerAction: (action: 'add-server' | 'add-folder' | 'search' | null) => void;
@@ -43,8 +61,7 @@ interface WorkspaceState {
 export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
     tabs: [],
     activeTabId: null,
-    sidebarVisible: true,
-    aiPanelVisible: true,
+    ...readWorkspacePresentation(),
     activeOverlay: null,
     preferencesSection: 'general',
     openPreferences: (section = 'general') => {
@@ -55,7 +72,7 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
         } else set({ activeOverlay: 'settings' });
     },
     nativeSessions: {},
-    toolsVisible: false,
+    setExplorerExpanded: (key, expanded) => set(state => ({ explorerExpanded: { ...state.explorerExpanded, [key]: expanded } })),
     toggleTools: () => set(state => ({ toolsVisible: !state.toolsVisible })),
     explorerAction: null,
     requestExplorerAction: action => set(action ? { explorerAction: action, sidebarVisible: true, activeOverlay: null } : { explorerAction: null }),
@@ -110,3 +127,13 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
         set({ activeOverlay: overlay });
     },
 }));
+
+// Solo preferencias visuales: nunca persistir pestañas, servidores o sesiones.
+useWorkspaceStore.subscribe((state, previous) => {
+    if (state.sidebarVisible === previous.sidebarVisible && state.aiPanelVisible === previous.aiPanelVisible
+        && state.toolsVisible === previous.toolsVisible && state.explorerExpanded === previous.explorerExpanded) return;
+    try {
+        localStorage.setItem(layoutStorageKey, JSON.stringify({ sidebarVisible: state.sidebarVisible, aiPanelVisible: state.aiPanelVisible,
+            toolsVisible: state.toolsVisible, explorerExpanded: state.explorerExpanded }));
+    } catch { /* Almacenamiento bloqueado o lleno: conservar el funcionamiento de la interfaz. */ }
+});

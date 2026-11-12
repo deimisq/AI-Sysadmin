@@ -226,7 +226,7 @@ export function ServerExplorer() {
         const folderServers = (matches ? servers : filteredServers).filter(s => layout.assignments[s.id] === folder.id);
         const children = layout.folders.filter(f => f.parentId === folder.id).map(f => renderFolder(f, matches));
         if (searchTerm && !matches && !folderServers.length && !children.some(Boolean)) return null;
-        return <CollapsibleGroup key={folder.id} title={folder.name} count={folderServers.length} defaultOpen={true} forceOpen={!!searchTerm}
+        return <CollapsibleGroup key={folder.id} expansionKey={`${layoutKey}:folder:${folder.id}`} title={folder.name} count={folderServers.length} defaultOpen={true} forceOpen={!!searchTerm}
             actions={<DropdownMenu><DropdownMenuTrigger aria-label={`Opciones de ${folder.name}`} className="p-1"><MoreVertical className="h-3 w-3" /></DropdownMenuTrigger><DropdownMenuContent>
                 <DropdownMenuItem onClick={() => { setCreationFolderId(folder.id); setEditingServer(null); setFormOpen(true); }}>{uiText("Nueva conexión en esta carpeta")}</DropdownMenuItem>
                 <DropdownMenuItem onClick={() => addFolder(folder.id)}>{uiText("Crear subcarpeta")}</DropdownMenuItem>
@@ -304,6 +304,7 @@ export function ServerExplorer() {
                     return (
                         <CollapsibleGroup
                             key={group.id}
+                            expansionKey={`${layoutKey}:group:${group.id}`}
                             title={group.name}
                             count={groupServersList.length}
                             defaultOpen={true}
@@ -317,6 +318,7 @@ export function ServerExplorer() {
                 {/* Render Ungrouped */}
                 {groupedServers['ungrouped'] && groupedServers['ungrouped'].length > 0 && (
                     <CollapsibleGroup
+                        expansionKey={`${layoutKey}:ungrouped`}
                         title="Sin Agrupar"
                         count={groupedServers['ungrouped'].length}
                         defaultOpen={true}
@@ -402,8 +404,9 @@ export function ServerExplorer() {
 
 // Sub-components
 
-function CollapsibleGroup({ title, count, children, defaultOpen = false, forceOpen = false, actions }: { title: string, count: number, children: React.ReactNode, defaultOpen?: boolean, forceOpen?: boolean, actions?: React.ReactNode }) {
-    const [isOpen, setIsOpen] = useState(defaultOpen);
+function CollapsibleGroup({ title, count, children, expansionKey, defaultOpen = false, forceOpen = false, actions }: { title: string, count: number, children: React.ReactNode, expansionKey: string, defaultOpen?: boolean, forceOpen?: boolean, actions?: React.ReactNode }) {
+    const isOpen = useWorkspaceStore(state => state.explorerExpanded[expansionKey] ?? defaultOpen);
+    const setExpanded = useWorkspaceStore(state => state.setExplorerExpanded);
     const expanded = forceOpen || isOpen;
 
     return (
@@ -411,7 +414,7 @@ function CollapsibleGroup({ title, count, children, defaultOpen = false, forceOp
             <div className="flex items-center">
             <button type="button" aria-expanded={expanded}
                 className="flex flex-1 min-w-0 items-center gap-1 px-2 py-1 hover:bg-[#2a2d2e] text-[#ccc] group text-left"
-                onClick={() => setIsOpen(!isOpen)}
+                onClick={() => { if (!forceOpen) setExpanded(expansionKey, !isOpen); }}
             >
                 {expanded ? <ChevronDown className="h-3 w-3 text-gray-400 group-hover:text-white" /> : <ChevronRight className="h-3 w-3 text-gray-400 group-hover:text-white" />}
                 <span className="text-xs font-semibold uppercase tracking-tight flex-1 truncate">{title}</span>

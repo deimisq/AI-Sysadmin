@@ -14,6 +14,7 @@ public partial class MainWindow
             MessageBox.Show(this,UserLanguage.Text("La actualización se está instalando. Esperá a que termine antes de cerrar la aplicación."),UserLanguage.Text("Actualización en curso"),MessageBoxButton.OK,MessageBoxImage.Information);
         }
         base.OnClosing(e);
+        if (!e.Cancel) SaveWindowPresentation();
     }
     private async Task<object> HandleUpdateAsync(string type,JsonElement payload)
     {

@@ -43,6 +43,13 @@ export function WorkspaceArea() {
                         <div
                             key={tab.id}
                             role="presentation"
+                            onMouseDown={event => { if (event.button === 1) event.preventDefault(); }}
+                            onAuxClick={event => {
+                                if (event.button !== 1) return;
+                                event.preventDefault();
+                                event.stopPropagation();
+                                closeTab(tab.id);
+                            }}
                             data-active={isActive}
                             className={`
                                 group flex items-center gap-0.5 pl-0.5 pr-1 text-sm border-r border-[#30333b] min-w-[80px] max-w-[160px] h-8 select-none shrink-0

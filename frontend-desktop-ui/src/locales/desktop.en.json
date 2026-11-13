@@ -1,4 +1,6 @@
 {
+  "No se pudo copiar la selección al portapapeles.": "Could not copy the selection to the clipboard.",
+  "No se pudo leer el portapapeles. Usa Ctrl+V para pegar.": "Could not read the clipboard. Use Ctrl+V to paste.",
   "Buscar conexión por nombre, dirección o acción…": "Search connections by name, address or action…",
   "No se encontraron conexiones ni acciones.": "No connections or actions found.",
   "Conexiones": "Connections",

@@ -46,6 +46,8 @@ Estas instrucciones aplican a todo el repositorio. Mantener este documento actua
 
 ## Terminal y acompañante IA
 
+- Las pestañas de conexiones admiten cierre con el botón central sin activarlas primero. En SSH, seleccionar texto lo copia y el clic derecho pega mediante la API de xterm para respetar el modo de pegado del servidor. Leer el portapapeles solo tras una acción del usuario; retirar los eventos al cerrar y no pegar resultados pendientes en terminales cerradas u ocultas.
+
 - Los comandos autorizados desde el chat se escriben en la sesión SSH abierta, conservando el estado de esa terminal. No envolverlos con `eval`, `printf` ni marcadores visibles para capturar el resultado.
 - Detectar el retorno del prompt considerando paquetes fragmentados, UTF-8, secuencias ANSI/OSC y movimientos del cursor. Volver al prompt no equivale a un código de salida 0; informar cuando el código no está disponible.
 - Al terminar o interrumpirse un comando, conservar la salida y continuar el análisis en el chat. No interrumpir automáticamente comandos largos por tiempo ni por volumen de salida. No reintentar acciones de resultado incierto.

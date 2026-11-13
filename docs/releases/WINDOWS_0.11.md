@@ -1,5 +1,7 @@
 # Windows 0.11
 
+- Cierre de pestañas de conexión con el botón central del ratón, sin activar primero las pestañas inactivas. La terminal SSH copia el texto seleccionado y pega el portapapeles con clic derecho mediante xterm, respetando el modo de pegado del servidor. Los fallos de acceso al portapapeles se notifican y los eventos se retiran al cerrar la terminal.
+
 - Unificación del español neutro en ayuda integrada, interfaz, mensajes de Windows, instalador y documentación. Catálogos de traducción sincronizados y pauta permanente de redacción; el acompañante recibe la indicación explícita de evitar voseo y regionalismos.
 
 - Ayuda integrada reorganizada en 13 guías por tareas, con contenido completo en español e inglés, búsqueda sin distinción de tildes, estados sin resultados y guías relacionadas. Se corrigen instrucciones heredadas y se documentan los límites reales de SSH/RDP, proveedores y modelos, permisos, contexto, limpieza del chat, respaldos, preferencias y actualizaciones. Se distinguen funciones locales de las que requieren backend empresarial.

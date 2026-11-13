@@ -4,6 +4,9 @@ import { FitAddon } from '@xterm/addon-fit';
 import { isTauri, isWebView2, sendCommand } from '../../lib/bridge';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 import '@xterm/xterm/css/xterm.css';
+import { attachTerminalClipboard } from '../../lib/terminal-clipboard';
+import { uiText } from '../../lib/ui-language';
+import { toast } from 'sonner';
 
 interface InteractiveTerminalProps {
     sessionId: string;
@@ -19,6 +22,7 @@ export function InteractiveTerminal({ sessionId, onClose: _onClose }: Interactiv
     const unlistenRef = useRef<UnlistenFn | null>(null);
     const wv2HandlerRef = useRef<((event: any) => void) | null>(null);
     const resizeObserverRef = useRef<ResizeObserver | null>(null);
+    const clipboardCleanupRef = useRef<(() => void) | null>(null);
     const isMounted = useRef(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -135,6 +139,13 @@ export function InteractiveTerminal({ sessionId, onClose: _onClose }: Interactiv
                     }
                 });
 
+                clipboardCleanupRef.current = attachTerminalClipboard(term, terminalRef.current!, {
+                    readText: () => navigator.clipboard.readText(),
+                    writeText: text => navigator.clipboard.writeText(text),
+                }, operation => toast.error(uiText(operation === 'copy'
+                    ? 'No se pudo copiar la selección al portapapeles.'
+                    : 'No se pudo leer el portapapeles. Usa Ctrl+V para pegar.'), { id: 'terminal-clipboard' }));
+
                 // Handle resize with ResizeObserver for better accuracy
                 const resizeObserver = new ResizeObserver(() => {
                     if (!fitAddonRef.current || !ptyIdRef.current || !isMounted.current) return;
@@ -173,6 +184,8 @@ export function InteractiveTerminal({ sessionId, onClose: _onClose }: Interactiv
         return () => {
             isMounted.current = false;
             clearTimeout(initializationTimer);
+            clipboardCleanupRef.current?.();
+            clipboardCleanupRef.current = null;
             if (unlistenRef.current) {
                 unlistenRef.current();
                 unlistenRef.current = null;

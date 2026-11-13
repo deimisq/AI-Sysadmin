@@ -21,6 +21,8 @@ La ayuda distingue datos declarados de evidencia comprobada, capturas RDP autori
 
 ## Mantenimiento
 
+Las guías de terminal y espacio de trabajo incluyen copia al seleccionar, pegado con clic derecho en SSH y cierre de pestañas con el botón central. El portapapeles no se lee en segundo plano; el pegado requiere una acción del usuario y no se completa si la terminal se cierra o se oculta mientras se obtiene el texto.
+
 Usar español neutro, sin voseo ni regionalismos, en los artículos y sus controles. Conservar el contenido completo en inglés y no alterar comandos, identificadores técnicos ni contenido del usuario.
 
 Al cambiar una función, revisar su artículo en ambos idiomas, los nombres visibles de los controles y los enlaces relacionados. Mantener pasos, resultados y límites concretos; no insertar instrucciones de compilación en las guías del usuario instalado. No fijar una «última versión» que caduque con cada compilación.

@@ -36,6 +36,8 @@ Selecciona la pestaña correcta y revisa el destino y las opciones de contexto d
 Crea una conexión SSH con dirección, puerto, usuario y autenticación. No es obligatorio usar root: elige los permisos que necesites. Si utilizas un archivo de clave privada, debe seguir disponible en su ruta.
 ## Trabajar en la terminal
 La sesión conserva su estado, incluido el directorio de trabajo. Puedes ejecutar comandos manualmente y preguntar después por su salida. Cerrar la pestaña termina la sesión; las preferencias de presentación no vuelven a conectar equipos.
+
+Seleccionar texto en la terminal SSH lo copia al portapapeles. El clic derecho pega su contenido en esa misma terminal y respeta el modo de pegado del servidor. El texto puede incluir saltos de línea; revísalo antes de pegarlo. También puedes usar Ctrl+V.
 Los comandos autorizados desde el chat se escriben en esa terminal, no en una conexión separada. Evita escribir otro mientras se ejecuta uno del agente. Atiende las preguntas interactivas en la terminal.
 Volver al prompt no demuestra un código de salida 0. Si el código no está disponible, el agente debe aclararlo.
 ## Conexiones rápidas
@@ -52,6 +54,8 @@ Usa **Archivo → Nueva carpeta…** para organizar equipos. Buscar en el árbol
 ## Ajustar el espacio de trabajo
 El menú **Ver** permite alternar explorador y acompañante IA. Hay además un panel de herramientas opcional con sesiones, tareas IA y transferencias; puede estar oculto.
 Usa **Ctrl+Alt+B** para el explorador, **Ctrl+Alt+I** para IA y **Ctrl+Shift+P** para buscar acciones.
+
+Para cerrar una pestaña de conexión SSH o RDP, pulsa su botón de cierre o haz clic con el botón central sobre ella. Cerrar una pestaña inactiva no cambia la sesión seleccionada.
 ## Qué se recuerda
 Se guardan tamaño normal y estado maximizado de la ventana, paneles visibles y expansión de carpetas y grupos por usuario y espacio. No se restauran sesiones remotas. El tamaño se adapta a límites compatibles con la pantalla.`, ['start', 'backup', 'updates']),
         article('files', 'Conexiones', 'Transferir archivos por SFTP', 'Sube o descarga archivos de una conexión SSH.', `## Abrir archivos remotos
@@ -157,6 +161,8 @@ Select the correct tab and check the companion's destination and context options
 Create an SSH connection with address, port, username and authentication. Root is not required: choose the permissions needed. File-based private keys must remain accessible at their path.
 ## Work in the terminal
 The session preserves state, including its working directory. Run commands manually and ask about their output later. Closing the tab ends the session; presentation preferences do not reconnect computers.
+
+Selecting text in the SSH terminal copies it to the clipboard. Right-click pastes into that terminal and respects the server's paste mode. Text may contain newlines; review it before pasting. You can also use Ctrl+V.
 Authorized chat commands are typed into that terminal, not a separate connection. Avoid typing another while an agent command runs. Answer interactive prompts in the terminal.
 A prompt return does not prove exit code 0. The agent should state when the code is unavailable.
 ## Quick connections
@@ -173,6 +179,8 @@ Use **File → New folder…** to organize computers. Tree search does not repla
 ## Adjust the workspace
 The **View** menu toggles explorer and AI companion. An optional tools panel contains sessions, AI tasks and transfers and may be hidden.
 Use **Ctrl+Alt+B** for explorer, **Ctrl+Alt+I** for AI and **Ctrl+Shift+P** to search actions.
+
+Close an SSH or RDP connection tab with its close button or a middle click anywhere on the tab. Closing an inactive tab leaves the selected session unchanged.
 ## Remembered preferences
 Normal window size, maximized state, panel visibility and folder/group expansion are saved per user and workspace. Remote sessions are not restored. Window size is constrained to compatible screen limits.`, ['start', 'backup', 'updates']),
         article('files', 'Connections', 'SFTP file transfers', 'Upload and download through an SSH connection.', `## Open remote files

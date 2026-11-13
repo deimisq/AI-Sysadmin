@@ -13,7 +13,7 @@ public sealed partial class LocalConnectionStore
         if (id >= 0 || !Guid.TryParse(session, out _) || string.IsNullOrWhiteSpace(address) || port is < 1 or > 65535 || protocol is not ("ssh" or "rdp"))
             throw new ArgumentException("Destino temporal inválido.");
         lock (_temporaryGate) {
-            if (_temporaryTargets.ContainsKey(id)) throw new InvalidOperationException("La conexión temporal ya tiene una sesión. Cerrala antes de reconectar.");
+            if (_temporaryTargets.ContainsKey(id)) throw new InvalidOperationException("La conexión temporal ya tiene una sesión. Ciérrala antes de reconectar.");
             var target = new Connection { Id = id, Hostname = address, IpAddress = address, SshPort = port, RdpPort = port, SshUsername = username, ConnectionProtocol = protocol };
             var fingerprint = Guid.NewGuid().ToString("N"); // Unique per authenticated session, never derived from secrets.
             _temporaryTargets.Add(id, new(target, session, fingerprint, new()));

@@ -36,21 +36,21 @@ export function AgentTaskPanel({ server, enabled, onRunningChange }: { server: S
                 expected_target: { address: server.ip_address, protocol: server.connection_protocol || 'ssh', port: server.ssh_port || 22 } }));
             setAuthorized(false);
             requestId.current = crypto.randomUUID().replaceAll('-', '');
-        } catch (e) { setError(e instanceof Error ? e.message : uiText('No se pudo iniciar. Consultá el estado antes de repetir.')); }
+        } catch (e) { setError(e instanceof Error ? e.message : uiText('No se pudo iniciar. Consulta el estado antes de repetir.')); }
         finally { setBusy(false); }
     };
     return <section className="p-3 space-y-3 text-xs overflow-y-auto overflow-x-hidden flex-1 min-h-0 min-w-0 [overflow-wrap:anywhere]" aria-label="Agente de tareas SSH">
-        <p>{uiText("Describí el objetivo. El agente ejecutará comandos en una sesión SSH de este equipo, observará los resultados y decidirá los siguientes pasos.")}</p>
-        <AssistantTextarea aria-label="Objetivo de la tarea" className="w-full min-h-24 p-2 bg-[#252526] border border-[#444] rounded" value={objective} maxLength={16000} onChange={e => setObjective(e.target.value)} placeholder={uiText("Por ejemplo: investigá por qué falla el servicio y corregí su configuración…")} />
-        <p>{uiText("Destino:")}{" "}<strong>{server ? `${server.hostname} · ${server.ip_address}:${server.ssh_port || 22}` : uiText('Seleccioná un servidor')}</strong>{uiText(". Hasta 10 comandos y 5 minutos. Los comandos usan shells independientes; no admiten interacción.")}</p>
+        <p>{uiText("Describe el objetivo. El agente ejecutará comandos en una sesión SSH de este equipo, observará los resultados y decidirá los siguientes pasos.")}</p>
+        <AssistantTextarea aria-label="Objetivo de la tarea" className="w-full min-h-24 p-2 bg-[#252526] border border-[#444] rounded" value={objective} maxLength={16000} onChange={e => setObjective(e.target.value)} placeholder={uiText("Por ejemplo: investiga por qué falla el servicio y corrige su configuración…")} />
+        <p>{uiText("Destino:")}{" "}<strong>{server ? `${server.hostname} · ${server.ip_address}:${server.ssh_port || 22}` : uiText('Selecciona un servidor')}</strong>{uiText(". Hasta 10 comandos y 5 minutos. Los comandos usan shells independientes; no admiten interacción.")}</p>
         <label className="flex gap-2 items-start"><input type="checkbox" checked={authorized} onChange={e => setAuthorized(e.target.checked)} /><span>{uiText("Autorizo al agente a ejecutar los pasos necesarios para este objetivo con los permisos del usuario SSH. Puede modificar el servidor y enviar comandos y resultados a mi proveedor IA. Cancelar no revierte cambios.")}</span></label>
-        {!session && <p className="text-amber-300">{uiText("Abrí la conexión SSH local para ejecutar una tarea. RDP todavía no admite este modo.")}</p>}
+        {!session && <p className="text-amber-300">{uiText("Abre la conexión SSH local para ejecutar una tarea. RDP todavía no admite este modo.")}</p>}
         {!connected && <p className="text-amber-300">{uiText("Sin comunicación con el agente nativo. No se puede iniciar otra tarea.")}</p>}
         <button className="bg-purple-600 rounded px-3 py-2 disabled:opacity-40" disabled={!connected || !enabled || !session || !authorized || !objective.trim() || busy || task?.Status === 'running'} onClick={start}>{uiText("Autorizar y ejecutar tarea")}</button>
         {error && <p role="alert" className="text-red-300">{error}</p>}
         {task && <div className="border-t border-[#444] pt-3 space-y-2">
             <p className="font-semibold">{labels[task.Status] || task.Status} · {task.Hostname}</p><p>{task.Objective}</p>
-            {task.Status === 'running' && <button className="border border-red-400 rounded px-3 py-2" onClick={async () => { try { await sendCommand('local_task_cancel', { id: task.Id }); } catch { setError(uiText('No se pudo confirmar la cancelación. Verificá la conexión y el servidor.')); } }}>{uiText("Cancelar tarea")}</button>}
+            {task.Status === 'running' && <button className="border border-red-400 rounded px-3 py-2" onClick={async () => { try { await sendCommand('local_task_cancel', { id: task.Id }); } catch { setError(uiText('No se pudo confirmar la cancelación. Verifica la conexión y el servidor.')); } }}>{uiText("Cancelar tarea")}</button>}
             <button className="block underline" onClick={() => {
                 const url = URL.createObjectURL(new Blob([JSON.stringify(task, null, 2)], { type: 'application/json' }));
                 const link = document.createElement('a'); link.href = url; link.download = `tarea-${task.Id}.json`; link.click(); URL.revokeObjectURL(url);

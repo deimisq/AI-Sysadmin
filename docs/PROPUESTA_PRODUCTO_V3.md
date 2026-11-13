@@ -8,7 +8,7 @@ Convertir AI Sysadmin Agent en un espacio de trabajo para operaciones: **conecta
 
 Nombre de trabajo posible: **Sentrait Ops**. No se verificaron marca ni dominios.
 
-La promesa propuesta es: **“Tus conexiones y el contexto de cada cliente, con diagnósticos que podés revisar y comprobar.”** La diferencia debe demostrarse en tareas reales y en tiempo ahorrado. SSH, RDP e IA ya existen en competidores: combinarlos no constituye por sí solo una ventaja defendible.
+La promesa propuesta es: **“Tus conexiones y el contexto de cada cliente, con diagnósticos que puedes revisar y comprobar.”** La diferencia debe demostrarse en tareas reales y en tiempo ahorrado. SSH, RDP e IA ya existen en competidores: combinarlos no constituye por sí solo una ventaja defendible.
 
 Lanzar **Free permanente** para trabajo individual local y **Pro por técnico** para organización avanzada, diagnósticos guiados y automatización con consumo de IA controlado. Preparar la arquitectura para colaboración, pero habilitarla comercialmente cuando estén probados el vault compartido, la revocación y la sincronización.
 

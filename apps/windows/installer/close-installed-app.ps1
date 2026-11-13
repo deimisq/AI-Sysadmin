@@ -45,7 +45,7 @@ public static class AiSysadminCloseWindows {
     foreach($process in $owned) {
         $remaining=[Math]::Max(0,[int]($TimeoutSeconds*1000-$clock.ElapsedMilliseconds))
         if(-not $process.HasExited -and -not $process.WaitForExit($remaining)) {
-            throw 'La instancia de AI Sysadmin no termino dentro del tiempo limite. Cerrala manualmente y reintenta.'
+            throw 'La instancia de AI Sysadmin no termino dentro del tiempo limite. Cierra la ventana manualmente y reintenta.'
         }
     }
     [IO.File]::WriteAllText($LogPath, "Cierre comprobado. Instancias de esta instalacion: $($owned.Count).")

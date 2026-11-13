@@ -51,7 +51,7 @@ public sealed class LocalAiCompanionTests : IDisposable
             return new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(JsonSerializer.Serialize(new { choices = new[] { new { message = new { content } } } })) };
         });
         using var service = new LocalAiService(Store, handler);
-        var result = await service.DiagnoseAsync(Body(new { server_id = 1, problem_description = "Revisá el estado del sistema" }));
+        var result = await service.DiagnoseAsync(Body(new { server_id = 1, problem_description = "Revisa el estado del sistema" }));
         Assert.Equal("Propuesta para revisar el disco", result.GetProperty("analysis").GetProperty("analysis").GetString());
         Assert.Equal("df -h", result.GetProperty("analysis").GetProperty("proposed_command").GetString());
         Assert.Equal(1, handler.Calls);
@@ -81,8 +81,8 @@ public sealed class LocalAiCompanionTests : IDisposable
     public async Task CurrentHealthQuestionIsLastAndCommandResultsRemainDistinctFromConversation()
     {
         Setup(); var store = Store;
-        store.SaveAiTurn(store.PrepareAiInvocation(1, "Actualizá los índices"), "apt update terminó con salida 0", "apt update");
-        store.SaveAiTurn(store.PrepareAiInvocation(1, "Actualizá los índices"), "200 paquetes pueden actualizarse", "apt update", "result");
+        store.SaveAiTurn(store.PrepareAiInvocation(1, "Actualiza los índices"), "apt update terminó con salida 0", "apt update");
+        store.SaveAiTurn(store.PrepareAiInvocation(1, "Actualiza los índices"), "200 paquetes pueden actualizarse", "apt update", "result");
         var handler = new Handler(async request => {
             using var json = JsonDocument.Parse(await request.Content!.ReadAsStringAsync());
             var messages = json.RootElement.GetProperty("messages").EnumerateArray().ToArray();
@@ -178,7 +178,7 @@ public sealed class LocalAiCompanionTests : IDisposable
             Assert.Equal(JsonValueKind.Null,context.RootElement.GetProperty("terminal_context").ValueKind);
             Assert.DoesNotContain("never-share-this",document.RootElement.GetRawText());
             if (calls++ > 0) Assert.Contains(messages, message => message.GetProperty("content").GetString() == "El servicio no inicia, error 1067");
-            return new HttpResponseMessage(HttpStatusCode.OK) { Content=new StringContent(JsonSerializer.Serialize(new { choices=new[] { new { message=new { content="{\"analysis\":\"Revisá el Visor de eventos de Windows.\",\"proposed_command\":\"Get-Service\"}" } } } })) };
+            return new HttpResponseMessage(HttpStatusCode.OK) { Content=new StringContent(JsonSerializer.Serialize(new { choices=new[] { new { message=new { content="{\"analysis\":\"Revisa el Visor de eventos de Windows.\",\"proposed_command\":\"Get-Service\"}" } } } })) };
         });
         using var service = new LocalAiService(store,handler,(_,_,_) => throw new Exception("RDP must not read an SSH transcript"));
         service.RegisterCommand = (_,_,_) => throw new Exception("RDP must not register SSH execution");

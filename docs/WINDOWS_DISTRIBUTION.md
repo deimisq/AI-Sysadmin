@@ -42,7 +42,7 @@ El sistema operativo elegido en el perfil es un dato declarado y editable (inclu
 
 Ante errores de IA: HTTP 401 indica rechazo de autenticación, 403 requiere revisar permisos, 429 cuota o límite de solicitudes y 503 indisponibilidad temporal del proveedor. Esos errores no borran la clave almacenada. En Configuración → IA, el indicador de clave guardada permite distinguir su presencia del campo de contraseña vacío, que conserva la clave al guardar el mismo proveedor.
 
-En RDP, el acompañante funciona como asesor: recibe los metadatos del destino y la conversación. Podés describir un problema o pegar en el chat el error, evento o resultado que quieras analizar. Conserva el hilo para preguntas posteriores; en conexiones temporales, el historial permanece en memoria hasta cerrar la sesión.
+En RDP, el acompañante funciona como asesor: recibe los metadatos del destino y la conversación. Puedes describir un problema o pegar en el chat el error, evento o resultado que quieras analizar. Conserva el hilo para preguntas posteriores; en conexiones temporales, el historial permanece en memoria hasta cerrar la sesión.
 
 La IA no recibe capturas, cambios del escritorio ni salida de PowerShell/CMD automáticamente. No ejecuta comandos, controla el escritorio ni usa tareas o permisos SSH desde RDP. Los pasos sugeridos deben realizarse manualmente dentro del equipo remoto y sus resultados compartirse en el chat. Los registros SSH no se usan como evidencia de RDP.
 

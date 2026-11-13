@@ -44,7 +44,7 @@ public sealed class TerminalContextStore : IDisposable
                 WriteFrame(sessionId, 0, JsonSerializer.SerializeToUtf8Bytes(header));
             }
         }
-        catch { state.Error = "No se pudo iniciar el registro local de terminal. Revisá el almacenamiento antes de pedir ayuda contextual."; }
+        catch { state.Error = "No se pudo iniciar el registro local de terminal. Revisa el almacenamiento antes de pedir ayuda contextual."; }
     }
     public void Append(string sessionId, ReadOnlySpan<byte> output)
     {
@@ -140,7 +140,7 @@ public sealed class TerminalContextStore : IDisposable
             try
             {
                 var text = Encoding.UTF8.GetString(bytes);
-                if (maxCharacters == null && text.Length > 240000) throw new InvalidOperationException("El contexto completo supera 240000 caracteres. Podés configurar una ventana de contexto reciente en Ajustes. No se envió un recorte sin tu configuración.");
+                if (maxCharacters == null && text.Length > 240000) throw new InvalidOperationException("El contexto completo supera 240000 caracteres. Puedes configurar una ventana de contexto reciente en Ajustes. No se envió un recorte sin tu configuración.");
                 var total = text.Length;
                 if (maxCharacters != null && total > maxCharacters)
                 {
@@ -198,12 +198,12 @@ public sealed class TerminalContextStore : IDisposable
         lock (_disk)
         {
             var state = _sessions.Values.FirstOrDefault(item => Guid.Parse(item.Header.SessionId) == guid);
-            if (state != null && !state.Closed) throw new InvalidOperationException("Cerrá la sesión SSH antes de borrar su registro.");
+            if (state != null && !state.Closed) throw new InvalidOperationException("Cierra la sesión SSH antes de borrar su registro.");
             var path = Path.Combine(_directory,guid.ToString("N") + ".terminal");
             if (!File.Exists(path)) return;
             FileStream lease;
             try { lease = new FileStream(path+".lock",FileMode.OpenOrCreate,FileAccess.ReadWrite,FileShare.None); }
-            catch (IOException) { throw new InvalidOperationException("El registro está en uso por otra instancia. Cerrá la sesión antes de borrarlo."); }
+            catch (IOException) { throw new InvalidOperationException("El registro está en uso por otra instancia. Cierra la sesión antes de borrarlo."); }
             using (lease)
             {
             File.Delete(path);

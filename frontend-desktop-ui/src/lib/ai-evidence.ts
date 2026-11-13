@@ -19,7 +19,7 @@ export interface AiHistoryTurn {
     command: string | null;
 }
 export function createEvidence(content: string, source: AiEvidence['source'], now = new Date()): AiEvidence {
-    if (!content.trim()) throw new Error('Seleccioná o pegá evidencia antes de agregarla.');
-    if (content.length > EVIDENCE_LIMIT) throw new Error(`La evidencia supera ${EVIDENCE_LIMIT} caracteres. Seleccioná un fragmento menor.`);
+    if (!content.trim()) throw new Error('Selecciona o pega evidencia antes de agregarla.');
+    if (content.length > EVIDENCE_LIMIT) throw new Error(`La evidencia supera ${EVIDENCE_LIMIT} caracteres. Selecciona un fragmento menor.`);
     return { content, source, captured_at: now.toISOString() };
 }

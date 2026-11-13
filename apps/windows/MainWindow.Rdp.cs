@@ -127,11 +127,11 @@ public partial class MainWindow
     {
         var id = _rdpSessions.ActiveId;
         if (id == null || !_rdpSessions.TryGet(id, out var session) || session == null)
-            throw new InvalidOperationException("Activá la sesión RDP de este destino antes de capturar.");
+            throw new InvalidOperationException("Activa la sesión RDP de este destino antes de capturar.");
         if (session.Failed ||
             session.Surface.Visibility != Visibility.Visible || WindowState == WindowState.Minimized ||
             session.Host != payload.GetProperty("host").GetString() || session.Port != payload.GetProperty("port").GetInt32())
-            throw new InvalidOperationException("Activá la sesión RDP de este destino antes de capturar.");
+            throw new InvalidOperationException("Activa la sesión RDP de este destino antes de capturar.");
         if ((int)session.Client.Client.Connected == 0) throw new InvalidOperationException("La sesión RDP no está conectada.");
         var client = session.Client;
         if (client.Width is < 50 or > 4096 || client.Height is < 50 or > 4096 || (long)client.Width * client.Height > 10000000)
@@ -140,14 +140,14 @@ public partial class MainWindow
         using var bitmap = new System.Drawing.Bitmap(client.Width, client.Height);
         using (var graphics = System.Drawing.Graphics.FromImage(bitmap)) {
             var dc = graphics.GetHdc();
-            try { if (!PrintWindow(client.Handle, dc, 2)) throw new InvalidOperationException("RDP no pudo renderizar la captura. Podés compartir el error como texto."); }
+            try { if (!PrintWindow(client.Handle, dc, 2)) throw new InvalidOperationException("RDP no pudo renderizar la captura. Puedes compartir el error como texto."); }
             finally { graphics.ReleaseHdc(dc); }
         }
         var scale = Math.Min(1.0, 1920.0 / Math.Max(bitmap.Width, bitmap.Height));
         using var resized = new System.Drawing.Bitmap(bitmap, Math.Max(1,(int)(bitmap.Width * scale)), Math.Max(1,(int)(bitmap.Height * scale)));
         using var memory = new System.IO.MemoryStream();
         resized.Save(memory, System.Drawing.Imaging.ImageFormat.Png);
-        if (memory.Length > 4 * 1024 * 1024) throw new InvalidOperationException("La captura supera 4 MiB. Reducí el tamaño del escritorio.");
+        if (memory.Length > 4 * 1024 * 1024) throw new InvalidOperationException("La captura supera 4 MiB. Reduce el tamaño del escritorio.");
         return new { image = "data:image/png;base64," + Convert.ToBase64String(memory.ToArray()), captured_at = DateTimeOffset.UtcNow, session_id = id };
     }
 }

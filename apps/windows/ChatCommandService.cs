@@ -53,7 +53,7 @@ public sealed class ChatCommandService
             Proposal proposal;
             lock (_sync) {
                 var id = body.GetProperty("proposal_id").GetString() ?? "";
-                if (!_proposals.Remove(id, out proposal!)) throw new InvalidOperationException("La propuesta venció o ya fue procesada. Pedí una nueva.");
+                if (!_proposals.Remove(id, out proposal!)) throw new InvalidOperationException("La propuesta venció o ya fue procesada. Pide una nueva.");
             }
             var invocation = _store.PrepareAiInvocation(proposal.ServerId, proposal.Objective);
             if (DateTimeOffset.UtcNow - proposal.CreatedAt > TimeSpan.FromMinutes(10) || invocation.HistoryEpoch != proposal.HistoryEpoch || invocation.Fingerprint != proposal.Fingerprint || !_connected(proposal.Session, proposal.ServerId, proposal.Fingerprint))

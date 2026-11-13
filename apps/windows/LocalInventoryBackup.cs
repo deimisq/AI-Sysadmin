@@ -39,13 +39,13 @@ public sealed partial class LocalConnectionStore
     {
         Password(password);
         // The native folder migration must finish before promising a complete inventory copy.
-        if (data.Folders == null) throw new InvalidOperationException("Abrí el inventario para migrar las carpetas antes de crear una copia.");
+        if (data.Folders == null) throw new InvalidOperationException("Abre el inventario para migrar las carpetas antes de crear una copia.");
         ValidateFolders(data.Folders,data.Servers.Select(s => s.Id).ToHashSet());
         var servers = JsonSerializer.Deserialize<List<Connection>>(JsonSerializer.SerializeToUtf8Bytes(data.Servers,Json),Json)!;
         if (includeKeyFiles) foreach (var server in servers) {
             if (string.IsNullOrWhiteSpace(server.SshKeyPath) || server.SshKeyPath.Contains("-----BEGIN")) continue;
             var file = new FileInfo(server.SshKeyPath);
-            if (!file.Exists || file.Length > 128 * 1024) throw new InvalidOperationException($"No se pudo incluir la clave SSH de {server.Hostname}. Revisá el archivo o desmarcá incluir archivos de claves.");
+            if (!file.Exists || file.Length > 128 * 1024) throw new InvalidOperationException($"No se pudo incluir la clave SSH de {server.Hostname}. Revisa el archivo o desmarca incluir archivos de claves.");
             var key = File.ReadAllText(file.FullName);
             if (!key.Contains("-----BEGIN") || !key.Contains("PRIVATE KEY-----")) throw new InvalidOperationException($"El archivo de clave SSH de {server.Hostname} no tiene un formato privado portable reconocido.");
             server.SshKeyPath = key;
@@ -105,10 +105,10 @@ public sealed partial class LocalConnectionStore
     }
     public JsonElement ImportBackup(string encoded,string password,string expectedHash,bool confirmed,string operationId)
     {
-        if (!confirmed) throw new InvalidOperationException("Revisá la copia y confirmá que querés agregar sus conexiones.");
+        if (!confirmed) throw new InvalidOperationException("Revisa la copia y confirma que quieres agregar sus conexiones.");
         if (!Guid.TryParse(operationId,out _)) throw new ArgumentException("Identificador de restauración inválido.");
         var (backup,hash) = ReadBackup(encoded,password);
-        if (hash != expectedHash) throw new InvalidOperationException("La copia cambió desde la revisión. Volvé a validarla.");
+        if (hash != expectedHash) throw new InvalidOperationException("La copia cambió desde la revisión. Vuelve a validarla.");
         return WithInventory(data =>
         {
             if (data.Restores.TryGetValue(operationId,out var receipt))
@@ -116,7 +116,7 @@ public sealed partial class LocalConnectionStore
                 if (receipt.Hash != hash) throw new InvalidOperationException("Ese identificador corresponde a otra copia.");
                 return JsonSerializer.SerializeToElement(new { imported = receipt.Imported, folders = receipt.Folders, already_applied = true },Json);
             }
-            if (data.Folders == null) throw new InvalidOperationException("Abrí el inventario para migrar las carpetas antes de restaurar.");
+            if (data.Folders == null) throw new InvalidOperationException("Abre el inventario para migrar las carpetas antes de restaurar.");
             if (data.Servers.Count + backup.Servers.Count > 10000) throw new InvalidOperationException("Se supera el límite de 10000 conexiones.");
             var ids = new Dictionary<int,int>(); var folderIds = backup.Folders.Folders.ToDictionary(f => f.Id,_ => Guid.NewGuid().ToString("N"));
             foreach (var server in backup.Servers)

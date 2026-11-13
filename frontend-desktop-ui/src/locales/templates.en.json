@@ -8,7 +8,7 @@
   "Salida {0}": "Exit {0}",
   "{0}. No se confirmó que la operación terminara. Voy a revisar la salida disponible sin reintentar el comando.": "{0}. Completion was not confirmed. I will review the available output without retrying the command.",
   "Objetivo actual del técnico: {0}\nEstado observado: {1}. {2}": "Technician's current objective: {0}\nObserved status: {1}. {2}",
-  "No se pudo completar la ejecución o el análisis: {0}\nRevisá la terminal antes de repetir el comando. No se reintentó automáticamente.": "Could not complete execution or analysis: {0}\nReview the terminal before repeating the command. It was not retried automatically.",
+  "No se pudo completar la ejecución o el análisis: {0}\nRevisa la terminal antes de repetir el comando. No se reintentó automáticamente.": "Could not complete execution or analysis: {0}\nReview the terminal before repeating the command. It was not retried automatically.",
   "💡 Conversación con IA para el servidor **{0}**. Describe el problema que estás experimentando y te ayudaré a diagnosticarlo y resolverlo.": "💡 AI conversation for server **{0}**. Describe the problem and I will help diagnose and resolve it.",
   "Ejecuté el comando que sugeriste. Aquí están los resultados:\n\n**Código de Salida:** {0}\n\n**Output:**\n```\n{1}\n```\n\nPor favor analiza estos resultados y dime qué encontraste.": "I ran your suggested command. Here are the results:\n\n**Exit code:** {0}\n\n**Output:**\n```\n{1}\n```\n\nPlease analyze these results and explain your findings.",
   "Abrir conexión {0}": "Open connection {0}",

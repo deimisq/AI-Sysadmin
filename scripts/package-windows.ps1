@@ -21,7 +21,7 @@ $output = Join-Path $projectRoot "dist/windows/$desktopVersion"
 New-Item -ItemType Directory -Path $stage,$output -Force | Out-Null
 $zip = Join-Path $output "AI-Sysadmin-Agent-$desktopVersion-win-x64-portable.zip"
 $installer = Join-Path $output "AI-Sysadmin-Agent-$desktopVersion-win-x64-setup.exe"
-if ((Test-Path $zip) -or (Test-Path $installer)) { throw 'Ya existe un paquete de esta version. Archivá los artefactos anteriores o cambiá la version antes de compilar.' }
+if ((Test-Path $zip) -or (Test-Path $installer)) { throw 'Ya existe un paquete de esta version. Archiva los artefactos anteriores o cambia la version antes de compilar.' }
 if (-not $SkipFrontend) {
     Push-Location (Join-Path $projectRoot 'frontend-desktop-ui')
     try {

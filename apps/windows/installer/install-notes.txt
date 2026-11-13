@@ -1,29 +1,35 @@
-AI Sysadmin Agent - Vista previa para Windows x64
+AI Sysadmin Agent - Windows x64
 
 Incluye el runtime .NET. Requiere Microsoft Edge WebView2 Runtime Evergreen.
 No necesita un backend ni una cuenta para las conexiones locales.
 
 Se instala para el usuario actual, sin solicitar privilegios de administrador.
-Las versiones se conservan en carpetas separadas. El acceso directo apunta a
-la version instalada mas recientemente. La app consulta actualizaciones;
-descargar, instalar y reiniciar requieren aprobaciones independientes.
-Antes de actualizar, el instalador detecta las versiones abiertas de esta
-instalacion y permite cerrarlas mediante Windows. Al finalizar solo se abre
-la version nueva, si se elige abrir la app. El cierre desconecta las sesiones.
+El ejecutable se actualiza en una ruta fija; se retiran las carpetas antiguas
+por versión de esa instalación. El instalador solicita el cierre normal solo
+de sus propias instancias. Si no confirma el cierre, aborta antes de sustituir
+archivos, sin forzar la salida. El cierre desconecta las sesiones SSH/RDP.
+Al finalizar puede abrirse la versión nueva, según la opción seleccionada.
 
-El inventario, credenciales, configuracion IA y registros permanecen en
+La app consulta actualizaciones. Descargar, preparar la instalación y reiniciar
+requieren aprobaciones independientes. La sustitución de archivos se realiza
+tras aprobar el reinicio de la app. Windows no se reinicia automáticamente.
+Para migrar desde un cliente antiguo con carpetas por versión, ejecuta este
+instalador una vez con la app cerrada; después usa el actualizador integrado.
+
+El inventario, las credenciales, la configuración IA y los registros permanecen en
 %LOCALAPPDATA%\AiSysadmin y se conservan al desinstalar.
-Creá una copia cifrada desde Ajustes antes de cambiar de equipo o usuario.
-El inventario protegido DPAPI requiere la misma cuenta Windows; la copia
-portable cifrada permite migrar conexiones y carpetas con su contraseña.
+Crea una copia cifrada desde Conexiones → Exportar / importar conexiones antes
+de cambiar de equipo o usuario. El inventario protegido con DPAPI requiere la
+misma cuenta Windows. La copia portable permite migrar conexiones y carpetas
+con su contraseña; no incluye claves IA, chats ni tokens de GitHub.
 
-La conexion con un proveedor IA se configura en Ajustes y requiere aceptar
-el aviso de envio de datos. El instalador no configura ni consulta una IA.
+La conexión con un proveedor IA se configura en Ajustes y requiere aceptar
+el aviso de envío de datos. El instalador no configura ni consulta una IA.
 
-Esta compilacion de prueba no esta firmada con un certificado comercial.
+Esta compilación no está firmada con un certificado comercial.
 Windows puede mostrar una advertencia de publicador desconocido.
-No se ofrece rollback automatico de cambios realizados por el agente.
+No se ofrece reversión automática de cambios realizados por el agente.
 
-El idioma seleccionado en el instalador se guarda para la aplicacion.
+El idioma seleccionado en el instalador se guarda para la aplicación.
 No se traducen nombres de equipos, comandos ni salidas de terminal.
-Codigo original bajo Apache 2.0; los terceros conservan sus licencias.
+Código original bajo Apache 2.0; los terceros conservan sus licencias.

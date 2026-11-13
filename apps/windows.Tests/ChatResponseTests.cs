@@ -14,7 +14,7 @@ public sealed class ChatResponseTests
     [InlineData("```sh\nid\n```\n```bash\ndf -h\n```")]
     [InlineData("```bash\nid")]
     [InlineData("```python\nprint('example')\n```")]
-    [InlineData("Ejecutá `id` cuando quieras.")]
+    [InlineData("Ejecuta `id` cuando quieras.")]
     [InlineData("Sin comandos necesarios.")]
     public void AmbiguousIncompleteOrInlineExamplesDoNotBecomeCommands(string content)
     {

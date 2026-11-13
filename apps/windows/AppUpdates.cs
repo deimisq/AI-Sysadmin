@@ -67,7 +67,7 @@ public sealed class AppUpdates : IDisposable
             }
             if(!response.IsSuccessStatusCode) {
                 var code=(int)response.StatusCode; response.Dispose();
-                throw new InvalidOperationException(code is 401 or 403 or 404 ? $"GitHub devolvió HTTP {code}. El repositorio es privado: configurá un token con acceso a AI-Sysadmin y permiso Contents: read; revisá también su vigencia o el límite de solicitudes." : $"GitHub devolvió HTTP {code}. Probá nuevamente más tarde.");
+                throw new InvalidOperationException(code is 401 or 403 or 404 ? $"GitHub devolvió HTTP {code}. El repositorio es privado: configura un token con acceso a AI-Sysadmin y permiso Contents: read; revisa también su vigencia o el límite de solicitudes." : $"GitHub devolvió HTTP {code}. Prueba nuevamente más tarde.");
             }
             return response;
         }
@@ -108,7 +108,7 @@ public sealed class AppUpdates : IDisposable
     public async Task DownloadAsync() {
         if(!await _gate.WaitAsync(0)) throw new InvalidOperationException(UserLanguage.Text("Ya hay una actualización en curso."));
         try {
-            if(_state!="available") throw new InvalidOperationException(UserLanguage.Text("Buscá una actualización antes de descargar."));
+            if(_state!="available") throw new InvalidOperationException(UserLanguage.Text("Busca una actualización antes de descargar."));
             State("downloading"); Directory.CreateDirectory(_directory);
             _file=Path.Combine(_directory,$"AI-Sysadmin-{_version}-{Guid.NewGuid():N}.exe");
             using var response=await RequestAsync($"https://api.github.com/repos/{Repository}/releases/assets/{_asset}",true);
@@ -140,7 +140,7 @@ public sealed class AppUpdates : IDisposable
     public async Task InstallAsync() {
         if(!await _gate.WaitAsync(0)) throw new InvalidOperationException(UserLanguage.Text("Ya hay una actualización en curso."));
         try {
-            if(_state!="downloaded") throw new InvalidOperationException("Primero descargá y verificá la actualización.");
+            if(_state!="downloaded") throw new InvalidOperationException("Primero descarga y verifica la actualización.");
             var root=_installRoot() ?? throw new InvalidOperationException("La actualización integrada requiere la app instalada. Esta instancia es portable o de desarrollo.");
             VerifyFile(); State("installing");
             // The installed files are replaced only after the separate restart approval.
@@ -153,7 +153,7 @@ public sealed class AppUpdates : IDisposable
         if(_state!="restart" || _restart==null) throw new InvalidOperationException("No hay actualización lista para reiniciar.");
         VerifyFile();
         var script=UpdateRestartScript.Create(Environment.ProcessId, _file, Path.GetDirectoryName(_restart)!, _digest, _size,
-            Path.Combine(_directory,"install.log"), UserLanguage.Text("No se pudo aplicar la actualización. Revisá el registro de instalación."));
+            Path.Combine(_directory,"install.log"), UserLanguage.Text("No se pudo aplicar la actualización. Revisa el registro de instalación."));
         var helper=new ProcessStartInfo("powershell.exe") { UseShellExecute=false,CreateNoWindow=true,WindowStyle=ProcessWindowStyle.Hidden };
         foreach(var argument in new[] {"-NoProfile","-NonInteractive","-EncodedCommand",Convert.ToBase64String(Encoding.Unicode.GetBytes(script))}) helper.ArgumentList.Add(argument);
         using var started=Process.Start(helper) ?? throw new InvalidOperationException("No se pudo iniciar el actualizador.");

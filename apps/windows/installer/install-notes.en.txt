@@ -4,11 +4,17 @@ Includes the .NET runtime. Requires Microsoft Edge WebView2 Runtime Evergreen.
 Local connections do not require a backend or an account.
 
 Installed for the current user without administrator privileges.
-The installer detects running versions and offers to close them through Windows.
-Closing the app disconnects SSH/RDP sessions. Only the new version is opened.
+The executable is updated at a fixed path; old version folders belonging to
+that installation are removed. The installer requests normal closure only for
+its own instances. If closure cannot be confirmed, it aborts before replacing
+files without forcing exit. Closing the app disconnects SSH/RDP sessions.
+The new version can open afterwards, according to your selected option.
 
-The app checks for updates. Downloading, installing and restarting require
-separate approvals. Windows is never restarted automatically.
+The app checks for updates. Downloading, preparing installation and restarting
+require separate approvals. Files are replaced after approving app restart.
+Windows is never restarted automatically. To migrate from an older client
+using version folders, run this installer once with the app closed, then use
+integrated updates.
 
 Connections, credentials, AI settings and logs remain in
 %LOCALAPPDATA%\AiSysadmin and are retained when uninstalling.

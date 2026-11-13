@@ -61,9 +61,9 @@ export function AppUpdateSettings() {
             <dt>{uiText("Datos locales")}</dt><dd>{info?.data_directory}</dd>
         </dl>
         <h3 className="font-semibold">{uiText("Actualizaciones")}</h3>
-        <p className="text-sm text-muted-foreground">{uiText("La app busca versiones al abrir. La descarga y la instalación requieren tu aprobación por separado. Después podés reiniciar la app para aplicar los cambios; se cerrarán las sesiones abiertas. Los datos locales se conservan.")}</p>
+        <p className="text-sm text-muted-foreground">{uiText("La app busca versiones al abrir. La descarga y la instalación requieren tu aprobación por separado. Después puedes reiniciar la app para aplicar los cambios; se cerrarán las sesiones abiertas. Los datos locales se conservan.")}</p>
         <details className="text-sm"><summary className="cursor-pointer">Acceso a GitHub privado {update?.has_token ? '· token guardado' : '· configurar'}</summary>
-            <p className="my-2">El repositorio es privado. Usá un token de GitHub con acceso solo a AI-Sysadmin y permiso Contents: read. Se guarda protegido con DPAPI en este equipo, separado de la clave de IA, y no se incluye en copias de conexiones.</p>
+            <p className="my-2">El repositorio es privado. Usa un token de GitHub con acceso solo a AI-Sysadmin y permiso Contents: read. Se guarda protegido con DPAPI en este equipo, separado de la clave de IA, y no se incluye en copias de conexiones.</p>
             <Input aria-label="Token de GitHub para actualizaciones" type="password" autoComplete="off" value={token} disabled={working} onChange={e => setToken(e.target.value)} />
             <div className="mt-2 flex gap-2"><Button disabled={working || !token.trim()} onClick={() => void action('update_token', { token: token.trim() })}>{uiText("Guardar acceso")}</Button><Button variant="outline" disabled={working || !update?.has_token} onClick={() => void action('update_token', { token: '' })}>{uiText("Eliminar acceso")}</Button></div>
         </details>
@@ -76,7 +76,7 @@ export function AppUpdateSettings() {
         {update?.state === 'current' && <p role="status">{uiText("No hay una versión más nueva compatible en el canal de actualizaciones.")}</p>}
         {update?.state === 'available' && <p role="status">{uiText("Nueva versión disponible:")}{" "}{update.version}.</p>}
         {update?.state === 'downloading' && <p role="status">{uiText("Descargando:")}{" "}{Math.floor(update.received / 1024 / 1024)}{" "}{uiText("de")}{" "}{Math.ceil(update.size / 1024 / 1024)} MB.</p>}
-        {update?.state === 'installing' && <p role="status">{uiText("Instalando la actualización. Mantené la app abierta…")}</p>}
+        {update?.state === 'installing' && <p role="status">{uiText("Instalando la actualización. Mantén la app abierta…")}</p>}
         {update?.state === 'downloaded' && <p role="status">{uiText("Descarga verificada con SHA256. Falta tu aprobación para instalar.")}</p>}
         {update?.state === 'restart' && <p role="status">{uiText("Instalación preparada. Al aprobar el reinicio se cerrará la app, se reemplazarán sus archivos y se abrirá la nueva versión.")}</p>}
         {update?.notes && <details><summary>{uiText("Notas de la nueva versión")}</summary><pre className="whitespace-pre-wrap text-sm mt-2">{update.notes}</pre></details>}

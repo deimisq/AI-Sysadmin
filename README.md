@@ -21,9 +21,9 @@ Administración de equipos por SSH y RDP para Windows. Gratis y con código prop
 
 </div>
 
-## Qué podés hacer
+## Qué puedes hacer
 
-Organizá equipos, abrí sesiones remotas y consultá la IA sin salir del espacio de trabajo. Las conexiones locales no requieren una cuenta ni un backend; cada proveedor de IA conserva sus condiciones y costos.
+Organiza equipos, abre sesiones remotas y consulta la IA sin salir del espacio de trabajo. Las conexiones locales no requieren una cuenta ni un backend; cada proveedor de IA conserva sus condiciones y costos.
 
 ## Aplicación Windows
 
@@ -104,8 +104,8 @@ Las guías antiguas documentan otras etapas; no certifican funciones del cliente
 
 Código original bajo [Apache License 2.0](LICENSE), conservando los derechos de terceros: [NOTICE](NOTICE) y [avisos](THIRD_PARTY_NOTICES.md). La licencia no concede derechos sobre marcas ni vuelve gratuitos los servicios externos de IA.
 
-Podés apoyar el mantenimiento mediante [GitHub Sponsors de @deimisq](https://github.com/sponsors/deimisq). Los aportes son voluntarios: usar la app y recibir actualizaciones no requiere donar. El aporte se gestiona en GitHub; la app no solicita datos de pago.
+Puedes apoyar el mantenimiento mediante [GitHub Sponsors de @deimisq](https://github.com/sponsors/deimisq). Los aportes son voluntarios: usar la app y recibir actualizaciones no requiere donar. El aporte se gestiona en GitHub; la app no solicita datos de pago.
 
 [![Apoyar a deimisq](https://img.shields.io/badge/Apoyar%20a%20%40deimisq-GitHub%20Sponsors-ea4aaa?logo=githubsponsors&logoColor=white)](https://github.com/sponsors/deimisq)
 
-Desarrollado y mantenido con [Sentra IT](https://sentrait.com.uy/). También podés colaborar reportando problemas con datos sintéticos, mejorando la documentación o proponiendo cambios.
+Desarrollado y mantenido con [Sentra IT](https://sentrait.com.uy/). También puedes colaborar reportando problemas con datos sintéticos, mejorando la documentación o proponiendo cambios.

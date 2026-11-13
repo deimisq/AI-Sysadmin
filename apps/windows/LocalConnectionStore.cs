@@ -80,7 +80,7 @@ public sealed partial class LocalConnectionStore
         bool locked;
         try { locked = mutex.WaitOne(TimeSpan.FromSeconds(5)); }
         catch (AbandonedMutexException) { locked = true; }
-        if (!locked) throw new IOException("El inventario local está ocupado. Intentá nuevamente.");
+        if (!locked) throw new IOException("El inventario local está ocupado. Intenta nuevamente.");
         try
         {
             return action(Load());
@@ -102,7 +102,7 @@ public sealed partial class LocalConnectionStore
             else if (endpoint == "/workspace/folders" && method == "GET") result = new { migrated = data.Folders != null, layout = data.Folders ?? new FolderLayout(), revision = data.FolderRevision };
             else if (endpoint == "/workspace/folders" && method == "PUT")
             {
-                if (body.GetProperty("revision").GetInt32() != data.FolderRevision) throw new InvalidOperationException("Las carpetas cambiaron. Actualizá el inventario antes de reintentar.");
+                if (body.GetProperty("revision").GetInt32() != data.FolderRevision) throw new InvalidOperationException("Las carpetas cambiaron. Actualiza el inventario antes de reintentar.");
                 var layout = JsonSerializer.Deserialize<FolderLayout>(body.GetProperty("layout"), Json) ?? throw new ArgumentException("Carpetas inválidas.");
                 ValidateFolders(layout, data.Servers.Select(s => s.Id).ToHashSet());
                 data.Folders = layout; data.FolderRevision = checked(data.FolderRevision + 1); Save(data);
@@ -126,19 +126,19 @@ public sealed partial class LocalConnectionStore
                     return value;
                 }
                 var username = provider == "opencode" ? Option("username", "opencode") : "opencode";
-                if (provider == "opencode" && (username.Length == 0 || username.Contains(':'))) throw new ArgumentException("Indicá un usuario de OpenCode válido, sin dos puntos.");
+                if (provider == "opencode" && (username.Length == 0 || username.Contains(':'))) throw new ArgumentException("Indica un usuario de OpenCode válido, sin dos puntos.");
                 if (!Uri.TryCreate(baseUrl, UriKind.Absolute, out var uri) || (uri.Scheme != "https" && preset?.Local != true) || uri.UserInfo.Length > 0 || uri.Query.Length > 0 || uri.Fragment.Length > 0 || baseUrl.Length > 2048)
                     throw new ArgumentException("La URL del proveedor debe usar HTTPS, sin usuario, parámetros ni fragmentos.");
                 var model = Read("model").Trim();
-                if (model.Length is < 1 or > 200) throw new ArgumentException("Indicá el identificador del modelo.");
+                if (model.Length is < 1 or > 200) throw new ArgumentException("Indica el identificador del modelo.");
                 var apiKey = body.TryGetProperty("api_key", out var key) ? key.GetString() ?? "" : "";
                 var sameConnection = data.Ai.BaseUrl == baseUrl && data.Ai.Username == username && AiProviders.Infer(data.Ai.Provider, data.Ai.BaseUrl) == AiProviders.Infer(provider, baseUrl);
                 if (apiKey.Length == 0 && sameConnection) apiKey = data.Ai.ApiKey;
-                if ((apiKey.Length == 0 && preset?.Local != true) || apiKey.Length > 8192 || apiKey.Contains('\r') || apiKey.Contains('\n')) throw new ArgumentException("Indicá una clave API válida para este proveedor.");
-                if (provider == "opencode" && (model.IndexOf('/') < 1 || model.EndsWith('/'))) throw new ArgumentException("Seleccioná un modelo configurado en OpenCode.");
+                if ((apiKey.Length == 0 && preset?.Local != true) || apiKey.Length > 8192 || apiKey.Contains('\r') || apiKey.Contains('\n')) throw new ArgumentException("Indica una clave API válida para este proveedor.");
+                if (provider == "opencode" && (model.IndexOf('/') < 1 || model.EndsWith('/'))) throw new ArgumentException("Selecciona un modelo configurado en OpenCode.");
                 if (preset?.Local == true) AiProviders.ValidateCredentials(baseUrl, apiKey);
                 if (!body.TryGetProperty("consent_accepted", out var accepted) || accepted.ValueKind != JsonValueKind.True)
-                    throw new ArgumentException("Aceptá el aviso de envío de contexto antes de habilitar la IA.");
+                    throw new ArgumentException("Acepta el aviso de envío de contexto antes de habilitar la IA.");
                 data.Ai = new AiConfiguration { AdditionalData = data.Ai.AdditionalData, Provider = provider, BaseUrl = baseUrl, Model = model, ApiKey = apiKey, Username = username,
                     Organization = provider == "openai" ? Option("organization", sameConnection ? data.Ai.Organization : "") : "", Project = provider == "openai" ? Option("project", sameConnection ? data.Ai.Project : "") : "",
                     Workspace = provider == "claude" ? Option("workspace", sameConnection ? data.Ai.Workspace : "") : "", ConsentVersion = AiConsentVersion, AcceptedAt = DateTimeOffset.UtcNow };
@@ -192,16 +192,16 @@ public sealed partial class LocalConnectionStore
     public AiInvocation PrepareAiInvocation(int serverId, string query, AiEvidence? evidence = null, bool evidenceReviewed = false, ExpectedAiTarget? expectedTarget = null) => WithInventory(data =>
     {
         if (data.Ai.ConsentVersion != AiConsentVersion || (data.Ai.ApiKey.Length == 0 && !AiProviders.IsLocal(AiProviders.Infer(data.Ai.Provider, data.Ai.BaseUrl))))
-            throw new InvalidOperationException("Configurá el proveedor y aceptá el envío de contexto en Ajustes → IA.");
+            throw new InvalidOperationException("Configura el proveedor y acepta el envío de contexto en Ajustes → IA.");
         if (string.IsNullOrWhiteSpace(query) || query.Length > 16000) throw new ArgumentException("La consulta debe tener entre 1 y 16000 caracteres.");
         if (evidence != null && (!evidenceReviewed || evidence.Content.Length is < 1 or > 12000 || evidence.Source is not ("manual" or "terminal-selection" or "diagnostic")))
-            throw new ArgumentException("Revisá la evidencia seleccionada; el límite es de 12000 caracteres.");
+            throw new ArgumentException("Revisa la evidencia seleccionada; el límite es de 12000 caracteres.");
         if (serverId < 0) return PrepareTemporary(data, serverId, query, evidence, expectedTarget);
         var server = data.Servers.SingleOrDefault(s => s.Id == serverId) ?? throw new InvalidOperationException("Conexión no encontrada.");
         if (expectedTarget != null && (expectedTarget.Address != server.IpAddress || expectedTarget.Protocol != server.ConnectionProtocol || expectedTarget.Port != (server.ConnectionProtocol == "rdp" ? server.RdpPort : server.SshPort)))
-            throw new InvalidOperationException("La conexión cambió desde que abriste la sesión. Cerrá la pestaña y volvé a abrirla antes de compartir contexto.");
+            throw new InvalidOperationException("La conexión cambió desde que abriste la sesión. Cierra la pestaña y vuelve a abrirla antes de compartir contexto.");
         if (evidence != null && (!evidenceReviewed || evidence.Content.Length is < 1 or > 12000 || evidence.Source is not ("manual" or "terminal-selection" or "diagnostic")))
-            throw new ArgumentException("Revisá la evidencia seleccionada; el límite es de 12000 caracteres.");
+            throw new ArgumentException("Revisa la evidencia seleccionada; el límite es de 12000 caracteres.");
         // Deliberately exclude credentials, descriptions and every other server.
         var identity = ContextIdentity(server);
         var conversation = data.AiHistory.Where(turn => turn.ServerId == server.Id && turn.TargetIdentity == identity)
@@ -262,7 +262,7 @@ public sealed partial class LocalConnectionStore
             return data;
         }
         catch (Exception ex) when (ex is CryptographicException or JsonException or InvalidDataException or ArgumentException)
-        { throw new InvalidDataException("No se pudo abrir el inventario protegido. No se modificó el archivo. Usá la misma cuenta de Windows o restaurá una copia válida."); }
+        { throw new InvalidDataException("No se pudo abrir el inventario protegido. No se modificó el archivo. Usa la misma cuenta de Windows o restaura una copia válida."); }
         finally { if (plain != null) CryptographicOperations.ZeroMemory(plain); }
     }
     private void Save(Inventory data)
@@ -301,7 +301,7 @@ public sealed partial class LocalConnectionStore
         item.Hostname = Text("hostname", item.Hostname).Trim();
         item.IpAddress = Text("ip_address", item.IpAddress).Trim();
         if (item.Hostname.Length == 0 || item.IpAddress.Length == 0 || item.IpAddress.Any(char.IsWhiteSpace) || item.IpAddress.IndexOfAny(new[] { '/', '\\', '@' }) >= 0)
-            throw new ArgumentException("Indicá un nombre y una dirección de servidor válidos.");
+            throw new ArgumentException("Indica un nombre y una dirección de servidor válidos.");
         item.Description = Text("description", item.Description, 4096);
         item.OsInfo = Text("os_info", item.OsInfo);
         item.ConnectionProtocol = Text("connection_protocol", item.ConnectionProtocol);

@@ -52,14 +52,14 @@ Name: "spanish"; MessagesFile: "compiler:Languages\Spanish.isl"; InfoBeforeFile:
 Name: "english"; MessagesFile: "compiler:Default.isl"; InfoBeforeFile: "install-notes.en.txt"
 
 [CustomMessages]
-spanish.CloseCheck=No se pudo comprobar si la aplicación está abierta: %1. Cerrala y volvé a ejecutar el instalador.
+spanish.CloseCheck=No se pudo comprobar si la aplicación está abierta: %1. Ciérrala y vuelve a ejecutar el instalador.
 english.CloseCheck=Could not check whether the application is running: %1. Close it and run the installer again.
-spanish.WebViewRequired=Instalá Microsoft Edge WebView2 Runtime (Evergreen) y volvé a ejecutar este instalador: https://developer.microsoft.com/microsoft-edge/webview2/
+spanish.WebViewRequired=Instala Microsoft Edge WebView2 Runtime (Evergreen) y vuelve a ejecutar este instalador: https://developer.microsoft.com/microsoft-edge/webview2/
 english.WebViewRequired=Install Microsoft Edge WebView2 Runtime (Evergreen), then run this installer again: https://developer.microsoft.com/microsoft-edge/webview2/
 
-spanish.CloseForFlatUpgrade=Para migrar a la instalación de ruta fija, cerrá AI Sysadmin y ejecutá este instalador. El actualizador anterior no admite esta migración inicial.
+spanish.CloseForFlatUpgrade=Para migrar a la instalación de ruta fija, cierra AI Sysadmin y ejecuta este instalador. El actualizador anterior no admite esta migración inicial.
 english.CloseForFlatUpgrade=To migrate to the fixed installation path, close AI Sysadmin and run this installer. The previous updater does not support this initial migration.
-spanish.CloseTimeout=No se pudo confirmar el cierre de AI Sysadmin. Cerrá sus ventanas y reintentá. El detalle está en el registro del instalador.
+spanish.CloseTimeout=No se pudo confirmar el cierre de AI Sysadmin. Cierra sus ventanas y reintenta. El detalle está en el registro del instalador.
 english.CloseTimeout=Could not confirm that AI Sysadmin has closed. Close its windows and retry. Details are in the setup log.
 
 [Registry]

@@ -35,7 +35,7 @@ public static class AiProviderTransport
     {
         var provider = AiProviders.Infer(invocation.Provider, invocation.BaseUrl);
         if (messages.Any(message => message.Image != null) && provider is "opencode" or "deepseek")
-            throw new InvalidOperationException("El envío de capturas no está habilitado para este proveedor. Elegí Gemini, OpenAI, Claude o un modelo de visión de Ollama/servidor compatible.");
+            throw new InvalidOperationException("El envío de capturas no está habilitado para este proveedor. Elige Gemini, OpenAI, Claude o un modelo de visión de Ollama/servidor compatible.");
         if (AiProviders.IsLocal(provider)) {
             AiProviders.NormalizeEndpoint(provider, invocation.BaseUrl);
             AiProviders.ValidateCredentials(invocation.BaseUrl, invocation.ApiKey);
@@ -65,7 +65,7 @@ public static class AiProviderTransport
         JsonElement response;
         try { response = await SendAsync(client, request, token); }
         catch (InvalidOperationException error) when (messages.Any(message => message.Image != null) && error.Message.StartsWith("HTTP 400:", StringComparison.Ordinal)) {
-            throw new InvalidOperationException("El proveedor rechazó la consulta con imagen (HTTP 400). Elegí un modelo con visión compatible o enviá la pregunta sin captura. No se reintentó ni se modificó la clave guardada.");
+            throw new InvalidOperationException("El proveedor rechazó la consulta con imagen (HTTP 400). Elige un modelo con visión compatible o envía la pregunta sin captura. No se reintentó ni se modificó la clave guardada.");
         }
         var text = claude ? string.Join("\n", response.GetProperty("content").EnumerateArray()
             .Where(part => part.GetProperty("type").GetString() == "text").Select(part => part.GetProperty("text").GetString())) :
@@ -112,8 +112,8 @@ public static class AiProviderTransport
             }
             return JsonSerializer.SerializeToElement(new { models = models.OrderBy(model => model.Name).Select(model => new { id = model.Id, name = model.Name }) });
         } catch (Exception ex) when (ex is HttpRequestException or OperationCanceledException) {
-            throw new InvalidOperationException(provider == "ollama" ? "No se pudo conectar con Ollama. Revisá la URL y que el servicio sea accesible desde este equipo." :
-                "No se pudo conectar con OpenCode. Revisá la URL del servidor, el usuario y la contraseña si está protegido.");
+            throw new InvalidOperationException(provider == "ollama" ? "No se pudo conectar con Ollama. Revisa la URL y que el servicio sea accesible desde este equipo." :
+                "No se pudo conectar con OpenCode. Revisa la URL del servidor, el usuario y la contraseña si está protegido.");
         }
     }
 
@@ -121,7 +121,7 @@ public static class AiProviderTransport
     {
         var preset = AiProviders.Get(provider);
         AiProviders.ValidateCredentials(preset.BaseUrl, secret);
-        if (string.IsNullOrWhiteSpace(secret)) throw new ArgumentException("Ingresá la clave API para consultar los modelos disponibles.");
+        if (string.IsNullOrWhiteSpace(secret)) throw new ArgumentException("Ingresa la clave API para consultar los modelos disponibles.");
         foreach (var value in new[] { organization, project, workspace })
             if (value.Length > 200 || value.Any(char.IsControl)) throw new ArgumentException("Los datos de la cuenta no son válidos.");
         using var client = new HttpClient(handler ?? new HttpClientHandler { AllowAutoRedirect = false }) { Timeout = TimeSpan.FromSeconds(15) };
@@ -161,16 +161,16 @@ public static class AiProviderTransport
                 if (cursor.Length == 0) return JsonSerializer.SerializeToElement(new { models = models.Values.OrderBy(model => model.Name).Select(model => new { id = model.Id, name = model.Name }) });
                 if (!cursors.Add(cursor)) break;
             }
-            throw new InvalidOperationException("El proveedor no permitió completar la lista de modelos. Reintentá la actualización.");
+            throw new InvalidOperationException("El proveedor no permitió completar la lista de modelos. Reintenta la actualización.");
         } catch (Exception ex) when (ex is HttpRequestException or OperationCanceledException) {
-            throw new InvalidOperationException("No se pudo consultar los modelos del proveedor. Revisá la conexión y reintentá.");
+            throw new InvalidOperationException("No se pudo consultar los modelos del proveedor. Revisa la conexión y reintenta.");
         }
     }
 
     private static async Task<string> OpenCodeAsync(HttpClient client, LocalConnectionStore.AiInvocation invocation, Message[] messages, CancellationToken token)
     {
         var model = invocation.Model.Split('/', 2);
-        if (model.Length != 2 || model.Any(string.IsNullOrWhiteSpace)) throw new InvalidOperationException("Elegí un modelo configurado en OpenCode.");
+        if (model.Length != 2 || model.Any(string.IsNullOrWhiteSpace)) throw new InvalidOperationException("Elige un modelo configurado en OpenCode.");
         async Task<JsonElement> Send(HttpMethod method, string path, object? body, CancellationToken cancellation) {
             using var request = new HttpRequestMessage(method, invocation.BaseUrl + path);
             LocalAuthentication(request, "opencode", invocation.ApiKey, invocation.Username);
@@ -186,14 +186,14 @@ public static class AiProviderTransport
         try {
             if (!session.TryGetProperty("permission", out var permissions) || !permissions.EnumerateArray().Any(rule =>
                 rule.GetProperty("permission").GetString() == "*" && rule.GetProperty("pattern").GetString() == "*" && rule.GetProperty("action").GetString() == "deny"))
-                throw new InvalidOperationException("Esta versión de OpenCode no confirmó el aislamiento de la sesión. Actualizá OpenCode antes de conectarlo.");
+                throw new InvalidOperationException("Esta versión de OpenCode no confirmó el aislamiento de la sesión. Actualiza OpenCode antes de conectarlo.");
             var response = await Send(HttpMethod.Post, "/session/" + id + "/message", new {
                 model = new { providerID = model[0], modelID = model[1] }, agent = "plan",
                 system = string.Join("\n\n", messages.Where(message => message.role == "system").Select(message => message.content)),
                 parts = new[] { new { type = "text", text = string.Join("\n\n", messages.Where(message => message.role != "system").Select(message => message.content)) } },
             }, token);
             if (response.TryGetProperty("info", out var info) && info.TryGetProperty("error", out var error) && error.ValueKind != JsonValueKind.Null)
-                throw new InvalidOperationException("OpenCode no pudo completar la consulta. Revisá el proveedor y el modelo configurados en OpenCode.");
+                throw new InvalidOperationException("OpenCode no pudo completar la consulta. Revisa el proveedor y el modelo configurados en OpenCode.");
             var text = string.Join("\n", response.GetProperty("parts").EnumerateArray().Where(part => part.GetProperty("type").GetString() == "text").Select(part => part.GetProperty("text").GetString()));
             if (string.IsNullOrWhiteSpace(text)) throw new InvalidOperationException("OpenCode no devolvió una respuesta de texto.");
             completed = true;
@@ -212,12 +212,12 @@ public static class AiProviderTransport
         using var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, token);
         if (!response.IsSuccessStatusCode) {
             var reason = (int)response.StatusCode switch {
-                401 => "El proveedor rechazó la autenticación. Revisá la clave configurada; este error no borra la clave guardada.",
-                403 => "El proveedor denegó el acceso. Revisá los permisos del proyecto, la cuenta y el modelo; no se borró la clave guardada.",
-                429 => "Se alcanzó una cuota o límite de solicitudes del proveedor. Esperá o revisá la cuota de tu cuenta; no hace falta volver a guardar la clave.",
-                500 or 502 or 503 or 504 => "El proveedor está temporalmente indisponible o sobrecargado. Probá de nuevo más tarde o elegí otro modelo. No se borró ni modificó la clave guardada.",
-                404 => "El modelo o endpoint no está disponible. Actualizá la lista de modelos en Configuración → IA.",
-                _ => "El proveedor rechazó la solicitud. Revisá el modelo y la configuración; no se modificaron las credenciales guardadas."
+                401 => "El proveedor rechazó la autenticación. Revisa la clave configurada; este error no borra la clave guardada.",
+                403 => "El proveedor denegó el acceso. Revisa los permisos del proyecto, la cuenta y el modelo; no se borró la clave guardada.",
+                429 => "Se alcanzó una cuota o límite de solicitudes del proveedor. Espera o revisa la cuota de tu cuenta; no hace falta volver a guardar la clave.",
+                500 or 502 or 503 or 504 => "El proveedor está temporalmente indisponible o sobrecargado. Prueba de nuevo más tarde o elige otro modelo. No se borró ni modificó la clave guardada.",
+                404 => "El modelo o endpoint no está disponible. Actualiza la lista de modelos en Configuración → IA.",
+                _ => "El proveedor rechazó la solicitud. Revisa el modelo y la configuración; no se modificaron las credenciales guardadas."
             };
             throw new InvalidOperationException($"HTTP {(int)response.StatusCode}: {reason}");
         }

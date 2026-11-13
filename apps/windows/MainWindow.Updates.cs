@@ -11,7 +11,7 @@ public partial class MainWindow
     {
         if(_updates.IsInstalling) {
             e.Cancel=true;
-            MessageBox.Show(this,UserLanguage.Text("La actualización se está instalando. Esperá a que termine antes de cerrar la aplicación."),UserLanguage.Text("Actualización en curso"),MessageBoxButton.OK,MessageBoxImage.Information);
+            MessageBox.Show(this,UserLanguage.Text("La actualización se está instalando. Espera a que termine antes de cerrar la aplicación."),UserLanguage.Text("Actualización en curso"),MessageBoxButton.OK,MessageBoxImage.Information);
         }
         base.OnClosing(e);
         if (!e.Cancel) SaveWindowPresentation();
@@ -44,7 +44,7 @@ public partial class MainWindow
             await _updates.InstallAsync();
         }
         if(type=="UPDATE_RESTART") {
-            if(MessageBox.Show(this,UserLanguage.Text("¿Cerrar AI Sysadmin, instalar la actualización y volver a abrir? Se cerrarán las sesiones SSH y RDP abiertas. Guardá tu trabajo antes de continuar."),UserLanguage.Text("Reiniciar aplicación"),MessageBoxButton.YesNo,MessageBoxImage.Warning)!=MessageBoxResult.Yes) return _updates.Status();
+            if(MessageBox.Show(this,UserLanguage.Text("¿Cerrar AI Sysadmin, instalar la actualización y volver a abrir? Se cerrarán las sesiones SSH y RDP abiertas. Guarda tu trabajo antes de continuar."),UserLanguage.Text("Reiniciar aplicación"),MessageBoxButton.YesNo,MessageBoxImage.Warning)!=MessageBoxResult.Yes) return _updates.Status();
             _updates.Restart(); Close();
         }
         return _updates.Status();

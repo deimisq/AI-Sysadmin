@@ -55,14 +55,14 @@ export function ServerExplorer() {
                     }
                     if (active && version === folderLoadVersion.current) { setLayout(saved.layout); folderRevision.current = saved.revision; folderReady.current = true; }
                 } else if (active) { setLayout(readFolderLayout(localStorage.getItem(layoutKey))); folderReady.current = true; }
-            } catch { if (active) toast.error(uiText('No se pudo leer la organización de carpetas. Actualizá el inventario para reintentar.')); }
+            } catch { if (active) toast.error(uiText('No se pudo leer la organización de carpetas. Actualiza el inventario para reintentar.')); }
         };
         void load(); window.addEventListener('local-inventory-restored',load); window.addEventListener('connection-folders-refresh',load);
         return () => { active = false; window.removeEventListener('local-inventory-restored',load); window.removeEventListener('connection-folders-refresh',load); };
     }, [layoutKey]);
     const saveLayout = async (next: FolderLayout) => {
         if (!layoutKey) return false;
-        if (!folderReady.current || folderSaving.current) { toast.warning(uiText('Esperá a que termine la carga o el guardado de carpetas.')); return false; }
+        if (!folderReady.current || folderSaving.current) { toast.warning(uiText('Espera a que termine la carga o el guardado de carpetas.')); return false; }
         folderSaving.current = true;
         try {
             if (local) { const saved = await api.put<{ revision: number; layout: FolderLayout }>('/workspace/folders',{ layout: next, revision: folderRevision.current }); folderRevision.current = saved.revision; setLayout(saved.layout); }
@@ -347,7 +347,7 @@ export function ServerExplorer() {
             <Dialog open={!!folderForm} onOpenChange={open => { if (!open) setFolderForm(null); }}>
                 <DialogContent className="bg-card text-card-foreground">
                     <DialogTitle>{folderForm?.id ? 'Renombrar carpeta' : 'Crear carpeta local'}</DialogTitle>
-                    <DialogDescription>{uiText("Organizá conexiones en este equipo sin cambiar sus permisos.")}</DialogDescription>
+                    <DialogDescription>{uiText("Organiza conexiones en este equipo sin cambiar sus permisos.")}</DialogDescription>
                     <form className="space-y-4" onSubmit={async event => {
                         event.preventDefault();
                         if (!folderForm?.name.trim()) return;

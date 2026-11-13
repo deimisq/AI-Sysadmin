@@ -51,7 +51,7 @@ export function LocalAiSettings() {
             setLocalModels(result.models);
             setModel(previous => result.models.some(item => item.id === previous) ? previous : result.models[0]?.id || previous);
             setAccepted(false);
-            if (!result.models.length) setDiscoveryError(!['ollama', 'opencode'].includes(id) ? uiText('El proveedor no devolvió modelos disponibles para esta clave.') : id === 'ollama' ? uiText('Ollama está disponible, pero no tiene modelos locales descargados.') : uiText('OpenCode está disponible, pero no tiene proveedores conectados. Configuralos en OpenCode y actualizá la lista.'));
+            if (!result.models.length) setDiscoveryError(!['ollama', 'opencode'].includes(id) ? uiText('El proveedor no devolvió modelos disponibles para esta clave.') : id === 'ollama' ? uiText('Ollama está disponible, pero no tiene modelos locales descargados.') : uiText('OpenCode está disponible, pero no tiene proveedores conectados. Configúralos en OpenCode y actualiza la lista.'));
         } catch (error) {
             if (version === discoveryVersion.current) setDiscoveryError(error instanceof Error ? error.message : uiText('No se pudo detectar el servicio local.'));
         } finally { if (version === discoveryVersion.current) setDiscovering(false); }
@@ -105,7 +105,7 @@ export function LocalAiSettings() {
     };
     return <section className="rounded-lg border border-border bg-card p-6 space-y-4" aria-label="Configurar IA en este equipo">
         <h2 className="text-lg font-semibold">{uiText("Proveedor de inteligencia artificial")}</h2>
-        <p className="text-sm text-muted-foreground">{uiText("Elegí el proveedor y completá los datos de su conexión.")}</p>
+        <p className="text-sm text-muted-foreground">{uiText("Elige el proveedor y completa los datos de su conexión.")}</p>
         {loadError ? <Button onClick={load}>{uiText("Reintentar lectura")}</Button> : <form onSubmit={save} className="space-y-4">
             <label className="block text-sm">{uiText("Proveedor")}<select aria-label="Proveedor de IA" className="mt-2 w-full rounded border px-3" value={providerId} disabled={busy} onChange={event => changeProvider(event.target.value)}>
                     <optgroup label="Servicios en la nube">{providers.filter(item => !item.local).map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</optgroup>
@@ -114,17 +114,17 @@ export function LocalAiSettings() {
             </label>
             {provider?.local && <label className="block text-sm">{uiText("URL del servidor")}{" "}{providerId === 'ollama' ? 'Ollama' : 'OpenCode'}
                 <Input aria-label="URL del servidor IA" type="url" required value={baseUrl} onChange={event => { setBaseUrl(event.target.value); invalidateConnection(); }} disabled={busy} className="mt-2" placeholder={providerId === 'ollama' ? 'http://localhost:11434' : 'http://localhost:4096'} />
-                <span className="block mt-1 text-xs text-muted-foreground">{uiText("Puede estar en este equipo, otro equipo de la red o detrás de un proxy. Incluí el puerto y la ruta del proxy, si corresponde.")}</span>
+                <span className="block mt-1 text-xs text-muted-foreground">{uiText("Puede estar en este equipo, otro equipo de la red o detrás de un proxy. Incluye el puerto y la ruta del proxy, si corresponde.")}</span>
             </label>}
             {providerId === 'opencode' && <label className="block text-sm">{uiText("Usuario del servidor OpenCode")}<Input aria-label={uiText("Usuario de OpenCode")} value={username} required maxLength={200} disabled={busy} className="mt-2" onChange={event => { setUsername(event.target.value); invalidateConnection(); }} />
             </label>}
-            <label className="block text-sm">{providerId === 'opencode' ? uiText('Contraseña de OpenCode (opcional)') : providerId === 'ollama' ? 'Token del proxy (opcional)' : 'Clave API'} {sameProvider && settings?.has_api_key && uiText('· dejá vacío para conservar la guardada')}
+            <label className="block text-sm">{providerId === 'opencode' ? uiText('Contraseña de OpenCode (opcional)') : providerId === 'ollama' ? 'Token del proxy (opcional)' : 'Clave API'} {sameProvider && settings?.has_api_key && uiText('· deja vacío para conservar la guardada')}
                 <Input aria-label="Clave API de IA" type="password" autoComplete="off" value={key} onChange={e => { setKey(e.target.value); invalidateModels(); }} onBlur={() => { if (key || provider?.local || (sameProvider && settings?.has_api_key)) void discover(providerId, key); }} disabled={busy} className="mt-2" />
             </label>
-            {sameProvider && settings?.has_api_key && <p className="text-xs text-muted-foreground">{uiText("Hay una clave protegida guardada en este equipo. El campo vacío no significa que se haya perdido.")}{!settings.consent_accepted && uiText(' La IA está pausada; revisá y guardá para habilitarla.')}</p>}
-            {providerId === 'openai' && <p className="text-xs text-muted-foreground">{uiText("Usá una clave de la API de OpenAI. El inicio de sesión de ChatGPT no se utiliza en esta conexión.")}</p>}
+            {sameProvider && settings?.has_api_key && <p className="text-xs text-muted-foreground">{uiText("Hay una clave protegida guardada en este equipo. El campo vacío no significa que se haya perdido.")}{!settings.consent_accepted && uiText(' La IA está pausada; revisa y guarda para habilitarla.')}</p>}
+            {providerId === 'openai' && <p className="text-xs text-muted-foreground">{uiText("Usa una clave de la API de OpenAI. El inicio de sesión de ChatGPT no se utiliza en esta conexión.")}</p>}
             {providerId === 'ollama' && <p className="text-sm text-muted-foreground">{uiText("Ollama nativo no requiere clave. La app acepta la URL del servidor terminada en /api, /v1 o sin sufijo y la adapta automáticamente. El token solo se usa si tu proxy lo exige; para enviar credenciales a otro equipo se necesita HTTPS.")}</p>}
-            {providerId === 'opencode' && <p className="text-sm text-muted-foreground">{uiText("Iniciá")}{" "}<code>opencode serve</code>{" "}{uiText("en el servidor indicado. Usará sus proveedores configurados, locales o de nube. El usuario predeterminado es opencode; si configuraste OPENCODE_SERVER_USERNAME, usá ese valor. Para credenciales fuera de este equipo usá HTTPS.")}</p>}
+            {providerId === 'opencode' && <p className="text-sm text-muted-foreground">{uiText("Inicia")}{" "}<code>opencode serve</code>{" "}{uiText("en el servidor indicado. Usará sus proveedores configurados, locales o de nube. El usuario predeterminado es opencode; si configuraste OPENCODE_SERVER_USERNAME, usa ese valor. Para credenciales fuera de este equipo usa HTTPS.")}</p>}
             {providerId === 'openai' && <details className="text-sm"><summary className="cursor-pointer">{uiText("Organización y proyecto (opcional)")}</summary><div className="mt-3 space-y-3">
                 <label className="block">{uiText("Organización")}<Input onBlur={() => { if (key || (sameProvider && settings?.has_api_key)) void discover(providerId, key); }} aria-label={uiText("Organización de OpenAI")} value={organization} maxLength={200} disabled={busy} onChange={event => { setOrganization(event.target.value); invalidateModels(); }} /></label>
                 <label className="block">{uiText("Proyecto")}<Input onBlur={() => { if (key || (sameProvider && settings?.has_api_key)) void discover(providerId, key); }} aria-label="Proyecto de OpenAI" value={project} maxLength={200} disabled={busy} onChange={event => { setProject(event.target.value); invalidateModels(); }} /></label>
@@ -133,7 +133,7 @@ export function LocalAiSettings() {
                 <span className="text-xs text-muted-foreground">{uiText("Necesario para claves que no están limitadas a un workspace.")}</span>
             </label>}
             <label className="block text-sm">{uiText("Modelo disponible")}<select aria-label={provider?.local ? uiText('Modelo local') : uiText('Modelo IA')} className="mt-2 w-full rounded border px-3" value={model} disabled={busy || discovering || !localModels.length} onChange={event => { setModel(event.target.value); setAccepted(false); }}>
-                    {!localModels.some(item => item.id === model) && <option value={model}>{discovering ? 'Consultando modelos…' : model ? model + ' · pendiente de verificar' : uiText('Cargá los modelos para seleccionar')}</option>}
+                    {!localModels.some(item => item.id === model) && <option value={model}>{discovering ? 'Consultando modelos…' : model ? model + ' · pendiente de verificar' : uiText('Carga los modelos para seleccionar')}</option>}
                     {localModels.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}
                 </select>
             </label>

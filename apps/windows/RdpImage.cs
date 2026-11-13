@@ -7,7 +7,7 @@ public static class RdpImage
 {
     public static string Validate(string image, bool reviewed)
     {
-        if (!reviewed) throw new ArgumentException("Revisá la captura y confirmá su envío al proveedor.");
+        if (!reviewed) throw new ArgumentException("Revisa la captura y confirma su envío al proveedor.");
         if (!image.StartsWith("data:image/png;base64,", StringComparison.Ordinal) || image.Length > 5600000)
             throw new ArgumentException("La captura debe ser PNG y no superar 4 MiB.");
         try {

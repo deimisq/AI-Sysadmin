@@ -18,11 +18,11 @@ export function TerminalContextSettings() {
         try {
             const [list,policy] = await Promise.all([sendCommand<Journal[]>('local_context_list'),api.get<{ max_characters: number }>('/workspace/context-policy')]);
             setJournals(list); setLimit(String(policy.max_characters)); setLoaded(true);
-        } catch { setMessage(uiText('No se pudo cargar la gestión de registros. Reintentá para comprobar su estado.')); }
+        } catch { setMessage(uiText('No se pudo cargar la gestión de registros. Reintenta para comprobar su estado.')); }
         finally { setBusy(false); }
     };
     useEffect(() => { void refresh(); },[]);
-    return <Card><CardHeader><CardTitle>{uiText("Contexto y registros de terminal")}</CardTitle><CardDescription>{uiText("Controlá lo que se conserva en este equipo y cuánto contexto se envía al pedir ayuda.")}</CardDescription></CardHeader><CardContent className="space-y-4">
+    return <Card><CardHeader><CardTitle>{uiText("Contexto y registros de terminal")}</CardTitle><CardDescription>{uiText("Controla lo que se conserva en este equipo y cuánto contexto se envía al pedir ayuda.")}</CardDescription></CardHeader><CardContent className="space-y-4">
         <p className="text-sm text-muted-foreground">{uiText("Los registros están cifrados para tu usuario Windows. Borrarlos no elimina conversaciones, registros de tareas ni datos que ya recibió el proveedor IA, y no cancela consultas en curso. No hay borrado automático.")}</p>
         <label className="block space-y-2">{uiText("Contexto de terminal para próximas consultas y tareas")}<select aria-label="Ventana de contexto IA" className="block w-full rounded border bg-background p-2" value={limit} disabled={busy || !loaded} onChange={event => setLimit(event.target.value)}>
                 <option value="0">{uiText("Completo (hasta 240000 caracteres; rechaza sesiones mayores)")}</option>

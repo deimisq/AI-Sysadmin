@@ -21,6 +21,8 @@ La ayuda distingue datos declarados de evidencia comprobada, capturas RDP autori
 
 ## Mantenimiento
 
+Usar español neutro, sin voseo ni regionalismos, en los artículos y sus controles. Conservar el contenido completo en inglés y no alterar comandos, identificadores técnicos ni contenido del usuario.
+
 Al cambiar una función, revisar su artículo en ambos idiomas, los nombres visibles de los controles y los enlaces relacionados. Mantener pasos, resultados y límites concretos; no insertar instrucciones de compilación en las guías del usuario instalado. No fijar una «última versión» que caduque con cada compilación.
 
 La búsqueda consulta categoría, título, resumen y cuerpo, sin distinguir mayúsculas ni tildes. Todas las palabras deben coincidir en el artículo. Si la selección no coincide con la búsqueda, se muestra el primer resultado; sin coincidencias se ofrece limpiar el filtro. Los enlaces relacionados restablecen el filtro. Cada artículo nuevo comienza arriba y el diseño utiliza desplazamiento por panel sin calcular alturas a partir del viewport.

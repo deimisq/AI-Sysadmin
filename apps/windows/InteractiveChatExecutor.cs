@@ -72,13 +72,13 @@ public sealed class InteractiveChatExecutor
         }
     }
     public async Task<LocalTaskAgent.Observation> ExecuteAsync(string session, string command, Action<string> write, CancellationToken token) {
-        if (!_terminals.TryGetValue(session, out var terminal)) throw new InvalidOperationException("Esperá a que aparezca el prompt de la terminal.");
+        if (!_terminals.TryGetValue(session, out var terminal)) throw new InvalidOperationException("Espera a que aparezca el prompt de la terminal.");
         Pending pending;
         lock (terminal) {
             token.ThrowIfCancellationRequested();
             if (terminal.Pending != null) throw new InvalidOperationException("La terminal ya tiene un comando del agente en curso.");
             var prompt = LastLine(Plain(terminal.Recent.ToString()));
-            if (!Regex.IsMatch(prompt, @"[#$%] ?$") || prompt.Length > 300) throw new InvalidOperationException("La terminal no muestra un prompt listo. Finalizá la interacción actual antes de ejecutar desde el chat.");
+            if (!Regex.IsMatch(prompt, @"[#$%] ?$") || prompt.Length > 300) throw new InvalidOperationException("La terminal no muestra un prompt listo. Finaliza la interacción actual antes de ejecutar desde el chat.");
             var colon = prompt.IndexOf(':');
             var prefix = colon > 0 && prompt[..colon].Contains('@') ? prompt[..(colon + 1)] : "";
             pending = new(command, prompt, prefix); terminal.Pending = pending;

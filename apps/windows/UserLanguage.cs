@@ -36,5 +36,5 @@ public static class UserLanguage
     public static string Text(string text) => Translate(text, Current);
     public static string Translate(string text, string language) => language == "en" && English.Value.TryGetValue(text, out var translated) ? translated : text;
     public static string BootstrapScript => "window.__AI_AGENT_LANGUAGE__=" + JsonSerializer.Serialize(Current) + ";";
-    public static string Prompt(string text) => Current == "en" ? text.Replace("Respondé en español", "Respond in English", StringComparison.Ordinal) : text;
+    public static string Prompt(string text) => Current == "en" ? text.Replace("Responde en español", "Respond in English", StringComparison.Ordinal) : text + " Usa español neutro, sin voseo ni regionalismos.";
 }

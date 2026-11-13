@@ -210,7 +210,7 @@ namespace AiSysadminDesktop
             MainWebView.Visibility = Visibility.Hidden;
             StartupPanel.Visibility = Visibility.Visible;
             StartupTitle.Text = "No pudimos iniciar el espacio de trabajo";
-            StartupDescription.Text = "Tus conexiones y credenciales guardadas se conservan. Podés reintentar; si el problema continúa, repará la instalación con el paquete más reciente.";
+            StartupDescription.Text = "Tus conexiones y credenciales guardadas se conservan. Puedes reintentar; si el problema continúa, repara la instalación con el paquete más reciente.";
             StartupProgress.Visibility = Visibility.Collapsed;
             StartupActions.Visibility = Visibility.Visible;
             StartupCode.Text = "Código: " + code;
@@ -286,7 +286,7 @@ namespace AiSysadminDesktop
                             var payload = root.GetProperty("payload").Clone();
                             if (type == "LOCAL_CONTEXT_DELETE")
                             {
-                                if (!payload.TryGetProperty("confirmed",out var confirmed) || confirmed.ValueKind != JsonValueKind.True) throw new InvalidOperationException("Confirmá el borrado del registro local.");
+                                if (!payload.TryGetProperty("confirmed",out var confirmed) || confirmed.ValueKind != JsonValueKind.True) throw new InvalidOperationException("Confirma el borrado del registro local.");
                                 await Task.Run(() => _terminalContexts.DeleteAsync(payload.GetProperty("id").GetString()!));
                             }
                             var result = await Task.Run(() => _terminalContexts.ListAsync());
@@ -311,7 +311,7 @@ namespace AiSysadminDesktop
                             object result;
                             if (type == "LOCAL_CHAT_CANCEL") { _chatCommands.Cancel(); result = true; }
                             else if (type == "LOCAL_CHAT_EXECUTE") {
-                                if (_taskAgent.Status()?.Status == "running") throw new InvalidOperationException("Esperá o cancelá la tarea activa antes de ejecutar desde el chat.");
+                                if (_taskAgent.Status()?.Status == "running") throw new InvalidOperationException("Espera o cancela la tarea activa antes de ejecutar desde el chat.");
                                 result = await _chatCommands.ExecuteAsync(payload);
                             }
                             else {

@@ -17,7 +17,7 @@ export function DocsView() {
     return <div className="flex h-full min-h-0 flex-col gap-4 p-4 md:p-6">
         <header className="shrink-0">
             <h1 className="flex items-center gap-2 text-2xl font-semibold"><BookOpen size={24} />{english ? 'Documentation' : 'Documentación'}</h1>
-            <p className="mt-1 text-sm text-muted-foreground">{english ? 'Practical Windows guides. Choose a topic or search all articles.' : 'Guías prácticas de Windows. Elegí un tema o buscá en todos los artículos.'}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{english ? 'Practical Windows guides. Choose a topic or search all articles.' : 'Guías prácticas de Windows. Elige un tema o busca en todos los artículos.'}</p>
         </header>
         <div className="relative shrink-0">
             <Search aria-hidden="true" className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -48,7 +48,7 @@ export function DocsView() {
                     </footer>
                 </div> : <div role="status" className="py-8 text-center">
                     <h2 className="font-semibold">{english ? 'No matching articles' : 'No se encontraron artículos'}</h2>
-                    <p className="mt-2 text-sm text-muted-foreground">{english ? 'Try fewer words or another topic.' : 'Probá con menos palabras o con otro tema.'}</p>
+                    <p className="mt-2 text-sm text-muted-foreground">{english ? 'Try fewer words or another topic.' : 'Prueba con menos palabras o con otro tema.'}</p>
                     <button className="mt-4 rounded border px-3 py-2 text-sm" onClick={() => setQuery('')}>{english ? 'Show all articles' : 'Mostrar todos los artículos'}</button>
                 </div>}
             </article>

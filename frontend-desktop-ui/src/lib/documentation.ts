@@ -23,125 +23,125 @@ function article(id: string, category: string, title: string, summary: string, c
 
 export const documentation: Record<'es' | 'en', DocumentationArticle[]> = {
     es: [
-        article('start', 'Primeros pasos', 'Empezar a usar la app', 'Conectá un equipo y prepará el acompañante IA.', `## Qué ofrece Windows
-Administrá conexiones SSH y RDP, transferí archivos por SFTP y consultá a un proveedor IA propio. El modo local no requiere cuenta empresarial ni backend. La IA es opcional para conectarte.
+        article('start', 'Primeros pasos', 'Empezar a usar la app', 'Conecta un equipo y prepara el acompañante IA.', `## Qué ofrece Windows
+Administra conexiones SSH y RDP, transfiere archivos por SFTP y consulta a un proveedor IA propio. El modo local no requiere cuenta empresarial ni backend. La IA es opcional para conectarte.
 ## Primera conexión
-1. Abrí **Archivo → Nueva conexión…** y elegí el protocolo.
-2. Completá dirección, puerto y autenticación. Guardá la conexión para encontrarla en el explorador.
-3. Abrila desde el árbol, o usá la barra superior para una conexión rápida.
-4. Para habilitar IA, abrí **Herramientas → Inteligencia artificial…**, configurá un proveedor y seleccioná un modelo disponible.
+1. Abre **Archivo → Nueva conexión…** y elige el protocolo.
+2. Completa dirección, puerto y autenticación. Guarda la conexión para encontrarla en el explorador.
+3. Ábrela desde el árbol, o usa la barra superior para una conexión rápida.
+4. Para habilitar IA, abre **Herramientas → Inteligencia artificial…**, configura un proveedor y selecciona un modelo disponible.
 ## Antes de preguntar
-Seleccioná la pestaña correcta y revisá el destino y las opciones de contexto del acompañante. RDP no proporciona la misma información que una terminal SSH.`, ['ssh', 'rdp', 'providers']),
+Selecciona la pestaña correcta y revisa el destino y las opciones de contexto del acompañante. RDP no proporciona la misma información que una terminal SSH.`, ['ssh', 'rdp', 'providers']),
         article('ssh', 'Conexiones', 'Terminal SSH', 'Sesiones guardadas, conexiones rápidas y comandos interactivos.', `## Preparar el acceso
-Creá una conexión SSH con dirección, puerto, usuario y autenticación. No es obligatorio usar root: elegí los permisos que necesites. Si utilizás un archivo de clave privada, debe seguir disponible en su ruta.
+Crea una conexión SSH con dirección, puerto, usuario y autenticación. No es obligatorio usar root: elige los permisos que necesites. Si utilizas un archivo de clave privada, debe seguir disponible en su ruta.
 ## Trabajar en la terminal
-La sesión conserva su estado, incluido el directorio de trabajo. Podés ejecutar comandos manualmente y preguntar después por su salida. Cerrar la pestaña termina la sesión; las preferencias de presentación no vuelven a conectar equipos.
-Los comandos autorizados desde el chat se escriben en esa terminal, no en una conexión separada. Evitá escribir otro mientras se ejecuta uno del agente. Atendé las preguntas interactivas en la terminal.
+La sesión conserva su estado, incluido el directorio de trabajo. Puedes ejecutar comandos manualmente y preguntar después por su salida. Cerrar la pestaña termina la sesión; las preferencias de presentación no vuelven a conectar equipos.
+Los comandos autorizados desde el chat se escriben en esa terminal, no en una conexión separada. Evita escribir otro mientras se ejecuta uno del agente. Atiende las preguntas interactivas en la terminal.
 Volver al prompt no demuestra un código de salida 0. Si el código no está disponible, el agente debe aclararlo.
 ## Conexiones rápidas
-Podés conectarte sin crear un perfil guardado. La conversación temporal no sustituye al historial de un destino guardado.`, ['chat', 'files', 'troubleshooting']),
+Puedes conectarte sin crear un perfil guardado. La conversación temporal no sustituye al historial de un destino guardado.`, ['chat', 'files', 'troubleshooting']),
         article('rdp', 'Conexiones', 'Escritorio remoto RDP', 'Qué puede conocer la IA y cómo compartir una captura.', `## Información disponible
 La IA recibe conversación y datos declarados del perfil. El nombre o sistema elegido no prueban la versión real de Windows ni sus recursos. No recibe automáticamente pantalla, eventos ni salida PowerShell.
 ## Compartir evidencia
-Pegá un error o una salida de diagnóstico en el chat. En una conexión RDP guardada, podés solicitar una captura del control remoto activo: revisá la vista previa y autorizá la imagen para esa consulta. Requiere un modelo con visión.
+Pega un error o una salida de diagnóstico en el chat. En una conexión RDP guardada, puedes solicitar una captura del control remoto activo: revisa la vista previa y autoriza la imagen para esa consulta. Requiere un modelo con visión.
 La captura no es continua, no se guarda como imagen en el historial y no usa el monitor local como alternativa. Las conexiones RDP temporales no ofrecen captura.
 ## Ejecutar indicaciones
-La IA asesora: no controla el escritorio ni ejecuta PowerShell por SSH. Revisá los pasos y realizalos manualmente en el equipo remoto. Los permisos SSH no autorizan acciones RDP.`, ['context', 'providers', 'security']),
+La IA asesora: no controla el escritorio ni ejecuta PowerShell por SSH. Revisa los pasos y realízalos manualmente en el equipo remoto. Los permisos SSH no autorizan acciones RDP.`, ['context', 'providers', 'security']),
         article('folders', 'Conexiones', 'Organizar equipos y paneles', 'Carpetas, búsqueda y preferencias de presentación.', `## Explorar conexiones
-Usá **Archivo → Nueva carpeta…** para organizar equipos. Buscar en el árbol no reemplaza la expansión guardada; las aperturas temporales necesarias para mostrar coincidencias no cambian esa preferencia.
+Usa **Archivo → Nueva carpeta…** para organizar equipos. Buscar en el árbol no reemplaza la expansión guardada; las aperturas temporales necesarias para mostrar coincidencias no cambian esa preferencia.
 ## Ajustar el espacio de trabajo
 El menú **Ver** permite alternar explorador y acompañante IA. Hay además un panel de herramientas opcional con sesiones, tareas IA y transferencias; puede estar oculto.
-Usá **Ctrl+Alt+B** para el explorador, **Ctrl+Alt+I** para IA y **Ctrl+Shift+P** para buscar acciones.
+Usa **Ctrl+Alt+B** para el explorador, **Ctrl+Alt+I** para IA y **Ctrl+Shift+P** para buscar acciones.
 ## Qué se recuerda
 Se guardan tamaño normal y estado maximizado de la ventana, paneles visibles y expansión de carpetas y grupos por usuario y espacio. No se restauran sesiones remotas. El tamaño se adapta a límites compatibles con la pantalla.`, ['start', 'backup', 'updates']),
-        article('files', 'Conexiones', 'Transferir archivos por SFTP', 'Subí o descargá archivos de una conexión SSH.', `## Abrir archivos remotos
-Elegí **Archivos** en la barra de una terminal SSH. SFTP usa el acceso de esa conexión: el servidor debe permitirlo y la cuenta necesita permisos sobre las rutas.
+        article('files', 'Conexiones', 'Transferir archivos por SFTP', 'Sube o descarga archivos de una conexión SSH.', `## Abrir archivos remotos
+Elige **Archivos** en la barra de una terminal SSH. SFTP usa el acceso de esa conexión: el servidor debe permitirlo y la cuenta necesita permisos sobre las rutas.
 ## Transferir
-1. Navegá a la carpeta remota.
-2. Elegí subir o descargar y seleccioná el archivo o destino local.
-3. Revisá progreso y resultado. Las transferencias también aparecen en el panel de herramientas cuando está visible.
+1. Navega a la carpeta remota.
+2. Elige subir o descargar y selecciona el archivo o destino local.
+3. Revisa progreso y resultado. Las transferencias también aparecen en el panel de herramientas cuando está visible.
 ## Resolver un fallo
-Podés cancelar una transferencia en curso. Confirmá el resultado antes de repetir: permisos, desconexiones o colisiones de nombre requieren revisar el destino. Este explorador no exporta el inventario de conexiones.`, ['ssh', 'backup', 'troubleshooting']),
+Puedes cancelar una transferencia en curso. Confirma el resultado antes de repetir: permisos, desconexiones o colisiones de nombre requieren revisar el destino. Este explorador no exporta el inventario de conexiones.`, ['ssh', 'backup', 'troubleshooting']),
         article('providers', 'Inteligencia artificial', 'Configurar proveedor y modelos', 'Servicios en la nube, Ollama y OpenCode.', `## Proveedores en la nube
-Abrí **Herramientas → Inteligencia artificial…**. Elegí un proveedor, como ChatGPT/OpenAI, Gemini, Claude o DeepSeek, y completá la clave API. La app configura la dirección y consulta los modelos disponibles para ese acceso. Una suscripción de chat no garantiza acceso ni saldo en la API.
-Actualizá la lista después de cambiar la clave o los datos de cuenta y seleccioná un modelo. Sin modelos, revisá permisos, disponibilidad y cuota. Visión y límites de contexto dependen del modelo.
+Abre **Herramientas → Inteligencia artificial…**. Elige un proveedor, como ChatGPT/OpenAI, Gemini, Claude o DeepSeek, y completa la clave API. La app configura la dirección y consulta los modelos disponibles para ese acceso. Una suscripción de chat no garantiza acceso ni saldo en la API.
+Actualiza la lista después de cambiar la clave o los datos de cuenta y selecciona un modelo. Sin modelos, revisa permisos, disponibilidad y cuota. Visión y límites de contexto dependen del modelo.
 ## Ollama
-Indicá la URL del servidor, por ejemplo \`http://localhost:11434\`. Debe estar iniciado y tener modelos descargados. El token del proxy es opcional. localhost es el equipo donde corre esta app.
+Indica la URL del servidor, por ejemplo \`http://localhost:11434\`. Debe estar iniciado y tener modelos descargados. El token del proxy es opcional. localhost es el equipo donde corre esta app.
 ## OpenCode
-Indicá su URL, por ejemplo \`http://localhost:4096\`, usuario y contraseña cuando corresponda. Conectá los proveedores en OpenCode y actualizá la lista. OpenCode local no garantiza procesamiento local: depende del proveedor configurado allí.
+Indica su URL, por ejemplo \`http://localhost:4096\`, usuario y contraseña cuando corresponda. Conecta los proveedores en OpenCode y actualiza la lista. OpenCode local no garantiza procesamiento local: depende del proveedor configurado allí.
 ## Guardar la configuración
-Completá los campos específicos del proveedor y revisá el consentimiento. Para el mismo proveedor y conexión, dejar la clave vacía conserva la guardada cuando la interfaz lo indica. Un HTTP 503 no demuestra pérdida de la clave.`, ['chat', 'context', 'troubleshooting']),
+Completa los campos específicos del proveedor y revisa el consentimiento. Para el mismo proveedor y conexión, dejar la clave vacía conserva la guardada cuando la interfaz lo indica. Un HTTP 503 no demuestra pérdida de la clave.`, ['chat', 'context', 'troubleshooting']),
         article('chat', 'Inteligencia artificial', 'Conversar y autorizar comandos', 'Preguntas nuevas, resultados y permisos por destino.', `## Conversar sobre la terminal
-Preguntá por el último comando, citá un episodio anterior o cambiá de tema. La pregunta más reciente debe guiar la respuesta. Mencioná el comando o fragmento relevante para evitar ambigüedad.
+Pregunta por el último comando, cita un episodio anterior o cambia de tema. La pregunta más reciente debe guiar la respuesta. Menciona el comando o fragmento relevante para evitar ambigüedad.
 ## Autorizar en SSH
-Revisá comando, propósito y destino antes de aprobar. Los permisos pueden cubrir un comando, la sesión o persistir para ese destino; son revocables mediante los controles de permisos. Una frase del modelo no concede autorización.
-Después de ejecutar, el agente usa la salida capturada para continuar. No debe detener comandos largos automáticamente por tiempo o volumen. Si interrumpís, los cambios previos no se revierten y puede quedar un resultado parcial o incierto.
+Revisa comando, propósito y destino antes de aprobar. Los permisos pueden cubrir un comando, la sesión o persistir para ese destino; son revocables mediante los controles de permisos. Una frase del modelo no concede autorización.
+Después de ejecutar, el agente usa la salida capturada para continuar. No debe detener comandos largos automáticamente por tiempo o volumen. Si interrumpes, los cambios previos no se revierten y puede quedar un resultado parcial o incierto.
 ## Tareas avanzadas
-**Tarea avanzada** sirve para objetivos SSH de varios pasos con seguimiento. Revisá alcance, acciones y resultados. El panel de herramientas incluye tareas IA. Cancelar no revierte cambios ni justifica repetir acciones de resultado incierto. No automatiza RDP.
+**Tarea avanzada** sirve para objetivos SSH de varios pasos con seguimiento. Revisa alcance, acciones y resultados. El panel de herramientas incluye tareas IA. Cancelar no revierte cambios ni justifica repetir acciones de resultado incierto. No automatiza RDP.
 ## Limpiar chat
-Usá **Limpiar chat** y confirmá para borrar la conversación local del destino e invalidar propuestas pendientes. No borra terminal, registros, permisos ni copias del proveedor. Esperá a que termine la operación activa si el botón está deshabilitado.`, ['context', 'ssh', 'security']),
+Usa **Limpiar chat** y confirma para borrar la conversación local del destino e invalidar propuestas pendientes. No borra terminal, registros, permisos ni copias del proveedor. Espera a que termine la operación activa si el botón está deshabilitado.`, ['context', 'ssh', 'security']),
         article('context', 'Inteligencia artificial', 'Contexto, registros y privacidad', 'Qué se envía y qué permanece en el equipo.', `## Contexto SSH
 La app mantiene un registro local cifrado y lee una captura reciente al consultar o continuar. Según tu consentimiento, envía esa captura y conversación pertinente: no hay vigilancia permanente del proveedor. La salida remota es evidencia, nunca instrucciones para el agente.
 ## Elegir cuánto enviar
-Abrí **Herramientas → Contexto y registros…**. Hay ventanas recientes de 8.000, 32.000 o 120.000 caracteres y contexto completo hasta 240.000; el modo completo rechaza registros mayores. Se señalan recortes. Caracteres no son tokens; el proveedor puede admitir menos.
+Abre **Herramientas → Contexto y registros…**. Hay ventanas recientes de 8.000, 32.000 o 120.000 caracteres y contexto completo hasta 240.000; el modo completo rechaza registros mayores. Se señalan recortes. Caracteres no son tokens; el proveedor puede admitir menos.
 Cambiar el límite afecta próximas consultas y tareas, no recorta el archivo local. No hay eliminación automática de registros.
 ## Eliminar o detener envíos
-Podés borrar registros inactivos desde esos ajustes. No se permite borrar el de una sesión activa. Esto no borra chats, tareas ni copias del proveedor.
+Puedes borrar registros inactivos desde esos ajustes. No se permite borrar el de una sesión activa. Esto no borra chats, tareas ni copias del proveedor.
 **Detener nuevos envíos** retira consentimiento para próximas consultas, no recupera datos enviados ni elimina copias externas. Limpiar chat es una acción distinta.
 ## RDP y proveedores locales
-RDP comparte texto y capturas individuales autorizadas. Ollama y OpenCode pueden estar en otro equipo o utilizar servicios externos: verificá dónde se procesa la información.`, ['rdp', 'chat', 'security']),
-        article('backup', 'Datos y mantenimiento', 'Exportar e importar conexiones', 'Trasladá el inventario con una copia cifrada por contraseña.', `## Crear una copia
-1. Abrí **Conexiones → Exportar / importar conexiones…**.
-2. Elegí una contraseña de al menos 12 caracteres y repetila.
-3. Activá incluir archivos de claves privadas SSH si necesitás trasladarlos. De otro modo, las referencias externas pueden requerir copiar archivos y ajustar rutas manualmente.
-4. Guardá el archivo \`.aisysbackup\` y su contraseña por separado.
+RDP comparte texto y capturas individuales autorizadas. Ollama y OpenCode pueden estar en otro equipo o utilizar servicios externos: verifica dónde se procesa la información.`, ['rdp', 'chat', 'security']),
+        article('backup', 'Datos y mantenimiento', 'Exportar e importar conexiones', 'Traslada el inventario con una copia cifrada por contraseña.', `## Crear una copia
+1. Abre **Conexiones → Exportar / importar conexiones…**.
+2. Elige una contraseña de al menos 12 caracteres y repítela.
+3. Activa incluir archivos de claves privadas SSH si necesitas trasladarlos. De otro modo, las referencias externas pueden requerir copiar archivos y ajustar rutas manualmente.
+4. Guarda el archivo \`.aisysbackup\` y su contraseña por separado.
 
 Incluye conexiones, carpetas y credenciales guardadas. No incluye configuración IA, chats, registros, tareas ni token del actualizador.
 ## Restaurar
-1. Elegí el archivo y escribí la contraseña de esa copia.
-2. Pulsá **Validar y revisar copia**. Si está deshabilitado, comprobá archivo y contraseña.
-3. Revisá resumen y advertencias; luego confirmá.
+1. Elige el archivo y escribe la contraseña de esa copia.
+2. Pulsa **Validar y revisar copia**. Si está deshabilitado, comprueba archivo y contraseña.
+3. Revisa resumen y advertencias; luego confirma.
 
 Agrega conexiones con identificadores nuevos sin borrar existentes. Importar dos veces puede duplicarlas. Se valida antes de guardar cambios.
 ## No copiar directamente el almacén
 DPAPI depende de la cuenta Windows. Copiar la carpeta local no sustituye esta exportación ni garantiza descifrar datos en otro equipo o cuenta.`, ['security', 'updates', 'ssh']),
-        article('updates', 'Datos y mantenimiento', 'Versión y actualizaciones', 'Consultá la compilación y aprobá cada etapa.', `## Consultar la versión
+        article('updates', 'Datos y mantenimiento', 'Versión y actualizaciones', 'Consulta la compilación y aprueba cada etapa.', `## Consultar la versión
 La barra inferior y **Ayuda → Ayuda de la aplicación** muestran la versión. Ayuda incluye instalación, sistema y commit. Windows usa versiones cortas \`0.11.N\` y muestra el commit por separado.
 ## Actualizar desde la app
-Busca versiones al abrir y permite comprobar manualmente en Ayuda. Aprobá por separado descarga, preparación de instalación y reinicio de la app para aplicar cambios. Verifica tamaño y SHA256; rechaza versiones inferiores.
-La app sigue abierta hasta aprobar el reinicio. El auxiliar espera su salida y actualiza. No reinicia Windows automáticamente. Revisá los fallos antes de reintentar.
+Busca versiones al abrir y permite comprobar manualmente en Ayuda. Aprueba por separado descarga, preparación de instalación y reinicio de la app para aplicar cambios. Verifica tamaño y SHA256; rechaza versiones inferiores.
+La app sigue abierta hasta aprobar el reinicio. El auxiliar espera su salida y actualiza. No reinicia Windows automáticamente. Revisa los fallos antes de reintentar.
 ## Instalación y datos
 El ejecutable usa una ruta fija con \`AiSysadmin.exe\`; los datos permanecen separados en \`%LOCALAPPDATA%/AiSysadmin\`. El instalador solicita cierre normal solo a su propia instalación. Si no confirma el cierre dentro del plazo previsto, aborta antes de reemplazar archivos.
-Para migrar desde clientes antiguos con carpetas por versión, ejecutá una vez el instalador nuevo con la app cerrada. Después usá el actualizador integrado. Si abre una versión antigua, compará versión del proceso y destino del acceso directo.
+Para migrar desde clientes antiguos con carpetas por versión, ejecuta una vez el instalador nuevo con la app cerrada. Después usa el actualizador integrado. Si abre una versión antigua, compara versión del proceso y destino del acceso directo.
 ## Apoyar el proyecto
 Ayuda abre el sitio oficial de Sentra IT y GitHub Sponsors de deimisq en el navegador predeterminado. Los aportes son voluntarios y no condicionan funciones. La app no solicita datos de pago.`, ['backup', 'troubleshooting', 'folders']),
         article('security', 'Datos y mantenimiento', 'Credenciales y uso seguro', 'Protección local y revisión de información compartida.', `## Protección local
 Windows protege secretos locales con DPAPI de tu cuenta. Credenciales IA y token GitHub del actualizador tienen usos separados. No compartas carpetas de datos, claves ni capturas con secretos.
 ## Permisos y evidencia
-El acceso remoto depende de la cuenta del equipo y sus permisos. El modo local no incorpora por sí mismo los roles de un backend empresarial. Usá privilegios mínimos y revisá comandos.
-El perfil contiene datos declarados que pueden estar desactualizados. Confirmá sistema, recursos y resultados con evidencia. Una respuesta convincente de IA no es una verificación.
+El acceso remoto depende de la cuenta del equipo y sus permisos. El modo local no incorpora por sí mismo los roles de un backend empresarial. Usa privilegios mínimos y revisa comandos.
+El perfil contiene datos declarados que pueden estar desactualizados. Confirma sistema, recursos y resultados con evidencia. Una respuesta convincente de IA no es una verificación.
 ## Copias y soporte
-Usá exportación cifrada para trasladar conexiones. Antes de compartir diagnósticos, ocultá contraseñas, tokens, direcciones sensibles y contenido privado. Limpiar el historial no revoca claves ni elimina copias externas. Las actualizaciones deben conservar las claves: revisá proveedor, error y versión antes de concluir que se perdieron.`, ['context', 'backup', 'troubleshooting']),
-        article('troubleshooting', 'Ayuda y otros modos', 'Resolver problemas frecuentes', 'Separá conexión, proveedor y versión instalada.', `## No conecta
-Revisá protocolo, dirección, puerto, red y autenticación. Para SFTP, también permisos de la ruta. No cambies firewall ni reinicies servicios sin identificar causa e impacto.
+Usa exportación cifrada para trasladar conexiones. Antes de compartir diagnósticos, oculta contraseñas, tokens, direcciones sensibles y contenido privado. Limpiar el historial no revoca claves ni elimina copias externas. Las actualizaciones deben conservar las claves: revisa proveedor, error y versión antes de concluir que se perdieron.`, ['context', 'backup', 'troubleshooting']),
+        article('troubleshooting', 'Ayuda y otros modos', 'Resolver problemas frecuentes', 'Separa conexión, proveedor y versión instalada.', `## No conecta
+Revisa protocolo, dirección, puerto, red y autenticación. Para SFTP, también permisos de la ruta. No cambies firewall ni reinicies servicios sin identificar causa e impacto.
 ## Errores de IA
-- **401 o 403:** revisá autenticación y permisos.
-- **429:** revisá cuota y frecuencia de consultas.
+- **401 o 403:** revisa autenticación y permisos.
+- **429:** revisa cuota y frecuencia de consultas.
 - **503:** puede ser indisponibilidad temporal; no demuestra pérdida de clave.
-- **Sin modelos locales:** revisá URL, servicio iniciado y modelos descargados de Ollama o proveedores conectados de OpenCode.
+- **Sin modelos locales:** revisa URL, servicio iniciado y modelos descargados de Ollama o proveedores conectados de OpenCode.
 ## No continúa tras un comando
-Comprobá si sigue ejecutándose o espera respuesta en la terminal. Si volvió el prompt, preguntá por ese comando y compartí su fragmento si falta contexto. No repitas acciones de resultado incierto: una interrupción puede dejar cambios parciales.
+Comprueba si sigue ejecutándose o espera respuesta en la terminal. Si volvió el prompt, pregunta por ese comando y comparte su fragmento si falta contexto. No repitas acciones de resultado incierto: una interrupción puede dejar cambios parciales.
 ## Parece faltar una función
-Compará versión y commit en Ayuda y el destino del acceso directo: un proceso o anclaje antiguo puede abrir otro ejecutable. Anotá mensaje y versión del instalador; evitá instalaciones simultáneas.
+Compara versión y commit en Ayuda y el destino del acceso directo: un proceso o anclaje antiguo puede abrir otro ejecutable. Anota mensaje y versión del instalador; evita instalaciones simultáneas.
 ## Pedir soporte
-Incluí versión, commit, pasos, resultado esperado y error exacto, sin claves ni datos privados. No necesitás instalar Node ni recompilar para usar la app instalada.`, ['providers', 'updates', 'chat']),
-        article('enterprise', 'Ayuda y otros modos', 'Modo local y empresarial', 'Identificá qué requiere un backend independiente.', `## Windows local
+Incluye versión, commit, pasos, resultado esperado y error exacto, sin claves ni datos privados. No necesitas instalar Node ni recompilar para usar la app instalada.`, ['providers', 'updates', 'chat']),
+        article('enterprise', 'Ayuda y otros modos', 'Modo local y empresarial', 'Identifica qué requiere un backend independiente.', `## Windows local
 Inventario, conexiones, credenciales protegidas, proveedor IA propio y respaldos pertenecen al modo local. No requieren cuenta empresarial.
 ## Funciones de backend
 Las vistas empresariales de usuarios, permisos, informes y comprobaciones programadas dependen de un backend configurado y sus permisos. No son capacidades automáticas del inventario local. Instalar la app no configura correo.
-El acompañante empresarial puede usar IA del backend; no presupongas que utiliza tu clave local ni las mismas políticas de datos. Consultá al administrador antes de compartir información.
+El acompañante empresarial puede usar IA del backend; no presupongas que utiliza tu clave local ni las mismas políticas de datos. Consulta al administrador antes de compartir información.
 ## Elegir la guía
-Para conexiones locales, seguí estas guías Windows. Desarrollo y despliegue de servicios independientes se documentan en el repositorio; no son pasos necesarios para usar la app instalada.`, ['start', 'security', 'context']),
+Para conexiones locales, sigue estas guías Windows. Desarrollo y despliegue de servicios independientes se documentan en el repositorio; no son pasos necesarios para usar la app instalada.`, ['start', 'security', 'context']),
     ],
     en: [
         article('start', 'Getting started', 'Start using the app', 'Connect a computer and set up the AI companion.', `## Windows features

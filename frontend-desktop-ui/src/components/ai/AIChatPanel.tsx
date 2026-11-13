@@ -163,7 +163,7 @@ function ServerAssistant({ server }: { server: Server | null }) {
             await navigator.clipboard.writeText(cmd);
             toast.success('Comando copiado. Revisalo antes de ejecutarlo.');
         } catch {
-            toast.error(uiText('No se pudo copiar el comando. Podés seleccionarlo manualmente.'));
+            toast.error(uiText('No se pudo copiar el comando. Puedes seleccionarlo manualmente.'));
         }
     };
 
@@ -182,7 +182,7 @@ function ServerAssistant({ server }: { server: Server | null }) {
             setCommandResults(previous => ({ ...previous, [proposalId]: `${status}${result.Truncated ? ' · captura parcial' : ''}\n${result.Output}` }));
             if (interrupted) setMessages(previous => [...previous, { role: 'ai', content: uiFormat("{0}. No se confirmó que la operación terminara. Voy a revisar la salida disponible sin reintentar el comando.", status) }]);
             setLoading(true);
-            const reply = await diagnoseProblem(server.id, uiFormat("Objetivo actual del técnico: {0}\nEstado observado: {1}. {2}", objective, status, interrupted ? uiText('La operación se interrumpió o perdió la conexión. Analizá la salida parcial y explicá qué quedó sin verificar. No la reintentes ni propongas repetir la actualización automáticamente.') : uiText('Analizá la salida disponible; volver al prompt no demuestra éxito y no proporciona un código de salida. Distinguí qué quedó verificado y qué falta para el objetivo.')), 'es', '2026-10-25', undefined, server, sshSession, true);
+            const reply = await diagnoseProblem(server.id, uiFormat("Objetivo actual del técnico: {0}\nEstado observado: {1}. {2}", objective, status, interrupted ? uiText('La operación se interrumpió o perdió la conexión. Analiza la salida parcial y explica qué quedó sin verificar. No la reintentes ni propongas repetir la actualización automáticamente.') : uiText('Analiza la salida disponible; volver al prompt no demuestra éxito y no proporciona un código de salida. Distingue qué quedó verificado y qué falta para el objetivo.')), 'es', '2026-10-25', undefined, server, sshSession, true);
             if (version !== requestVersion.current) return;
             const analysis = typeof reply.analysis === 'string' ? reply.analysis : reply.analysis?.analysis || uiText('Sin análisis');
             const command = typeof reply.analysis === 'object' ? reply.analysis.proposed_command : undefined;
@@ -192,7 +192,7 @@ function ServerAssistant({ server }: { server: Server | null }) {
             automaticSteps.current = 10; setPermission('ask');
             const detail = error instanceof Error ? error.message : uiText('No se pudo confirmar el resultado.');
             setCommandResults(previous => ({ ...previous, [proposalId]: detail }));
-            setMessages(previous => [...previous, { role: 'ai', content: uiFormat("No se pudo completar la ejecución o el análisis: {0}\nRevisá la terminal antes de repetir el comando. No se reintentó automáticamente.", detail) }]);
+            setMessages(previous => [...previous, { role: 'ai', content: uiFormat("No se pudo completar la ejecución o el análisis: {0}\nRevisa la terminal antes de repetir el comando. No se reintentó automáticamente.", detail) }]);
         } finally { setExecuting(false); if (version === requestVersion.current) setLoading(false); }
     };
     useEffect(() => {
@@ -230,14 +230,14 @@ function ServerAssistant({ server }: { server: Server | null }) {
                     <span className="truncate text-blue-200" title={configuration?.base_url}>{configuration?.consent_accepted ? configuration.model : uiText('Sin configurar')}</span>
                 </div>
 
-                                <details className="text-[11px] text-gray-400"><summary className="cursor-pointer">{uiText("Contexto y privacidad")}</summary><p className="pt-2 leading-relaxed">{rdp ? uiText('En RDP se comparte la conversación y los datos del equipo. Podés adjuntar una captura del RDP después de revisarla. Solo se envía con esa pregunta; no hay visión continua. También podés pegar errores o salidas como texto.') : uiText('La salida SSH se registra cifrada en este equipo. Al pedir ayuda se comparte el contexto disponible y la conversación reciente con tu proveedor. No hay envío continuo.')}</p><button className="text-blue-300 hover:underline" onClick={() => useWorkspaceStore.getState().openPreferences('ai')}>{uiText("Configurar proveedor y privacidad")}</button></details>
+                                <details className="text-[11px] text-gray-400"><summary className="cursor-pointer">{uiText("Contexto y privacidad")}</summary><p className="pt-2 leading-relaxed">{rdp ? uiText('En RDP se comparte la conversación y los datos del equipo. Puedes adjuntar una captura del RDP después de revisarla. Solo se envía con esa pregunta; no hay visión continua. También puedes pegar errores o salidas como texto.') : uiText('La salida SSH se registra cifrada en este equipo. Al pedir ayuda se comparte el contexto disponible y la conversación reciente con tu proveedor. No hay envío continuo.')}</p><button className="text-blue-300 hover:underline" onClick={() => useWorkspaceStore.getState().openPreferences('ai')}>{uiText("Configurar proveedor y privacidad")}</button></details>
                 <div className="flex gap-2"><button aria-pressed={mode === 'chat'} className="border border-[#444] rounded px-2 py-1" onClick={() => setMode('chat')}>{uiText("Conversar con el agente")}</button>{!rdp && <button aria-pressed={mode === 'task'} className="border border-[#444] rounded px-2 py-1" onClick={() => setMode('task')}>{uiText("Tarea avanzada")}</button>}</div>
             </section>}
             {local && taskRunning && mode === 'chat' && <button className="p-2 text-xs text-amber-300 border-b border-[#444]" onClick={() => setMode('task')}>{uiText("Hay una tarea en ejecución · Ver progreso o cancelar")}</button>}
             {local && !rdp && <div className={mode === 'task' ? 'flex flex-col flex-1 min-h-0' : 'hidden'}><AgentTaskPanel server={server} enabled={accepted} onRunningChange={setTaskRunning} /></div>}
             {(!local || mode === 'chat') && <>
             {local && server && <div className="px-3 py-2 text-xs text-gray-400 border-b border-[#333]" role="note">
-                {rdp ? uiText('Asistente RDP: orientación sobre Windows a partir de lo que compartís. Compartí texto o una captura revisada para analizar lo visible. Los pasos y comandos se realizan manualmente en el equipo remoto.') : uiText('El agente propone comandos y solicita permiso antes de ejecutarlos por SSH.')}
+                {rdp ? uiText('Asistente RDP: orientación sobre Windows a partir de lo que compartes. Comparte texto o una captura revisada para analizar lo visible. Los pasos y comandos se realizan manualmente en el equipo remoto.') : uiText('El agente propone comandos y solicita permiso antes de ejecutarlos por SSH.')}
                 {!rdp && <p className="mt-1">{uiText("Permiso:")}{" "}{permission === 'always' ? uiText('Automático para este destino') : permission === 'session' ? uiText('Automático en esta sesión SSH') : uiText('Preguntar por cada comando')}.</p>}
                 {!rdp && permission !== 'ask' && <button className="text-blue-300 underline" onClick={async () => {
                     setPermission('ask');
@@ -257,7 +257,7 @@ function ServerAssistant({ server }: { server: Server | null }) {
             )}
             {accepted && server && <div className="px-3 py-2 text-xs text-gray-300 border-b border-[#333] flex flex-wrap gap-2 justify-between"><span>{uiText("Contexto de")}{" "}{server.hostname} · {local ? 'Proveedor propio' : 'Backend configurado'}</span><button className="underline" onClick={async () => {
                 requestVersion.current += 1; setAccepted(false); setConsent(false); setLoading(false);
-                if (local) { try { await api.post('/ai/settings/pause', {}); notifyAiConfiguration(); toast.success(uiText('Envíos pausados. La clave guardada se conserva.')); } catch { toast.error(uiText('No se pudo pausar la configuración. Reintentá desde Ajustes.')); } }
+                if (local) { try { await api.post('/ai/settings/pause', {}); notifyAiConfiguration(); toast.success(uiText('Envíos pausados. La clave guardada se conserva.')); } catch { toast.error(uiText('No se pudo pausar la configuración. Reintenta desde Ajustes.')); } }
             }}>{uiText("Detener nuevos envíos")}</button></div>}
 
             {/* Messages */}
@@ -268,7 +268,7 @@ function ServerAssistant({ server }: { server: Server | null }) {
                     <div className="flex flex-col flex-1 items-center justify-center py-4 text-center text-gray-500 opacity-60">
                         <Sparkles className="w-12 h-12 mb-4" />
                         <p className="text-sm font-medium">{uiText("Tu acompañante en la terminal")}</p>
-                        <p className="text-xs mt-2 max-w-[260px]">{uiText("Preguntá por lo último que ejecutaste, un error anterior o posibles soluciones. Podés seguir el tema o cambiar de pregunta en este mismo chat.")}</p>
+                        <p className="text-xs mt-2 max-w-[260px]">{uiText("Pregunta por lo último que ejecutaste, un error anterior o posibles soluciones. Puedes seguir el tema o cambiar de pregunta en este mismo chat.")}</p>
                     </div>
                 )}
                 {messages.map((m, i) => (
@@ -287,7 +287,7 @@ function ServerAssistant({ server }: { server: Server | null }) {
                                     <span className="text-[10px] text-gray-400 uppercase font-bold">{m.proposalId && commandResults[m.proposalId] ? 'Resultado del comando' : m.proposalId && usedProposals.includes(m.proposalId) ? 'Propuesta procesada' : 'Propuesta · Pendiente de permiso'}</span>
                                 </div>
                                 <code className="text-xs text-green-400 font-mono block mb-3 break-all">{m.command}</code>
-                                {local && !m.proposalId && <p className="text-xs text-amber-300 mb-2">{uiText("Esta propuesta no tiene autorización activa: puede pertenecer al historial o no tener una sesión SSH disponible. Pedí al agente una propuesta nueva con el servidor conectado.")}</p>}
+                                {local && !m.proposalId && <p className="text-xs text-amber-300 mb-2">{uiText("Esta propuesta no tiene autorización activa: puede pertenecer al historial o no tener una sesión SSH disponible. Pide al agente una propuesta nueva con el servidor conectado.")}</p>}
                                 {m.proposalId && !usedProposals.includes(m.proposalId) && <div className="space-y-2 mb-3">
                                     <p className="text-[11px] text-gray-400">{uiText("En la terminal abierta de")}{" "}{server?.hostname}{" "}{uiText("· puede realizar cambios.")}</p>
                                     <div className="flex items-center gap-1.5">
@@ -297,7 +297,7 @@ function ServerAssistant({ server }: { server: Server | null }) {
                                         </select>
                                         <button aria-label="Rechazar comando" title="Rechazar" className="shrink-0 rounded p-1.5 text-gray-400 hover:bg-[#333] hover:text-white" onClick={() => setUsedProposals(previous => [...previous, m.proposalId!])}><X className="h-3.5 w-3.5" /></button>
                                     </div>
-                                    {approvalScope !== 'once' && <p className="text-[10px] text-amber-200/80">{approvalScope === 'session' ? uiText('Los siguientes comandos se ejecutarán sin preguntar en esta sesión SSH.') : uiText('Los siguientes comandos se ejecutarán sin preguntar en este destino, incluso al reabrir la app.')}{" "}{uiText("Podés revocarlo arriba.")}</p>}
+                                    {approvalScope !== 'once' && <p className="text-[10px] text-amber-200/80">{approvalScope === 'session' ? uiText('Los siguientes comandos se ejecutarán sin preguntar en esta sesión SSH.') : uiText('Los siguientes comandos se ejecutarán sin preguntar en este destino, incluso al reabrir la app.')}{" "}{uiText("Puedes revocarlo arriba.")}</p>}
                                 </div>}
                                 {m.proposalId && commandResults[m.proposalId] && <details className="text-xs mb-2"><summary className="cursor-pointer text-gray-400">{commandResults[m.proposalId].split('\n')[0]}{" "}{uiText("· Ver salida capturada")}</summary><pre className="whitespace-pre-wrap break-all mt-2">{commandResults[m.proposalId]}</pre></details>}
                                 <button
@@ -334,18 +334,18 @@ function ServerAssistant({ server }: { server: Server | null }) {
                     <p className="text-gray-400">{uiText("Requiere un modelo con visión. Cada captura se revisa antes del envío; no hay observación continua.")}</p>
                     {capture && <div className="space-y-2 rounded border border-[#444] p-2">
                         <img src={capture.image} alt={uiText("Vista previa de la captura RDP que se enviará")} className="w-full max-h-48 object-contain" />
-                        <p>{uiText("Captura de")}{" "}{new Date(capture.captured_at).toLocaleTimeString()}{uiText(". Revisá que sea el escritorio correcto y no contenga información que no quieras compartir. Si aparece negra, descartala.")}</p>
+                        <p>{uiText("Captura de")}{" "}{new Date(capture.captured_at).toLocaleTimeString()}{uiText(". Revisa que sea el escritorio correcto y no contenga información que no quieras compartir. Si aparece negra, descártala.")}</p>
                         <label className="flex gap-2"><input type="checkbox" checked={captureReviewed} onChange={event => setCaptureReviewed(event.target.checked)} />{uiText("Revisé la imagen y autorizo enviarla con mi próxima pregunta a")}{" "}{configuration?.provider || 'mi proveedor IA'}.</label>
                         <button className="text-gray-300 underline" onClick={() => { setCapture(null); setCaptureReviewed(false); }}>{uiText("Descartar captura")}</button>
                     </div>}
                 </div>}
                 {executing && <button className="text-xs text-red-300 mb-2 underline" onClick={() => { setPermission('ask'); automaticSteps.current = 10; void sendCommand('local_chat_cancel').catch(() => toast.error(uiText('No se pudo confirmar la detención.'))); if (server && sshSession) void sendCommand('local_chat_revoke', { server_id: server.id, session_id: sshSession }).catch(() => toast.error(uiText('No se pudo revocar el permiso.'))); }}>{uiText("Detener comando · los cambios no se revierten")}</button>}
-                {automaticSteps.current >= 10 && <p className="text-xs text-amber-300 mb-2">{uiText("Límite de 10 pasos automáticos alcanzado. Revisá los resultados antes de continuar.")}</p>}
+                {automaticSteps.current >= 10 && <p className="text-xs text-amber-300 mb-2">{uiText("Límite de 10 pasos automáticos alcanzado. Revisa los resultados antes de continuar.")}</p>}
                 <div className="relative">
                     <AssistantTextarea
                         className="w-full bg-[#1e1e1e] border border-[#333] text-white text-xs rounded p-2 pr-10 resize-none focus:border-blue-500 focus:ring-0 outline-none placeholder-gray-600"
                         style={{ minHeight: '40px' }}
-                        placeholder={server ? rdp ? uiText("Describí el problema de Windows o pegá el error…") : uiText("Preguntá sobre lo que está pasando en la terminal…") : uiText("Seleccioná un servidor…")}
+                        placeholder={server ? rdp ? uiText("Describe el problema de Windows o pega el error…") : uiText("Pregunta sobre lo que está pasando en la terminal…") : uiText("Selecciona un servidor…")}
                         disabled={!server || !accepted || loading || executing || historyLoading || clearingHistory || waitingForTemporarySsh}
                         maxLength={16000}
                         value={input}
@@ -369,7 +369,7 @@ function ServerAssistant({ server }: { server: Server | null }) {
                         <Send className="w-3.5 h-3.5" />
                     </button>
                 </div>
-                <div className="text-[10px] text-gray-600 mt-1 text-center">{uiText("La IA puede equivocarse. Revisá cada comando antes de ejecutarlo.")}</div>
+                <div className="text-[10px] text-gray-600 mt-1 text-center">{uiText("La IA puede equivocarse. Revisa cada comando antes de ejecutarlo.")}</div>
             </div>
             <Dialog open={showClearHistory} onOpenChange={setShowClearHistory}>
                 <DialogContent className="bg-card text-card-foreground">
@@ -382,7 +382,7 @@ function ServerAssistant({ server }: { server: Server | null }) {
                             await api.delete(`/servers/${server.id}/history`);
                             requestVersion.current++; automaticSteps.current = 0; currentObjective.current = '';
                             setLoading(false); setMessages([]); setInput(''); setCommandResults({}); setUsedProposals([]); setApprovalScope('once'); setHistoryError(false); setShowClearHistory(false);
-                            toast.success(uiText('Chat limpio. Podés empezar una conversación nueva.'));
+                            toast.success(uiText('Chat limpio. Puedes empezar una conversación nueva.'));
                         }
                         catch { toast.error(uiText('No se pudo borrar el historial.')); }
                         finally { setClearingHistory(false); }

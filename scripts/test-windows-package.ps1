@@ -57,7 +57,7 @@ if ($ExerciseInstaller) {
     if ($setup.Count -ne 1) { throw 'Se requiere un unico instalador.' }
     $logPath = Join-Path $sandbox 'install.log'
     $process = Start-Process -FilePath $setup[0].FullName -ArgumentList '/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/NOICONS',"/DIR=`"$install`"","/LOG=`"$logPath`"" -WindowStyle Hidden -Wait -PassThru
-    if ($process.ExitCode -ne 0) { throw "El instalador devolvio $($process.ExitCode). Revisá el log en el directorio de prueba." }
+    if ($process.ExitCode -ne 0) { throw "El instalador devolvio $($process.ExitCode). Revisa el log en el directorio de prueba." }
     $registered = (Get-ItemProperty -LiteralPath $key).InstallLocation
     if ([IO.Path]::GetFullPath($registered).TrimEnd('\') -ne $install.TrimEnd('\')) { throw 'La instalacion registrada no corresponde al directorio de prueba. No se ejecutara el desinstalador.' }
     Assert-Payload $install

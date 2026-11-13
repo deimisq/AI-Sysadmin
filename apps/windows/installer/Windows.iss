@@ -37,7 +37,7 @@ WizardStyle=modern
 SetupIconFile=..\Assets\app.ico
 DisableProgramGroupPage=yes
 AllowNoIcons=yes
-UninstallDisplayIcon={app}\versions\{#AppVersion}\AiSysadmin.exe
+UninstallDisplayIcon={app}\AiSysadmin.exe
 CloseApplications=yes
 RestartApplications=no
 InfoBeforeFile=install-notes.txt
@@ -54,6 +54,9 @@ english.CloseCheck=Could not check whether the application is running: %1. Close
 spanish.WebViewRequired=Instalá Microsoft Edge WebView2 Runtime (Evergreen) y volvé a ejecutar este instalador: https://developer.microsoft.com/microsoft-edge/webview2/
 english.WebViewRequired=Install Microsoft Edge WebView2 Runtime (Evergreen), then run this installer again: https://developer.microsoft.com/microsoft-edge/webview2/
 
+spanish.CloseForFlatUpgrade=Para migrar a la instalación de ruta fija, cerrá AI Sysadmin y ejecutá este instalador. El actualizador anterior no admite esta migración inicial.
+english.CloseForFlatUpgrade=To migrate to the fixed installation path, close AI Sysadmin and run this installer. The previous updater does not support this initial migration.
+
 [Registry]
 Root: HKCU; Subkey: "{#InstallerSettingsKey}"; ValueType: string; ValueName: "Language"; ValueData: "{code:ApplicationLanguage}"
 
@@ -61,15 +64,20 @@ Root: HKCU; Subkey: "{#InstallerSettingsKey}"; ValueType: string; ValueName: "La
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; Flags: unchecked
 
 [Files]
-Source: "{#PublishDir}\*"; DestDir: "{app}\versions\{#AppVersion}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#PublishDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "..\Assets\app.ico"; DestDir: "{app}"; DestName: "app.ico"; Flags: ignoreversion
 
 [Icons]
-Name: "{autoprograms}\AI Sysadmin Agent"; Filename: "{app}\versions\{#AppVersion}\AiSysadmin.exe"; IconFilename: "{app}\app.ico"; AppUserModelID: "Sentrait.AiSysadminAgent.Desktop"; Check: not WizardNoIcons
-Name: "{autodesktop}\AI Sysadmin Agent"; Filename: "{app}\versions\{#AppVersion}\AiSysadmin.exe"; IconFilename: "{app}\app.ico"; AppUserModelID: "Sentrait.AiSysadminAgent.Desktop"; Tasks: desktopicon; Check: not WizardNoIcons
+Name: "{autoprograms}\AI Sysadmin Agent"; Filename: "{app}\AiSysadmin.exe"; IconFilename: "{app}\app.ico"; AppUserModelID: "Sentrait.AiSysadminAgent.Desktop"; Check: not WizardNoIcons
+Name: "{autodesktop}\AI Sysadmin Agent"; Filename: "{app}\AiSysadmin.exe"; IconFilename: "{app}\app.ico"; AppUserModelID: "Sentrait.AiSysadminAgent.Desktop"; Tasks: desktopicon; Check: not WizardNoIcons
 
 [Run]
-Filename: "{app}\versions\{#AppVersion}\AiSysadmin.exe"; Description: "{cm:LaunchProgram,AI Sysadmin Agent}"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\AiSysadmin.exe"; Description: "{cm:LaunchProgram,AI Sysadmin Agent}"; Flags: nowait postinstall skipifsilent
+
+[InstallDelete]
+Type: filesandordirs; Name: "{app}\versions"
+Type: filesandordirs; Name: "{app}\wwwroot"
+Type: filesandordirs; Name: "{app}\ThirdParty"
 
 [Code]
 procedure UpdatePinnedShortcuts;
@@ -80,7 +88,7 @@ var
 begin
   Directory := ExpandConstant('{#PinnedShortcutsDir}');
   VersionsRoot := AddBackslash(ExpandConstant('{app}')) + 'versions\';
-  CurrentExecutable := ExpandConstant('{app}\versions\{#AppVersion}\AiSysadmin.exe');
+  CurrentExecutable := ExpandConstant('{app}\AiSysadmin.exe');
   if not FileExists(CurrentExecutable) then Exit;
   if not FindFirst(AddBackslash(Directory) + '*.lnk', Found) then Exit;
   try
@@ -172,8 +180,16 @@ begin
 end;
 
 function PrepareToInstall(var NeedsRestart: Boolean): String;
+var
+  Index: Integer;
 begin
   Result := '';
+  for Index := 1 to ParamCount do
+    if CompareText(ParamStr(Index), '/NOCLOSEAPPLICATIONS') = 0 then
+    begin
+      Result := CustomMessage('CloseForFlatUpgrade');
+      Exit;
+    end;
   if not HasWebView2 then
     Result := CustomMessage('WebViewRequired');
 end;

@@ -17,13 +17,15 @@ public sealed class AppUpdates : IDisposable
     public static string CurrentVersion => typeof(AppUpdates).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()!.InformationalVersion.Split('+')[0];
     private readonly string _directory;
     private readonly HttpClient _http;
+    private readonly Func<string?> _installRoot;
     private readonly SemaphoreSlim _gate = new(1,1);
     private readonly object _sync = new();
     private string _state = "idle", _error = "", _version = "", _notes = "", _digest = "", _file = "";
     private long _asset, _size, _received;
     private string? _restart;
     private static readonly byte[] Entropy = Encoding.UTF8.GetBytes("AiSysadmin.GitHubUpdates.v1");
-    public AppUpdates(HttpMessageHandler? handler = null, string? directory = null) {
+    public AppUpdates(HttpMessageHandler? handler = null, string? directory = null, Func<string?>? installRoot = null) {
+        _installRoot = installRoot ?? InstallRoot;
         _directory = directory ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"AiSysadmin","Updates");
         _http = new HttpClient(handler ?? new HttpClientHandler { AllowAutoRedirect=false }) { Timeout=TimeSpan.FromMinutes(15) };
         _http.DefaultRequestHeaders.UserAgent.ParseAdd("AI-Sysadmin-Updater/1.0");
@@ -49,7 +51,7 @@ public sealed class AppUpdates : IDisposable
         try { File.WriteAllBytes(TokenPath,ProtectedData.Protect(plain,Entropy,DataProtectionScope.CurrentUser)); }
         finally { CryptographicOperations.ZeroMemory(plain); }
     }
-    public object Status() { lock(_sync) return new { current_version=CurrentVersion, repository=Repository, state=_state, error=_error, version=_version, notes=_notes, received=_received, size=_size, has_token=File.Exists(TokenPath), installed=InstallRoot()!=null }; }
+    public object Status() { lock(_sync) return new { current_version=CurrentVersion, repository=Repository, state=_state, error=_error, version=_version, notes=_notes, received=_received, size=_size, has_token=File.Exists(TokenPath), installed=_installRoot()!=null }; }
     private void State(string state,string error="") { lock(_sync) { _state=state; _error=error; } }
     private async Task<HttpResponseMessage> RequestAsync(string url,bool asset=false) {
         var target=new Uri(url); var authenticated=true;
@@ -128,34 +130,33 @@ public sealed class AppUpdates : IDisposable
         using var key=Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Uninstall\{4DFF87E7-6939-4591-910C-8BA873B15B32}_is1");
         var root=key?.GetValue("InstallLocation") as string;
         if(string.IsNullOrWhiteSpace(root)) return null;
+        return ResolveInstallRoot(root, AppContext.BaseDirectory);
+    }
+    public static string? ResolveInstallRoot(string root, string executableDirectory) {
         root=Path.GetFullPath(root).TrimEnd(Path.DirectorySeparatorChar);
-        var expected=Path.Combine(root,"versions")+Path.DirectorySeparatorChar;
-        return AppContext.BaseDirectory.StartsWith(expected,StringComparison.OrdinalIgnoreCase) ? root : null;
+        var current=Path.GetFullPath(executableDirectory).TrimEnd(Path.DirectorySeparatorChar);
+        return current.Equals(root,StringComparison.OrdinalIgnoreCase) || current.StartsWith(Path.Combine(root,"versions")+Path.DirectorySeparatorChar,StringComparison.OrdinalIgnoreCase) ? root : null;
     }
     public async Task InstallAsync() {
         if(!await _gate.WaitAsync(0)) throw new InvalidOperationException(UserLanguage.Text("Ya hay una actualización en curso."));
         try {
             if(_state!="downloaded") throw new InvalidOperationException("Primero descargá y verificá la actualización.");
-            var root=InstallRoot() ?? throw new InvalidOperationException("La actualización integrada requiere la app instalada. Esta instancia es portable o de desarrollo.");
+            var root=_installRoot() ?? throw new InvalidOperationException("La actualización integrada requiere la app instalada. Esta instancia es portable o de desarrollo.");
             VerifyFile(); State("installing");
-            var info=new ProcessStartInfo(_file) { UseShellExecute=false,CreateNoWindow=true,WindowStyle=ProcessWindowStyle.Hidden };
-            foreach(var argument in new[] {"/SP-","/VERYSILENT","/SUPPRESSMSGBOXES","/NORESTART","/NOCLOSEAPPLICATIONS","/NORESTARTAPPLICATIONS","/RESTARTEXITCODE=3010","/DIR="+root,"/LOG="+Path.Combine(_directory,"install.log")}) info.ArgumentList.Add(argument);
-            using var process=Process.Start(info) ?? throw new InvalidOperationException("No se pudo iniciar la instalación.");
-            await process.WaitForExitAsync();
-            if(process.ExitCode is not (0 or 3010)) throw new InvalidOperationException($"La instalación falló ({process.ExitCode}). La versión actual sigue abierta. Revisá el registro de actualización.");
-            _restart=Path.Combine(root,"versions",_version,"AiSysadmin.exe");
-            if(!File.Exists(_restart)) throw new InvalidOperationException("No se encontró la nueva versión instalada.");
+            // The installed files are replaced only after the separate restart approval.
+            _restart=Path.Combine(root,"AiSysadmin.exe");
             State("restart");
         } catch(Exception error) { State("error",error.Message); throw; }
         finally { _gate.Release(); }
     }
     public void Restart() {
-        if(_state!="restart" || _restart==null || !File.Exists(_restart)) throw new InvalidOperationException("No hay actualización lista para reiniciar.");
-        // Wait for the old process to release SSH, WebView2 and its local proxy.
-        var script=$"Wait-Process -Id {Environment.ProcessId} -ErrorAction SilentlyContinue; Start-Process -FilePath '{_restart.Replace("'","''")}'";
+        if(_state!="restart" || _restart==null) throw new InvalidOperationException("No hay actualización lista para reiniciar.");
+        VerifyFile();
+        var script=UpdateRestartScript.Create(Environment.ProcessId, _file, Path.GetDirectoryName(_restart)!, _digest, _size,
+            Path.Combine(_directory,"install.log"), UserLanguage.Text("No se pudo aplicar la actualización. Revisá el registro de instalación."));
         var helper=new ProcessStartInfo("powershell.exe") { UseShellExecute=false,CreateNoWindow=true,WindowStyle=ProcessWindowStyle.Hidden };
         foreach(var argument in new[] {"-NoProfile","-NonInteractive","-EncodedCommand",Convert.ToBase64String(Encoding.Unicode.GetBytes(script))}) helper.ArgumentList.Add(argument);
-        Process.Start(helper)?.Dispose();
+        using var started=Process.Start(helper) ?? throw new InvalidOperationException("No se pudo iniciar el actualizador.");
     }
     public void Dispose() { _http.Dispose(); }
 }

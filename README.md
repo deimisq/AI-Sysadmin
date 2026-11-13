@@ -46,6 +46,8 @@ Los instaladores x64, el ZIP portable y los hashes se generan en [GitHub Actions
 
 Requiere Windows x64 compatible con el instalador y Microsoft Edge WebView2 Runtime Evergreen. El paquete incluye .NET; no requiere Python, Node.js ni Docker para usar el cliente Windows.
 
+El ejecutable instalado mantiene una ruta fija al actualizar. La migración inicial desde instalaciones con carpetas `versions` requiere ejecutar el nuevo instalador una vez con la app cerrada; los datos se conservan. Después se actualiza desde la app, aprobando descarga, preparación y reinicio.
+
 El instalador ofrece español e inglés y guarda la elección para la app. Los nombres de equipos, comandos, salidas de terminal y conversaciones conservan su contenido original. La documentación propia se mantiene en español; las licencias oficiales y avisos de terceros se conservan sin alterar.
 
 Las compilaciones actuales no tienen firma de código. SHA256 comprueba correspondencia con el archivo publicado por GitHub; no sustituye una firma del editor. No se promete ausencia absoluta de vulnerabilidades.

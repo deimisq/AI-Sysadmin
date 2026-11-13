@@ -1,5 +1,7 @@
 # Windows 0.11
 
+- Instalación en una ruta fija `AI Sysadmin Agent/AiSysadmin.exe`, sustituyendo los archivos en cada actualización y retirando carpetas legacy `versions` y assets antiguos. La migración inicial requiere ejecutar el nuevo instalador con la app cerrada porque el actualizador anterior espera directorios por versión. Las actualizaciones siguientes se preparan con la app abierta y reemplazan archivos solo después de aprobar el reinicio; el auxiliar verifica de nuevo el instalador y no reinicia Windows.
+
 - El instalador actualiza los accesos anclados a la barra de tareas que apuntan a versiones anteriores de esa misma instalación. Evita reabrir una versión antigua tras actualizar, que puede no incluir la persistencia de ventana, carpetas y paneles. No crea anclajes ni cambia accesos de otras instalaciones.
 
 - Persistencia de presentación: tamaño normal y estado maximizado de la ventana principal, visibilidad del explorador, acompañante IA y panel inferior, y expansión de carpetas, subcarpetas y grupos por usuario/espacio de trabajo. La búsqueda no altera la expansión guardada. No se restauran sesiones remotas ni se guardan credenciales en estas preferencias.
@@ -20,7 +22,7 @@
 - Versión visible en la barra inferior y sección Ayuda con información de producto, instalación, sistema, runtime, arquitectura, repositorio, commit y ubicación de datos.
 - Comprobación de versiones al abrir y búsqueda manual en Ayuda. Las descargas e instalaciones requieren aprobaciones nativas independientes. El instalador se ejecuta desde la app, sin abrirlo manualmente.
 - Verificación de tamaño y SHA256 contra el digest del asset publicado por GitHub. No se instalan versiones antiguas, prereleases de otras ramas ni archivos sin hash válido.
-- Instalación en segundo plano en la ubicación existente, conservando datos. La app continúa abierta y avisa cuando se puede reiniciar; el reinicio aprobado cierra las sesiones SSH/RDP y abre la nueva versión.
+- Preparación de la instalación conservando datos. El reinicio aprobado cierra las sesiones SSH/RDP, reemplaza los archivos de la ruta fija y abre la nueva versión si la instalación finaliza correctamente.
 - Repositorio privado: acceso opcional mediante token restringido a `deimisq/AI-Sysadmin`, permiso `Contents: read`, guardado con DPAPI en el equipo. No se reutiliza la API key de IA ni se incluye este token en backups.
 - Solo las instalaciones registradas permiten actualizarse en la app. El modo portable y de desarrollo permite consultar información y versiones, pero no sustituye una instalación registrada.
 

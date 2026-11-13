@@ -46,6 +46,27 @@ public sealed class AppUpdateTests : IDisposable
         await updates.CheckAsync(); await Assert.ThrowsAsync<InvalidOperationException>(()=>updates.DownloadAsync());
         Assert.Empty(Directory.GetFiles(_directory,"*.exe"));
     }
+    [Fact] public async Task PreparingInstallationDoesNotExecuteInstallerOrReplaceFiles()
+    {
+        var bytes=Encoding.ASCII.GetBytes("fixture");
+        var root=Path.Combine(_directory,"synthetic-installed");
+        using var updates=new AppUpdates(new Handler(request=>request.RequestUri!.AbsolutePath.EndsWith("/releases") ? Releases(Convert.ToHexString(SHA256.HashData(bytes))) : new(HttpStatusCode.OK){Content=new ByteArrayContent(bytes)}),_directory,()=>root);
+        await updates.CheckAsync(); await updates.DownloadAsync(); await updates.InstallAsync();
+        Assert.Equal("restart",State(updates).GetProperty("state").GetString());
+        Assert.False(Directory.Exists(root));
+        // This is deliberately not an executable: preparation must not launch it.
+        Assert.Single(Directory.GetFiles(_directory,"*.exe"));
+        File.WriteAllText(Directory.GetFiles(_directory,"*.exe")[0],"tampered");
+        Assert.Throws<InvalidOperationException>(()=>updates.Restart());
+    }
+    [Fact] public void InstallationRecognitionSupportsFlatAndLegacyButRejectsOtherLocations()
+    {
+        var root=Path.Combine(_directory,"installed");
+        Assert.Equal(root,AppUpdates.ResolveInstallRoot(root,root));
+        Assert.Equal(root,AppUpdates.ResolveInstallRoot(root,Path.Combine(root,"versions","0.11.46")));
+        Assert.Null(AppUpdates.ResolveInstallRoot(root,Path.Combine(_directory,"installed-other")));
+        Assert.Null(AppUpdates.ResolveInstallRoot(root,Path.Combine(_directory,"portable")));
+    }
     [Fact] public async Task PrivateTokenIsProtectedAndNeverForwardedToAssetStorage()
     {
         var bytes=Encoding.ASCII.GetBytes("fixture");

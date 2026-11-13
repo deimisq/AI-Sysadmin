@@ -60,7 +60,7 @@ if ($ExerciseInstaller) {
     if ($process.ExitCode -ne 0) { throw "El instalador devolvio $($process.ExitCode). Revisá el log en el directorio de prueba." }
     $registered = (Get-ItemProperty -LiteralPath $key).InstallLocation
     if ([IO.Path]::GetFullPath($registered).TrimEnd('\') -ne $install.TrimEnd('\')) { throw 'La instalacion registrada no corresponde al directorio de prueba. No se ejecutara el desinstalador.' }
-    Assert-Payload (Join-Path $install "versions/$($manifest.version)")
+    Assert-Payload $install
     $uninstall = Join-Path $install 'unins000.exe'
     $process = Start-Process -FilePath $uninstall -ArgumentList '/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART' -WindowStyle Hidden -Wait -PassThru
     if ($process.ExitCode -ne 0 -or (Test-Path $key)) { throw 'La desinstalacion de prueba no finalizo correctamente.' }

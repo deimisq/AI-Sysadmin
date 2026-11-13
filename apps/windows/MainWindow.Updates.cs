@@ -40,11 +40,11 @@ public partial class MainWindow
             await _updates.DownloadAsync();
         }
         if(type=="UPDATE_INSTALL") {
-            if(MessageBox.Show(this,UserLanguage.Text("¿Instalar la actualización descargada y verificada? La app seguirá abierta y te avisará cuando esté lista para reiniciar. Se conservarán tus datos y conexiones."),UserLanguage.Text("Instalar actualización"),MessageBoxButton.YesNo,MessageBoxImage.Question)!=MessageBoxResult.Yes) return _updates.Status();
+            if(MessageBox.Show(this,UserLanguage.Text("¿Preparar la instalación de la actualización verificada? Los archivos se reemplazarán después de aprobar el reinicio de la app. Se conservarán tus datos y conexiones."),UserLanguage.Text("Instalar actualización"),MessageBoxButton.YesNo,MessageBoxImage.Question)!=MessageBoxResult.Yes) return _updates.Status();
             await _updates.InstallAsync();
         }
         if(type=="UPDATE_RESTART") {
-            if(MessageBox.Show(this,UserLanguage.Text("¿Reiniciar AI Sysadmin para aplicar la actualización? Se cerrarán las sesiones SSH y RDP abiertas. Guardá tu trabajo antes de continuar."),UserLanguage.Text("Reiniciar aplicación"),MessageBoxButton.YesNo,MessageBoxImage.Warning)!=MessageBoxResult.Yes) return _updates.Status();
+            if(MessageBox.Show(this,UserLanguage.Text("¿Cerrar AI Sysadmin, instalar la actualización y volver a abrir? Se cerrarán las sesiones SSH y RDP abiertas. Guardá tu trabajo antes de continuar."),UserLanguage.Text("Reiniciar aplicación"),MessageBoxButton.YesNo,MessageBoxImage.Warning)!=MessageBoxResult.Yes) return _updates.Status();
             _updates.Restart(); Close();
         }
         return _updates.Status();

@@ -11,7 +11,9 @@ El instalador limita esta compilación a Windows x64 y build 19045 o posterior. 
 
 ## Datos y actualizaciones
 
-La instalación predeterminada reside en `%LOCALAPPDATA%/Programs/AI Sysadmin Agent/versions/<version>`. Los accesos directos apuntan a la versión instalada más recientemente. La app consulta actualizaciones y requiere aprobaciones separadas para descargar, instalar y reiniciar. No hay rollback automático; las carpetas separadas no garantizan compatibilidad de un cliente antiguo con datos nuevos.
+La instalación predeterminada reside en `%LOCALAPPDATA%/Programs/AI Sysadmin Agent`, con el ejecutable fijo `AiSysadmin.exe` y sus dependencias en esa misma instalación. Los accesos directos mantienen esa ruta al actualizar. El instalador cierra las instancias de esa instalación antes de reemplazar archivos, retira la antigua carpeta `versions` y renueva los assets de interfaz y avisos de terceros. Los datos permanecen separados en `%LOCALAPPDATA%/AiSysadmin`. No hay rollback automático ni se conservan ejecutables de versiones anteriores.
+
+La primera migración desde una distribución que usa carpetas `versions/<versión>` requiere ejecutar el nuevo instalador una vez con la app cerrada. El actualizador antiguo espera esas carpetas y no puede aplicar esta transición; el instalador rechaza su modo `/NOCLOSEAPPLICATIONS` antes de cambiar archivos. Después de migrar, las actualizaciones integradas usan la ruta fija y se aplican al aprobar el cierre y reinicio de la app, sin reiniciar Windows.
 
 Inventario, credenciales, configuración IA, registros y perfil WebView2 permanecen en `%LOCALAPPDATA%/AiSysadmin`. Desinstalar conserva ese directorio. El ZIP portable tampoco vuelve portable el vault: la protección DPAPI sigue ligada a la cuenta de Windows. Para migrar conexiones/carpetas a otra cuenta o equipo, usar la copia cifrada portable de Ajustes.
 
@@ -104,7 +106,7 @@ El instalador muestra el selector español/inglés y guarda es/en en HKCU bajo S
 
 ## Preferencias de presentación
 
-Si después de actualizar no aparecen funciones nuevas o no se conserva la presentación, comprobar la versión en Ayuda y el destino del acceso usado. Los accesos anclados de Windows pueden conservar un ejecutable dentro de `versions/<versión anterior>`. El instalador retargetea los anclajes de esa misma instalación a la nueva versión; no crea anclajes ni modifica otras instalaciones. La prueba de actualización usa una carpeta sintética de accesos y verifica que un acceso ajeno permanezca intacto. Una instancia antigua ya abierta debe cerrarse y volver a abrirse para usar el ejecutable nuevo.
+Si después de actualizar no aparecen funciones nuevas o no se conserva la presentación, comprobar la versión en Ayuda y el destino del acceso usado. El instalador migra los anclajes que apuntaban a `versions/<versión anterior>` de esa misma instalación hacia su ejecutable fijo. No crea anclajes ni modifica otras instalaciones. La prueba usa accesos sintéticos, comprueba que un acceso ajeno permanece intacto y valida una segunda actualización sobre el ejecutable fijo.
 
 La ventana principal guarda su tamaño normal y estado maximizado en `%LOCALAPPDATA%/AiSysadmin/window-presentation.v1.json`. Al reabrir se centra y ajusta al área de trabajo de la pantalla, respetando el tamaño mínimo de la interfaz. Cerrar minimizada conserva el último estado normal o maximizado. Un archivo ausente o inválido usa los valores iniciales; un fallo de guardado no bloquea el cierre.
 

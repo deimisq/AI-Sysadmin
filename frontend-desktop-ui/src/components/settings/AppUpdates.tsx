@@ -78,7 +78,7 @@ export function AppUpdateSettings() {
         {update?.state === 'downloading' && <p role="status">{uiText("Descargando:")}{" "}{Math.floor(update.received / 1024 / 1024)}{" "}{uiText("de")}{" "}{Math.ceil(update.size / 1024 / 1024)} MB.</p>}
         {update?.state === 'installing' && <p role="status">{uiText("Instalando la actualización. Mantené la app abierta…")}</p>}
         {update?.state === 'downloaded' && <p role="status">{uiText("Descarga verificada con SHA256. Falta tu aprobación para instalar.")}</p>}
-        {update?.state === 'restart' && <p role="status">{uiText("Actualización instalada. Reiniciá cuando termines de trabajar para usar la nueva versión.")}</p>}
+        {update?.state === 'restart' && <p role="status">{uiText("Instalación preparada. Al aprobar el reinicio se cerrará la app, se reemplazarán sus archivos y se abrirá la nueva versión.")}</p>}
         {update?.notes && <details><summary>{uiText("Notas de la nueva versión")}</summary><pre className="whitespace-pre-wrap text-sm mt-2">{update.notes}</pre></details>}
         {(error || update?.error) && <p role="alert" className="text-sm text-red-400">{error || update?.error}</p>}
         <p className="text-xs text-muted-foreground">{uiText("Las compilaciones actuales no tienen firma de código. La app verifica el hash publicado por GitHub antes de ejecutar el actualizador. El modo portable requiere una instalación para habilitar la actualización integrada.")}</p>

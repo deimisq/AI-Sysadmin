@@ -70,6 +70,8 @@ Estas instrucciones aplican a todo el repositorio. Mantener este documento actua
 
 ## Mantenimiento de esta guía
 
+- Mantener la ayuda integrada de Windows en ambos idiomas en `frontend-desktop-ui/src/lib/documentation.ts`. Revisar sus artículos al modificar funciones, controles o límites; conservar paridad de identificadores y guías relacionadas. El alcance y las verificaciones se documentan en [docs/AYUDA_INTEGRADA.md](docs/AYUDA_INTEGRADA.md).
+
 - El destino autorizado para aportes voluntarios es https://github.com/sponsors/deimisq. Mantenerlo coherente en README, `.github/FUNDING.yml` y Ayuda de la app, con textos español/inglés. Abrir Sponsors en el navegador predeterminado mediante una URL fija; no pedir datos de pago en la app ni condicionar funciones a donar. Conservar https://sentrait.com.uy/ como sitio oficial.
 
 - El objetivo de distribución indicado por el usuario es ofrecer la app gratis y permitir aportes voluntarios desde la app, la presentación de Sentrait y GitHub. Los aportes no deben condicionar el uso. La evaluación de licencia está en [docs/OPEN_SOURCE_REVIEW.md](docs/OPEN_SOURCE_REVIEW.md); el código propio adopta Apache 2.0, conservando los avisos de terceros. La web oficial es https://sentrait.com.uy/. Mantener el repositorio privado hasta resolver los secretos históricos y revisar la publicación. No publicar cuentas o enlaces de donación inventados.

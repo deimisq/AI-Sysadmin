@@ -1,5 +1,7 @@
 # Windows 0.11
 
+- Ayuda integrada reorganizada en 13 guías por tareas, con contenido completo en español e inglés, búsqueda sin distinción de tildes, estados sin resultados y guías relacionadas. Se corrigen instrucciones heredadas y se documentan los límites reales de SSH/RDP, proveedores y modelos, permisos, contexto, limpieza del chat, respaldos, preferencias y actualizaciones. Se distinguen funciones locales de las que requieren backend empresarial.
+
 - Corrección del bloqueo en «Preparándose para instalar»: se sustituye el escaneo masivo de Restart Manager por un cierre normal acotado a procesos de la propia instalación. Si una instancia no termina en 20 segundos, se informa el error antes de modificar archivos, sin forzar su salida. Se excluyen del escaneo también las ejecuciones iniciadas por clientes antiguos con `/CLOSEAPPLICATIONS`.
 
 - Instalación en una ruta fija `AI Sysadmin Agent/AiSysadmin.exe`, sustituyendo los archivos en cada actualización y retirando carpetas legacy `versions` y assets antiguos. La migración inicial requiere ejecutar el nuevo instalador con la app cerrada porque el actualizador anterior espera directorios por versión. Las actualizaciones siguientes se preparan con la app abierta y reemplazan archivos solo después de aprobar el reinicio; el auxiliar verifica de nuevo el instalador y no reinicia Windows.

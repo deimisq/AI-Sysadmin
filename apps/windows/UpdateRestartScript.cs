@@ -14,7 +14,7 @@ public static class UpdateRestartScript
             Wait-Process -Id $plan.processId -ErrorAction SilentlyContinue
             try {
                 if ((Get-Item -LiteralPath $plan.installer).Length -ne $plan.size -or (Get-FileHash -LiteralPath $plan.installer -Algorithm SHA256).Hash -ne $plan.digest) { throw 'SHA256/size mismatch' }
-                $arguments=@('/SP-','/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/CLOSEAPPLICATIONS','/NORESTARTAPPLICATIONS',('/DIR="'+$plan.root+'"'),('/LOG="'+$plan.log+'"'))
+                $arguments=@('/SP-','/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/NORESTARTAPPLICATIONS',('/DIR="'+$plan.root+'"'),('/LOG="'+$plan.log+'"'))
                 $setup=Start-Process -FilePath $plan.installer -ArgumentList $arguments -WindowStyle Hidden -Wait -PassThru
                 if ($setup.ExitCode -ne 0) { throw ('Installer exit: '+$setup.ExitCode) }
                 $executable=Join-Path $plan.root 'AiSysadmin.exe'

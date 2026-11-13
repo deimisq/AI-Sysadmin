@@ -38,7 +38,10 @@ SetupIconFile=..\Assets\app.ico
 DisableProgramGroupPage=yes
 AllowNoIcons=yes
 UninstallDisplayIcon={app}\AiSysadmin.exe
-CloseApplications=yes
+; Restart Manager can stall scanning thousands of historical DLLs. Use our
+; bounded, installation-scoped graceful close check in PrepareToInstall instead.
+CloseApplications=no
+CloseApplicationsFilterExcludes=*
 RestartApplications=no
 InfoBeforeFile=install-notes.txt
 SetupLogging=yes
@@ -56,6 +59,8 @@ english.WebViewRequired=Install Microsoft Edge WebView2 Runtime (Evergreen), the
 
 spanish.CloseForFlatUpgrade=Para migrar a la instalación de ruta fija, cerrá AI Sysadmin y ejecutá este instalador. El actualizador anterior no admite esta migración inicial.
 english.CloseForFlatUpgrade=To migrate to the fixed installation path, close AI Sysadmin and run this installer. The previous updater does not support this initial migration.
+spanish.CloseTimeout=No se pudo confirmar el cierre de AI Sysadmin. Cerrá sus ventanas y reintentá. El detalle está en el registro del instalador.
+english.CloseTimeout=Could not confirm that AI Sysadmin has closed. Close its windows and retry. Details are in the setup log.
 
 [Registry]
 Root: HKCU; Subkey: "{#InstallerSettingsKey}"; ValueType: string; ValueName: "Language"; ValueData: "{code:ApplicationLanguage}"
@@ -64,6 +69,7 @@ Root: HKCU; Subkey: "{#InstallerSettingsKey}"; ValueType: string; ValueName: "La
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; Flags: unchecked
 
 [Files]
+Source: "close-installed-app.ps1"; Flags: dontcopy
 Source: "{#PublishDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "..\Assets\app.ico"; DestDir: "{app}"; DestName: "app.ico"; Flags: ignoreversion
 
@@ -138,36 +144,6 @@ begin
   if ActiveLanguage = 'english' then Result := 'en' else Result := 'es';
 end;
 
-procedure RegisterInstalledExecutable(const Filename: String);
-begin
-  if FileExists(Filename) then
-    if not RegisterExtraCloseApplicationsResource(False, Filename) then
-      RaiseException(FmtMessage(CustomMessage('CloseCheck'), [Filename]));
-end;
-
-procedure RegisterExtraCloseApplicationsResources;
-var
-  Versions: String;
-  Found: TFindRec;
-begin
-  { Updates use a new directory. Register older executables explicitly so
-    Restart Manager closes those instances before installing the next version. }
-  RegisterInstalledExecutable(ExpandConstant('{app}\AiSysadmin.exe'));
-  Versions := ExpandConstant('{app}\versions\');
-  if FindFirst(Versions + '*', Found) then
-  begin
-    try
-      repeat
-        if ((Found.Attributes and FILE_ATTRIBUTE_DIRECTORY) <> 0) and
-           (Found.Name <> '.') and (Found.Name <> '..') then
-          RegisterInstalledExecutable(Versions + Found.Name + '\AiSysadmin.exe');
-      until not FindNext(Found);
-    finally
-      FindClose(Found);
-    end;
-  end;
-end;
-
 function HasWebView2: Boolean;
 var
   Version: String;
@@ -182,6 +158,9 @@ end;
 function PrepareToInstall(var NeedsRestart: Boolean): String;
 var
   Index: Integer;
+  ResultCode: Integer;
+  LogPath, Parameters: String;
+  CloseDetails: AnsiString;
 begin
   Result := '';
   for Index := 1 to ParamCount do
@@ -191,5 +170,20 @@ begin
       Exit;
     end;
   if not HasWebView2 then
+  begin
     Result := CustomMessage('WebViewRequired');
+    Exit;
+  end;
+  ExtractTemporaryFile('close-installed-app.ps1');
+  LogPath := ExpandConstant('{tmp}\ai-sysadmin-close.log');
+  Parameters := '-NoProfile -NonInteractive -ExecutionPolicy Bypass -File ' +
+    AddQuotes(ExpandConstant('{tmp}\close-installed-app.ps1')) + ' -InstallRoot ' +
+    AddQuotes(ExpandConstant('{app}')) + ' -LogPath ' + AddQuotes(LogPath);
+  Log('Comprobando cierre acotado de las instancias de esta instalacion.');
+  if not Exec(ExpandConstant('{sys}\WindowsPowerShell\v1.0\powershell.exe'), Parameters,
+    '', SW_HIDE, ewWaitUntilTerminated, ResultCode) or (ResultCode <> 0) then
+  begin
+    if LoadStringFromFile(LogPath, CloseDetails) then Log(String(CloseDetails));
+    Result := CustomMessage('CloseTimeout');
+  end;
 end;

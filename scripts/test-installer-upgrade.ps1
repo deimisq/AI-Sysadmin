@@ -33,6 +33,7 @@ public class UpgradeFixture : Form {
         base.OnLoad(e);
     }
     protected override void OnFormClosing(FormClosingEventArgs e) {
+        if(File.Exists(Path.Combine(MarkerDirectory,"block-close.request"))) { e.Cancel=true; return; }
         File.WriteAllText(Path.Combine(MarkerDirectory, "closed.txt"), "graceful");
         base.OnFormClosing(e);
     }
@@ -61,6 +62,7 @@ $otherHash = (Get-FileHash -LiteralPath $otherPin).Hash
 if ($LASTEXITCODE -ne 0) { throw 'No se pudo compilar el instalador aislado.' }
 $previousFixtureRoot=$env:AI_AGENT_UPGRADE_FIXTURE_ROOT
 $env:AI_AGENT_UPGRADE_FIXTURE_ROOT=$sandbox
+$foreign=$null
 $running = Start-Process -FilePath $executable -WindowStyle Hidden -PassThru
 try {
     $ready = [Diagnostics.Stopwatch]::StartNew()
@@ -69,6 +71,25 @@ try {
         Start-Sleep -Milliseconds 100; $running.Refresh()
     }
     $setup = Join-Path $sandbox 'AI-Sysadmin-Agent-upgrade-test-win-x64-setup.exe'
+    $otherDirectory=Split-Path -Parent $otherTarget
+    New-Item -ItemType Directory -Path $otherDirectory -Force | Out-Null
+    Copy-Item -LiteralPath $executable -Destination $otherTarget
+    $env:AI_AGENT_UPGRADE_FIXTURE_ROOT=$otherDirectory
+    $foreign=Start-Process -FilePath $otherTarget -WindowStyle Hidden -PassThru
+    $env:AI_AGENT_UPGRADE_FIXTURE_ROOT=$sandbox
+    # Old installations may contain thousands of DLLs. They must never be
+    # enumerated by Restart Manager, including when an old client forces /CLOSEAPPLICATIONS.
+    foreach($index in 1..128){[IO.File]::WriteAllBytes((Join-Path $old "synthetic-$index.dll"),[byte[]]@())}
+    if(-not $KeepOldRunning) {
+        $block=Join-Path $sandbox 'block-close.request'
+        Set-Content -LiteralPath $block -Value 'synthetic refusal to close'
+        $helper=Join-Path $projectRoot 'apps/windows/installer/close-installed-app.ps1'
+        $watch=[Diagnostics.Stopwatch]::StartNew()
+        $check=Start-Process powershell.exe -ArgumentList '-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File',"`"$helper`"",'-InstallRoot',"`"$install`"",'-LogPath',"`"$(Join-Path $sandbox 'close-timeout.log')`"",'-TimeoutSeconds','1' -WindowStyle Hidden -PassThru -Wait
+        if($check.ExitCode -eq 0 -or $watch.Elapsed.TotalSeconds -gt 15){throw 'No se respeto el limite de cierre de la instancia sintetica.'}
+        $running.Refresh(); if($running.HasExited -or -not(Test-Path $executable)){throw 'El cierre acotado forzo la salida o modifico archivos.'}
+        Remove-Item -LiteralPath $block
+    }
     if($KeepOldRunning) {
         $legacyAttempt=Start-Process -FilePath $setup -ArgumentList '/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/NOICONS','/NOCLOSEAPPLICATIONS',"/DIR=`"$install`"" -WindowStyle Hidden -Wait -PassThru
         if($legacyAttempt.ExitCode -eq 0 -or -not(Test-Path $executable)) { throw 'La migracion incompatible no se rechazo antes de modificar archivos.' }
@@ -79,7 +100,7 @@ try {
         Set-Content -LiteralPath (Join-Path $sandbox 'close.request') -Value 'approved restart fixture'
         if(-not $running.WaitForExit(10000)) { throw 'No termino la app tras aprobar el cierre.' }
     }
-    $closeMode = '/CLOSEAPPLICATIONS'
+    $closeMode = '/NORESTARTAPPLICATIONS'
     $process = Start-Process -FilePath $setup -ArgumentList '/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/NOICONS',"/LANG=$Language",$closeMode,"/DIR=`"$install`"","/LOG=`"$(Join-Path $sandbox 'upgrade.log')`"" -WindowStyle Hidden -Wait -PassThru
     if ($process.ExitCode -ne 0) { throw "Falló la actualización aislada: $($process.ExitCode)." }
     $expectedLanguage = if ($Language -eq 'english') { 'en' } else { 'es' }
@@ -106,14 +127,21 @@ try {
     $obsolete=Join-Path $install 'wwwroot/obsolete-fixture.js'
     New-Item -ItemType Directory -Path (Split-Path $obsolete -Parent) -Force | Out-Null
     Set-Content -LiteralPath $obsolete -Value 'synthetic obsolete asset'
-    $process=Start-Process -FilePath $setup -ArgumentList '/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/NOICONS','/CLOSEAPPLICATIONS',"/LANG=$Language","/DIR=`"$install`"" -WindowStyle Hidden -Wait -PassThru
+    $secondLog=Join-Path $sandbox 'flat-upgrade.log'
+    $process=Start-Process -FilePath $setup -ArgumentList '/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/NOICONS','/CLOSEAPPLICATIONS',"/LANG=$Language","/DIR=`"$install`"","/LOG=`"$secondLog`"" -WindowStyle Hidden -Wait -PassThru
     if($process.ExitCode -ne 0 -or -not $running.WaitForExit(10000)){throw 'Fallo la actualizacion sobre el ejecutable fijo.'}
     if((Test-Path $obsolete) -or (Test-Path (Join-Path $install 'versions'))){throw 'Quedaron archivos de una version anterior.'}
     if(-not(Test-Path (Join-Path $sandbox 'closed.txt'))){throw 'La app de ruta fija no se cerro normalmente.'}
     if((Get-FileHash -LiteralPath $profileFile).Hash -ne $profileHash){throw 'Se modificaron los datos sinteticos separados de la instalacion.'}
+    if(Select-String -LiteralPath $secondLog -Pattern 'Calling RestartManager|RmGetList' -Quiet){throw 'Se volvio a activar la consulta masiva a Restart Manager.'}
+    $foreign.Refresh();if($foreign.HasExited){throw 'Se cerro una instancia de otra instalacion.'}
     Write-Output 'Actualización verificada: instancia anterior cerrada normalmente y nueva versión instalada.'
 } finally {
     $env:AI_AGENT_UPGRADE_FIXTURE_ROOT=$previousFixtureRoot
+    if($foreign -and -not $foreign.HasExited){
+        Set-Content -LiteralPath (Join-Path $otherDirectory 'close.request') -Value 'synthetic cleanup'
+        if(-not $foreign.WaitForExit(5000) -and $foreign.Path -eq $otherTarget){Stop-Process -Id $foreign.Id -Force}
+    }
     if (-not $running.HasExited) {
         $null = $running.CloseMainWindow(); $null = $running.WaitForExit(3000)
         if (-not $running.HasExited -and $running.Path -eq $executable) { Stop-Process -Id $running.Id -Force }

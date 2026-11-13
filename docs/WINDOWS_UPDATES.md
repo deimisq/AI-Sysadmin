@@ -22,6 +22,8 @@ No hay downgrade automático ni instalación sin aprobación. Los errores de red
 
 La instalación usa una única ruta de ejecutable y elimina la carpeta legacy `versions`. La primera migración desde el actualizador antiguo exige ejecutar el nuevo instalador una vez con la app cerrada: ese cliente espera un directorio por versión y no puede aplicar este cambio de estructura. El instalador rechaza su modo incompatible antes de modificar archivos. Las actualizaciones posteriores usan el flujo integrado descrito arriba.
 
+El instalador evita el escaneo de miles de archivos por Restart Manager. Comprueba únicamente las instancias de su propia ruta y pide un cierre normal, con una espera máxima de 20 segundos. Si alguna no sale, muestra un error para cerrarla manualmente y reintentar; no termina procesos por la fuerza ni reemplaza sus archivos mientras siguen abiertos.
+
 Los datos permanecen en `%LOCALAPPDATA%/AiSysadmin`. Descargas, token cifrado y registro `install.log` viven en su subcarpeta `Updates`. El auxiliar elimina el instalador que acaba de aplicar después de iniciar correctamente la app; conserva el registro para diagnóstico. Los paquetes actuales no están firmados: el hash comprueba correspondencia con el asset de GitHub y no sustituye una firma de código del publicador.
 
 ## Verificación

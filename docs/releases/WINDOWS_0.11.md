@@ -1,5 +1,7 @@
 # Windows 0.11
 
+- El instalador actualiza los accesos anclados a la barra de tareas que apuntan a versiones anteriores de esa misma instalación. Evita reabrir una versión antigua tras actualizar, que puede no incluir la persistencia de ventana, carpetas y paneles. No crea anclajes ni cambia accesos de otras instalaciones.
+
 - Persistencia de presentación: tamaño normal y estado maximizado de la ventana principal, visibilidad del explorador, acompañante IA y panel inferior, y expansión de carpetas, subcarpetas y grupos por usuario/espacio de trabajo. La búsqueda no altera la expansión guardada. No se restauran sesiones remotas ni se guardan credenciales en estas preferencias.
 
 - Ayuda incorpora un acceso a GitHub Sponsors de @deimisq en el navegador predeterminado, con textos en español e inglés. Los aportes son voluntarios y no se solicitan datos de pago en la app.

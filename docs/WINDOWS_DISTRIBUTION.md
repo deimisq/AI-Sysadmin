@@ -104,6 +104,8 @@ El instalador muestra el selector español/inglés y guarda es/en en HKCU bajo S
 
 ## Preferencias de presentación
 
+Si después de actualizar no aparecen funciones nuevas o no se conserva la presentación, comprobar la versión en Ayuda y el destino del acceso usado. Los accesos anclados de Windows pueden conservar un ejecutable dentro de `versions/<versión anterior>`. El instalador retargetea los anclajes de esa misma instalación a la nueva versión; no crea anclajes ni modifica otras instalaciones. La prueba de actualización usa una carpeta sintética de accesos y verifica que un acceso ajeno permanezca intacto. Una instancia antigua ya abierta debe cerrarse y volver a abrirse para usar el ejecutable nuevo.
+
 La ventana principal guarda su tamaño normal y estado maximizado en `%LOCALAPPDATA%/AiSysadmin/window-presentation.v1.json`. Al reabrir se centra y ajusta al área de trabajo de la pantalla, respetando el tamaño mínimo de la interfaz. Cerrar minimizada conserva el último estado normal o maximizado. Un archivo ausente o inválido usa los valores iniciales; un fallo de guardado no bloquea el cierre.
 
 La visibilidad del explorador, acompañante IA y panel inferior, y la expansión de carpetas y grupos se guardan localmente en el perfil WebView2 mediante `workspace-presentation:v1`. Las claves del árbol distinguen usuario/espacio y tipo de nodo; buscar solo expande temporalmente. Son preferencias visuales del equipo, sin credenciales ni sesiones, y no se incluyen en la copia de conexiones.

@@ -13,6 +13,9 @@
 #ifndef AppVersion
   #error AppVersion is required.
 #endif
+#ifndef PinnedShortcutsDir
+  #define PinnedShortcutsDir "{userappdata}\Microsoft\Internet Explorer\Quick Launch\User Pinned\TaskBar"
+#endif
 
 [Setup]
 AppId={#InstallerAppId}
@@ -69,6 +72,59 @@ Name: "{autodesktop}\AI Sysadmin Agent"; Filename: "{app}\versions\{#AppVersion}
 Filename: "{app}\versions\{#AppVersion}\AiSysadmin.exe"; Description: "{cm:LaunchProgram,AI Sysadmin Agent}"; Flags: nowait postinstall skipifsilent
 
 [Code]
+procedure UpdatePinnedShortcuts;
+var
+  Directory, VersionsRoot, Filename, Target, CurrentExecutable: String;
+  Found: TFindRec;
+  Shell, Shortcut: Variant;
+begin
+  Directory := ExpandConstant('{#PinnedShortcutsDir}');
+  VersionsRoot := AddBackslash(ExpandConstant('{app}')) + 'versions\';
+  CurrentExecutable := ExpandConstant('{app}\versions\{#AppVersion}\AiSysadmin.exe');
+  if not FileExists(CurrentExecutable) then Exit;
+  if not FindFirst(AddBackslash(Directory) + '*.lnk', Found) then Exit;
+  try
+    Shell := CreateOleObject('WScript.Shell');
+    repeat
+      if (Found.Attributes and FILE_ATTRIBUTE_DIRECTORY) = 0 then
+      begin
+        Filename := AddBackslash(Directory) + Found.Name;
+        try
+          Shortcut := Shell.CreateShortcut(Filename);
+          Target := ExpandFileName(Shortcut.TargetPath);
+          { Only retarget links belonging to this installation. Never create,
+            unpin or change links for other apps or portable installations. }
+          if (CompareText(Copy(Target, 1, Length(VersionsRoot)), VersionsRoot) = 0) and
+             (CompareText(ExtractFileName(Target), 'AiSysadmin.exe') = 0) then
+          begin
+            Shortcut.TargetPath := CurrentExecutable;
+            Shortcut.WorkingDirectory := ExtractFileDir(CurrentExecutable);
+            Shortcut.IconLocation := ExpandConstant('{app}\app.ico') + ',0';
+            Shortcut.Save;
+            Log('Actualizado acceso anclado de esta instalacion.');
+          end;
+        except
+          Log('No se pudo actualizar un acceso anclado: ' + GetExceptionMessage);
+        end;
+      end;
+    until not FindNext(Found);
+  finally
+    FindClose(Found);
+  end;
+end;
+
+procedure CurStepChanged(CurStep: TSetupStep);
+begin
+  if CurStep = ssPostInstall then
+  begin
+    try
+      UpdatePinnedShortcuts;
+    except
+      Log('No se pudieron revisar los accesos anclados: ' + GetExceptionMessage);
+    end;
+  end;
+end;
+
 function ApplicationLanguage(Param: String): String;
 begin
   if ActiveLanguage = 'english' then Result := 'en' else Result := 'es';

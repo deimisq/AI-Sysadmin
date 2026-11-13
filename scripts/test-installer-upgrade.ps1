@@ -42,7 +42,16 @@ public class UpgradeFixture : Form {
 $executable = Join-Path $old 'AiSysadmin.exe'
 Add-Type -TypeDefinition $source -ReferencedAssemblies 'System.Windows.Forms','System.Drawing' -OutputAssembly $executable -OutputType WindowsApplication
 Copy-Item -LiteralPath $executable -Destination (Join-Path $payload 'AiSysadmin.exe')
-& $Iscc '/Q' "/DPublishDir=$payload" "/DOutputDir=$sandbox" '/DAppVersion=upgrade-test' "/DInstallerAppId={{$testId}" "/DInstallerSettingsKey=$settingsKey" (Join-Path $projectRoot 'apps/windows/installer/Windows.iss')
+$pins = Join-Path $sandbox 'synthetic-taskbar'
+New-Item -ItemType Directory -Path $pins | Out-Null
+$shell = New-Object -ComObject WScript.Shell
+$pin = Join-Path $pins 'AI Sysadmin Agent.lnk'
+$link = $shell.CreateShortcut($pin); $link.TargetPath = $executable; $link.Save()
+$otherPin = Join-Path $pins 'Otra instalacion.lnk'
+$otherTarget = Join-Path $sandbox 'other-installation/versions/old/AiSysadmin.exe'
+$link = $shell.CreateShortcut($otherPin); $link.TargetPath = $otherTarget; $link.Save()
+$otherHash = (Get-FileHash -LiteralPath $otherPin).Hash
+& $Iscc '/Q' "/DPublishDir=$payload" "/DOutputDir=$sandbox" '/DAppVersion=upgrade-test' "/DInstallerAppId={{$testId}" "/DInstallerSettingsKey=$settingsKey" "/DPinnedShortcutsDir=$pins" (Join-Path $projectRoot 'apps/windows/installer/Windows.iss')
 if ($LASTEXITCODE -ne 0) { throw 'No se pudo compilar el instalador aislado.' }
 $running = Start-Process -FilePath $executable -WindowStyle Hidden -PassThru
 try {
@@ -65,6 +74,8 @@ try {
     if (-not $running.WaitForExit(10000)) { throw 'La versión anterior sigue abierta.' }
     if (-not (Test-Path -LiteralPath (Join-Path $old 'closed.txt'))) { throw 'La versión anterior no recibió un cierre normal.' }
     if (-not (Test-Path -LiteralPath (Join-Path $install 'versions/upgrade-test/AiSysadmin.exe'))) { throw 'La versión nueva no se instaló.' }
+    if ($shell.CreateShortcut($pin).TargetPath -ne (Join-Path $install 'versions/upgrade-test/AiSysadmin.exe')) { throw 'El acceso anclado sigue apuntando a una version anterior.' }
+    if ((Get-FileHash -LiteralPath $otherPin).Hash -ne $otherHash) { throw 'Se modifico el acceso de otra instalacion.' }
     $installedIcon = Join-Path $install 'app.ico'
     if (-not (Test-Path -LiteralPath $installedIcon)) { throw 'Falta el icono estable de la instalación.' }
     if ((Get-FileHash -LiteralPath $installedIcon).Hash -ne (Get-FileHash -LiteralPath (Join-Path $projectRoot 'apps/windows/Assets/app.ico')).Hash) { throw 'El icono instalado no corresponde a la identidad de la app.' }

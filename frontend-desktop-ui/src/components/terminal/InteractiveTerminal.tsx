@@ -54,7 +54,6 @@ export function InteractiveTerminal({ sessionId, onClose: _onClose }: Interactiv
             xtermRef.current = term;
             fitAddonRef.current = fitAddon;
 
-            // term.write('\r\n🔌 Initializing PTY session...\r\n'); // REMOVED FOR NATIVE LOOK
 
             try {
                 // Determine dimensions
@@ -104,7 +103,6 @@ export function InteractiveTerminal({ sessionId, onClose: _onClose }: Interactiv
                 }
 
                 if (!isMounted.current) {
-                    console.log('Component unmounted before pty_create, aborting');
                     return;
                 }
 
@@ -156,7 +154,6 @@ export function InteractiveTerminal({ sessionId, onClose: _onClose }: Interactiv
                         fitAddonRef.current.fit();
                         const { cols, rows } = xtermRef.current;
 
-                        console.log(`[Terminal] Resizing PTY to ${cols}x${rows}`);
                         sendCommand('pty_resize', {
                             ptyId: ptyIdRef.current!,
                             rows,
@@ -170,7 +167,6 @@ export function InteractiveTerminal({ sessionId, onClose: _onClose }: Interactiv
                 }
                 resizeObserverRef.current = resizeObserver;
 
-                // No more readLoop!
 
             } catch (err: any) {
                 console.error('Failed to create PTY:', err);
@@ -198,10 +194,6 @@ export function InteractiveTerminal({ sessionId, onClose: _onClose }: Interactiv
                 resizeObserverRef.current.disconnect();
                 resizeObserverRef.current = null;
             }
-            // Remove resize listener - requires moving handleResize out or keeping ref?
-            // Since handleResize was defined inside, we can't remove it easily unless we store it.
-            // But window resize leak is minor for now compared to data leak.
-            // Ideally should refactor handleResize to use ref or be outside.
 
             if (ptyIdRef.current) {
                 sendCommand('pty_close', { ptyId: ptyIdRef.current }).catch(console.error);

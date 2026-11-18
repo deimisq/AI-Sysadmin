@@ -1,4 +1,5 @@
 import { uiText } from '../../lib/ui-language';
+import { useWorkspaceStore } from '../../stores/workspaceStore';
 import { useEffect, useState, useMemo } from 'react';
 import {
     fetchServers,
@@ -250,7 +251,8 @@ export function DashboardView() {
     }, [processedServers, groups]);
 
     const openConsole = (serverId: number) => {
-        navigate(`/server/${serverId}/console`);
+        const server = servers.find(item => item.id === serverId);
+        if (server) useWorkspaceStore.getState().openTab({ type: 'terminal', title: server.hostname, serverId: String(server.id), server });
     };
 
     const ServerCard = ({ server }: { server: Server }) => (
@@ -418,14 +420,6 @@ export function DashboardView() {
                         <p className="text-muted-foreground mt-1">{uiText("Gestiona tu infraestructura con asistencia inteligente")}</p>
                     </div>
                     <div className="flex gap-3">
-                        <Button
-                            variant="secondary"
-                            className="gap-2"
-                            onClick={() => navigate('/ssh-test')}
-                            type="button"
-                        >
-                            🧪 Test SSH (Phase 1)
-                        </Button>
                         <Button
                             variant="outline"
                             className="gap-2"

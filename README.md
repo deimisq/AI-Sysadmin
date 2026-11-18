@@ -61,6 +61,7 @@ Los badges de versión y compilación consultan GitHub; su disponibilidad extern
 | Recurso | Contenido |
 |---|---|
 | [Ayuda integrada](docs/AYUDA_INTEGRADA.md) | Artículos de uso disponibles dentro de la app en español e inglés y pautas para mantenerlos |
+| [Mantenimiento del repositorio](docs/MANTENIMIENTO_REPOSITORIO.md) | Componentes vigentes, limpieza y criterios para retirar código |
 | [Instalación y distribución](docs/WINDOWS_DISTRIBUTION.md) | Instalador, ZIP portable, requisitos y validación |
 | [Actualizaciones](docs/WINDOWS_UPDATES.md) | Versionado, descarga y aplicación de nuevas versiones |
 | [Notas de versión](docs/releases/WINDOWS_0.11.md) | Funcionalidades y cambios de la línea Windows vigente |

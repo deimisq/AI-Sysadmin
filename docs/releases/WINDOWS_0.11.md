@@ -1,5 +1,7 @@
 # Windows 0.11
 
+- Limpieza de pantallas de prueba y rutas antiguas no alcanzables desde las entradas del cliente. Se conservan las vistas actuales de ayuda y administración, el backend empresarial y la web independiente. El dashboard abre conexiones mediante el gestor de pestañas vigente. Se retiran esquemas generados huérfanos y el script de migración V2 ya completada.
+
 - Cierre de pestañas de conexión con el botón central del ratón, sin activar primero las pestañas inactivas. La terminal SSH copia el texto seleccionado y pega el portapapeles con clic derecho mediante xterm, respetando el modo de pegado del servidor. Los fallos de acceso al portapapeles se notifican y los eventos se retiran al cerrar la terminal.
 
 - Unificación del español neutro en ayuda integrada, interfaz, mensajes de Windows, instalador y documentación. Catálogos de traducción sincronizados y pauta permanente de redacción; el acompañante recibe la indicación explícita de evitar voseo y regionalismos.

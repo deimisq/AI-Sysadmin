@@ -23,6 +23,7 @@ backend/*.spec
 
 # ----- Python -----
 __pycache__/
+.pytest_cache/
 *.pyc
 *.pyo
 *.pyd
@@ -59,6 +60,7 @@ yarn-error.log*
 
 # ----- Tauri / Rust -----
 **/src-tauri/target/
+**/src-tauri/gen/
 **/src-tauri/Cargo.lock
 
 # ----- Visual Studio -----

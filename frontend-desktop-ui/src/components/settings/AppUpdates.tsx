@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import { sendCommand, isWebView2 } from '../../lib/bridge';
 import { useWorkspaceStore } from '../../stores/workspaceStore';
 import { Button } from '../ui/button';
-import { Input } from '../ui/input';
 
 type Update = { current_version: string; repository: string; state: string; error: string; version: string; notes: string; received: number; size: number; has_token: boolean; installed: boolean };
 type Info = { version: string; product: string; repository: string; runtime: string; architecture: string; os: string; commit: string; data_directory: string; installed: boolean };
@@ -38,13 +37,12 @@ export function AppVersionBadge() {
 export function AppUpdateSettings() {
     const update = useUpdateStatus();
     const [info, setInfo] = useState<Info | null>(null);
-    const [token, setToken] = useState('');
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
     useEffect(() => { if (isWebView2()) void sendCommand<Info>('app_info').then(setInfo).catch(() => {}); }, []);
     const action = async (command: string, payload: Record<string, unknown> = {}) => {
         setBusy(true); setError('');
-        try { await sendCommand(command, payload); if (command === 'update_token') setToken(''); }
+        try { await sendCommand(command, payload); }
         catch (failure) { setError(failure instanceof Error ? failure.message : uiText('La actualización falló.')); }
         finally { setBusy(false); await status().catch(() => {}); }
     };
@@ -62,11 +60,6 @@ export function AppUpdateSettings() {
         </dl>
         <h3 className="font-semibold">{uiText("Actualizaciones")}</h3>
         <p className="text-sm text-muted-foreground">{uiText("La app busca versiones al abrir. La descarga y la instalación requieren tu aprobación por separado. Después puedes reiniciar la app para aplicar los cambios; se cerrarán las sesiones abiertas. Los datos locales se conservan.")}</p>
-        <details className="text-sm"><summary className="cursor-pointer">Acceso a GitHub privado {update?.has_token ? '· token guardado' : '· configurar'}</summary>
-            <p className="my-2">El repositorio es privado. Usa un token de GitHub con acceso solo a AI-Sysadmin y permiso Contents: read. Se guarda protegido con DPAPI en este equipo, separado de la clave de IA, y no se incluye en copias de conexiones.</p>
-            <Input aria-label="Token de GitHub para actualizaciones" type="password" autoComplete="off" value={token} disabled={working} onChange={e => setToken(e.target.value)} />
-            <div className="mt-2 flex gap-2"><Button disabled={working || !token.trim()} onClick={() => void action('update_token', { token: token.trim() })}>{uiText("Guardar acceso")}</Button><Button variant="outline" disabled={working || !update?.has_token} onClick={() => void action('update_token', { token: '' })}>{uiText("Eliminar acceso")}</Button></div>
-        </details>
         <div className="flex flex-wrap gap-2">
             <Button variant="outline" disabled={working || update?.state === 'restart' || update?.state === 'downloaded'} onClick={() => void action('update_check')}>{uiText("Buscar actualizaciones")}</Button>
             {update?.state === 'available' && <Button disabled={working || !update.installed} onClick={() => void action('update_download')}>{uiText("Descargar")}{" "}{update.version} · {Math.ceil(update.size / 1024 / 1024)} MB</Button>}

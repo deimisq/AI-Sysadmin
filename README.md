@@ -21,6 +21,10 @@ Administración de equipos por SSH y RDP para Windows. Gratis y con código prop
 
 </div>
 
+![Interfaz de AI Sysadmin Agent para Windows con el explorador de conexiones, una terminal SSH y el acompañante IA](assets/screenshots/ai-sysadmin-windows.png)
+
+*Espacio de trabajo con conexiones organizadas por carpetas, terminal SSH y acompañante IA.*
+
 ## Qué puedes hacer
 
 Organiza equipos, abre sesiones remotas y consulta la IA sin salir del espacio de trabajo. Las conexiones locales no requieren una cuenta ni un backend; cada proveedor de IA conserva sus condiciones y costos.

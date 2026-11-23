@@ -39,7 +39,7 @@ namespace AiSysadminDesktop
                 _listener.Start();
                 _isRunning = true;
 
-                Console.WriteLine($"✅ API Proxy running on http://localhost:{port}");
+                Debug.WriteLine($"API Proxy running on http://localhost:{port}");
                 
                 Task.Run(() => ListenAsync());
             }
@@ -108,7 +108,7 @@ namespace AiSysadminDesktop
                     return;
                 }
                 string targetUrl = _backendUrl + request.Url.PathAndQuery;
-                Console.WriteLine($"🔷 Proxy: {request.HttpMethod} {targetUrl}");
+                Debug.WriteLine($"Proxy: {request.HttpMethod} {request.Url.AbsolutePath}"); // sin query: puede contener datos sensibles
 
                 // Create initial proxy request
                 var proxyRequest = new HttpRequestMessage
@@ -172,7 +172,7 @@ namespace AiSysadminDesktop
                         if (redirectCount == MaxRedirects)
                             throw new HttpRequestException("Too many backend redirects");
                             
-                        Console.WriteLine($"🔄 Redirecting ({statusCode}) [{redirectCount}/{MaxRedirects}] to: {redirectUrl}");
+                        Debug.WriteLine($"Redirecting ({statusCode}) [{redirectCount}/{MaxRedirects}]");
                         
                         // Dispose previous response
                         if (redirectCount > 0) currentResponse.Dispose(); 
@@ -271,7 +271,7 @@ namespace AiSysadminDesktop
                 response.Headers.Remove("Content-Encoding");
                 response.Headers.Remove("Transfer-Encoding");
 
-                Console.WriteLine($"✅ Proxy Response: {response.StatusCode} | Type: {contentType} | Size: {response.ContentLength64} bytes");
+                Debug.WriteLine($"Proxy Response: {response.StatusCode} | Type: {contentType} | Size: {response.ContentLength64} bytes");
 
                 // Write body
                 await response.OutputStream.WriteAsync(responseBytes, 0, responseBytes.Length);

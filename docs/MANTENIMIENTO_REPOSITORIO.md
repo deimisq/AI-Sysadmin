@@ -21,3 +21,14 @@ También se retiraron siete esquemas generados de Tauri que eran los únicos arc
 Antes de retirar código, comprobar imports, rutas, entradas de compilación, workflows, scripts y consumidores compartidos. No confundir nombres antiguos con falta de uso: por ejemplo, `LegacyTerminal` sigue siendo el fallback del cliente y `admin-layout` contiene controles usados por Administración.
 
 La limpieza no equivale a una auditoría completa de seguridad, rendimiento o compatibilidad con todos los servidores y proveedores. Las verificaciones proporcionadas para esta entrega son las pruebas frontend, el análisis de tipos y el empaquetado Vite; CI ejecuta además las comprobaciones y distribución Windows.
+
+## Versionado heredado y ubicación de archivos
+
+- `VERSION.json` es la versión del backend y la web empresarial (se copia en `Dockerfile.backend` y en `build-release.yml`). `versions.json` es la copia del índice publicado en el sitio de distribución (véase [guía del sitio](guides/DISTRIBUTION_SITE.md)). Ninguno corresponde a la línea Windows 0.11.N; se actualizan solo al publicar esos componentes y pueden diferir entre sí hasta entonces.
+- La raíz solo conserva archivos de proyecto. `scripts/open-web-testing.ps1` abre el sitio de pruebas web y `docs/architecture/tauri_architecture_diagram.png` es el diagrama histórico de la implementación Tauri.
+
+## Proxy local de la app Windows
+
+- Escucha en `localhost:8080`; si el puerto está ocupado, la app sigue con conexiones locales y desactiva el acceso empresarial. El puerto fijo lo comparten `MainWindow` y los valores por defecto del frontend, por lo que cambiarlo es una decisión aparte.
+- Rechaza orígenes de navegador ajenos, pero acepta peticiones sin `Origin` porque WebView2 reenvía así las llamadas `/api/` desde `MainWindow`. Exigirlo rompería la app; el proxy no es un límite de seguridad frente a procesos locales del mismo usuario.
+- Los registros de depuración no incluyen la query ni la URL del backend.

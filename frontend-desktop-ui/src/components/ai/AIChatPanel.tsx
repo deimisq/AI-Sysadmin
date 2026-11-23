@@ -255,14 +255,14 @@ function ServerAssistant({ server }: { server: Server | null }) {
                     <button className="px-3 py-2 bg-blue-600 rounded disabled:opacity-40" disabled={!consent} onClick={() => setAccepted(true)}>{uiText("Aceptar y habilitar para esta sesión")}</button>
                 </section>
             )}
-            {accepted && server && <div className="px-3 py-2 text-xs text-gray-300 border-b border-[#333] flex flex-wrap gap-2 justify-between"><span>{uiText("Contexto de")}{" "}{server.hostname} · {local ? 'Proveedor propio' : 'Backend configurado'}</span><button className="underline" onClick={async () => {
+            {accepted && server && <div className="px-3 py-2 text-xs text-gray-300 border-b border-[#333] flex flex-wrap gap-2 justify-between"><span>{uiText("Contexto de")}{" "}{server.hostname} · {local ? uiText('Proveedor propio') : uiText('Backend configurado')}</span><button className="underline" onClick={async () => {
                 requestVersion.current += 1; setAccepted(false); setConsent(false); setLoading(false);
                 if (local) { try { await api.post('/ai/settings/pause', {}); notifyAiConfiguration(); toast.success(uiText('Envíos pausados. La clave guardada se conserva.')); } catch { toast.error(uiText('No se pudo pausar la configuración. Reintenta desde Ajustes.')); } }
             }}>{uiText("Detener nuevos envíos")}</button></div>}
 
             {/* Messages */}
             <div ref={messagesRef} className="assistant-messages flex flex-col flex-1 min-h-0 min-w-0 overflow-y-auto overflow-x-hidden p-3 gap-4 font-sans">
-                {local && server && <div className="flex flex-wrap gap-2 justify-between text-xs text-gray-400"><span>{historyLoading ? uiText('Cargando historial protegido…') : 'Historial · Hasta 20 registros por destino'}</span><button disabled={executing || historyLoading || clearingHistory} className="underline disabled:opacity-40" onClick={() => setShowClearHistory(true)}>{uiText("Limpiar chat")}</button></div>}
+                {local && server && <div className="flex flex-wrap gap-2 justify-between text-xs text-gray-400"><span>{historyLoading ? uiText('Cargando historial protegido…') : uiText('Historial · Hasta 20 registros por destino')}</span><button disabled={executing || historyLoading || clearingHistory} className="underline disabled:opacity-40" onClick={() => setShowClearHistory(true)}>{uiText("Limpiar chat")}</button></div>}
                 {historyError && <p role="alert" className="text-xs text-amber-300">{uiText("No se pudo cargar el historial.")}{" "}<button className="underline" onClick={() => setHistoryRefresh(value => value + 1)}>{uiText("Reintentar")}</button></p>}
                 {messages.length === 0 && (
                     <div className="flex flex-col flex-1 items-center justify-center py-4 text-center text-gray-500 opacity-60">
@@ -284,7 +284,7 @@ function ServerAssistant({ server }: { server: Server | null }) {
                         {m.command && (
                             <div className="mt-2 w-full max-w-[95%] bg-[#000000] border border-[#3e3e3e] rounded p-2">
                                 <div className="flex justify-between items-center mb-2 border-b border-[#333] pb-1">
-                                    <span className="text-[10px] text-gray-400 uppercase font-bold">{m.proposalId && commandResults[m.proposalId] ? 'Resultado del comando' : m.proposalId && usedProposals.includes(m.proposalId) ? 'Propuesta procesada' : 'Propuesta · Pendiente de permiso'}</span>
+                                    <span className="text-[11px] text-gray-400 uppercase font-bold">{m.proposalId && commandResults[m.proposalId] ? 'Resultado del comando' : m.proposalId && usedProposals.includes(m.proposalId) ? 'Propuesta procesada' : 'Propuesta · Pendiente de permiso'}</span>
                                 </div>
                                 <code className="text-xs text-green-400 font-mono block mb-3 break-all">{m.command}</code>
                                 {local && !m.proposalId && <p className="text-xs text-amber-300 mb-2">{uiText("Esta propuesta no tiene autorización activa: puede pertenecer al historial o no tener una sesión SSH disponible. Pide al agente una propuesta nueva con el servidor conectado.")}</p>}
@@ -297,7 +297,7 @@ function ServerAssistant({ server }: { server: Server | null }) {
                                         </select>
                                         <button aria-label="Rechazar comando" title="Rechazar" className="shrink-0 rounded p-1.5 text-gray-400 hover:bg-[#333] hover:text-white" onClick={() => setUsedProposals(previous => [...previous, m.proposalId!])}><X className="h-3.5 w-3.5" /></button>
                                     </div>
-                                    {approvalScope !== 'once' && <p className="text-[10px] text-amber-200/80">{approvalScope === 'session' ? uiText('Los siguientes comandos se ejecutarán sin preguntar en esta sesión SSH.') : uiText('Los siguientes comandos se ejecutarán sin preguntar en este destino, incluso al reabrir la app.')}{" "}{uiText("Puedes revocarlo arriba.")}</p>}
+                                    {approvalScope !== 'once' && <p className="text-[11px] text-amber-200/80">{approvalScope === 'session' ? uiText('Los siguientes comandos se ejecutarán sin preguntar en esta sesión SSH.') : uiText('Los siguientes comandos se ejecutarán sin preguntar en este destino, incluso al reabrir la app.')}{" "}{uiText("Puedes revocarlo arriba.")}</p>}
                                 </div>}
                                 {m.proposalId && commandResults[m.proposalId] && <details className="text-xs mb-2"><summary className="cursor-pointer text-gray-400">{commandResults[m.proposalId].split('\n')[0]}{" "}{uiText("· Ver salida capturada")}</summary><pre className="whitespace-pre-wrap break-all mt-2">{commandResults[m.proposalId]}</pre></details>}
                                 <button
@@ -369,7 +369,7 @@ function ServerAssistant({ server }: { server: Server | null }) {
                         <Send className="w-3.5 h-3.5" />
                     </button>
                 </div>
-                <div className="text-[10px] text-gray-600 mt-1 text-center">{uiText("La IA puede equivocarse. Revisa cada comando antes de ejecutarlo.")}</div>
+                <div className="text-[11px] text-gray-600 mt-1 text-center">{uiText("La IA puede equivocarse. Revisa cada comando antes de ejecutarlo.")}</div>
             </div>
             <Dialog open={showClearHistory} onOpenChange={setShowClearHistory}>
                 <DialogContent className="bg-card text-card-foreground">

@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { confirmDialog } from "@/components/ui/confirm-dialog";
 import { Calendar, Clock, Mail, Server, FolderOpen, Play, Trash2, Edit, Plus, Download, History, CheckCircle, XCircle, Loader2 } from "lucide-react";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api/v1";
@@ -165,7 +166,7 @@ export function ScheduledReports() {
     };
 
     const handleDelete = async (id: number) => {
-        const confirmed = window.confirm("¿Estás seguro de eliminar este chequeo programado?");
+        const confirmed = await confirmDialog(uiText("¿Estás seguro de eliminar este chequeo programado?"));
         if (!confirmed) return;
 
         try {

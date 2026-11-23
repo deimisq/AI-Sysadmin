@@ -215,7 +215,7 @@ export function FileExplorer({ sessionId, initialPath = ".", onClose, className 
                     </div>
                 )}
 
-                <div className="px-2 py-1 text-[10px] uppercase tracking-wide text-gray-400 border-b border-[#333] flex justify-between"><span>{uiText("Nombre / Modificado")}</span><span>{uiText("Tamaño")}</span></div>
+                <div className="px-2 py-1 text-[11px] uppercase tracking-wide text-gray-400 border-b border-[#333] flex justify-between"><span>{uiText("Nombre / Modificado")}</span><span>{uiText("Tamaño")}</span></div>
                 {files.filter(file => file.name.toLocaleLowerCase().includes(filter.toLocaleLowerCase())).map((file) => (
                     <div key={file.name} className="flex items-center">
                     <button type="button" disabled={transferring}
@@ -229,8 +229,8 @@ export function FileExplorer({ sessionId, initialPath = ".", onClose, className 
                         ) : (
                             <File className="w-4 h-4 text-gray-500 flex-shrink-0" />
                         )}
-                        <span className="min-w-0 flex-1"><span className="block truncate text-gray-200 group-hover:text-white text-xs">{file.name}</span><span className="block text-[10px] text-gray-400">{formatModified(file.modified)}</span></span>
-                        <span className="text-[10px] text-gray-400 font-mono whitespace-nowrap">{file.is_dir ? uiText('Carpeta') : formatSize(file.size)}</span>
+                        <span className="min-w-0 flex-1"><span className="block truncate text-gray-200 group-hover:text-white text-xs">{file.name}</span><span className="block text-[11px] text-gray-400">{formatModified(file.modified)}</span></span>
+                        <span className="text-[11px] text-gray-400 font-mono whitespace-nowrap">{file.is_dir ? uiText('Carpeta') : formatSize(file.size)}</span>
                     </button>
                     {!file.is_dir && isWebView2() && <button disabled={transferring || loading || draftPath !== path}
                         onClick={() => void startTransfer('download', file.name)} aria-label={uiFormat("Descargar {0}", file.name)} title={uiText("Descargar archivo")}
@@ -257,7 +257,7 @@ export function FileExplorer({ sessionId, initialPath = ".", onClose, className 
             </div>}
 
             {/* StatusBar */}
-            <div className="bg-[#252526] border-t border-[#333] px-2 py-1 text-[10px] text-gray-500 flex justify-between">
+            <div className="bg-[#252526] border-t border-[#333] px-2 py-1 text-[11px] text-gray-500 flex justify-between">
                 <span>{files.length}{" "}{uiText("elementos")}</span>
                 <span role="status">{loading ? uiText('Cargando...') : error ? uiText('Error de lectura') : 'Listo'}</span>
             </div>

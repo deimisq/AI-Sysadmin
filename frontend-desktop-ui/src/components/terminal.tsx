@@ -164,7 +164,7 @@ export default function TerminalComponent(props: TerminalComponentProps) {
                 )}
                 <div className="flex-grow flex overflow-hidden relative">
                     {props.serverData?.quick_protocol !== 'sftp' && <div className="flex-1 bg-black min-w-0">
-                        <InteractiveTerminal sessionId={sessionId} serverId={props.serverData?.quick_protocol ? undefined : props.serverData?.id} />
+                        <InteractiveTerminal onReconnect={() => { setSessionId(null); setServerInfo(null); }} sessionId={sessionId} serverId={props.serverData?.quick_protocol ? undefined : props.serverData?.id} />
                     </div>}
                     { (showFiles || props.serverData?.quick_protocol === 'sftp') && (
                         <FileExplorer

@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { fetchGroups, createGroup, updateGroup, deleteGroup, fetchOrganizations } from "@/lib/api";
 import { Edit2, Trash2, Plus, Folder } from "lucide-react";
 import { toast } from "sonner";
+import { confirmDialog } from "@/components/ui/confirm-dialog";
 import type { Organization } from "@/lib/api";
 
 interface GroupManagementProps {
@@ -96,7 +97,7 @@ export function GroupManagement({ currentUser }: GroupManagementProps) {
     };
 
     const handleDelete = async (id: number) => {
-        if (!window.confirm("¿Estás seguro de eliminar este grupo? Los servidores en este grupo quedarán sin asignar.")) return;
+        if (!await confirmDialog(uiText("¿Estás seguro de eliminar este grupo? Los servidores en este grupo quedarán sin asignar."))) return;
 
         try {
             await deleteGroup(id);

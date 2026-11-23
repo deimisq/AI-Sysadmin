@@ -15,7 +15,7 @@ export function IdeTools() {
         {section === 'tasks' ? <IdeAgentMonitor /> : section === 'transfers' ? <IdeTransferMonitor /> : <div className="overflow-auto flex-1">
             {!tabs.length && <p className="px-4 py-4 text-xs text-gray-500">{uiText("Abre un servidor desde el explorador. Las sesiones aparecerán aquí.")}</p>}
             {tabs.map(tab => { const connection = connectionPresentation(tab.server); const Icon = connection.protocol === 'RDP' ? Monitor : Terminal; const registered = tab.server && nativeSessions[tab.server.id]; return <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`ide-session-row ${tab.id === activeTabId ? 'selected' : ''}`}>
-                <Icon size={13} /><span className="truncate w-40 text-left">{tab.title}</span><span className="text-gray-500 truncate flex-1 text-left">{tab.server?.ip_address}</span><span className="text-gray-400">{connection.protocol}</span><span className="text-[10px] text-gray-400 ml-4">{registered ? uiText('Sesión SSH registrada') : uiText('Pestaña abierta')}</span>
+                <Icon size={13} /><span className="truncate w-40 text-left">{tab.title}</span><span className="text-gray-500 truncate flex-1 text-left">{tab.server?.ip_address}</span><span className="text-gray-400">{connection.protocol}</span><span className="text-[11px] text-gray-400 ml-4">{registered ? uiText('Sesión SSH registrada') : uiText('Pestaña abierta')}</span>
             </button>; })}
         </div>}
     </section>;

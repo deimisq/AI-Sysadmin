@@ -268,7 +268,7 @@ export function GuacamoleCanvas({
                         {status.charAt(0).toUpperCase() + status.slice(1)}
                     </span>
                 </div>
-                <div className="text-[10px] text-gray-400 mt-1">
+                <div className="text-[11px] text-gray-400 mt-1">
                     {host}:{port}
                 </div>
             </div>

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Users, Edit2, Trash2, Shield, FolderOpen, Plus, X, Mail } from "lucide-react";
 import { toast } from "sonner";
+import { confirmDialog } from "@/components/ui/confirm-dialog";
 import { fetchOrganizations } from "@/lib/api";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api/v1";
@@ -144,7 +145,7 @@ export function UserManagement({ currentUser }: UserManagementProps) {
     };
 
     const handleDeleteUser = async (userId: number) => {
-        const confirmed = window.confirm("¿Estás seguro de eliminar este usuario? Esta acción no se puede deshacer.");
+        const confirmed = await confirmDialog(uiText("¿Estás seguro de eliminar este usuario? Esta acción no se puede deshacer."));
         if (!confirmed) return;
 
         try {
@@ -222,7 +223,7 @@ export function UserManagement({ currentUser }: UserManagementProps) {
     };
 
     const handleSendApprovalNotification = async (user: any) => {
-        const confirmed = window.confirm(uiFormat("¿Enviar notificación de aprobación a {0}?", user.email));
+        const confirmed = await confirmDialog(uiFormat("¿Enviar notificación de aprobación a {0}?", user.email));
         if (!confirmed) return;
 
         try {

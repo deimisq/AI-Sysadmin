@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { fetchServers, createServer, updateServer, deleteServer, fetchGroups } from "@/lib/api";
 import { Server, Edit2, Trash2, Plus } from "lucide-react";
+import { confirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 
 interface ServerManagementProps {
@@ -148,7 +149,7 @@ export function ServerManagement({ currentUser }: ServerManagementProps) {
     };
 
     const handleDeleteServer = async (serverId: number) => {
-        const confirmed = window.confirm("¿Estás seguro de eliminar este servidor?"); // Simple confirm for desktop
+        const confirmed = await confirmDialog(uiText("¿Estás seguro de eliminar este servidor?")); 
         if (!confirmed) return;
 
         try {

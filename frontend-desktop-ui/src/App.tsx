@@ -4,6 +4,7 @@ import AcceptInvitation from './routes/accept-invitation';
 import { DesktopLayout } from './components/layout/DesktopLayout';
 import { isAuthenticated } from './lib/api';
 import { Toaster } from 'sonner';
+import { ConfirmDialogHost } from './components/ui/confirm-dialog';
 import { ThemeProvider } from '@/components/theme-provider';
 import { useEffect } from 'react';
 import { notifyDesktopReady, isPreferencesWindow } from './lib/bridge';
@@ -41,7 +42,8 @@ export default function App() {
             }
           />
         </Routes>
-        <Toaster position="top-right" />
+        <ConfirmDialogHost />
+      <Toaster position="top-right" />
       </HashRouter>
     </ThemeProvider>
   );

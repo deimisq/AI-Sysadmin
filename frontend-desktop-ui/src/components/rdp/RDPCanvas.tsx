@@ -120,7 +120,7 @@ export function RDPCanvas({ sessionId, width = 1920, height = 1080 }: RDPCanvasP
             <div className="absolute top-2 right-2 bg-black/70 text-white px-3 py-2 rounded text-xs font-mono space-y-1">
                 <div>FPS: <span className="text-green-400">{fps}</span></div>
                 <div>Frames: <span className="text-blue-400">{frameCount}</span></div>
-                <div className="text-[10px] text-gray-500">Session: {sessionId.slice(0, 8)}...</div>
+                <div className="text-[11px] text-gray-500">Session: {sessionId.slice(0, 8)}...</div>
             </div>
 
             {/* Mock Indicator */}

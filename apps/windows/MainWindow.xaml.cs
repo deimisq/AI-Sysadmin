@@ -539,6 +539,10 @@ namespace AiSysadminDesktop
                                             Console.WriteLine("[PTY] Read Error: " + ex.Message);
                                         }
                                         _interactiveChat.Close(sessionId);
+                                        // Cierre no solicitado (el usuario lo retira de _shellStreams antes): avisa a la interfaz.
+                                        if (_shellStreams.ContainsKey(sessionId)) {
+                                            try { await Dispatcher.InvokeAsync(() => MainWebView.CoreWebView2?.PostWebMessageAsJson(JsonSerializer.Serialize(new { type = "PTY_CLOSED", ptyId = sessionId }))); } catch { }
+                                        }
                                         Console.WriteLine($"[PTY] Reading loop ended for: {sessionId}");
                                     });
 

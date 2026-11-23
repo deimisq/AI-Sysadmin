@@ -133,11 +133,11 @@ export function LocalAiSettings() {
                 <span className="text-xs text-muted-foreground">{uiText("Necesario para claves que no están limitadas a un workspace.")}</span>
             </label>}
             <label className="block text-sm">{uiText("Modelo disponible")}<select aria-label={provider?.local ? uiText('Modelo local') : uiText('Modelo IA')} className="mt-2 w-full rounded border px-3" value={model} disabled={busy || discovering || !localModels.length} onChange={event => { setModel(event.target.value); setAccepted(false); }}>
-                    {!localModels.some(item => item.id === model) && <option value={model}>{discovering ? 'Consultando modelos…' : model ? model + ' · pendiente de verificar' : uiText('Carga los modelos para seleccionar')}</option>}
+                    {!localModels.some(item => item.id === model) && <option value={model}>{discovering ? uiText('Consultando modelos…') : model ? model + uiText(' · pendiente de verificar') : uiText('Carga los modelos para seleccionar')}</option>}
                     {localModels.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}
                 </select>
             </label>
-            <div className="space-y-2"><Button type="button" variant="outline" disabled={busy || discovering || (!!provider?.requires_key && !key && !(sameProvider && settings?.has_api_key))} onClick={() => void discover(providerId, key)}>{discovering ? 'Consultando modelos…' : uiText('Actualizar modelos')}</Button>
+            <div className="space-y-2"><Button type="button" variant="outline" disabled={busy || discovering || (!!provider?.requires_key && !key && !(sameProvider && settings?.has_api_key))} onClick={() => void discover(providerId, key)}>{discovering ? uiText('Consultando modelos…') : uiText('Actualizar modelos')}</Button>
                 <p className="text-xs text-muted-foreground">{uiText("La lista se consulta al proveedor con tu conexión. No se envían conversaciones ni datos de servidores. Algunos modelos del catálogo pueden no admitir chat.")}</p>
                 {discoveryError && <p role="status" className="text-sm text-amber-300">{discoveryError}</p>}
             </div>

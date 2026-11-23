@@ -5,6 +5,7 @@
 - Limpieza de pantallas de prueba y rutas antiguas no alcanzables desde las entradas del cliente. Se conservan las vistas actuales de ayuda y administración, el backend empresarial y la web independiente. El dashboard abre conexiones mediante el gestor de pestañas vigente. Se retiran esquemas generados huérfanos y el script de migración V2 ya completada.
 
 - Cierre de pestañas de conexión con el botón central del ratón, sin activar primero las pestañas inactivas. La terminal SSH copia el texto seleccionado y pega el portapapeles con clic derecho mediante xterm, respetando el modo de pegado del servidor. Los fallos de acceso al portapapeles se notifican y los eventos se retiran al cerrar la terminal.
+- La terminal SSH avisa cuando la sesión termina o se pierde la conexión (evento `PTY_CLOSED` desde la app nativa) y ofrece **Reconectar**. Los textos de error de la terminal, del panel de IA y de los ajustes de IA local están traducidos, y los confirmar de Administración y del cambio de espacio usan el diálogo de la app en lugar de `window.confirm`. La terminal admite alturas menores (200 px) y el texto de 9–10 px pasa a 11 px.
 
 - Unificación del español neutro en ayuda integrada, interfaz, mensajes de Windows, instalador y documentación. Catálogos de traducción sincronizados y pauta permanente de redacción; el acompañante recibe la indicación explícita de evitar voseo y regionalismos.
 

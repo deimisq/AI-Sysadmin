@@ -12,9 +12,10 @@ interface InteractiveTerminalProps {
     sessionId: string;
     serverId?: number;
     onClose?: () => void;
+    onReconnect?: () => void;
 }
 
-export function InteractiveTerminal({ sessionId, onClose: _onClose }: InteractiveTerminalProps) {
+export function InteractiveTerminal({ sessionId, onClose: _onClose, onReconnect }: InteractiveTerminalProps) {
     const terminalRef = useRef<HTMLDivElement>(null);
     const xtermRef = useRef<Terminal | null>(null);
     const fitAddonRef = useRef<FitAddon | null>(null);
@@ -25,6 +26,7 @@ export function InteractiveTerminal({ sessionId, onClose: _onClose }: Interactiv
     const clipboardCleanupRef = useRef<(() => void) | null>(null);
     const isMounted = useRef(true);
     const [error, setError] = useState<string | null>(null);
+    const [ended, setEnded] = useState(false);
 
     useEffect(() => {
         isMounted.current = true;
@@ -81,6 +83,7 @@ export function InteractiveTerminal({ sessionId, onClose: _onClose }: Interactiv
                 if (isWebView2()) {
                     const messageHandler = (event: any) => {
                         const msg = event.data;
+                        if (msg.type === 'PTY_CLOSED' && msg.ptyId === sessionId) { setEnded(true); return; }
                         if (msg.type === 'PTY_DATA' && msg.ptyId === sessionId) {
                             let data = msg.payload;
                             if (data) {
@@ -133,7 +136,7 @@ export function InteractiveTerminal({ sessionId, onClose: _onClose }: Interactiv
                         });
                     } catch (e) {
                         console.error('Failed to write to PTY:', e);
-                        term.write(`\r\n❌ Write Error: ${e}\r\n`);
+                        term.write(`\r\n❌ ${uiText('Error de escritura')}: ${e}\r\n`);
                     }
                 });
 
@@ -209,14 +212,20 @@ export function InteractiveTerminal({ sessionId, onClose: _onClose }: Interactiv
     return (
         <div className="flex flex-col h-full w-full bg-black p-2 rounded overflow-hidden">
             {error && (
-                <div className="bg-red-900 text-white p-2 mb-2 rounded text-sm">
-                    Error: {error}
+                <div role="alert" className="bg-red-900 text-white p-2 mb-2 rounded text-sm">
+                    {uiText("Error")}: {error}
+                </div>
+            )}
+            {ended && (
+                <div role="alert" className="bg-amber-900 text-white p-2 mb-2 rounded text-sm flex items-center justify-between gap-3">
+                    <span>{uiText("La sesión terminó o se perdió la conexión.")}</span>
+                    {onReconnect && <button onClick={onReconnect} className="px-2 py-1 border border-white/40 rounded hover:bg-white/10">{uiText("Reconectar")}</button>}
                 </div>
             )}
             <div
                 ref={terminalRef}
                 className="flex-grow h-full w-full"
-                style={{ minHeight: '400px' }}
+                style={{ minHeight: '200px' }}
             />
         </div>
     );

@@ -37,7 +37,7 @@ export function IdeAgentMonitor() {
                     finally { setCancelling(false); }
                 }}>{cancelling ? 'Solicitando…' : uiText('Cancelar tarea')}</button>}
             </div>
-            <p className="px-3 py-1 text-[10px] text-gray-500">{uiText("Última tarea de esta instancia · cancelar no revierte cambios · el resultado debe verificarse.")}</p>
+            <p className="px-3 py-1 text-[11px] text-gray-500">{uiText("Última tarea de esta instancia · cancelar no revierte cambios · el resultado debe verificarse.")}</p>
             {task.Events.map((event, index) => <details key={`${task.Id}-${index}`} className="border-b border-[#303030] px-3 py-1.5"><summary className="cursor-pointer text-gray-400"><span className="font-mono mr-2">{new Date(event.At).toLocaleTimeString()}</span>{event.Kind}{event.ExitCode !== null ? ` · salida ${event.ExitCode}` : ''}</summary><pre className="font-mono text-[11px] whitespace-pre-wrap break-words text-gray-200 py-2">{event.Text}</pre></details>)}
         </>}
     </div>;

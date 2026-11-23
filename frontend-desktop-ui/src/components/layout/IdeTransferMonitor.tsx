@@ -41,7 +41,7 @@ export function IdeTransferMonitor() {
                 finally { setBusy(false); }
             }}>{busy ? 'Solicitando…' : uiText('Cancelar transferencia')}</button>}
             {transfer.error && <p className="text-red-300 break-words">{transfer.error}</p>}
-            <p className="text-[10px] text-gray-500">{uiText("Última transferencia de la instancia · cerrar este panel no cancela la operación.")}</p>
+            <p className="text-[11px] text-gray-500">{uiText("Última transferencia de la instancia · cerrar este panel no cancela la operación.")}</p>
         </>}
     </div>;
 }

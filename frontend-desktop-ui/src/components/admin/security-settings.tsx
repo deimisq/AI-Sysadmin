@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Shield, Plus, Trash2, Check } from "lucide-react";
+import { confirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api/v1";
@@ -123,7 +124,7 @@ export function SecuritySettings() {
     };
 
     const handleDeleteDomain = async (id: number) => {
-        const confirmed = window.confirm("¿Seguro que quieres eliminar este dominio permitido?");
+        const confirmed = await confirmDialog(uiText("¿Seguro que quieres eliminar este dominio permitido?"));
         if (!confirmed) return;
 
         try {

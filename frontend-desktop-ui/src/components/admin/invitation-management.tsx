@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { fetchInvitations, createInvitation, deleteInvitation, fetchOrganizations } from "@/lib/api";
 import { Mail, Trash2, Plus, Copy } from "lucide-react";
 import { toast } from "sonner";
+import { confirmDialog } from "@/components/ui/confirm-dialog";
 import type { Organization } from "@/lib/api";
 
 interface InvitationManagementProps {
@@ -76,7 +77,7 @@ export function InvitationManagement({ currentUser }: InvitationManagementProps)
     };
 
     const handleDelete = async (id: number) => {
-        if (!window.confirm("¿Eliminar invitación?")) return;
+        if (!await confirmDialog(uiText("¿Eliminar invitación?"))) return;
         try {
             await deleteInvitation(id);
             await loadData();

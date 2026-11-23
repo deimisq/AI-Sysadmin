@@ -418,7 +418,7 @@ function CollapsibleGroup({ title, count, children, expansionKey, defaultOpen = 
             >
                 {expanded ? <ChevronDown className="h-3 w-3 text-gray-400 group-hover:text-white" /> : <ChevronRight className="h-3 w-3 text-gray-400 group-hover:text-white" />}
                 <span className="text-xs font-semibold uppercase tracking-tight flex-1 truncate">{title}</span>
-                {count > 0 && <span className="text-[10px] bg-[#3c3c3c] text-gray-400 rounded-full px-1.5 min-w-[1.2em] text-center">{count}</span>}
+                {count > 0 && <span className="text-[11px] bg-[#3c3c3c] text-gray-400 rounded-full px-1.5 min-w-[1.2em] text-center">{count}</span>}
             </button>{actions}</div>
             {expanded && (
                 <div className="space-y-0">

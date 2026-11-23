@@ -35,7 +35,7 @@ Selecciona la pestaña correcta y revisa el destino y las opciones de contexto d
         article('ssh', 'Conexiones', 'Terminal SSH', 'Sesiones guardadas, conexiones rápidas y comandos interactivos.', `## Preparar el acceso
 Crea una conexión SSH con dirección, puerto, usuario y autenticación. No es obligatorio usar root: elige los permisos que necesites. Si utilizas un archivo de clave privada, debe seguir disponible en su ruta.
 ## Trabajar en la terminal
-La sesión conserva su estado, incluido el directorio de trabajo. Puedes ejecutar comandos manualmente y preguntar después por su salida. Cerrar la pestaña termina la sesión; las preferencias de presentación no vuelven a conectar equipos.
+La sesión conserva su estado, incluido el directorio de trabajo. Puedes ejecutar comandos manualmente y preguntar después por su salida. Cerrar la pestaña termina la sesión; las preferencias de presentación no vuelven a conectar equipos. Si el servidor cierra la conexión, la pestaña muestra un aviso con el botón **Reconectar**, que abre una sesión nueva.
 
 Seleccionar texto en la terminal SSH lo copia al portapapeles. El clic derecho pega su contenido en esa misma terminal y respeta el modo de pegado del servidor. El texto puede incluir saltos de línea; revísalo antes de pegarlo. También puedes usar Ctrl+V.
 Los comandos autorizados desde el chat se escriben en esa terminal, no en una conexión separada. Evita escribir otro mientras se ejecuta uno del agente. Atiende las preguntas interactivas en la terminal.
@@ -160,7 +160,7 @@ Select the correct tab and check the companion's destination and context options
         article('ssh', 'Connections', 'SSH terminal', 'Saved sessions, quick connections and interactive commands.', `## Prepare access
 Create an SSH connection with address, port, username and authentication. Root is not required: choose the permissions needed. File-based private keys must remain accessible at their path.
 ## Work in the terminal
-The session preserves state, including its working directory. Run commands manually and ask about their output later. Closing the tab ends the session; presentation preferences do not reconnect computers.
+The session preserves state, including its working directory. Run commands manually and ask about their output later. Closing the tab ends the session; presentation preferences do not reconnect computers. If the server closes the connection, the tab shows a notice with a **Reconnect** button that opens a new session.
 
 Selecting text in the SSH terminal copies it to the clipboard. Right-click pastes into that terminal and respects the server's paste mode. Text may contain newlines; review it before pasting. You can also use Ctrl+V.
 Authorized chat commands are typed into that terminal, not a separate connection. Avoid typing another while an agent command runs. Answer interactive prompts in the terminal.

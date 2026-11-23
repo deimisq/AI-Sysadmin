@@ -28,7 +28,7 @@ export function WorkspaceArea() {
             <button onClick={() => window.dispatchEvent(new Event('workspace-command-palette'))} className="ide-empty-action"><span>{uiText("Abrir conexión")}</span><kbd>Ctrl+Shift+P</kbd></button>
             <button onClick={() => useWorkspaceStore.getState().requestExplorerAction('add-server')} className="ide-empty-action"><span>{uiText("Nueva conexión")}</span><span>{uiText("Archivo → Nueva conexión")}</span></button>
             <button onClick={() => useWorkspaceStore.getState().toggleAIPanel()} className="ide-empty-action"><span>{uiText("Acompañante IA")}</span><kbd>Ctrl+Alt+I</kbd></button>
-            <p className="text-[11px] text-gray-600 mt-8">{uiText("Doble clic en un servidor del explorador para empezar.")}</p>
+            <p className="text-[12px] text-gray-400 mt-8">{uiText("Doble clic en un servidor del explorador para empezar.")}</p>
         </div>;
     }
 

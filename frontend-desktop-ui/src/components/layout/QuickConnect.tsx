@@ -26,8 +26,9 @@ export function QuickConnect() {
                 setPending({ ...parseQuickTarget(target, protocol), username: username.trim(), protocol });
             } catch (e) { setError((e as Error).message); }
         }}>
-            <input aria-label={uiText("Usuario de conexión rápida")} placeholder={uiText("Usuario")} value={username} onChange={e => setUsername(e.target.value)} required autoComplete="off" />
-            <input aria-label={uiText("Servidor de conexión rápida")} placeholder={uiText("Servidor[:puerto]")} value={target} onChange={e => setTarget(e.target.value)} required autoComplete="off" />
+            <span className="quick-connect-label" aria-hidden="true">{uiText("Conexión rápida")}</span>
+            <input title={uiText("Usuario con el que iniciar sesión")} aria-label={uiText("Usuario de conexión rápida")} placeholder={uiText("Usuario")} value={username} onChange={e => setUsername(e.target.value)} required autoComplete="off" />
+            <input title={uiText("Dirección o nombre del servidor; opcionalmente :puerto")} aria-label={uiText("Servidor de conexión rápida")} placeholder={uiText("Servidor[:puerto]")} value={target} onChange={e => setTarget(e.target.value)} required autoComplete="off" />
             <select aria-label={uiText("Protocolo de conexión rápida")} value={protocol} onChange={e => setProtocol(e.target.value as typeof protocol)}><option value="ssh">SSH</option><option value="rdp">RDP</option><option value="sftp">SFTP</option></select>
             <button type="submit" title={uiText("Conectar directamente")} aria-label={uiText("Conectar directamente")}><Plug size={13} /><span>{uiText("Conectar")}</span></button>
             {error && <span role="alert" className="quick-connect-error" onClick={() => setError('')}>{error}</span>}

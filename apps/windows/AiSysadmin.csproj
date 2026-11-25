@@ -25,7 +25,7 @@
 
   <ItemGroup>
     <!-- El navegador embebido -->
-    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2957.106" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4370.26" />
     <PackageReference Include="SSH.NET" Version="2026.0.0" />
   </ItemGroup>
 
